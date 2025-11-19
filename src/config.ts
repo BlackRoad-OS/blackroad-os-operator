@@ -4,7 +4,7 @@ import fs from 'fs';
 
 dotenv.config();
 
-const pkgPath = path.join(__dirname, '..', '..', 'package.json');
+const pkgPath = path.join(__dirname, '..', 'package.json');
 const pkgJson = fs.existsSync(pkgPath) ? JSON.parse(fs.readFileSync(pkgPath, 'utf-8')) : { version: '0.0.0' };
 
 type RequiredEnv = 'NODE_ENV' | 'DATABASE_URL' | 'CORE_API_URL' | 'PUBLIC_AGENTS_URL';
