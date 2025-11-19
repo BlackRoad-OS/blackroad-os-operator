@@ -2,11 +2,23 @@ import { config } from '../config';
 import { getDbPool } from '../lib/db';
 import { getRedis } from '../lib/queue';
 import { logger } from '../lib/logger';
+import { URL } from 'url';
 
-async function bootstrapWorker() {
+function redactDbUrl(dbUrl: string): string {
+  try {
+    const urlObj = new URL(dbUrl);
+    if (urlObj.password) {
+      urlObj.password = '[redacted]';
+    }
+    return urlObj.toString();
+  } catch (e) {
+    // If parsing fails, return a placeholder
+    return '[invalid db url]';
+  }
+}
   logger.info('Starting agents-worker', {
     environment: config.env,
-    dbUrl: 'DATABASE_URL',
+    dbUrl: redactDbUrl(config.dbUrl),
     redisEnabled: Boolean(config.redisUrl),
   });
 
