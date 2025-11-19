@@ -45,7 +45,8 @@ jobs:
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
         run: |
-          railway up --service agents-api --service agents-worker --environment ${{ matrix.environment }} --ci
+          railway up --service agents-api --environment ${{ matrix.environment }} --ci
+          railway up --service agents-worker --environment ${{ matrix.environment }} --ci
 
       - name: Health check agents-api
         run: |
