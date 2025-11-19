@@ -13,7 +13,7 @@ app.use(healthRouter);
 app.use(versionRouter);
 
 app.use((err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
-  logger.error('Unhandled API error', { error: err.message });
+  logger.error('Unhandled API error', { error: err.message, stack: err.stack });
   res.status(500).json({ error: 'Internal server error' });
 });
 
