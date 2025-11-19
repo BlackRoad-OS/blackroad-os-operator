@@ -1,8 +1,8 @@
+import { URL } from 'url';
 import { config } from '../config';
 import { getDbPool } from '../lib/db';
 import { getRedis } from '../lib/queue';
 import { logger } from '../lib/logger';
-import { URL } from 'url';
 
 function redactDbUrl(dbUrl: string): string {
   try {
@@ -12,10 +12,11 @@ function redactDbUrl(dbUrl: string): string {
     }
     return urlObj.toString();
   } catch (e) {
-    // If parsing fails, return a placeholder
     return '[invalid db url]';
   }
 }
+
+async function bootstrapWorker() {
   logger.info('Starting agents-worker', {
     environment: config.env,
     dbUrl: redactDbUrl(config.dbUrl),
@@ -24,31 +25,36 @@ function redactDbUrl(dbUrl: string): string {
 
   const pool = getDbPool();
   const client = await pool.connect();
+  await client.query('SELECT 1');
   client.release();
   logger.info('Database connection ready for worker');
 
-  if (config.redisUrl) {
-    const redis = getRedis();
-    await redis?.ping();
+  const redis = getRedis();
+  if (redis) {
+    await redis.ping();
     logger.info('Redis connection ready for worker');
+  } else {
+    logger.info('Redis disabled - skipping connection');
   }
 
-  // Placeholder job loop.
-  logger.info('Worker idle - awaiting job subscriptions');
+  logger.info('Worker ready - awaiting job subscriptions');
 
-  process.on('SIGTERM', async () => {
-    logger.warn('Worker received SIGTERM, shutting down');
-    await pool.end();
-    await getRedis()?.quit();
-    process.exit(0);
-  });
+  const heartbeat = setInterval(() => {
+    logger.debug('Worker heartbeat');
+  }, 60_000);
 
-  process.on('SIGINT', async () => {
-    logger.warn('Worker received SIGINT (Ctrl+C), shutting down');
+  const shutdown = async (signal: string) => {
+    logger.warn(`Worker received ${signal}, shutting down`);
+    clearInterval(heartbeat);
     await pool.end();
-    await getRedis()?.quit();
+    if (redis) {
+      await redis.quit();
+    }
     process.exit(0);
-  });
+  };
+
+  process.on('SIGTERM', () => void shutdown('SIGTERM'));
+  process.on('SIGINT', () => void shutdown('SIGINT'));
 }
 
 bootstrapWorker().catch((err) => {
