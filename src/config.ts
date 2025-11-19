@@ -41,7 +41,7 @@ export const config: RuntimeConfig = {
   redisUrl: getOptionalEnv('REDIS_URL'),
   coreApiUrl: getEnv('CORE_API_URL'),
   publicAgentsUrl: getEnv('PUBLIC_AGENTS_URL'),
-  logLevel: getOptionalEnv('LOG_LEVEL', 'info') ?? 'info',
+  logLevel: getOptionalEnv('LOG_LEVEL', 'info'),
   appVersion: process.env.APP_VERSION ?? pkgJson.version ?? '0.0.0',
   gitCommit: process.env.GIT_COMMIT ?? process.env.RAILWAY_GIT_COMMIT_SHA,
   buildTime: process.env.BUILD_TIME,
