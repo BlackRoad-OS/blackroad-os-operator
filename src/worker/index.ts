@@ -42,6 +42,13 @@ function redactDbUrl(dbUrl: string): string {
     await getRedis()?.quit();
     process.exit(0);
   });
+
+  process.on('SIGINT', async () => {
+    logger.warn('Worker received SIGINT (Ctrl+C), shutting down');
+    await pool.end();
+    await getRedis()?.quit();
+    process.exit(0);
+  });
 }
 
 bootstrapWorker().catch((err) => {
