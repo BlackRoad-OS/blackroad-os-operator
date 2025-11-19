@@ -1,0 +1,28 @@
+{
+  "name": "blackroad-os-operator",
+  "version": "1.0.0",
+  "description": "Agents runtime with API and worker services for BlackRoad OS.",
+  "main": "dist/index.js",
+  "license": "MIT",
+  "scripts": {
+    "build": "tsc",
+    "start:api": "node dist/api/index.js",
+    "start:worker": "node dist/worker/index.js",
+    "dev:api": "ts-node src/api/index.ts",
+    "dev:worker": "ts-node src/worker/index.ts"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "ioredis": "^5.4.1",
+    "pg": "^8.11.5"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.21",
+    "@types/ioredis": "^4.28.10",
+    "@types/node": "^20.11.30",
+    "@types/pg": "^8.10.9",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.4.5"
+  }
+}
