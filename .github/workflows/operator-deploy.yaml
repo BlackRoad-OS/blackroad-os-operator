@@ -1,0 +1,52 @@
+name: Deploy Operator to Railway
+
+on:
+  push:
+    branches:
+      - dev
+      - staging
+      - main
+
+jobs:
+  deploy-operator:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - branch: dev
+            environment: dev
+            health_url: https://dev.operator.blackroad.systems/health
+          - branch: staging
+            environment: staging
+            health_url: https://staging.operator.blackroad.systems/health
+          - branch: main
+            environment: prod
+            health_url: https://operator.blackroad.systems/health
+    if: github.ref_name == matrix.branch
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Use Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build project
+        run: npm run build
+
+      - name: Install Railway CLI
+        run: npm install -g @railway/cli
+
+      - name: Deploy operator service
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+        run: |
+          railway up --service operator --environment ${{ matrix.environment }} --ci
+
+      - name: Health check operator
+        run: |
+          curl -f ${{ matrix.health_url }}

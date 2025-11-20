@@ -1,31 +1,9 @@
 {
   "$schema": "https://railway.app/railway.schema.json",
-  "project": "blackroad-agents",
+  "project": "blackroad-os-operator",
   "services": [
     {
-      "name": "agents-api",
-      "source": ".",
-      "build": {
-        "command": "npm install && npm run build"
-      },
-      "start": {
-        "command": "npm run start:api"
-      },
-      "envVars": [
-        "NODE_ENV",
-        "PORT",
-        "DATABASE_URL",
-        "REDIS_URL",
-        "CORE_API_URL",
-        "PUBLIC_AGENTS_URL",
-        "LOG_LEVEL",
-        "APP_VERSION",
-        "GIT_COMMIT",
-        "BUILD_TIME"
-      ]
-    },
-    {
-      "name": "agents-worker",
+      "name": "operator",
       "source": ".",
       "build": {
         "command": "npm install && npm run build"
@@ -33,16 +11,22 @@
       "start": {
         "command": "npm run start:worker"
       },
+      "healthcheck": {
+        "path": "/health"
+      },
       "envVars": [
         "NODE_ENV",
-        "DATABASE_URL",
-        "REDIS_URL",
+        "OPERATOR_PORT",
         "CORE_API_URL",
-        "PUBLIC_AGENTS_URL",
+        "AGENTS_API_URL",
+        "QUEUE_POLL_INTERVAL_MS",
+        "JOB_MAX_ATTEMPTS",
         "LOG_LEVEL",
         "APP_VERSION",
         "GIT_COMMIT",
-        "BUILD_TIME"
+        "BUILD_TIME",
+        "DATABASE_URL",
+        "REDIS_URL"
       ]
     }
   ]

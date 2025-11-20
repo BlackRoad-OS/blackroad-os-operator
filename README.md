@@ -8,86 +8,65 @@ Background workers, schedulers, and AI agent orchestration engine.
 
 Operator Engine is the automation heart of BlackRoad OS — running jobs, queues, schedulers, system-level background processes, and multi-agent workflows. It integrates with Lucidia, coordinates actions across Core and API, and ensures deterministic task execution.
 
-## Structured Table
+## What lives here?
 
-| Field          | Value                                      |
-| -------------- | ------------------------------------------ |
-| **Purpose**    | Background jobs, schedulers, orchestration |
-| **Depends On** | API Gateway                                |
-| **Used By**    | Core, Prism, Lucidia Agents                |
-| **Owner**      | Cece (Operator group)                      |
-| **Status**     | High-priority active                       |
-
-## Runtime Layout
-
-This repository now exposes two entrypoints:
-
-- **agents-api** – HTTP surface for webhooks, agent triggers, and control-plane endpoints.
-- **agents-worker** – background worker process for queues, flows, and scheduled jobs.
-
-Supporting libraries:
-
-- `src/config.ts` – centralized environment configuration.
-- `src/lib/db.ts` – Postgres pool wiring for the `agents-db` database.
-- `src/lib/queue.ts` – Redis connector for the optional `agents-queue`.
-- `src/lib/logger.ts` – structured JSON logging with level + environment metadata.
+- **Operator (this repo)** – long-lived worker with a simple in-memory queue and HTTP surface for health, version, and job management.
+- **Agents API** – external orchestration/control-plane facade that triggers work on the operator.
 
 ## Environment Variables
 
-| Variable            | Description                                                      |
-| ------------------- | ---------------------------------------------------------------- |
-| `NODE_ENV`          | `development` / `staging` / `production`                         |
-| `PORT`              | HTTP port for `agents-api`                                       |
-| `DATABASE_URL`      | Postgres connection string for `agents-db`                       |
-| `REDIS_URL`         | Redis connection string for `agents-queue` (optional)            |
-| `CORE_API_URL`      | URL of the Core backend for the current environment              |
-| `PUBLIC_AGENTS_URL` | Public URL of the agents API in the current environment          |
-| `LOG_LEVEL`         | `debug` / `info` / `warn` / `error`                              |
-| `APP_VERSION`       | Optional override for application version                        |
-| `GIT_COMMIT`        | Git commit SHA (Railway also exposes `RAILWAY_GIT_COMMIT_SHA`)    |
-| `BUILD_TIME`        | Build timestamp if provided                                      |
+| Variable | Description |
+| --- | --- |
+| `NODE_ENV` | `development` / `staging` / `production` |
+| `OPERATOR_PORT` | HTTP port for the operator (defaults to `PORT` or `3001`) |
+| `CORE_API_URL` | URL of the Core backend for the current environment |
+| `AGENTS_API_URL` | URL of the Agents API triggering work on the operator |
+| `QUEUE_POLL_INTERVAL_MS` | How frequently to poll the in-memory queue for new jobs |
+| `JOB_MAX_ATTEMPTS` | Max attempts per job before marking it failed |
+| `LOG_LEVEL` | `debug` / `info` / `warn` / `error` |
+| `APP_VERSION` | Optional override for application version |
+| `GIT_COMMIT` | Git commit SHA (Railway also exposes `RAILWAY_GIT_COMMIT_SHA`) |
+| `BUILD_TIME` | Build timestamp if provided |
+| `DATABASE_URL` | Optional Postgres connection string (disabled if absent) |
+| `REDIS_URL` | Optional Redis connection string (disabled if absent) |
 
 ## Local Development
+
+Install dependencies and build:
 
 ```bash
 npm install
 npm run build
-NODE_ENV=development DATABASE_URL=postgres://... CORE_API_URL=http://localhost:4000 PUBLIC_AGENTS_URL=http://localhost:3000 npm run start:api
 ```
 
-- Health check: `GET /health`
-- Version: `GET /version`
-
-Run the worker:
+Start the operator with sensible defaults:
 
 ```bash
-NODE_ENV=development DATABASE_URL=postgres://... CORE_API_URL=http://localhost:4000 PUBLIC_AGENTS_URL=http://localhost:3000 npm run start:worker
+NODE_ENV=development OPERATOR_PORT=3001 CORE_API_URL=http://localhost:4000 AGENTS_API_URL=http://localhost:4100 npm run start:worker
+```
+
+HTTP surface:
+
+- `GET /health` – process + queue status
+- `GET /version` – version/build metadata
+- `GET /jobs/health` – queue status snapshot
+- `POST /jobs/enqueue` – enqueue a job: `{"type":"health-check","payload":{"targetUrl":"http://localhost:4000"}}`
+
+## Enqueue a test job
+
+```bash
+curl -X POST http://localhost:3001/jobs/enqueue \
+  -H "Content-Type: application/json" \
+  -d '{"type":"health-check","payload":{"targetUrl":"http://localhost:4000"}}'
 ```
 
 ## Deployment (Railway)
 
-Project: **blackroad-agents**
+Project: **blackroad-os-operator**
 
-Services in this repo:
+- Service: `operator`
+- Build: `npm install && npm run build`
+- Start: `npm run start:worker`
+- Health check: `/health`
 
-- `agents-api` (HTTP service)
-- `agents-worker` (background worker)
-
-Supporting services:
-
-- `agents-db` (Postgres): stores agent runs, tasks, logs, and state.
-- `agents-queue` (Redis, optional): used for job queues, delayed tasks, and flow orchestration.
-
-Environment mapping:
-
-- **dev**
-  - `PUBLIC_AGENTS_URL` = dev Railway URL or `https://dev.agents.blackroad.systems`
-  - `CORE_API_URL` = core dev Railway URL
-- **staging**
-  - `PUBLIC_AGENTS_URL` = `https://staging.agents.blackroad.systems`
-  - `CORE_API_URL` = `https://staging.core.blackroad.systems`
-- **prod**
-  - `PUBLIC_AGENTS_URL` = `https://agents.blackroad.systems`
-  - `CORE_API_URL` = `https://core.blackroad.systems`
-
-Deployments are handled via GitHub Actions (`.github/workflows/deploy-agents.yml`) using Railway. Each push to `dev`, `staging`, or `main` builds the project, deploys both services, and performs a `/health` check against the environment URL.
+Deployments are handled via GitHub Actions (`.github/workflows/operator-deploy.yaml`). Each push to `dev`, `staging`, or `main` builds the project, deploys the `operator` service, and performs a `/health` check against the environment URL.

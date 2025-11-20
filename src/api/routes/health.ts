@@ -9,7 +9,8 @@ router.get('/health', async (_req, res) => {
   const [db, redis] = await Promise.all([checkDbConnection(), checkRedisConnection()]);
 
   res.json({
-    status: db === 'ok' && (redis === 'ok' || redis === 'disabled') ? 'ok' : 'error',
+    status:
+      (db === 'ok' || db === 'disabled') && (redis === 'ok' || redis === 'disabled') ? 'ok' : 'error',
     timestamp: new Date().toISOString(),
     environment: config.env,
     checks: {

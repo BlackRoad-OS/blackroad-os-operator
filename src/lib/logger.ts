@@ -13,7 +13,7 @@ function formatMessage(level: LogLevel, message: string, meta?: Record<string, u
   const base = {
     level,
     timestamp: new Date().toISOString(),
-    service: 'agents-runtime',
+    service: 'operator',
     env: config.env,
     message,
     ...meta,
