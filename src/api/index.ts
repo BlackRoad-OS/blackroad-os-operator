@@ -1,5 +1,5 @@
 import express from 'express';
-import { config } from '../config';
+import { config, isDatabaseEnabled, isRedisEnabled } from '../config';
 import healthRouter from './routes/health';
 import versionRouter from './routes/version';
 import { logger } from '../lib/logger';
@@ -20,17 +20,27 @@ app.use((err: Error, _req: express.Request, res: express.Response, _next: expres
 async function start() {
   logger.info('Starting agents-api server', {
     environment: config.env,
-    port: config.port,
+    port: config.operatorPort,
     coreApiUrl: config.coreApiUrl,
-    publicAgentsUrl: config.publicAgentsUrl,
-    redisEnabled: Boolean(config.redisUrl),
+    publicAgentsUrl: config.agentsApiUrl,
+    redisEnabled: isRedisEnabled,
+    databaseEnabled: isDatabaseEnabled,
   });
 
-  getDbPool();
-  getRedis();
+  if (isDatabaseEnabled) {
+    getDbPool();
+  } else {
+    logger.info('Database disabled - skipping connection');
+  }
 
-  app.listen(config.port, () => {
-    logger.info('agents-api listening', { port: config.port });
+  if (isRedisEnabled) {
+    getRedis();
+  } else {
+    logger.info('Redis disabled - skipping connection');
+  }
+
+  app.listen(config.operatorPort, () => {
+    logger.info('agents-api listening', { port: config.operatorPort });
   });
 }
 

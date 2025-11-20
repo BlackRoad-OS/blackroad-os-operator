@@ -1,60 +1,64 @@
-import { URL } from 'url';
+import express from 'express';
 import { config } from '../config';
-import { getDbPool } from '../lib/db';
-import { getRedis } from '../lib/queue';
 import { logger } from '../lib/logger';
+import { enqueueJob, getJobQueueState, startJobLoop, JobType } from './job-runner';
 
-function redactDbUrl(dbUrl: string): string {
+const app = express();
+app.use(express.json());
+
+app.get('/health', (_req, res) => {
+  res.json({ status: 'ok', queue: getJobQueueState(), timestamp: new Date().toISOString() });
+});
+
+app.get('/version', (_req, res) => {
+  res.json({
+    appVersion: config.appVersion,
+    commit: config.gitCommit,
+    buildTime: config.buildTime,
+    environment: config.env,
+  });
+});
+
+app.get('/jobs/health', (_req, res) => {
+  const queue = getJobQueueState();
+  res.json({
+    status: queue.pending === 0 && !queue.running ? 'idle' : 'processing',
+    queue,
+    timestamp: new Date().toISOString(),
+  });
+});
+
+app.post('/jobs/enqueue', (req, res) => {
+  const { type, payload } = req.body ?? {};
   try {
-    const urlObj = new URL(dbUrl);
-    if (urlObj.password) {
-      urlObj.password = '[redacted]';
+    if (!type) {
+      return res.status(400).json({ error: 'Job type is required' });
     }
-    return urlObj.toString();
-  } catch (e) {
-    return '[invalid db url]';
+    const job = enqueueJob(type as JobType, payload);
+    res.status(202).json({ job });
+  } catch (err) {
+    res.status(400).json({ error: (err as Error).message });
   }
-}
+});
+
+app.use((err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
+  logger.error('Unhandled worker API error', { error: err.message, stack: err.stack });
+  res.status(500).json({ error: 'Internal server error' });
+});
 
 async function bootstrapWorker() {
-  logger.info('Starting agents-worker', {
+  logger.info('Starting operator worker', {
     environment: config.env,
-    dbUrl: redactDbUrl(config.dbUrl),
-    redisEnabled: Boolean(config.redisUrl),
+    coreApiUrl: config.coreApiUrl,
+    agentsApiUrl: config.agentsApiUrl,
+    queuePollIntervalMs: config.queuePollIntervalMs,
   });
 
-  const pool = getDbPool();
-  const client = await pool.connect();
-  await client.query('SELECT 1');
-  client.release();
-  logger.info('Database connection ready for worker');
+  startJobLoop();
 
-  const redis = getRedis();
-  if (redis) {
-    await redis.ping();
-    logger.info('Redis connection ready for worker');
-  } else {
-    logger.info('Redis disabled - skipping connection');
-  }
-
-  logger.info('Worker ready - awaiting job subscriptions');
-
-  const heartbeat = setInterval(() => {
-    logger.debug('Worker heartbeat');
-  }, 60_000);
-
-  const shutdown = async (signal: string) => {
-    logger.warn(`Worker received ${signal}, shutting down`);
-    clearInterval(heartbeat);
-    await pool.end();
-    if (redis) {
-      await redis.quit();
-    }
-    process.exit(0);
-  };
-
-  process.on('SIGTERM', () => void shutdown('SIGTERM'));
-  process.on('SIGINT', () => void shutdown('SIGINT'));
+  app.listen(config.operatorPort, () => {
+    logger.info('Operator worker listening', { port: config.operatorPort });
+  });
 }
 
 bootstrapWorker().catch((err) => {
