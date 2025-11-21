@@ -1,27 +1,14 @@
 import express from 'express';
-import { loadEnv } from './env';
+import packageJson from '../package.json';
 
-export function createApp() {
-  const app = express();
+const app = express();
 
-  app.get('/health', (_req, res) => {
-    res.json({ status: 'ok' });
-  });
+app.get('/health', (_req, res) => {
+  res.json({ status: 'ok', service: 'operator' });
+});
 
-  return app;
-}
+app.get('/version', (_req, res) => {
+  res.json({ version: packageJson.version, service: 'operator' });
+});
 
-function bootstrap() {
-  loadEnv();
-  const port = Number(process.env.PORT) || 8080;
-  const app = createApp();
-
-  app.listen(port, () => {
-    // eslint-disable-next-line no-console
-    console.log(`BlackRoad OS Agents Orchestration Service listening on :${port}`);
-  });
-}
-
-if (require.main === module) {
-  bootstrap();
-}
+export default app;
