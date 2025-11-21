@@ -6,6 +6,9 @@ const app = express();
 app.get('/health', (_req, res) => {
   res.json({ status: 'ok', service: 'operator' });
 });
+  app.get('/health', (_req, res) => {
+    res.json({ status: 'ok', service: 'operator' });
+  });
 
 app.get('/version', (_req, res) => {
   res.json({ version: packageJson.version, service: 'operator' });
