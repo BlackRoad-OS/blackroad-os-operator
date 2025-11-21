@@ -1,38 +1,21 @@
 {
   "name": "blackroad-os-operator",
-  "version": "1.0.0",
-  "description": "Agents runtime with API and worker services for BlackRoad OS.",
+  "version": "0.1.0",
+  "description": "BlackRoad OS Agents Orchestration Service scaffold.",
   "main": "dist/index.js",
   "license": "MIT",
   "scripts": {
-    "dev": "ts-node src/index.ts",
+    "dev": "ts-node-dev --respawn src/index.ts",
     "build": "tsc",
-    "start": "node dist/index.js",
-    "test": "jest",
-    "start:api": "node dist/api/index.js",
-    "start:worker": "node dist/worker/index.js",
-    "dev:api": "ts-node src/api/index.ts",
-    "dev:worker": "ts-node src/worker/index.ts"
+    "start": "node dist/index.js"
   },
   "dependencies": {
     "dotenv": "^16.4.5",
-    "express": "^4.19.2",
-    "ioredis": "^5.4.1",
-    "node-fetch": "^2.7.0",
-    "pg": "^8.11.5"
+    "express": "^4.19.2"
   },
   "devDependencies": {
     "@types/express": "^4.17.21",
-    "@types/ioredis": "^4.28.10",
-    "@types/jest": "^29.5.12",
     "@types/node": "^20.11.30",
-    "@types/node-fetch": "^2.6.4",
-    "@types/pg": "^8.10.9",
-    "@types/supertest": "^2.0.16",
-    "jest": "^29.7.0",
-    "supertest": "^6.3.4",
-    "ts-jest": "^29.1.2",
-    "ts-node": "^10.9.2",
     "ts-node-dev": "^2.0.0",
     "typescript": "^5.4.5"
   }
