@@ -1,13 +1,15 @@
 import app from './index';
-import { loadEnv } from './env';
+import { getRuntimeConfig, loadEnv } from './env';
 import { startWorker } from './worker';
 
 loadEnv();
 
-const port = process.env.PORT || 8080;
+const runtimeConfig = getRuntimeConfig();
+const port = Number(runtimeConfig.port ?? process.env.PORT ?? 8080);
+const host = runtimeConfig.host || '0.0.0.0';
 
-const server = app.listen(port, () => {
-  console.log(`BlackRoad OS Operator listening on :${port}`);
+const server = app.listen(port, host, () => {
+  console.log(`BlackRoad OS Operator listening on ${host}:${port}`);
 
   startWorker();
 });
