@@ -5,7 +5,7 @@ export function createApp() {
   const app = express();
 
   app.get('/health', (_req, res) => {
-    res.json({ status: 'ok' });
+    res.json({ status: 'ok', service: 'operator' });
   });
 
   return app;
