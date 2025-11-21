@@ -1,0 +1,14 @@
+# BlackRoad OS Operator - Railway deployment configuration
+# Sample configuration file for Railway.app deployment
+# No secrets should be stored in this file
+
+[build]
+builder = "DOCKERFILE"
+dockerfilePath = "infra/Dockerfile"
+
+[deploy]
+startCommand = "uvicorn app.main:app --host 0.0.0.0 --port 8000"
+healthcheckPath = "/health"
+healthcheckTimeout = 300
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 10
