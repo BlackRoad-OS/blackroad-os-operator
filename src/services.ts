@@ -1,9 +1,17 @@
-import { OS_ROOT, SERVICE_BASE_URL } from './config/serviceConfig';
-import { config } from './config';
+export interface OperatorService {
+  id: string;
+  name: string;
+  baseUrl: string;
+  healthEndpoint: string;
+  infoEndpoint: string;
+}
 
-export const services = {
-  operator: SERVICE_BASE_URL,
-  osRoot: OS_ROOT,
-  coreApi: config.coreApiUrl ?? `${OS_ROOT}/core`,
-  agentsApi: config.agentsApiUrl ?? `${OS_ROOT}/agents`,
+export const operatorService: OperatorService = {
+  id: 'operator',
+  name: 'BlackRoad OS – Operator',
+  baseUrl: process.env.SERVICE_BASE_URL || 'https://operator.blackroad.systems',
+  healthEndpoint: '/health',
+  infoEndpoint: '/info',
 };
+
+export default operatorService;
