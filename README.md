@@ -1,72 +1,73 @@
-# BlackRoad OS — Operator Engine
+# BlackRoad OS – Operator
 
-## Short Description
+The Operator is the automation heart of BlackRoad OS. It exposes a small HTTP surface for orchestration metadata while coordinating workers, queues, and background flows that power the wider platform.
 
-Background workers, schedulers, and AI agent orchestration engine.
+## Stack
 
-## Long Description
+- **Runtime:** Node.js 18
+- **Language:** TypeScript
+- **Framework:** Express
+- **Kind:** Backend service (`operator`)
 
-Operator Engine is the automation heart of BlackRoad OS — running jobs, queues, schedulers, system-level background processes, and multi-agent workflows. It integrates with Lucidia, coordinates actions across Core and API, and ensures deterministic task execution.
+## Endpoints
 
-## What lives here?
-
-- **Operator (this repo)** – long-lived worker with a simple in-memory queue and HTTP surface for health, version, and job management.
-- **Agents API** – external orchestration/control-plane facade that triggers work on the operator.
+| Method | Path | Description |
+| --- | --- | --- |
+| `GET` | `/health` | Liveness probe returning service id and timestamp. |
+| `GET` | `/info` | Basic service info with version and environment. |
+| `GET` | `/version` | Detailed version/build metadata. |
+| `GET` | `/debug/env` | Safe snapshot of environment variables (common secrets redacted). |
 
 ## Environment Variables
 
-| Variable | Description |
+| Variable | Purpose |
 | --- | --- |
-| `NODE_ENV` | `development` / `staging` / `production` |
-| `OPERATOR_PORT` | HTTP port for the operator (defaults to `PORT` or `3001`) |
-| `CORE_API_URL` | URL of the Core backend for the current environment |
-| `AGENTS_API_URL` | URL of the Agents API triggering work on the operator |
-| `QUEUE_POLL_INTERVAL_MS` | How frequently to poll the in-memory queue for new jobs |
-| `JOB_MAX_ATTEMPTS` | Max attempts per job before marking it failed |
-| `LOG_LEVEL` | `debug` / `info` / `warn` / `error` |
-| `APP_VERSION` | Optional override for application version |
-| `GIT_COMMIT` | Git commit SHA (Railway also exposes `RAILWAY_GIT_COMMIT_SHA`) |
-| `BUILD_TIME` | Build timestamp if provided |
-| `DATABASE_URL` | Optional Postgres connection string (disabled if absent) |
-| `REDIS_URL` | Optional Redis connection string (disabled if absent) |
+| `NODE_ENV` | Runtime environment (`development`/`staging`/`production`). |
+| `PORT` / `OPERATOR_PORT` | HTTP port (defaults to `8080`). |
+| `CORE_API_URL` | URL of the Core backend. |
+| `AGENTS_API_URL` | URL of the Agents API. |
+| `LOG_LEVEL` | Logging level for existing worker/logger utilities. |
+| `QUEUE_POLL_INTERVAL_MS` | Queue polling interval for worker routines. |
+| `JOB_MAX_ATTEMPTS` | Maximum attempts per job. |
+| `APP_VERSION`, `GIT_COMMIT`, `BUILD_TIME` | Optional build metadata. |
+| `DATABASE_URL`, `REDIS_URL` | Optional backing services; if omitted those clients stay disabled. |
+| `OS_ROOT` | Root URL for the broader BlackRoad OS (`https://blackroad.systems`). |
+| `SERVICE_BASE_URL` | Public base URL for this service (used in service discovery helpers). |
 
-## Local Development
+Copy `.env.example` to `.env` and fill in values as needed.
 
-Install dependencies and build:
+## Running locally
 
 ```bash
 npm install
+npm run dev
+```
+
+The service listens on `http://localhost:8080` by default and serves the endpoints above. Existing worker and legacy API entrypoints remain available via `npm run dev:worker` and `npm run dev:api` if needed.
+
+## Tests
+
+```bash
+npm test
+```
+
+## Build
+
+```bash
 npm run build
-```
-
-Start the operator with sensible defaults:
-
-```bash
-NODE_ENV=development OPERATOR_PORT=3001 CORE_API_URL=http://localhost:4000 AGENTS_API_URL=http://localhost:4100 npm run start:worker
-```
-
-HTTP surface:
-
-- `GET /health` – process + queue status
-- `GET /version` – version/build metadata
-- `GET /jobs/health` – queue status snapshot
-- `POST /jobs/enqueue` – enqueue a job: `{"type":"health-check","payload":{"targetUrl":"http://localhost:4000"}}`
-
-## Enqueue a test job
-
-```bash
-curl -X POST http://localhost:3001/jobs/enqueue \
-  -H "Content-Type: application/json" \
-  -d '{"type":"health-check","payload":{"targetUrl":"http://localhost:4000"}}'
 ```
 
 ## Deployment (Railway)
 
-Project: **blackroad-os-operator**
+Railway expects:
 
-- Service: `operator`
-- Build: `npm install && npm run build`
-- Start: `npm run start:worker`
-- Health check: `/health`
+- **Build:** `npm install && npm run build`
+- **Start:** `npm start`
+- **Port:** `8080`
+- **Healthcheck:** `GET /health`
 
-Deployments are handled via GitHub Actions (`.github/workflows/operator-deploy.yaml`). Each push to `dev`, `staging`, or `main` builds the project, deploys the `operator` service, and performs a `/health` check against the environment URL.
+The included `railway.json` matches these defaults. The Dockerfile uses a Node 18 Alpine multi-stage build suitable for Railway or any container runtime.
+
+## Role in BlackRoad OS
+
+The Operator coordinates automation across the platform. It provides a lightweight HTTP surface for status (`/health`, `/info`, `/version`, `/debug/env`) while powering background workers that interact with the Core backend and Agents API. Other BlackRoad OS services can discover it via the shared `OS_ROOT` and `SERVICE_BASE_URL` values.

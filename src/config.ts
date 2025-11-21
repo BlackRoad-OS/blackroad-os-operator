@@ -20,7 +20,9 @@ type OptionalEnv =
   | 'GIT_COMMIT'
   | 'BUILD_TIME'
   | 'DATABASE_URL'
-  | 'REDIS_URL';
+  | 'REDIS_URL'
+  | 'OS_ROOT'
+  | 'SERVICE_BASE_URL';
 
 function getEnv(name: RequiredEnv, fallback?: string): string {
   const value = process.env[name] ?? fallback;
@@ -57,11 +59,13 @@ export interface RuntimeConfig {
   buildTime?: string;
   databaseUrl?: string;
   redisUrl?: string;
+  osRoot?: string;
+  serviceBaseUrl?: string;
 }
 
 export const config: RuntimeConfig = {
   env: getOptionalEnv('NODE_ENV', 'development') as string,
-  operatorPort: getNumberEnv('OPERATOR_PORT', Number(getOptionalEnv('PORT', '3001'))),
+  operatorPort: getNumberEnv('OPERATOR_PORT', Number(getOptionalEnv('PORT', '8080'))),
   coreApiUrl: getEnv('CORE_API_URL', 'http://localhost:4000'),
   agentsApiUrl: getEnv('AGENTS_API_URL', 'http://localhost:4100'),
   queuePollIntervalMs: getNumberEnv('QUEUE_POLL_INTERVAL_MS', 1_000),
@@ -72,6 +76,8 @@ export const config: RuntimeConfig = {
   buildTime: getOptionalEnv('BUILD_TIME'),
   databaseUrl: getOptionalEnv('DATABASE_URL'),
   redisUrl: getOptionalEnv('REDIS_URL'),
+  osRoot: getOptionalEnv('OS_ROOT', 'https://blackroad.systems'),
+  serviceBaseUrl: getOptionalEnv('SERVICE_BASE_URL'),
 };
 
 export const isRedisEnabled = Boolean(config.redisUrl);
