@@ -1,78 +1,46 @@
 # BlackRoad OS – Operator
 
-Backend service that powers background workers, queues, and agent automation tasks for BlackRoad OS. It also exposes a minimal HTTP surface for health and metadata.
+TypeScript/Express service that orchestrates background jobs and automation for BlackRoad OS. It exposes lightweight HTTP endpoints for health and metadata while delegating job handling to the worker runtime.
 
-## Running locally
+## Getting Started
+
+Install dependencies and start the development server:
 
 ```bash
 npm install
 npm run dev
 ```
 
-The service listens on port `8080` by default.
+The service binds to `0.0.0.0` and listens on the port defined by `PORT` (default `8080`).
 
-## Build & start
+## Production
+
+Build the project then start the compiled server:
 
 ```bash
 npm run build
 npm start
 ```
 
-## System endpoints
+## Health
 
-- `GET /health`
-- `GET /info`
-- `GET /version`
-- `GET /debug/env`
+- **Path:** `GET /health`
+- **Response:**
 
-## Deployment (Railway)
-
-- Port: `8080`
-- Healthcheck: `GET /health`
-- Build: `npm install && npm run build`
-- Start: `npm start`
-- Configure environment variables using `.env.example` as a reference
-
-## Environment variables
-
-See `.env.example` for required and optional values, including `OS_ROOT`, `SERVICE_BASE_URL`, `LOG_LEVEL`, and `PORT`.
-# blackroad-os-operator
-
-Operator engine for BlackRoad OS — runs jobs, schedulers, background workers, and coordinates agent workflows across OS, Prism, and Lucidia. Handles automation, task orchestration, and system-level operations.
-
-## Structure
-
-- **app/**: FastAPI application with health check endpoint
-- **workers/**: Background job and agent orchestration modules
-- **infra/**: Infrastructure configuration (Dockerfile, requirements, Railway config)
-
-## Quick Start
-
-### Local Development
-
-1. Install dependencies:
-```bash
-pip install -r infra/requirements.txt
+```json
+{
+  "status": "ok",
+  "service": "operator"
+}
 ```
 
-2. Run the application:
-```bash
-uvicorn app.main:app --reload
-```
+`/api/health` is kept as a backward-compatible alias.
 
-3. Access the service:
-- Health check: http://localhost:8000/health
-- API docs: http://localhost:8000/docs
+## Jobs API
 
-### Docker
+- `POST /jobs/enqueue` – enqueue a job with `{ type, payload }`
+- `GET /jobs/status` – check queue size
 
-Build and run with Docker:
+## Environment Variables
 
-```bash
-docker build -f infra/Dockerfile -t blackroad-os-operator .
-docker run -p 8000:8000 blackroad-os-operator
-```
-
-### Deployment
-
-The service can be deployed to Railway using the provided `infra/railway.toml` configuration.
+`PORT`, `HOST`, and other service settings are loaded from `.env` (see `src/env.ts`).
