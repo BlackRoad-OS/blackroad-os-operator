@@ -1,20 +1,33 @@
+export type LogLevel = "debug" | "info" | "warn" | "error";
+
+const levelWeights: Record<LogLevel, number> = {
+  debug: 10,
+  info: 20,
+  warn: 30,
+  error: 40,
+};
+
 export interface Logger {
+  debug: (...args: unknown[]) => void;
   info: (...args: unknown[]) => void;
   warn: (...args: unknown[]) => void;
   error: (...args: unknown[]) => void;
-  debug: (...args: unknown[]) => void;
 }
 
-export function createLogger(level: 'debug' | 'info' | 'warn' | 'error' = 'info'): Logger {
-  const levels: Record<string, number> = { debug: 10, info: 20, warn: 30, error: 40 };
-  const current = levels[level] ?? levels.info;
+export function createLogger(level: LogLevel): Logger {
+  const threshold = levelWeights[level] ?? levelWeights.info;
 
-  const shouldLog = (msgLevel: keyof typeof levels) => levels[msgLevel] >= current;
+  const logAt = (msgLevel: LogLevel, args: unknown[]) => {
+    if (levelWeights[msgLevel] < threshold) return;
+    const prefix = `[${new Date().toISOString()}] [${msgLevel.toUpperCase()}]`;
+    // eslint-disable-next-line no-console
+    console[msgLevel === "debug" ? "log" : msgLevel](prefix, ...args);
+  };
 
   return {
-    info: (...args: unknown[]) => shouldLog('info') && console.info('[INFO]', ...args),
-    warn: (...args: unknown[]) => shouldLog('warn') && console.warn('[WARN]', ...args),
-    error: (...args: unknown[]) => shouldLog('error') && console.error('[ERROR]', ...args),
-    debug: (...args: unknown[]) => shouldLog('debug') && console.debug('[DEBUG]', ...args),
+    debug: (...args: unknown[]) => logAt("debug", args),
+    info: (...args: unknown[]) => logAt("info", args),
+    warn: (...args: unknown[]) => logAt("warn", args),
+    error: (...args: unknown[]) => logAt("error", args),
   };
 }

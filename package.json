@@ -2,22 +2,18 @@
   "name": "blackroad-os-operator",
   "version": "0.1.0",
   "description": "BlackRoad OS Agents Orchestration Service scaffold.",
-  "main": "dist/server.js",
+  "main": "dist/index.js",
   "license": "MIT",
   "scripts": {
-    "dev": "bun run src/server.ts",
+    "dev": "tsx src/index.ts",
     "build": "tsc -p tsconfig.json",
-    "start": "bun run src/server.ts",
+    "start": "node dist/index.js",
     "lint": "eslint .",
-    "test": "vitest",
-    "dev:worker": "tsx src/worker/index.ts",
-    "start:worker": "node dist/worker/index.js",
     "test": "vitest run"
   },
   "dependencies": {
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
-    "yaml": "^2.8.1"
     "js-yaml": "^4.1.0"
   },
   "devDependencies": {
@@ -26,7 +22,6 @@
     "@typescript-eslint/eslint-plugin": "^8.12.1",
     "@typescript-eslint/parser": "^8.12.1",
     "eslint": "^9.5.0",
-    "vitest": "^4.0.13",
     "tsx": "^4.15.7",
     "typescript": "^5.4.5",
     "vitest": "^1.6.0"

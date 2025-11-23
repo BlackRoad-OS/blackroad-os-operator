@@ -8,7 +8,11 @@
     "esModuleInterop": true,
     "resolveJsonModule": true,
     "skipLibCheck": true,
-    "sourceMap": true
+    "sourceMap": true,
+    "baseUrl": "./",
+    "paths": {
+      "blackroad-os-core": ["src/shims/blackroad-os-core"]
+    }
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist"]

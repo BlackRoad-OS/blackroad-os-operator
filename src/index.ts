@@ -1,52 +1,41 @@
-import express from 'express';
-import { healthHandler } from './health/health';
-import healthRoutes from './routes/healthRoutes';
-import jobsRoutes from './routes/jobsRoutes';
-import { createInternalRouter } from './api/internalRouter';
-import { AgentLoader } from './runtime/agentLoader';
-import { LocalEventBus } from './runtime/eventBus';
-import { DevPsShaInfinity } from './runtime/journal';
-import { createLogger } from './utils/logger';
-import { getOperatorConfig, loadEnv } from './config/env';
-import { FinanceOrchestrator } from './orchestrators/financeOrchestrator';
-import { RegistryPaths } from './config/defaults';
-import { AgentContext } from './runtime/agentContext';
+import http from "http";
+import { getConfig } from "./config";
+import { createApp } from "./app";
+import { createDefaultAgentRegistry } from "./runtime/agentRegistry";
+import { InMemoryJobQueue } from "./runtime/jobQueue";
+import { Worker } from "./runtime/worker";
+import { EventBus } from "./events/eventBus";
+import { InMemoryJournalStore, eventToJournalEntry } from "./integrations/journalStore";
+import { createLogger } from "./utils/logger";
 
-const app = express();
-
-app.use(express.json());
-
-app.get('/health', healthHandler);
-app.use(healthRoutes);
-app.use('/jobs', jobsRoutes);
-
-loadEnv();
-const config = getOperatorConfig();
+const config = getConfig();
 const logger = createLogger(config.logLevel);
-const eventBus = new LocalEventBus(logger);
-const journal = new DevPsShaInfinity();
+const registry = createDefaultAgentRegistry(logger);
+const queue = new InMemoryJobQueue();
+const eventBus = new EventBus(config.eventBufferSize, logger);
+const journalStore = new InMemoryJournalStore();
 
-const ctx: AgentContext = {
-  logger,
-  eventBus,
-  journal,
-  config,
-  schedule: (interval, fn) => setInterval(() => fn().catch(logger.error), interval),
-};
+// Persist events into journal store
+const unsubscribeJournal = eventBus.subscribe((event) => {
+  journalStore
+    .append(eventToJournalEntry(event))
+    .catch((err) => logger.error("Failed to append journal entry", err));
+});
 
-const loader = new AgentLoader(ctx);
-const financeOrchestrator = new FinanceOrchestrator({ ctx });
+const worker = new Worker(registry, queue, eventBus, config, logger);
+worker.start();
 
-loader
-  .loadFromRegistry(RegistryPaths.agents)
-  .then(() => loader.initAll())
-  .then(() => financeOrchestrator.scheduleDefaults())
-  .then(() => {
-    app.use('/internal', createInternalRouter({ loader, financeOrchestrator, eventBus }));
-    logger.info('Internal API ready');
-  })
-  .catch((err) => {
-    logger.error('Failed to initialize runtime', err);
-  });
+const app = createApp({ config, registry, queue, worker, eventBus, logger });
+const server = http.createServer(app);
 
-export default app;
+server.listen(config.port, () => {
+  const baseUrl = `http://localhost:${config.port}/internal`;
+  logger.info(`Operator starting in ${config.nodeEnv} mode on ${baseUrl}`);
+});
+
+process.on("SIGTERM", () => {
+  logger.info("Shutting down operator");
+  worker.stop();
+  unsubscribeJournal();
+  server.close();
+});
