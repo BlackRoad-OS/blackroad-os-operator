@@ -10,11 +10,13 @@
     "start": "bun run src/server.ts",
     "lint": "eslint .",
     "dev:worker": "tsx src/worker/index.ts",
-    "start:worker": "node dist/worker/index.js"
+    "start:worker": "node dist/worker/index.js",
+    "test": "vitest run"
   },
   "dependencies": {
     "dotenv": "^16.4.5",
-    "express": "^4.19.2"
+    "express": "^4.19.2",
+    "js-yaml": "^4.1.0"
   },
   "devDependencies": {
     "@types/express": "^4.17.21",
@@ -23,7 +25,8 @@
     "@typescript-eslint/parser": "^8.12.1",
     "eslint": "^9.5.0",
     "tsx": "^4.15.7",
-    "typescript": "^5.4.5"
+    "typescript": "^5.4.5",
+    "vitest": "^1.6.0"
   },
   "engines": {
     "node": ">=20"

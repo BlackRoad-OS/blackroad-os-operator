@@ -1,10 +1,10 @@
 import app from './index';
-import { getRuntimeConfig, loadEnv } from './env';
+import { getOperatorConfig, loadEnv } from './config/env';
 import { startWorker } from './worker';
 
 loadEnv();
 
-const runtimeConfig = getRuntimeConfig();
+const runtimeConfig = getOperatorConfig();
 const port = Number(process.env.PORT ?? runtimeConfig.port ?? 8080);
 const host = '0.0.0.0';
 
