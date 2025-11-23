@@ -1,0 +1,20 @@
+orchestrators:
+  - id: finance_orchestrator
+    file: "orchestrators/financeOrchestrator"
+    description: Coordinates cross-finance workflows.
+
+  - id: infra_orchestrator
+    file: "orchestrators/infraOrchestrator"
+    description: Ensures infrastructure posture and reconciliations.
+
+  - id: compliance_orchestrator
+    file: "orchestrators/complianceOrchestrator"
+    description: Runs periodic surveillance and control checks.
+
+  - id: ops_orchestrator
+    file: "orchestrators/opsOrchestrator"
+    description: Oversees platform operations and heartbeats.
+
+  - id: research_orchestrator
+    file: "orchestrators/researchOrchestrator"
+    description: Coordinates research workloads and insights refreshes.

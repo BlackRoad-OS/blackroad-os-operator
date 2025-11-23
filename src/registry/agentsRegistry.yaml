@@ -1,0 +1,95 @@
+agents:
+  # FINANCE LAYER
+  - id: unified_ledger
+    file: "agents/finance/unifiedLedgerAgent"
+    domain: finance
+    description: Maintains general ledger, subledgers, and journal events.
+
+  - id: market_data
+    file: "agents/finance/marketDataAgent"
+    domain: finance
+    description: Retrieves and normalizes market/instrument data.
+
+  - id: accounting_close
+    file: "agents/finance/accountingCloseAgent"
+    domain: finance
+
+  - id: treasury_liquidity
+    file: "agents/finance/treasuryLiquidityAgent"
+    domain: finance
+
+  - id: fpna_forecasting
+    file: "agents/finance/fpnaForecastingAgent"
+    domain: finance
+
+  - id: capital_budgeting
+    file: "agents/finance/capitalBudgetingAgent"
+    domain: finance
+
+  - id: capital_structure
+    file: "agents/finance/capitalStructureAgent"
+    domain: finance
+
+  - id: working_capital
+    file: "agents/finance/workingCapitalAgent"
+    domain: finance
+
+  # INFRA LAYER
+  - id: infra_provision
+    file: "agents/infra/infraProvisionAgent"
+    domain: infra
+
+  - id: dns_agent
+    file: "agents/infra/dnsAgent"
+    domain: infra
+
+  - id: monitoring_agent
+    file: "agents/infra/monitoringAgent"
+    domain: infra
+
+  - id: secrets_agent
+    file: "agents/infra/secretsAgent"
+    domain: infra
+
+  # COMPLIANCE LAYER
+  - id: aml_agent
+    file: "agents/compliance/amlAgent"
+    domain: compliance
+
+  - id: kyc_agent
+    file: "agents/compliance/kycAgent"
+    domain: compliance
+
+  - id: suitability_agent
+    file: "agents/compliance/suitabilityAgent"
+    domain: compliance
+
+  - id: supervisory_agent
+    file: "agents/compliance/supervisoryAgent"
+    domain: compliance
+
+  # OPS LAYER
+  - id: scheduler
+    file: "agents/ops/schedulerAgent"
+    domain: ops
+
+  - id: notification_agent
+    file: "agents/ops/notificationAgent"
+    domain: ops
+
+  - id: incident_response
+    file: "agents/ops/incidentResponseAgent"
+    domain: ops
+
+  # RESEARCH LAYER
+  - id: model_training
+    file: "agents/research/modelTrainingAgent"
+    domain: research
+
+  - id: insights_agent
+    file: "agents/research/insightsAgent"
+    domain: research
+
+  - id: market_intel_agent
+    file: "agents/research/marketIntelAgent"
+    domain: research
