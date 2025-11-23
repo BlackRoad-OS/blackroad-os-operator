@@ -5,11 +5,11 @@ import { startWorker } from './worker';
 loadEnv();
 
 const runtimeConfig = getRuntimeConfig();
-const port = Number(runtimeConfig.port ?? process.env.PORT ?? 8080);
-const host = runtimeConfig.host || '0.0.0.0';
+const port = Number(process.env.PORT ?? runtimeConfig.port ?? 8080);
+const host = '0.0.0.0';
 
 const server = app.listen(port, host, () => {
-  console.log(`BlackRoad OS Operator listening on ${host}:${port}`);
+  console.log(`[blackroad-os-operator] listening on http://${host}:${port}`);
 
   startWorker();
 });
