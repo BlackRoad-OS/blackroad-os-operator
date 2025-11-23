@@ -1,6 +1,6 @@
 import { Job, JobStatus, PsShaInfinity } from "blackroad-os-core";
 
-export interface QueuedJob<I = unknown, O = unknown> extends Job<I, O> {}
+export type QueuedJob<I = unknown, O = unknown> = Job<I, O>;
 
 export class InMemoryJobQueue {
   private queue: QueuedJob[] = [];

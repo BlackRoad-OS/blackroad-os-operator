@@ -20,7 +20,6 @@ export function createLogger(level: LogLevel): Logger {
   const logAt = (msgLevel: LogLevel, args: unknown[]) => {
     if (levelWeights[msgLevel] < threshold) return;
     const prefix = `[${new Date().toISOString()}] [${msgLevel.toUpperCase()}]`;
-    // eslint-disable-next-line no-console
     console[msgLevel === "debug" ? "log" : msgLevel](prefix, ...args);
   };
 

@@ -46,6 +46,7 @@ export function createApp({ config, registry, queue, worker, eventBus, logger }:
   app.use("/internal", internalRouter);
 
   app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
+    void _next;
     logger.error("Unhandled error", err);
     const status = 500;
     return res.status(status).json({

@@ -9,11 +9,11 @@ export interface AgentHandle<I = unknown, O = unknown> {
 export interface AgentMetadataWithState extends AgentMetadata, AgentState {}
 
 export class AgentRegistry {
-  private agents = new Map<PsShaInfinity, AgentHandle<any, any>>();
+  private agents = new Map<PsShaInfinity, AgentHandle<unknown, unknown>>();
 
   constructor(private logger?: Logger) {}
 
-  registerAgent(agent: CoreAgent<any, any>): void {
+  registerAgent<I, O>(agent: CoreAgent<I, O>): void {
     const existing = this.agents.get(agent.metadata.id);
     if (existing) {
       this.logger?.warn(`Agent ${agent.metadata.id} already registered, overwriting`);
