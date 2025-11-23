@@ -1,0 +1,225 @@
+agents:
+  - id: unified_ledger
+    name: "Unified Ledger & Subledgers Agent"
+    description: "Maintains double-entry accounting ledgers for BlackRoad: general ledger, management ledger, and regulatory ledgers."
+    mandate:
+      - Design and enforce a coherent chart of accounts.
+      - Accept transaction events from across the OS and transform them into balanced journal entries.
+      - Maintain subledgers and reconciliations.
+    inputs:
+      - Transaction events (trades, invoices, subscriptions, expenses, payroll, tax, manual journal entries).
+      - Configuration for chart of accounts and posting rules.
+    outputs:
+      - Journal entries.
+      - Trial balances.
+      - Account balances by period.
+    critical_reports:
+      - period_trial_balance
+      - subledger_reconciliation
+    escalation_rules:
+      - Any structural change to the chart of accounts.
+      - Any back-dated journal entry over a configurable threshold.
+      - Any manual journal entry explicitly flagged as requires_human_approval.
+    dependencies: []
+    data_sources:
+      - Core database.
+      - Event bus.
+    status: experimental
+
+  - id: market_data
+    name: "Market & Reference Data Agent"
+    description: Centralizes instrument reference data and market prices (equities, bonds, funds, FX, rates).
+    mandate:
+      - Maintain an instrument master for all tradable/valued instruments.
+      - Ingest and normalize prices and curves from external sources.
+    inputs:
+      - External price feeds.
+      - Instrument metadata sources.
+    outputs:
+      - Instrument master snapshots.
+      - End-of-day price files.
+      - Yield curves and other reference curves.
+    critical_reports:
+      - market_data_quality_report
+      - stale_feed_alerts
+    escalation_rules:
+      - Change of data vendor.
+      - Data gaps or anomalies exceeding thresholds.
+    dependencies: []
+    data_sources:
+      - External APIs.
+      - Internal DB.
+    status: experimental
+
+  - id: accounting_close
+    name: "Accounting & Close Agent"
+    description: Implements accrual accounting, runs the monthly/quarterly close, and produces financial statements.
+    mandate:
+      - Generate adjusting entries and period-end entries (accruals, deferrals, amortizations).
+      - Produce Income Statement, Balance Sheet, Cash Flow Statement, and Statement of Equity.
+      - Perform variance analysis vs prior periods and budgets.
+    inputs:
+      - Journal entries and account balances from unified_ledger.
+      - Accounting policy configuration.
+    outputs:
+      - Period financial statements.
+      - Adjusting journal entries.
+      - Close checklist status.
+    critical_reports:
+      - period_close_package
+      - variance_analysis
+    escalation_rules:
+      - Any material adjustment above a defined threshold.
+      - Changes to accounting policies.
+      - Detection of errors requiring restatement.
+    dependencies:
+      - unified_ledger
+      - market_data
+    data_sources:
+      - Ledger DB.
+      - Policy config store.
+    status: experimental
+
+  - id: treasury_liquidity
+    name: "Treasury & Liquidity Agent"
+    description: Manages cash, short-term investments, and ensures sufficient liquidity via a rolling forecast.
+    mandate:
+      - Maintain a 13-week rolling cash forecast.
+      - Propose sweeps, short-term investments, or credit facility draws.
+      - Monitor liquidity and covenant metrics.
+    inputs:
+      - Current bank balances and statements.
+      - Payables/receivables schedules.
+      - Forecast data from FP&A.
+    outputs:
+      - Cash forecasts.
+      - Recommended treasury actions.
+    critical_reports:
+      - weekly_cash_forecast
+      - liquidity_and_covenant_report
+    escalation_rules:
+      - Any draw on or amendment to credit facilities.
+      - Breach of minimum liquidity floor.
+      - Any change of core banking relationships.
+    dependencies:
+      - accounting_close
+      - fpna_forecasting
+    data_sources:
+      - Banking APIs.
+      - Internal financial DB.
+    status: experimental
+
+  - id: fpna_forecasting
+    name: "FP&A / Budgeting & Forecasting Agent"
+    description: Maintains rolling financial forecasts and budgets; provides scenario and sensitivity analysis.
+    mandate:
+      - Generate 12–24 month forecasts under base, bull, and bear cases.
+      - Produce pro forma IS/BS/CF and driver-based sensitivities.
+      - Reconcile forecasts to actuals and explain variances.
+    inputs:
+      - Historical financial statements.
+      - Revenue pipeline metrics.
+      - Headcount and compensation plans.
+      - Infrastructure cost curves.
+    outputs:
+      - Forecast models and projections.
+      - Budget vs actual dashboards/feeds.
+    critical_reports:
+      - quarterly_forecast_package
+      - budget_vs_actual_report
+    escalation_rules:
+      - Significant change to core assumptions (growth, churn, pricing, infra cost per user).
+      - Major deviation from forecast.
+    dependencies:
+      - accounting_close
+      - market_data
+    data_sources:
+      - Data warehouse.
+      - CRM / subscription systems.
+    status: experimental
+
+  - id: capital_budgeting
+    name: "Capital Budgeting Agent"
+    description: Evaluates internal projects using NPV/IRR/payback and produces capital allocation recommendations.
+    mandate:
+      - Analyze project cash flows using accepted capital budgeting techniques.
+      - Rank projects by economic value added.
+      - Perform post-implementation reviews when data becomes available.
+    inputs:
+      - Projected cash flows per project.
+      - Discount rates and hurdle rates from capital_structure.
+    outputs:
+      - Project NPV, IRR, payback metrics.
+      - Recommendation (accept/reject/defer).
+    critical_reports:
+      - capital_allocation_recommendation_list
+      - post_implementation_review_summary
+    escalation_rules:
+      - Approval of any project exceeding spend thresholds.
+      - Overrides of negative NPV recommendations.
+    dependencies:
+      - fpna_forecasting
+      - capital_structure
+    data_sources:
+      - Project management systems.
+      - Forecast models.
+    status: experimental
+
+  - id: capital_structure
+    name: "Capital Structure & Funding Agent"
+    description: Manages and recommends the firm’s capital structure and funding strategy.
+    mandate:
+      - Maintain an up-to-date view of debt, equity, and hybrid instruments.
+      - Recommend optimal funding mix and timing of raises.
+      - Calculate and update WACC.
+    inputs:
+      - Current capital structure detail.
+      - Market conditions (rates, valuations).
+      - Forecasts from FP&A.
+    outputs:
+      - Funding proposals.
+      - Capital structure summaries.
+      - WACC estimates.
+    critical_reports:
+      - capital_structure_summary
+      - funding_runway_analysis
+      - dilution_scenarios
+    escalation_rules:
+      - Any external capital raise or new security issuance.
+      - Major leverage change.
+    dependencies:
+      - accounting_close
+      - market_data
+      - fpna_forecasting
+    data_sources:
+      - Internal cap table systems.
+      - Market data feeds.
+    status: experimental
+
+  - id: working_capital
+    name: "Working Capital & Trade Credit Agent"
+    description: Oversees receivables, payables, and inventory (if any) to optimize the cash conversion cycle.
+    mandate:
+      - Monitor DSO, DPO, and DIO.
+      - Propose credit limits and terms for customers and suppliers.
+      - Flag risky or delinquent counterparties.
+    inputs:
+      - AR and AP aging reports.
+      - Customer credit profiles and payment history.
+      - Supplier terms.
+    outputs:
+      - Recommended credit limits and terms.
+      - Working capital KPIs.
+    critical_reports:
+      - monthly_working_capital_report
+      - high_risk_counterparty_list
+    escalation_rules:
+      - Write-offs above a defined threshold.
+      - Changes to standard customer or vendor terms.
+    dependencies:
+      - unified_ledger
+      - treasury_liquidity
+    data_sources:
+      - Billing and AP systems.
+      - Credit data providers.
+    status: experimental
