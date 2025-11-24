@@ -10,6 +10,8 @@ import { createAgentsRouter } from "./routes/agents";
 import { createJobsRouter } from "./routes/jobs";
 import { createEventsRouter } from "./routes/events";
 import { createHealthRouter } from "./routes/health";
+import { BuildInfo } from "./utils/buildInfo";
+import { createMetaRouter } from "./routes/meta";
 
 export interface AppDependencies {
   config: OperatorConfig;
@@ -18,9 +20,10 @@ export interface AppDependencies {
   worker: Worker;
   eventBus: EventBus;
   logger: Logger;
+  buildInfo: BuildInfo;
 }
 
-export function createApp({ config, registry, queue, worker, eventBus, logger }: AppDependencies) {
+export function createApp({ config, registry, queue, worker, eventBus, logger, buildInfo }: AppDependencies) {
   const app = express();
 
   app.use(express.json());
@@ -34,6 +37,7 @@ export function createApp({ config, registry, queue, worker, eventBus, logger }:
   app.use(correlationIdMiddleware);
 
   const internalRouter = express.Router();
+  internalRouter.use(createMetaRouter({ buildInfo, config }));
   internalRouter.use(createHealthRouter({ worker, queue, config }));
   internalRouter.use(createAgentsRouter({ registry }));
   internalRouter.use(createJobsRouter({ queue, eventBus }));

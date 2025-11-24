@@ -36,6 +36,7 @@ npm start
 All routes are prefixed with `/internal`:
 
 - `GET /internal/health` – runtime health including worker status and queue stats
+- `GET /internal/version` – build metadata (service, version, git SHA, uptime)
 - `GET /internal/agents` – list registered agents (supports `status` and `q` filters)
 - `GET /internal/agents/:id` – fetch a single agent
 - `POST /internal/jobs` – enqueue a job `{ type, agentId?, input? }`

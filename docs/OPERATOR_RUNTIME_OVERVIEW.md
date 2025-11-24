@@ -30,4 +30,4 @@ The Operator hosts agents and dispatches jobs using in-process primitives. It is
 3. Jobs can target the new agent by specifying `agentId` when enqueuing.
 
 ## Internal HTTP API
-The Express app mounted in `src/app.ts` exposes `/internal` routes for health, agents, jobs, and events. These endpoints are meant for internal services such as `blackroad-os-api`.
+The Express app mounted in `src/app.ts` exposes `/internal` routes for meta/build info, health, agents, jobs, and events. These endpoints are meant for internal services such as `blackroad-os-api`.
