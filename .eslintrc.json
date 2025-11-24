@@ -1,7 +1,4 @@
 {
-  "extends": ["next", "next/core-web-vitals", "prettier"],
-  "rules": {
-    "no-console": ["warn", {"allow": ["warn", "error"]}]
   "root": true,
   "parser": "@typescript-eslint/parser",
   "parserOptions": {
