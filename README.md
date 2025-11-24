@@ -1,53 +1,64 @@
-# BlackRoad OS – Operator
+# BlackRoad OS Operator Engine · Gen-0
 
-`blackroad-os-operator` is the automation runtime for BlackRoad OS. It supervises agents, manages jobs, and emits domain events / journal entries through an internal HTTP API that is consumed by `blackroad-os-api`.
+Operator-Gen-0 is a lightweight, headless orchestrator for coordinating agents across BlackRoad OS. It exposes a small Fastify API, a BullMQ queue factory backed by Redis, and a cron-driven heartbeat scheduler.
 
-## Purpose
-- Run and supervise agents from `blackroad-os-core`
-- Enqueue and dispatch jobs with a lightweight worker runtime
-- Emit `DomainEvent` objects and journal entries for RoadChain pipelines
-- Provide internal-only HTTP endpoints under `/internal/*`
+## Tech baseline
+- Node.js 20
+- TypeScript 5 (strict)
+- Fastify 4.x
+- BullMQ + Redis
+- node-cron
+- Vitest for tests
+- ESLint + Prettier
 
-This service participates in the shared GitHub project **"BlackRoad OS - Master Orchestration"** alongside sibling repos such as `blackroad-os-core` (upstream) and `blackroad-os-api` (downstream).
+## Getting started
+1. Install dependencies:
+   ```bash
+   pnpm install
+   ```
+2. Start a local Redis instance (e.g., `redis-server`).
+3. Run the dev server:
+   ```bash
+   pnpm dev
+   ```
+   The API listens on port 4000 by default.
 
-## Getting Started
-Install dependencies and start the development server:
-
+### Environment
+Copy the example environment file and adjust as needed:
 ```bash
-npm install
-npm run dev
+cp operator.env.example .env
 ```
 
-### Environment Variables
-- `PORT` (default `4100`)
-- `LOG_LEVEL` (default `info`)
-- `MAX_CONCURRENT_JOBS` (default `4`)
-- `EVENT_BUFFER_SIZE` (default `200`)
+Key variables:
+- `PORT` (default: 4000)
+- `REDIS_URL` (e.g., `redis://localhost:6379`)
+- `COMMIT_SHA` (for `/version`)
+- `LOG_LEVEL` (pino log level)
 
-## Running in Production
-Build then start the compiled server:
+### HTTP API
+- `GET /health` → `{ status: 'ok', uptime }`
+- `GET /version` → `{ version: '0.0.1', commit }`
 
+### Jobs and schedulers
+- Queues are created via a shared Redis connection (`getQueue(name)`).
+- `sample.job.ts` registers a stub processor that logs incoming payloads.
+- `heartbeat.scheduler.ts` enqueues a `heartbeat` job every 5 minutes with `{ ts }`.
+
+### Docker
+Build and run the container:
 ```bash
-npm run build
-npm start
+docker build -t blackroad/operator:0.0.1 .
+docker run -e REDIS_URL=redis://... -p 4000:4000 blackroad/operator:0.0.1
 ```
 
-## Internal HTTP API
-All routes are prefixed with `/internal`:
+### Testing & linting
+```bash
+pnpm lint
+pnpm test
+```
 
-- `GET /internal/health` – runtime health including worker status and queue stats
-- `GET /internal/agents` – list registered agents (supports `status` and `q` filters)
-- `GET /internal/agents/:id` – fetch a single agent
-- `POST /internal/jobs` – enqueue a job `{ type, agentId?, input? }`
-- `GET /internal/jobs/:id` – fetch job status
-- `GET /internal/events` – recent domain events (optional `limit`)
+### TODOs for next iterations
+- TODO(op-next): agent auto-registration
+- TODO(op-next): authentication and request signing
+- TODO(op-next): multi-queue orchestration policies
 
-## Architecture
-- **Express app** defined in `src/app.ts` wires middleware and routes.
-- **Config** in `src/config.ts` reads typed settings from the environment.
-- **AgentRegistry** (`src/runtime/agentRegistry.ts`) hosts agents with metadata/state.
-- **Job queue + worker** (`src/runtime/jobQueue.ts`, `src/runtime/worker.ts`) handle job lifecycle and dispatch.
-- **Event bus** (`src/events/eventBus.ts`) emits and buffers recent events.
-- **Journal store** (`src/integrations/journalStore.ts`) currently uses an in-memory implementation.
-
-See `docs/OPERATOR_RUNTIME_OVERVIEW.md` for a brief runtime walkthrough.

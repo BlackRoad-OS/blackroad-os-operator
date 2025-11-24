@@ -1,32 +1,44 @@
 {
   "name": "blackroad-os-operator",
-  "version": "0.1.0",
-  "description": "BlackRoad OS Agents Orchestration Service scaffold.",
+  "version": "0.0.1",
+  "description": "BlackRoad OS Operator Engine scaffold (Gen-0).",
+  "type": "module",
   "main": "dist/index.js",
   "license": "MIT",
   "scripts": {
-    "dev": "tsx src/index.ts",
-    "build": "tsc -p tsconfig.json",
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc -p tsconfig.json && pnpm run postbuild",
+    "postbuild": "tsx scripts/postbuild.ts",
     "start": "node dist/index.js",
-    "lint": "eslint .",
+    "lint": "ESLINT_USE_FLAT_CONFIG=false eslint .",
+    "format": "prettier --check .",
     "test": "vitest run"
   },
   "dependencies": {
+    "bullmq": "^5.7.12",
     "dotenv": "^16.4.5",
-    "express": "^4.19.2",
-    "js-yaml": "^4.1.0"
+    "fastify": "^4.28.1",
+    "ioredis": "^5.4.1",
+    "node-cron": "^3.0.3",
+    "pino": "^9.5.0"
   },
   "devDependencies": {
-    "@types/express": "^4.17.21",
-    "@types/node": "^20.11.30",
-    "@typescript-eslint/eslint-plugin": "^8.12.1",
-    "@typescript-eslint/parser": "^8.12.1",
-    "eslint": "^9.5.0",
-    "tsx": "^4.15.7",
-    "typescript": "^5.4.5",
+    "@types/node": "^22.5.4",
+    "@types/node-cron": "^3.0.11",
+    "@typescript-eslint/eslint-plugin": "^8.8.1",
+    "@typescript-eslint/parser": "^8.8.1",
+    "eslint": "^9.9.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-import-resolver-typescript": "^4.4.4",
+    "eslint-plugin-import": "^2.29.1",
+    "pino-pretty": "^11.2.2",
+    "prettier": "^3.3.3",
+    "tsx": "^4.19.1",
+    "typescript": "^5.6.2",
     "vitest": "^1.6.0"
   },
   "engines": {
     "node": ">=20"
-  }
+  },
+  "packageManager": "pnpm@8.15.4"
 }
