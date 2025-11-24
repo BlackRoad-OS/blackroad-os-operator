@@ -21,26 +21,25 @@ DEFAULT_CATALOG_PATH = Path(
 
 def create_app(catalog_path: Path | None = None, enable_watch: bool = True) -> FastAPI:
     catalog = AgentCatalog(catalog_path or DEFAULT_CATALOG_PATH)
-    app = FastAPI(title="BlackRoad OS Operator")
     start_time = time.time()
     stop_event = asyncio.Event()
     operator_version = os.getenv("COMMIT_SHA") or get_git_sha(REPO_ROOT) or "unknown"
 
-    @app.on_event("startup")
-    async def startup() -> None:  # pragma: no cover - wiring
+    from contextlib import asynccontextmanager
+    @asynccontextmanager
+    async def lifespan(app: FastAPI):
         await catalog.load()
+        watch_task = None
         if enable_watch:
-            app.state.catalog_watch = asyncio.create_task(catalog.watch(stop_event))
-
-    @app.on_event("shutdown")
-    async def shutdown() -> None:  # pragma: no cover - wiring
+            watch_task = asyncio.create_task(catalog.watch(stop_event))
+        yield
         stop_event.set()
-        watch_task: asyncio.Task | None = getattr(app.state, "catalog_watch", None)
-        if watch_task:
+        if enable_watch and watch_task:
             watch_task.cancel()
             with contextlib.suppress(asyncio.CancelledError):
                 await watch_task
 
+    app = FastAPI(title="BlackRoad OS Operator", lifespan=lifespan)
     @app.middleware("http")
     async def add_version_headers(request: Request, call_next):  # type: ignore[override]
         response = await call_next(request)
