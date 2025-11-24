@@ -69,12 +69,17 @@ class AgentCatalog:
     async def watch(self, stop_event: asyncio.Event) -> None:
         target = self.path if self.path.exists() else self.path.parent
         while not stop_event.is_set():
-            async for changes in awatch(target):
-                watched_paths = {Path(change[1]).resolve() for change in changes}
-                if self.path.resolve() in watched_paths:
-                    await self.load()
-                if stop_event.is_set():
-                    break
-
+            try:
+                async for changes in awatch(target):
+                    watched_paths = {Path(change[1]).resolve() for change in changes}
+                    if self.path.resolve() in watched_paths:
+                        await self.load()
+                    if stop_event.is_set():
+                        break
+            except Exception as exc:
+                print(f"Error in awatch loop: {exc}")
+                async with self._lock:
+                    self._error = f"watch error: {exc}"
+                await asyncio.sleep(1)  # avoid tight error loop
     def get_agent(self, agent_id: str) -> Optional[Dict[str, Any]]:
         return self._agents.get(agent_id)
