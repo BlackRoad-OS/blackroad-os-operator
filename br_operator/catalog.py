@@ -36,7 +36,7 @@ class AgentCatalog:
     async def load(self) -> None:
         async with self._lock:
             try:
-                content = self.path.read_text(encoding="utf-8")
+                content = await asyncio.to_thread(self.path.read_text, encoding="utf-8")
             except FileNotFoundError as exc:
                 self._agents = {}
                 self._file_sha = ""
