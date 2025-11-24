@@ -12,5 +12,5 @@ def get_git_sha(repo_root: Path) -> Optional[str]:
             .decode()
             .strip()
         )
-    except Exception:  # noqa: BLE001
+    except (subprocess.CalledProcessError, FileNotFoundError, OSError):
         return None
