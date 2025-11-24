@@ -1,0 +1,53 @@
+contract "SaaS Subscription" version 0.1 {
+
+  scope {
+    term from "2025-03-01" to "2026-03-01";
+    autoRenew every 1 year unless Buyer.givesNotice 30 day;
+    jurisdiction "California, USA";
+  }
+
+  parties {
+    Provider role "SaaS Vendor";
+    Buyer    role "Customer";
+  }
+
+  definitions {
+    MonthlyFee = 99 USD;
+    DowntimeThreshold = 99.5 percent;
+  }
+
+  obligations {
+    Buyer MUST pay MonthlyFee
+      on first BusinessDay of eachMonth;
+
+    Provider MUST provideService
+      with uptime >= DowntimeThreshold
+      measured over rollingWindow 30 day;
+
+    Provider MUST notify Buyer
+      at least 7 day
+      before any priceIncrease;
+  }
+
+  events {
+    event ChronicDowntime when
+      uptime < DowntimeThreshold
+      for 3 consecutiveMonth;
+
+    event NonPayment when
+      Buyer.paymentOverdue > 15 day;
+  }
+
+  remedies {
+    on NonPayment {
+      Provider MAY suspendService;
+      Provider MUST notify Buyer "suspension due to non-payment";
+    }
+
+    on ChronicDowntime {
+      Buyer MAY terminateContract
+        with 0 dayNotice;
+      Provider MUST refund 2 * MonthlyFee;
+    }
+  }
+}

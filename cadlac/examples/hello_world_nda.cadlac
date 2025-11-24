@@ -1,0 +1,44 @@
+contract "Hello World NDA" version 1.0 {
+
+  parties {
+    Discloser role "Party A";
+    Recipient role "Party B";
+  }
+
+  scope {
+    term from "2025-01-01" to "2028-01-01";
+    jurisdiction "Delaware, USA";
+  }
+
+  definitions {
+    ConfidentialInformation =
+      any information marked "CONFIDENTIAL"
+      or shared in secure channels
+      except information that is (public OR independentlyDeveloped);
+  }
+
+  obligations {
+    Recipient MUST NOT disclose ConfidentialInformation
+      to anyThirdParty
+      during scope.term
+      AND for 2 years after scope.term.end;
+
+    Recipient MAY use ConfidentialInformation
+      onlyFor "evaluation of potential business relationship";
+  }
+
+  events {
+    event UnauthorisedDisclosure when
+      Recipient.discloses(ConfidentialInformation)
+      to anyThirdParty
+      without Discloser.priorWrittenConsent;
+  }
+
+  remedies {
+    on UnauthorisedDisclosure {
+      Recipient MUST pay liquidatedDamages of 100_000 USD;
+      Discloser MAY seek injunctiveRelief;
+      log "Breach: Unauthorised disclosure" severity HIGH;
+    }
+  }
+}
