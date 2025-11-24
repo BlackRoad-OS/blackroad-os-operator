@@ -1,8 +1,10 @@
 node_modules
+.next
+.turbo
 .dist
-.env
-coverage
 dist
+coverage
+.env
 /tests/**/*.js
 /tests/**/*.js.map
 /tests/**/*.d.ts
