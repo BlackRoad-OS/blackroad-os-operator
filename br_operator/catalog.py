@@ -74,8 +74,6 @@ class AgentCatalog:
                     watched_paths = {Path(change[1]).resolve() for change in changes}
                     if self.path.resolve() in watched_paths:
                         await self.load()
-                    if stop_event.is_set():
-                        break
             except Exception as exc:
                 print(f"Error in awatch loop: {exc}")
                 async with self._lock:
