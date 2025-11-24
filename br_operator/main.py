@@ -70,10 +70,6 @@ def create_app(catalog_path: Path | None = None, enable_watch: bool = True) -> F
             payload["catalog_error"] = catalog.error
         return payload
 
-    @app.exception_handler(Exception)
-    async def unhandled_exception_handler(_request: Request, exc: Exception) -> JSONResponse:
-        return JSONResponse(status_code=500, content={"detail": str(exc)})
-
     return app
 
 
