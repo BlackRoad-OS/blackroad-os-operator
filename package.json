@@ -1,44 +1,4 @@
 {
-  "name": "blackroad-os-prism-console",
-  "version": "0.0.1",
-  "private": true,
-  "description": "Prism Console is the single-pane-of-glass for every BlackRoad environment.",
-  "scripts": {
-    "dev": "next dev",
-    "build": "next build && pnpm run postbuild",
-    "start": "next start",
-    "lint": "next lint",
-    "test": "vitest run",
-    "postbuild": "tsx scripts/postbuild.ts"
-  },
-  "dependencies": {
-    "clsx": "^2.1.1",
-    "next": "14.2.5",
-    "react": "18.3.1",
-    "react-dom": "18.3.1"
-  },
-  "devDependencies": {
-    "@testing-library/jest-dom": "^6.4.8",
-    "@testing-library/react": "^16.0.1",
-    "@types/node": "^22.5.4",
-    "@types/react": "^18.3.11",
-    "@types/react-dom": "^18.3.0",
-    "autoprefixer": "^10.4.20",
-    "eslint": "^8.57.1",
-    "eslint-config-next": "14.2.5",
-    "eslint-config-prettier": "^9.1.0",
-    "jsdom": "^25.0.1",
-    "postcss": "^8.4.45",
-    "prettier": "^3.3.3",
-    "tailwindcss": "^3.4.10",
-    "tsx": "^4.19.0",
-    "typescript": "^5.6.2",
-    "vitest": "^2.1.2"
-  },
-  "engines": {
-    "node": ">=18"
-  },
-  "packageManager": "pnpm@9.12.2"
   "name": "blackroad-os-operator",
   "version": "0.0.1",
   "description": "BlackRoad OS Operator Engine scaffold (Gen-0).",
