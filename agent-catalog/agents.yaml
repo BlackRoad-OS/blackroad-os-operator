@@ -1,0 +1,13 @@
+- id: echo-agent
+  name: Echo Agent
+  description: Simple echo service for testing.
+  version: 1.0.0
+  capabilities:
+    - echo
+- id: summarizer
+  name: Summarizer
+  description: Summarizes provided text snippets.
+  version: 0.5.1
+  capabilities:
+    - summarize
+    - outline

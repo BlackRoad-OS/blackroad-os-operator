@@ -119,3 +119,17 @@ pnpm test
 - TODO(op-next): authentication and request signing
 - TODO(op-next): multi-queue orchestration policies
 
+
+## Agent catalog operator
+
+The operator now sources agent registrations from `agent-catalog/agents.yaml` (override via `CATALOG_PATH`). The catalog file is parsed on startup and hot-reloaded on changes. Key HTTP routes:
+
+- `GET /agents` – returns the full catalog JSON.
+- `GET /agents/{id}` – returns a single agent or 404 when missing.
+- `GET /health` – includes `catalog: "ok"` when the YAML parses without errors.
+
+Each response includes version headers:
+- `X-Agent-Operator-Version` – git SHA for this service.
+- `X-Catalog-Version` – first seven characters of the catalog file SHA.
+
+When running in containers, the default catalog path is `/app/agent-catalog/agents.yaml`; mount an override directory at `/app/agent-catalog` to supply a different catalog in production deployments.
