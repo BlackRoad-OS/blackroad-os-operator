@@ -20,9 +20,10 @@ app.get('/health', async () => ({
 // Ready endpoint - readiness check
 app.get('/ready', async () => {
   // Perform lightweight checks
+  // Note: For production, consider adding actual Redis connectivity check
   const checks = {
     config: true,
-    queue: true // TODO: add actual queue connectivity check if needed
+    queue: true // Currently always true; TODO: add actual queue connectivity check if needed
   };
 
   return {
