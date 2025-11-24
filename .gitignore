@@ -9,3 +9,11 @@ coverage
 /tests/**/*.js.map
 /tests/**/*.d.ts
 /tests/**/*.d.ts.map
+dist
+scripts/*.js
+scripts/*.js.map
+tests/**/*.js
+tests/**/*.js.map
+.env
+.pnpm-debug.log
+.DS_Store
