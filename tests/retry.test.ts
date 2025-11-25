@@ -142,7 +142,7 @@ describe('retry utilities', () => {
       const duration = Date.now() - startTime;
       
       // Should have waited at least 50ms (first retry) + 100ms (second retry) = 150ms
-      expect(duration).toBeGreaterThanOrEqual(100);
+      expect(duration).toBeGreaterThanOrEqual(150);
       expect(callCount).toBe(3);
     });
 

@@ -60,7 +60,7 @@ export async function executeDeployWorkflow(
     input.idempotencyKey ||
     createIdempotencyKey('deploy', `${input.serviceId}-${input.version}`, input.environment);
 
-    if (await isProcessed(idempotencyKey)) {
+  if (await isProcessed(idempotencyKey)) {
     logger.info({ workflowId, idempotencyKey }, '🔁 workflow already processed (idempotent)');
     const result = await getProcessedResult();
     return (result as DeployWorkflowResult) || { workflowId, status: 'completed' };
