@@ -1,33 +1,55 @@
 # Operator Runtime Overview
 
-The Operator hosts agents and dispatches jobs using in-process primitives. It is intentionally lightweight and stateless so the persistence layers can be swapped later.
+The Operator is a lightweight job scheduler and orchestrator for BlackRoad OS. It uses BullMQ backed by Redis for job queueing and node-cron for scheduled tasks.
 
-## Core Components
+## Current Components
 
-### Agent Registry
-- File: `src/runtime/agentRegistry.ts`
-- Holds registered agents, their metadata, and runtime state.
-- Provides helper to register default example agents for local development.
+### Job Queue
+- File: `src/queues/index.ts`
+- Uses BullMQ with Redis as the backing store
+- Factory function `getQueue(name)` creates or retrieves named queues
+- Connection is shared across all queues
 
-### Job Queue + Worker
-- Files: `src/runtime/jobQueue.ts`, `src/runtime/worker.ts`
-- `InMemoryJobQueue` stores queued jobs and exposes status lookups.
-- `Worker` polls the queue, invokes the appropriate agent, updates job lifecycle, and emits events.
+### Job Processors
+- Directory: `src/jobs/`
+- Example: `src/jobs/sample.job.ts` - demonstrates basic job processing
+- Each processor registers a BullMQ Worker that processes jobs from a specific queue
+- Workers log job execution and failures
 
-### Event Bus
-- File: `src/events/eventBus.ts`
-- Emits `DomainEvent` objects for state transitions and keeps a bounded buffer of recent events.
-- Subscribers can attach to forward events to the journal store or future sinks.
+### Schedulers
+- Directory: `src/schedulers/`
+- Example: `src/schedulers/heartbeat.scheduler.ts` - enqueues heartbeat jobs every 5 minutes
+- Uses node-cron for recurring tasks
+- Schedulers enqueue jobs into appropriate queues
 
-### Journal Store
-- File: `src/integrations/journalStore.ts`
-- Defines the `JournalStore` interface and an in-memory implementation used during development.
-- Converts emitted events into journal entries that can later be rolled into RoadChain blocks.
+### Configuration
+- File: `src/config.ts`
+- Centralized typed configuration from environment variables
+- Provides safe defaults and validates critical values
+- Supports standard BlackRoad OS env vars: `BR_OS_ENV`, `BR_OS_OPERATOR_VERSION`, etc.
 
-## Adding New Agents
-1. Implement an agent in `blackroad-os-core` style with `metadata` and an async `run` method.
-2. Register it through `AgentRegistry.registerAgent` or extend `createDefaultAgentRegistry` for local defaults.
-3. Jobs can target the new agent by specifying `agentId` when enqueuing.
+### HTTP Endpoints
+The Fastify app in `src/index.ts` exposes standard service endpoints:
+- `GET /health` - Liveness check
+- `GET /ready` - Readiness check (validates config and queue availability)
+- `GET /version` - Build and environment metadata
 
-## Internal HTTP API
-The Express app mounted in `src/app.ts` exposes `/internal` routes for meta/build info, health, agents, jobs, and events. These endpoints are meant for internal services such as `blackroad-os-api`.
+## Adding New Jobs
+1. Create a new file in `src/jobs/` (e.g., `my-job.job.ts`)
+2. Define your job input type in `src/types/index.ts`
+3. Implement a BullMQ Worker that processes jobs from a named queue
+4. Register the processor in `src/index.ts` by calling your registration function
+5. Jobs can be enqueued using `getQueue('my-queue').add('job-name', payload)`
+
+## Adding New Schedulers
+1. Create a new file in `src/schedulers/` (e.g., `my-task.scheduler.ts`)
+2. Use node-cron's `schedule()` function with a cron expression
+3. Have the scheduler enqueue jobs via `getQueue().add()`
+4. Start the scheduler in `src/index.ts`
+
+## Future Enhancements
+- Agent registration and discovery
+- Authentication and request signing
+- Multi-queue orchestration policies
+- Workflow composition (fan-out, fan-in, conditional branching)
+
