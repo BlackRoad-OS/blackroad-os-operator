@@ -47,6 +47,7 @@ Examples:
 - 🗃️ = Storage / archive  
 - 🌈 = Creativity/brand  
 - ⚙️ = System internals  
+- 📚 = Documentation  
 
 Operators use emojis to **anchor agent selection heuristics.**
 
