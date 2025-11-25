@@ -1,4 +1,14 @@
-# BlackRoad OS Operator Engine · Gen-0
+# ⚙️ BlackRoad OS Operator Engine · Gen-0
+
+**ROLE:** Operator Engine ⚙️🤖 – jobs, schedulers, background workers, and agent workflows for BlackRoad OS.
+
+## 🎯 MISSION
+
+Run the **behind-the-scenes automation** for BlackRoad OS:
+- Coordinate agents, jobs, and workflows across OS, Prism, Infra, Packs
+- Turn human/agent intent ("do X everywhere") into safe, idempotent operations
+- Execute orchestrated workflows with retry logic and circuit breakers
+
 Operator-Gen-0 is a lightweight, headless orchestrator for coordinating agents across BlackRoad OS. It exposes a small Fastify API, a BullMQ queue factory backed by Redis, and a cron-driven heartbeat scheduler.
 
 ## Tech baseline
@@ -78,7 +88,9 @@ All routes are prefixed with `/internal`:
 - **Event bus** (`src/events/eventBus.ts`) emits and buffers recent events.
 - **Journal store** (`src/integrations/journalStore.ts`) currently uses an in-memory implementation.
 
-See `docs/OPERATOR_RUNTIME_OVERVIEW.md` for a brief runtime walkthrough.
+See:
+- `docs/OPERATOR_ENGINE.md` for comprehensive operator engine documentation with emoji legend 🧬
+- `docs/OPERATOR_RUNTIME_OVERVIEW.md` for a brief runtime walkthrough
 
 ### Production build
 ```bash
