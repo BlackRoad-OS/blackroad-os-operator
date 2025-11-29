@@ -4,6 +4,7 @@
   version: 1.0.0
   capabilities:
     - echo
+
 - id: summarizer
   name: Summarizer
   description: Summarizes provided text snippets.
@@ -11,3 +12,74 @@
   capabilities:
     - summarize
     - outline
+
+# ⚙️🤖 Operator-Level Agents
+# These agents coordinate workflows across BlackRoad OS services
+
+- id: deploy-bot
+  name: Deploy Bot 🤖
+  description: Automates Railway deployment rollouts with safety checks and rollback capabilities.
+  version: 1.0.0
+  capabilities:
+    - deploy
+    - rollback
+    - health-check
+  operatorLevel: true
+  category: deployment
+
+- id: sweep-bot
+  name: Sweep Bot 🧹
+  description: Performs merge-ready sweeps across repositories ensuring code quality and consistency.
+  version: 1.0.0
+  capabilities:
+    - sweep
+    - merge-ready-check
+    - code-quality
+  operatorLevel: true
+  category: quality
+
+- id: policy-bot
+  name: Policy Bot ⚖️
+  description: Enforces compliance policies across services, especially for finance, identity, and regulatory workflows.
+  version: 1.0.0
+  capabilities:
+    - policy-enforcement
+    - compliance-check
+    - audit
+  operatorLevel: true
+  category: compliance
+  complianceSensitive: true
+
+- id: sync-agent
+  name: Sync Agent 🔄
+  description: Synchronizes state across OS, Prism, Infra, and Packs repositories.
+  version: 1.0.0
+  capabilities:
+    - sync
+    - state-reconciliation
+    - consistency-check
+  operatorLevel: true
+  category: orchestration
+
+- id: health-monitor
+  name: Health Monitor 🏥
+  description: Continuous health monitoring and alerting for all BlackRoad OS services.
+  version: 1.0.0
+  capabilities:
+    - health-check
+    - monitoring
+    - alerting
+  operatorLevel: true
+  category: observability
+
+- id: archive-bot
+  name: Archive Bot 🧾
+  description: Routes critical operation outcomes to blackroad-os-archive for compliance and audit trails.
+  version: 1.0.0
+  capabilities:
+    - archive
+    - audit-log
+    - compliance-record
+  operatorLevel: true
+  category: compliance
+  complianceSensitive: true
