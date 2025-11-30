@@ -69,6 +69,14 @@ def create_app(catalog_path: Path | None = None, enable_watch: bool = True) -> F
             payload["catalog_error"] = catalog.error
         return payload
 
+    @app.get("/version")
+    async def version() -> Dict[str, Any]:
+        return {
+            "version": operator_version,
+            "catalog_version": catalog.catalog_version,
+            "service": "blackroad-os-operator",
+        }
+
     return app
 
 
