@@ -74,3 +74,44 @@ async def remove_agent(agent_id: str):
 
     await registry.unregister(agent_id)
     return {"status": "removed", "agent_id": agent_id}
+
+
+@router.post("/{agent_id}/smoke-test")
+async def smoke_test_agent(agent_id: str):
+    """
+    Run a quick smoke test on an agent.
+
+    Sends simple commands (hostname, uptime) to verify the agent
+    can receive and execute tasks.
+    """
+    agent = registry.get(agent_id)
+    if not agent:
+        raise HTTPException(status_code=404, detail=f"Agent {agent_id} not found")
+
+    if agent.status != AgentStatus.ONLINE:
+        raise HTTPException(status_code=503, detail=f"Agent {agent_id} is not online")
+
+    # Send smoke test task directly to agent
+    success = await registry.send_to_agent(agent_id, {
+        "type": "execute_task",
+        "payload": {
+            "task_id": f"smoke-test-{agent_id}",
+            "plan": {
+                "commands": [
+                    {"run": "hostname"},
+                    {"run": "uptime"},
+                    {"run": "df -h / | tail -1"},
+                ]
+            }
+        }
+    })
+
+    if not success:
+        raise HTTPException(status_code=503, detail=f"Failed to send smoke test to {agent_id}")
+
+    return {
+        "status": "sent",
+        "agent_id": agent_id,
+        "task_id": f"smoke-test-{agent_id}",
+        "message": "Smoke test dispatched. Check agent logs or /ws/client for results."
+    }
