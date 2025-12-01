@@ -5,6 +5,7 @@ import Fastify from 'fastify';
 import { getConfig } from './config.js';
 import { registerSampleJobProcessor } from './jobs/sample.job.js';
 import { startHeartbeatScheduler } from './schedulers/heartbeat.scheduler.js';
+import { generateChatResponse, checkLlmHealth, ChatRequest } from './services/llm.service.js';
 import logger from './utils/logger.js';
 
 const config = getConfig();
@@ -40,6 +41,61 @@ app.get('/version', async () => ({
   commit: config.commit,
   env: config.brOsEnv
 }));
+
+// ============================================
+// HERO FLOW #1: Chat with Cece
+// ============================================
+
+interface ChatRequestBody {
+  message: string;
+  userId?: string;
+  model?: string;
+}
+
+// Chat endpoint - talk to Cece through the Operator Engine
+app.post<{ Body: ChatRequestBody }>('/chat', async (request, reply) => {
+  const { message, userId, model } = request.body;
+
+  if (!message || typeof message !== 'string' || message.trim().length === 0) {
+    return reply.status(400).send({
+      error: 'Bad Request',
+      message: 'message field is required and must be a non-empty string'
+    });
+  }
+
+  try {
+    const chatRequest: ChatRequest = {
+      message: message.trim(),
+      userId,
+      model,
+    };
+
+    const response = await generateChatResponse(chatRequest);
+
+    return {
+      reply: response.reply,
+      trace: response.trace,
+    };
+  } catch (error) {
+    logger.error({ error, message }, 'Chat request failed');
+    return reply.status(500).send({
+      error: 'Internal Server Error',
+      message: error instanceof Error ? error.message : 'Failed to generate response'
+    });
+  }
+});
+
+// LLM Health check endpoint
+app.get('/llm/health', async () => {
+  const health = await checkLlmHealth();
+  return {
+    service: 'llm-gateway',
+    provider: config.llmProvider,
+    configured_model: config.ollamaModel,
+    ollama_url: config.ollamaUrl,
+    ...health
+  };
+});
 
 registerSampleJobProcessor();
 startHeartbeatScheduler();

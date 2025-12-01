@@ -6,30 +6,42 @@
 export interface OperatorConfig {
   /** Server port */
   port: number;
-  
+
   /** Node environment (development, staging, production) */
   nodeEnv: string;
-  
+
   /** BlackRoad OS environment identifier */
   brOsEnv: string;
-  
+
   /** Service version */
   version: string;
-  
+
   /** Git commit SHA */
   commit: string;
-  
+
   /** Redis connection URL */
   redisUrl: string;
-  
+
   /** Log level for pino */
   logLevel: string;
-  
+
   /** Maximum concurrency for workers */
   maxConcurrency: number;
-  
+
   /** Default job timeout in seconds */
   defaultTimeoutSeconds: number;
+
+  /** LLM Provider (ollama, openai, etc.) */
+  llmProvider: string;
+
+  /** Ollama URL for LLM calls */
+  ollamaUrl: string;
+
+  /** Default Ollama model to use */
+  ollamaModel: string;
+
+  /** RAG API URL for context retrieval */
+  ragApiUrl: string;
 }
 
 /**
@@ -47,6 +59,10 @@ export function getConfig(): OperatorConfig {
     logLevel: process.env.LOG_LEVEL ?? 'info',
     maxConcurrency: Number(process.env.BR_OS_OPERATOR_MAX_CONCURRENCY ?? 10),
     defaultTimeoutSeconds: Number(process.env.BR_OS_OPERATOR_DEFAULT_TIMEOUT_SECONDS ?? 300),
+    llmProvider: process.env.LLM_PROVIDER ?? 'ollama',
+    ollamaUrl: process.env.OLLAMA_URL ?? 'http://gpt-oss-model.railway.internal:11434',
+    ollamaModel: process.env.OLLAMA_MODEL ?? 'llama3.2:1b',
+    ragApiUrl: process.env.RAG_API_URL ?? 'http://rag-api.railway.internal:8000',
   };
 
   // Validate critical values
