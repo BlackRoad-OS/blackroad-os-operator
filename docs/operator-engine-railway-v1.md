@@ -412,7 +412,96 @@ curl -X POST "https://blackroad-os-operator-production-8d28.up.railway.app/chat"
 | Endpoint | Method | Description |
 |----------|--------|-------------|
 | `/llm/health` | GET | Check if Ollama is reachable and has models |
+| `/rag/health` | GET | Check if RAG API is reachable |
 | `/health` | GET | General operator health check |
+
+---
+
+## Hero Flow #2 — RAG-Enhanced /chat
+
+Hero Flow #2 extends Hero Flow #1 by optionally retrieving context from the RAG API before calling the LLM. This provides Cece with relevant knowledge from the BlackRoad knowledge base.
+
+### Request Flow
+
+```
+User Request
+    ↓
+┌──────────────────────────┐
+│ blackroad-os-operator    │  POST /chat
+│ (FastAPI :8080)          │
+└────────────┬─────────────┘
+             ↓
+┌──────────────────────────┐
+│ RAG API                  │  POST /query
+│ (FastAPI :8000)          │  (optional - graceful fallback)
+└────────────┬─────────────┘
+             ↓
+┌──────────────────────────┐
+│ GPT-OSS Model            │  /api/generate
+│ (Ollama :11434)          │  (with context if RAG succeeded)
+│ Model: llama3.2:1b       │
+└────────────┬─────────────┘
+             ↓
+Response back to user
+```
+
+### Difference from Hero Flow #1
+
+| Aspect | Hero Flow #1 | Hero Flow #2 |
+|--------|--------------|--------------|
+| RAG Context | No | Yes (when available) |
+| `trace.used_rag` | `false` | `true` (when context attached) |
+| Fallback | N/A | Falls back to #1 if RAG fails |
+| Extra trace fields | None | `rag_latency_ms`, `num_context_chunks` |
+
+### RAG-Enhanced Response
+
+When RAG is successfully used, the response includes additional trace fields:
+
+```json
+{
+  "reply": "Based on the BlackRoad documentation, ...",
+  "trace": {
+    "llm_provider": "ollama",
+    "model": "llama3.2:1b",
+    "used_rag": true,
+    "response_time_ms": 12500,
+    "rag_latency_ms": 450,
+    "num_context_chunks": 3
+  }
+}
+```
+
+### Environment Variables
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `RAG_API_URL` | `http://rag-api.railway.internal:8000` | RAG API endpoint |
+| `RAG_TOP_K` | `3` | Number of context chunks to retrieve |
+| `RAG_TIMEOUT_SECONDS` | `10.0` | Timeout for RAG API calls |
+
+### Graceful Fallback
+
+RAG failures are handled gracefully:
+- If RAG API is unreachable → Falls back to Hero Flow #1
+- If RAG returns no results → Falls back to Hero Flow #1
+- `trace.used_rag` will be `false` in fallback cases
+
+### RAG API Contract (Expected)
+
+The Operator expects the RAG API to implement:
+
+```
+POST /query
+Request:  {"query": "string", "top_k": 5}
+Response: {"results": [{"content": "...", "score": 0.95, "metadata": {...}}, ...]}
+```
+
+### Current Status
+
+**RAG API**: Not yet deployed (Hero Flow #2 falls back to #1)
+
+Once deployed, Hero Flow #2 will auto-activate with no code changes needed.
 
 ---
 
@@ -420,6 +509,7 @@ curl -X POST "https://blackroad-os-operator-production-8d28.up.railway.app/chat"
 
 | Date | Change | Author |
 |------|--------|--------|
+| 2024-12-01 | Added Hero Flow #2 (RAG) documentation | Cece |
 | 2024-12-01 | Added Hero Flow #1 documentation | Cece |
 | 2024-11-30 | Initial v1 architecture defined | Cece |
 

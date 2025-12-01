@@ -49,9 +49,11 @@ if [ "$HTTP_STATUS" = "200" ]; then
   echo "PASS - Hero Flow #1 working!"
   echo "----------------------------------------------"
 
-  # Extract and show response time if available
+  # Extract and show trace info
   RESPONSE_TIME=$(echo "$HTTP_BODY" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('trace',{}).get('response_time_ms','N/A'))" 2>/dev/null || echo "N/A")
+  USED_RAG=$(echo "$HTTP_BODY" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('trace',{}).get('used_rag','N/A'))" 2>/dev/null || echo "N/A")
   echo "Response time: ${RESPONSE_TIME}ms"
+  echo "Used RAG: ${USED_RAG}"
   echo ""
 else
   echo ""

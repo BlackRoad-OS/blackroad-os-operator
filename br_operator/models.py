@@ -25,6 +25,8 @@ class ChatTrace(BaseModel):
     model: str = Field(..., description="Model name used for generation")
     used_rag: bool = Field(..., description="Whether RAG context was retrieved")
     response_time_ms: int = Field(..., description="Total response time in milliseconds")
+    rag_latency_ms: Optional[int] = Field(None, description="RAG API latency in ms (when used)")
+    num_context_chunks: Optional[int] = Field(None, description="Number of context chunks retrieved")
 
 
 class ChatResponse(BaseModel):
@@ -42,4 +44,13 @@ class LLMHealthResponse(BaseModel):
     provider: str
     configured_model: str
     ollama_url: str
+    error: Optional[str] = None
+
+
+class RAGHealthResponse(BaseModel):
+    """Response model for GET /rag/health endpoint."""
+
+    healthy: bool
+    rag_api_url: str
+    top_k: int
     error: Optional[str] = None
