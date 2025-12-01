@@ -5,24 +5,16 @@ import contextlib
 import os
 import time
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any, Dict
 
 from fastapi import FastAPI, HTTPException, Request
-from fastapi.responses import JSONResponse
-from pydantic import BaseModel
 
 from .catalog import AgentCatalog
 from .versioning import get_git_sha
 from .llm_service import generate_chat_response, check_llm_health
+from .models import ChatRequest, ChatResponse, LLMHealthResponse
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
-
-
-# Hero Flow #1 Request Model
-class ChatRequest(BaseModel):
-    message: str
-    userId: Optional[str] = None
-    model: Optional[str] = None
 
 
 DEFAULT_CATALOG_PATH = Path(
@@ -84,9 +76,12 @@ def create_app(catalog_path: Path | None = None, enable_watch: bool = True) -> F
     # HERO FLOW #1: Chat with Cece
     # ============================================
 
-    @app.post("/chat")
-    async def chat(request: ChatRequest) -> Dict[str, Any]:
-        """Chat with Cece through the Operator Engine."""
+    @app.post("/chat", response_model=ChatResponse)
+    async def chat(request: ChatRequest) -> ChatResponse:
+        """Chat with Cece through the Operator Engine.
+
+        Hero Flow #1: User → Operator → GPT-OSS Model → Response
+        """
         if not request.message or not request.message.strip():
             raise HTTPException(status_code=400, detail="message is required")
 
@@ -96,14 +91,15 @@ def create_app(catalog_path: Path | None = None, enable_watch: bool = True) -> F
                 user_id=request.userId,
                 model=request.model,
             )
-            return response
+            return ChatResponse(**response)
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))
 
-    @app.get("/llm/health")
-    async def llm_health() -> Dict[str, Any]:
+    @app.get("/llm/health", response_model=LLMHealthResponse)
+    async def llm_health() -> LLMHealthResponse:
         """Check LLM gateway health."""
-        return await check_llm_health()
+        data = await check_llm_health()
+        return LLMHealthResponse(**data)
 
     return app
 

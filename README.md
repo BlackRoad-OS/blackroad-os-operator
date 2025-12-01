@@ -132,9 +132,26 @@ pnpm start
 | **Browserless** | Web scraping workflows |
 | **MongoDB** | Only if LibreChat is enabled |
 
+### Hero Flow #1 — Chat with Cece
+
+The `/chat` endpoint is the **canonical Operator entrypoint** for talking to Cece:
+
+```bash
+curl -X POST "https://blackroad-os-operator-production-8d28.up.railway.app/chat" \
+  -H "Content-Type: application/json" \
+  -d '{"message": "Hello Cece!"}'
+```
+
+Or run the test script:
+```bash
+./scripts/hero-flow-test.sh
+```
+
+See [docs/operator-engine-railway-v1.md#hero-flow-1--operator-chat-endpoint](docs/operator-engine-railway-v1.md#hero-flow-1--operator-chat-endpoint) for full API contract and details.
+
 ### Related Docs
 
-- `docs/operator-engine-railway-v1.md` - Full architecture specification
+- `docs/operator-engine-railway-v1.md` - Full architecture specification + Hero Flow #1
 - `docs/RAILWAY_CLEANUP_PLAYBOOK.md` - Steps to clean up redundant services
 - `docs/GPT_OSS_MODEL_VOLUME_FIX.md` - Fix for "volume is FULL" errors
 

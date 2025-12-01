@@ -312,10 +312,115 @@ railway run -s gpt-oss-model -- ollama list
 
 ---
 
+## Hero Flow #1 — Operator /chat Endpoint
+
+The `/chat` endpoint is the **canonical entry point** for users to talk to Cece through the Operator Engine.
+
+### Request Flow
+
+```
+User Request
+    ↓
+┌──────────────────────────┐
+│ blackroad-os-operator    │  POST /chat
+│ (FastAPI :8080)          │
+└────────────┬─────────────┘
+             ↓
+┌──────────────────────────┐
+│ GPT-OSS Model            │  /api/generate
+│ (Ollama :11434)          │
+│ Model: llama3.2:1b       │
+└────────────┬─────────────┘
+             ↓
+Response back to user
+```
+
+### API Contract
+
+**Endpoint:** `POST /chat`
+
+**Request:**
+```json
+{
+  "message": "string (required)",
+  "userId": "string (optional)",
+  "model": "string (optional, overrides default)"
+}
+```
+
+**Response (200 OK):**
+```json
+{
+  "reply": "Cece's response text",
+  "trace": {
+    "llm_provider": "ollama",
+    "model": "llama3.2:1b",
+    "used_rag": false,
+    "response_time_ms": 9253
+  }
+}
+```
+
+**Error Responses:**
+- `400 Bad Request` — Empty or missing message
+- `500 Internal Server Error` — LLM API failure
+
+### Services Involved
+
+| Service | Role | Internal URL |
+|---------|------|--------------|
+| blackroad-os-operator | Receives request, forwards to LLM | `:8080` |
+| GPT-OSS Model | Ollama LLM inference | `gpt-oss-model.railway.internal:11434` |
+
+### Sample Successful Response
+
+```json
+{
+  "reply": "Hello! I'm delighted to help. In the Operator Engine v1, I can display my current state and provide information on its capabilities. As an AI assistant, I'm currently logged in and visible within the Operator Engine...",
+  "trace": {
+    "llm_provider": "ollama",
+    "model": "llama3.2:1b",
+    "used_rag": false,
+    "response_time_ms": 9253
+  }
+}
+```
+
+### Manual Test
+
+Run the test script:
+```bash
+./scripts/hero-flow-test.sh
+```
+
+Or use curl directly:
+```bash
+curl -X POST "https://blackroad-os-operator-production-8d28.up.railway.app/chat" \
+  -H "Content-Type: application/json" \
+  -d '{"message": "Hello Cece!"}'
+```
+
+**What a "pass" looks like:**
+- HTTP 200 status code
+- Response contains `reply` string (non-empty)
+- Response contains `trace` object with timing
+
+**Expected latency:** ~8-12 seconds on `llama3.2:1b`
+
+### Additional Endpoints
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/llm/health` | GET | Check if Ollama is reachable and has models |
+| `/health` | GET | General operator health check |
+
+---
+
 ## Changelog
 
 | Date | Change | Author |
 |------|--------|--------|
+| 2024-12-01 | Added Hero Flow #1 documentation | Cece |
 | 2024-11-30 | Initial v1 architecture defined | Cece |
 
 ---
