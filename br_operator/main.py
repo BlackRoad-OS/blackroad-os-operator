@@ -5,13 +5,15 @@ import contextlib
 import os
 import time
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse
+from pydantic import BaseModel
 
 from .catalog import AgentCatalog
 from .versioning import get_git_sha
+from .llm_service import generate_chat_response, check_llm_health
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 DEFAULT_CATALOG_PATH = Path(
@@ -68,6 +70,36 @@ def create_app(catalog_path: Path | None = None, enable_watch: bool = True) -> F
         if catalog.error:
             payload["catalog_error"] = catalog.error
         return payload
+
+    # ============================================
+    # HERO FLOW #1: Chat with Cece
+    # ============================================
+
+    class ChatRequest(BaseModel):
+        message: str
+        userId: Optional[str] = None
+        model: Optional[str] = None
+
+    @app.post("/chat")
+    async def chat(request: ChatRequest) -> Dict[str, Any]:
+        """Chat with Cece through the Operator Engine."""
+        if not request.message or not request.message.strip():
+            raise HTTPException(status_code=400, detail="message is required")
+
+        try:
+            response = await generate_chat_response(
+                message=request.message.strip(),
+                user_id=request.userId,
+                model=request.model,
+            )
+            return response
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=str(e))
+
+    @app.get("/llm/health")
+    async def llm_health() -> Dict[str, Any]:
+        """Check LLM gateway health."""
+        return await check_llm_health()
 
     return app
 
