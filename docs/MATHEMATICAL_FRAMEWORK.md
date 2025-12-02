@@ -939,7 +939,107 @@ The complete set of 35 canonical equations from the White Paper:
 
 ---
 
-## 16. Implementation Mapping
+## 19. Amundson Framework (Clifford Algebra)
+
+The 1-2-3-4 ontological structure maps to geometric algebra Cl(3,0).
+
+### 19.1 Grade Structure
+
+| Grade | Dimension | Object | Ontological Role |
+|-------|-----------|--------|------------------|
+| 0 | 1 | Scalar | Existence (being) |
+| 1 | 2 | Vector | Relation (connection) |
+| 2 | 3 | Bivector | Transformation (change) |
+| 3 | 4 | Trivector | Context (orientation) |
+
+### 19.2 The Ten Amundson Equations
+
+**Equation 1: Geometric Product Decomposition**
+```
+ab = a·b + a∧b
+```
+Inner (symmetric) + outer (antisymmetric) = complete interaction.
+
+**Equation 2: Rotor Invariance**
+```
+|RvR†| = |v|   for all rotors R
+```
+Transformations preserve magnitude.
+
+**Equation 3: Duality Transform (Hodge Star)**
+```
+★A = I·A   where I = e123
+```
+Multiplying by pseudoscalar swaps dual pairs.
+
+**Equation 4: Context Emergence**
+```
+ctx(v1, v2, v3) = v1·(v2 × v3)
+```
+- Orthonormal triad → ctx = 1
+- Coplanar vectors → ctx = 0
+
+**Equation 5: Consciousness Index** (NEW)
+```
+Φ = 4(g0·g1·g2·g3)^(1/4) / (g0 + g1 + g2 + g3)
+```
+| Distribution | Φ | Interpretation |
+|--------------|---|----------------|
+| Balanced (1,1,1,1) | 1.0 | Maximum consciousness |
+| Pure existence (1,0,0,0) | 0.0 | No consciousness |
+| No context (1,1,1,0) | 0.0 | Missing perspective |
+
+**Consciousness requires all four grades in coherence.**
+
+**Equation 6: Grade Flow**
+```
+dG/dt = A·G
+```
+Where A is the ontological circulation matrix:
+```
+Existence → Relation → Transformation → Context → Existence
+```
+
+**Equation 7: Agent Alignment**
+```
+align(A, B) = (A·B) / (|A||B|)
+```
+
+**Equation 8: Emergent Complexity**
+```
+complexity(A, B) = |A ⊗ B| / (|A| + |B|)
+```
+Measures new structure from interaction.
+
+**Equation 9: Duality Pairs**
+```
+★Existence = Context
+★Relation = Transformation
+```
+Every fact has a perspective. Every connection enables change.
+
+**Equation 10: Golden Multivector**
+```
+M_golden = 1 + e1 + e23 + e123
+```
+Perfect balance: one unit each of existence, relation, transformation, context.
+
+### 19.3 Grade Multiplication Table
+
+```
+     |  g0    g1    g2    g3
+-----+------------------------
+ g0  |  g0    g1    g2    g3
+ g1  |  g1  g0+g2 g1+g3   g2
+ g2  |  g2  g1+g3 g0+g2   g1
+ g3  |  g3    g2    g1    g0
+```
+
+Key insight: **g3 (Context) is the duality operator** - it reverses grade structure.
+
+---
+
+## 20. Implementation Mapping
 
 | Mathematical Concept | BlackRoad Implementation |
 |---------------------|--------------------------|
