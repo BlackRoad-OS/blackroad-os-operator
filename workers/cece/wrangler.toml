@@ -11,7 +11,7 @@ routes = [
 ]
 
 [vars]
-OPERATOR_URL = "https://cozy-dream-all.up.railway.app"
+OPERATOR_URL = "https://blackroad-cece-operator-production.up.railway.app"
 CECE_VERSION = "1.0.0"
 
 # Observability
