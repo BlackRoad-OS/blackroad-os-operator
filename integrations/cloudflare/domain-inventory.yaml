@@ -1,0 +1,318 @@
+# BlackRoad Domain Inventory
+# Complete list of verified domains
+#
+# @blackroad_name: BlackRoad Domain Portfolio
+# @operator: alexa.operator.v1
+# @last_updated: 2024-12-01
+
+version: "domains-v1"
+
+# ============================================
+# DOMAIN INVENTORY (16 Verified Domains)
+# ============================================
+
+domains:
+  # ==========================================
+  # TIER 1: PRIMARY DOMAINS
+  # ==========================================
+
+  # Primary Marketing & Platform
+  - domain: blackroad.io
+    status: verified
+    tier: primary
+    plan: business
+    purpose: "Primary marketing site and web application"
+    subdomains:
+      - "@": "Landing page"
+      - "www": "Redirect to root"
+      - "app": "Main web application"
+      - "api": "Public API gateway"
+      - "docs": "Developer documentation"
+      - "status": "System status page"
+      - "blog": "Company blog"
+      - "demo": "Product demo"
+
+  # AI Agent Platform
+  - domain: lucidia.earth
+    status: verified
+    tier: primary
+    plan: business
+    purpose: "Lucidia AI agent platform"
+    subdomains:
+      - "@": "Lucidia landing"
+      - "app": "Agent web app"
+      - "api": "Lucidia API"
+      - "console": "Admin console"
+      - "playground": "AI playground"
+      - "agents": "Agent directory"
+      - "memories": "Memory explorer"
+      - "docs": "Lucidia documentation"
+
+  # Corporate
+  - domain: blackroadinc.us
+    status: verified
+    tier: primary
+    plan: pro
+    purpose: "Corporate and investor relations"
+    subdomains:
+      - "@": "Corporate site"
+      - "www": "Redirect"
+      - "ir": "Investor relations"
+      - "legal": "Legal documents"
+      - "compliance": "Compliance portal"
+      - "board": "Board portal"
+      - "governance": "Corporate governance"
+
+  # ==========================================
+  # TIER 2: PRODUCT DOMAINS
+  # ==========================================
+
+  # AI Services
+  - domain: blackroadai.com
+    status: verified
+    tier: product
+    plan: pro
+    purpose: "Enterprise AI services"
+    subdomains:
+      - "@": "AI services landing"
+      - "www": "Redirect"
+      - "enterprise": "Enterprise AI portal"
+      - "models": "Model catalog"
+      - "train": "Fine-tuning services"
+      - "benchmark": "AI benchmarks"
+
+  # User Portal
+  - domain: blackroad.me
+    status: verified
+    tier: product
+    plan: pro
+    purpose: "User dashboard and account management"
+    subdomains:
+      - "@": "User portal"
+      - "my": "User dashboard"
+      - "agents": "Agent management"
+      - "billing": "Billing portal"
+      - "settings": "User settings"
+      - "data": "Data export"
+      - "connect": "OAuth/SSO"
+
+  # Infrastructure Network
+  - domain: blackroad.network
+    status: verified
+    tier: product
+    plan: pro
+    purpose: "Infrastructure and mesh network"
+    subdomains:
+      - "@": "Network landing"
+      - "mesh": "Mesh router"
+      - "nodes": "Node registry"
+      - "chain": "RoadChain explorer"
+      - "edge": "Edge status"
+      - "registry": "Service registry"
+      - "health": "Health dashboard"
+      - "tunnel-lucidia": "Pi 5 tunnel"
+      - "tunnel-alice": "Pi 400 tunnel"
+      - "tunnel-jetson": "Jetson tunnel"
+
+  # Technical Systems
+  - domain: blackroad.systems
+    status: verified
+    tier: product
+    plan: pro
+    purpose: "Technical and governance systems"
+    subdomains:
+      - "@": "Systems landing"
+      - "arch": "Architecture docs"
+      - "specs": "Technical specs"
+      - "runbooks": "Runbooks"
+      - "metrics": "Metrics dashboard"
+      - "ledger": "Governance ledger"
+      - "policies": "Policy engine"
+      - "intents": "Intent chains"
+      - "claims": "Claims service"
+      - "delegations": "Delegations"
+
+  # Creative Studio
+  - domain: lucidia.studio
+    status: verified
+    tier: product
+    plan: pro
+    purpose: "Lucidia creative tools and agent homes"
+    subdomains:
+      - "@": "Studio landing"
+      - "create": "Creation tools"
+      - "homes": "Agent homes (Unity)"
+      - "gallery": "Asset gallery"
+      - "assets": "R2 asset storage"
+      - "templates": "Templates library"
+      - "render": "Rendering service"
+
+  # ==========================================
+  # TIER 3: AGENT IDENTITY DOMAINS
+  # ==========================================
+
+  # Alice Agent
+  - domain: aliceqi.com
+    status: verified
+    tier: agent
+    plan: pro
+    purpose: "Alice agent identity and interface"
+    subdomains:
+      - "@": "Alice landing"
+      - "www": "Redirect"
+      - "chat": "Direct chat"
+      - "memory": "Memory explorer"
+      - "home": "Alice's home"
+
+  # ==========================================
+  # TIER 4: QUANTUM COMPUTING DOMAINS
+  # ==========================================
+
+  # Primary Quantum
+  - domain: blackroadquantum.com
+    status: verified
+    tier: quantum
+    plan: pro
+    purpose: "Primary quantum computing brand"
+    subdomains:
+      - "@": "Quantum landing"
+      - "www": "Redirect"
+      - "compute": "Quantum compute"
+      - "simulator": "Circuit simulator"
+      - "api": "Quantum API"
+      - "docs": "Quantum docs"
+
+  # Quantum Intelligence
+  - domain: blackroadqi.com
+    status: verified
+    tier: quantum
+    plan: pro
+    purpose: "Quantum intelligence research"
+    subdomains:
+      - "@": "QI landing"
+      - "www": "Redirect"
+      - "research": "Research portal"
+      - "lab": "QI lab"
+      - "papers": "Publications"
+
+  # Lucidia Quantum
+  - domain: lucidiaqi.com
+    status: verified
+    tier: quantum
+    plan: pro
+    purpose: "Quantum-enhanced AI agents"
+    subdomains:
+      - "@": "Lucidia QI landing"
+      - "www": "Redirect"
+      - "quantum": "Quantum agents"
+      - "neural": "Neural networks"
+
+  # ==========================================
+  # TIER 5: REDIRECT/PROTECTION DOMAINS
+  # ==========================================
+
+  # Quantum Info (Redirect)
+  - domain: blackroadquantum.info
+    status: verified
+    tier: redirect
+    plan: free
+    purpose: "Redirects to blackroadquantum.com"
+    redirect_to: blackroadquantum.com
+
+  # Quantum Net (Redirect)
+  - domain: blackroadquantum.net
+    status: verified
+    tier: redirect
+    plan: free
+    purpose: "Redirects to blackroadquantum.com"
+    redirect_to: blackroadquantum.com
+
+  # Quantum Shop
+  - domain: blackroadquantum.shop
+    status: verified
+    tier: commerce
+    plan: free
+    purpose: "Merchandise store"
+    subdomains:
+      - "@": "Shop landing"
+      - "www": "Redirect"
+      - "store": "Merch store"
+
+  # Quantum Store (Redirect)
+  - domain: blackroadquantum.store
+    status: verified
+    tier: redirect
+    plan: free
+    purpose: "Redirects to blackroadquantum.shop"
+    redirect_to: blackroadquantum.shop
+
+# ============================================
+# DOMAIN SUMMARY
+# ============================================
+
+summary:
+  total_domains: 16
+  verified: 16
+  pending: 0
+
+  by_tier:
+    primary: 3
+    product: 5
+    agent: 1
+    quantum: 3
+    redirect: 3
+    commerce: 1
+
+  by_plan:
+    business: 2
+    pro: 10
+    free: 4
+
+  estimated_annual_cost:
+    registrations: "$200-300"
+    cloudflare_plans: "$2,400-4,800"
+    total: "$2,600-5,100"
+
+# ============================================
+# REGISTRAR INFO
+# ============================================
+
+registrars:
+  primary: "Cloudflare Registrar"
+  secondary: "GoDaddy"
+
+  renewal_dates:
+    # Add renewal dates when known
+    blackroad.io: "TBD"
+    lucidia.earth: "TBD"
+
+# ============================================
+# SSL/TLS CONFIGURATION
+# ============================================
+
+ssl_config:
+  default:
+    mode: full_strict
+    min_tls_version: "1.2"
+    always_use_https: true
+
+  certificates:
+    type: "Cloudflare Universal SSL"
+    auto_renewal: true
+
+# ============================================
+# DNS PROPAGATION CHECKLIST
+# ============================================
+
+dns_checklist:
+  # Run these commands to verify DNS propagation
+  verify_commands:
+    - "dig +short blackroad.io"
+    - "dig +short lucidia.earth"
+    - "curl -I https://blackroad.io"
+    - "curl -I https://api.blackroad.io/health"
+
+  expected_responses:
+    a_records: "104.x.x.x (Cloudflare)"
+    cname_records: "*.up.railway.app or *.pages.dev"
+    https_status: "200 OK or 301 Redirect"

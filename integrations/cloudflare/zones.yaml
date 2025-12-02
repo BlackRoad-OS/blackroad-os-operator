@@ -562,6 +562,243 @@ zones:
         content: "alice-home.up.railway.app"
         proxied: true
 
+  # ============================================
+  # ZONE: blackroadqi.com (Quantum Intelligence)
+  # ============================================
+
+  blackroadqi.com:
+    plan: pro
+    settings:
+      ssl: full_strict
+      security_level: high
+
+    dns_records:
+      - name: "@"
+        type: A
+        content: "${RAILWAY_IP}"
+        proxied: true
+
+      - name: "www"
+        type: CNAME
+        content: "blackroadqi.com"
+        proxied: true
+
+      - name: "research"
+        type: CNAME
+        content: "blackroad-qi-research.up.railway.app"
+        proxied: true
+        comment: "Quantum intelligence research"
+
+      - name: "lab"
+        type: CNAME
+        content: "blackroad-qi-lab.up.railway.app"
+        proxied: true
+        comment: "QI experimentation lab"
+
+      - name: "papers"
+        type: CNAME
+        content: "blackroad-qi-papers.pages.dev"
+        proxied: true
+        comment: "Research publications"
+
+  # ============================================
+  # ZONE: lucidiaqi.com (Lucidia Quantum)
+  # ============================================
+
+  lucidiaqi.com:
+    plan: pro
+    settings:
+      ssl: full_strict
+      security_level: high
+
+    dns_records:
+      - name: "@"
+        type: A
+        content: "${RAILWAY_IP}"
+        proxied: true
+
+      - name: "www"
+        type: CNAME
+        content: "lucidiaqi.com"
+        proxied: true
+
+      - name: "quantum"
+        type: CNAME
+        content: "lucidia-quantum-agents.up.railway.app"
+        proxied: true
+        comment: "Quantum-enhanced agents"
+
+      - name: "neural"
+        type: CNAME
+        content: "lucidia-neural-net.up.railway.app"
+        proxied: true
+        comment: "Neural network services"
+
+  # ============================================
+  # ZONE: blackroadquantum.com (Primary Quantum)
+  # ============================================
+
+  blackroadquantum.com:
+    plan: pro
+    settings:
+      ssl: full_strict
+      security_level: high
+
+    dns_records:
+      - name: "@"
+        type: A
+        content: "${RAILWAY_IP}"
+        proxied: true
+
+      - name: "www"
+        type: CNAME
+        content: "blackroadquantum.com"
+        proxied: true
+
+      - name: "compute"
+        type: CNAME
+        content: "blackroad-quantum-compute.up.railway.app"
+        proxied: true
+        comment: "Quantum computing services"
+
+      - name: "simulator"
+        type: CNAME
+        content: "blackroad-quantum-sim.up.railway.app"
+        proxied: true
+        comment: "Quantum circuit simulator"
+
+      - name: "api"
+        type: CNAME
+        content: "blackroad-quantum-api.up.railway.app"
+        proxied: true
+        comment: "Quantum API gateway"
+
+      - name: "docs"
+        type: CNAME
+        content: "blackroad-quantum-docs.pages.dev"
+        proxied: true
+
+  # ============================================
+  # ZONE: blackroadquantum.info (Quantum Info)
+  # ============================================
+
+  blackroadquantum.info:
+    plan: free
+    settings:
+      ssl: full_strict
+      security_level: medium
+
+    dns_records:
+      - name: "@"
+        type: CNAME
+        content: "blackroadquantum.com"
+        proxied: true
+        comment: "Redirect to primary quantum domain"
+
+      - name: "www"
+        type: CNAME
+        content: "blackroadquantum.com"
+        proxied: true
+
+    page_rules:
+      - url: "blackroadquantum.info/*"
+        actions:
+          forwarding_url:
+            status_code: 301
+            url: "https://blackroadquantum.com/$1"
+
+  # ============================================
+  # ZONE: blackroadquantum.net (Quantum Network)
+  # ============================================
+
+  blackroadquantum.net:
+    plan: free
+    settings:
+      ssl: full_strict
+      security_level: medium
+
+    dns_records:
+      - name: "@"
+        type: CNAME
+        content: "blackroadquantum.com"
+        proxied: true
+        comment: "Redirect to primary quantum domain"
+
+      - name: "www"
+        type: CNAME
+        content: "blackroadquantum.com"
+        proxied: true
+
+    page_rules:
+      - url: "blackroadquantum.net/*"
+        actions:
+          forwarding_url:
+            status_code: 301
+            url: "https://blackroadquantum.com/$1"
+
+  # ============================================
+  # ZONE: blackroadquantum.shop (Quantum Shop)
+  # ============================================
+
+  blackroadquantum.shop:
+    plan: free
+    settings:
+      ssl: full_strict
+      security_level: medium
+
+    dns_records:
+      - name: "@"
+        type: A
+        content: "${RAILWAY_IP}"
+        proxied: true
+
+      - name: "www"
+        type: CNAME
+        content: "blackroadquantum.shop"
+        proxied: true
+
+      - name: "store"
+        type: CNAME
+        content: "blackroad-merch-store.up.railway.app"
+        proxied: true
+        comment: "Merchandise store"
+
+    page_rules:
+      - url: "blackroadquantum.shop/"
+        actions:
+          forwarding_url:
+            status_code: 301
+            url: "https://blackroadquantum.shop/store"
+
+  # ============================================
+  # ZONE: blackroadquantum.store (Quantum Store)
+  # ============================================
+
+  blackroadquantum.store:
+    plan: free
+    settings:
+      ssl: full_strict
+      security_level: medium
+
+    dns_records:
+      - name: "@"
+        type: CNAME
+        content: "blackroadquantum.shop"
+        proxied: true
+        comment: "Redirect to shop domain"
+
+      - name: "www"
+        type: CNAME
+        content: "blackroadquantum.shop"
+        proxied: true
+
+    page_rules:
+      - url: "blackroadquantum.store/*"
+        actions:
+          forwarding_url:
+            status_code: 301
+            url: "https://blackroadquantum.shop/$1"
+
 # ============================================
 # CLOUDFLARE WORKERS
 # ============================================
@@ -654,6 +891,25 @@ r2_buckets:
         - "https://*.blackroad.io"
         - "https://lucidia.earth"
         - "https://*.lucidia.earth"
+        - "https://blackroadinc.us"
+        - "https://*.blackroadinc.us"
+        - "https://aliceqi.com"
+        - "https://*.aliceqi.com"
+        - "https://blackroadai.com"
+        - "https://*.blackroadai.com"
+        - "https://blackroad.me"
+        - "https://blackroad.network"
+        - "https://*.blackroad.network"
+        - "https://blackroadqi.com"
+        - "https://*.blackroadqi.com"
+        - "https://blackroadquantum.com"
+        - "https://*.blackroadquantum.com"
+        - "https://blackroad.systems"
+        - "https://*.blackroad.systems"
+        - "https://lucidia.studio"
+        - "https://*.lucidia.studio"
+        - "https://lucidiaqi.com"
+        - "https://*.lucidiaqi.com"
       allowed_methods:
         - GET
         - HEAD
