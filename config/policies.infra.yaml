@@ -1,0 +1,195 @@
+# policies.infra.yaml
+# Infrastructure policy pack - v1
+#
+# Governance semantics:
+#   - Scope: infra.*
+#   - Default stance: deny
+#   - Default ledger_level: full
+#
+# CRITICAL INVARIANTS:
+#   - All infra.* actions require role=operator
+#   - All infra.* actions logged at full fidelity
+#   - No exceptions for infra mutations
+
+# Amundson language header
+amundson: "0.1.0"
+governor: alice.governor.v1
+operator: alexa.operator.v1
+policy_pack: infra-policies
+policy_pack_version: "1.0.0"
+
+# Pack metadata
+version: "infra-v1"
+scope: "infra.*"
+default_stance: deny
+default_ledger_level: full
+
+policies:
+  # ============================================
+  # SERVICE OPERATIONS
+  # ============================================
+
+  - id: infra.service.restart.operator-only
+    description: "Only operators may restart services."
+    effect: allow
+    priority: 100
+    subject:
+      role: operator
+    action: "operator:restart"
+    resource: "service"
+    condition: {}
+    ledger_level: full
+
+  - id: infra.service.scale.operator-only
+    description: "Only operators may scale services."
+    effect: allow
+    priority: 100
+    subject:
+      role: operator
+    action: "operator:scale"
+    resource: "service"
+    condition: {}
+    ledger_level: full
+
+  - id: infra.service.deploy.operator-only
+    description: "Only operators may deploy services."
+    effect: allow
+    priority: 100
+    subject:
+      role: operator
+    action: "operator:deploy"
+    resource: "service"
+    condition: {}
+    ledger_level: full
+
+  - id: infra.service.rollback.operator-only
+    description: "Only operators may rollback services."
+    effect: allow
+    priority: 100
+    subject:
+      role: operator
+    action: "operator:rollback"
+    resource: "service"
+    condition: {}
+    ledger_level: full
+
+  # ============================================
+  # DATABASE OPERATIONS
+  # ============================================
+
+  - id: infra.db.migrate.operator-only
+    description: "Only operators may run database migrations."
+    effect: allow
+    priority: 100
+    subject:
+      role: operator
+    action: "operator:migrate"
+    resource: "database"
+    condition: {}
+    ledger_level: full
+
+  - id: infra.db.backup.operator-only
+    description: "Only operators may trigger database backups."
+    effect: allow
+    priority: 100
+    subject:
+      role: operator
+    action: "operator:backup"
+    resource: "database"
+    condition: {}
+    ledger_level: full
+
+  - id: infra.db.restore.operator-only
+    description: "Only operators may restore database backups."
+    effect: warn
+    priority: 100
+    subject:
+      role: operator
+    action: "operator:restore"
+    resource: "database"
+    condition:
+      caller_asserts:
+        - "restore_confirmed"
+    ledger_level: full
+
+  # ============================================
+  # CONFIGURATION
+  # ============================================
+
+  - id: infra.config.update.operator-only
+    description: "Only operators may update configuration."
+    effect: allow
+    priority: 100
+    subject:
+      role: operator
+    action: "operator:config-update"
+    resource: "config"
+    condition: {}
+    ledger_level: full
+
+  - id: infra.secrets.rotate.operator-only
+    description: "Only operators may rotate secrets."
+    effect: warn
+    priority: 100
+    subject:
+      role: operator
+    action: "operator:rotate-secrets"
+    resource: "secrets"
+    condition:
+      caller_asserts:
+        - "rotation_confirmed"
+    ledger_level: full
+
+  # ============================================
+  # MONITORING & LOGS (read operations)
+  # ============================================
+
+  - id: infra.logs.view.operator-allow
+    description: "Operators may view logs."
+    effect: allow
+    priority: 100
+    subject:
+      role: operator
+    action: "operator:view-logs"
+    resource: "logs"
+    condition: {}
+    ledger_level: action
+
+  - id: infra.metrics.view.operator-allow
+    description: "Operators may view metrics."
+    effect: allow
+    priority: 100
+    subject:
+      role: operator
+    action: "operator:view-metrics"
+    resource: "metrics"
+    condition: {}
+    ledger_level: action
+
+  - id: infra.health.check.any-allow
+    description: "Any authenticated actor may check infrastructure health."
+    effect: allow
+    priority: 100
+    subject:
+      role: "*"
+    action: "operator:health-check"
+    resource: "infra"
+    condition:
+      caller_asserts:
+        - "is_authenticated"
+    ledger_level: decision
+
+  # ============================================
+  # DEFAULT DENY (catch-all)
+  # ============================================
+
+  - id: infra.default-deny
+    description: "Deny any infrastructure action not explicitly allowed above."
+    effect: deny
+    priority: 0
+    subject:
+      role: "*"
+    action: "operator:*"
+    resource: "*"
+    condition: {}
+    ledger_level: full

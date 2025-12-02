@@ -1,0 +1,530 @@
+{
+  "description": "Stage 2: Mesh/Agent/Infra Governance - Example JSON Payloads",
+  "amundson_version": "0.1.0",
+  "governor": "alice.governor.v1",
+  "operator": "alexa.operator.v1",
+
+  "flows": {
+    "mesh_connect": {
+      "description": "Pi node or agent connecting to the mesh network",
+      "invariant": "mesh.* requires delegation_id OR role=operator",
+
+      "policy_evaluate_request": {
+        "subject": {
+          "user_id": null,
+          "role": "pi-node",
+          "attributes": {
+            "agent_id": "pi-mesh-001.node.v1"
+          }
+        },
+        "action": "mesh:connect",
+        "resource": {
+          "type": "mesh",
+          "id": "conn-abc123"
+        },
+        "context": {
+          "claims": [
+            {
+              "type": "device-certificate",
+              "device_id": "pi-mesh-001",
+              "cert_fingerprint": "sha256:abcd1234..."
+            }
+          ],
+          "asserted_facts": ["device_cert_valid"],
+          "fact_evidence": {
+            "device_cert_valid": {
+              "verified_at": "2025-12-01T12:00:00Z",
+              "cert_chain_length": 2
+            }
+          },
+          "request_metadata": {
+            "host": "mesh.blackroad.network",
+            "service": "mesh-router",
+            "correlation_id": "550e8400-e29b-41d4-a716-446655440000"
+          }
+        }
+      },
+
+      "policy_evaluate_response_allow": {
+        "decision": "allow",
+        "policy_id": "mesh.pi.connect.device-cert",
+        "policy_version": "mesh-v1",
+        "reason": "Pi node with valid device certificate may connect",
+        "required_ledger_level": "full"
+      },
+
+      "policy_evaluate_response_deny": {
+        "decision": "deny",
+        "policy_id": "invariant:mesh-delegation-required",
+        "policy_version": "invariant-v1",
+        "reason": "mesh.*/agents.* actions require explicit delegation or operator role",
+        "required_ledger_level": "full"
+      },
+
+      "ledger_event": {
+        "correlation_id": "550e8400-e29b-41d4-a716-446655440000",
+        "intent_id": null,
+        "sequence_num": 0,
+        "layer": "mesh",
+        "host": "mesh.blackroad.network",
+        "service": "mesh-router",
+        "policy_scope": "mesh.*",
+        "actor": {
+          "user_id": null,
+          "role": "pi-node",
+          "agent_id": "pi-mesh-001.node.v1",
+          "delegation_id": null
+        },
+        "action": "mesh:connect",
+        "resource_type": "mesh",
+        "resource_id": "conn-abc123",
+        "decision": "allow",
+        "policy_id": "mesh.pi.connect.device-cert",
+        "policy_version": "mesh-v1",
+        "asserted_facts": ["device_cert_valid"],
+        "fact_evidence": {
+          "device_cert_valid": {
+            "verified_at": "2025-12-01T12:00:00Z",
+            "cert_chain_length": 2
+          }
+        },
+        "claims": [
+          {
+            "type": "device-certificate",
+            "device_id": "pi-mesh-001",
+            "cert_fingerprint": "sha256:abcd1234..."
+          }
+        ],
+        "ledger_level": "full",
+        "metadata": {
+          "connection_type": "websocket",
+          "client_info": {
+            "device_type": "raspberry-pi",
+            "firmware_version": "1.2.0"
+          },
+          "event_type": "mesh:connected",
+          "language_version": "0.1.0",
+          "policy_pack": "mesh-policies",
+          "policy_pack_version": "1.0.0"
+        },
+        "request_context": {
+          "connection_id": "conn-abc123",
+          "connection_type": "websocket"
+        },
+        "response_summary": {
+          "connected": true
+        }
+      }
+    },
+
+    "agent_invoke": {
+      "description": "Agent invoking another agent via the mesh",
+      "invariant": "agents.* requires actor_agent_id AND capability claim",
+
+      "policy_evaluate_request": {
+        "subject": {
+          "user_id": "user-xyz789",
+          "role": "agent",
+          "attributes": {
+            "agent_id": "cece.assistant.v1"
+          }
+        },
+        "action": "agents:invoke",
+        "resource": {
+          "type": "agent",
+          "id": "lucidia.system.v1"
+        },
+        "context": {
+          "claims": [
+            {
+              "type": "capability",
+              "capabilities": ["invoke", "message"],
+              "agent_id": "cece.assistant.v1",
+              "granted_by": "alice.governor.v1"
+            },
+            {
+              "type": "delegation",
+              "delegation_id": "del-987654",
+              "delegator": "alexa.operator.v1",
+              "scope": ["agents.*"]
+            }
+          ],
+          "asserted_facts": ["has_invoke_capability", "target_agent_registered"],
+          "fact_evidence": {
+            "has_invoke_capability": {
+              "capability": "invoke",
+              "verified_at": "2025-12-01T12:05:00Z"
+            },
+            "target_agent_registered": {
+              "agent_id": "lucidia.system.v1",
+              "registered_at": "2025-11-01T00:00:00Z"
+            }
+          },
+          "request_metadata": {
+            "host": "agents.blackroad.network",
+            "service": "operator-ws",
+            "correlation_id": "660e8400-e29b-41d4-a716-446655440001"
+          }
+        }
+      },
+
+      "policy_evaluate_response_allow": {
+        "decision": "allow",
+        "policy_id": "agents.invoke.capability-allow",
+        "policy_version": "mesh-v1",
+        "reason": "Agent has invoke capability and target is registered",
+        "required_ledger_level": "full"
+      },
+
+      "policy_evaluate_response_deny_no_capability": {
+        "decision": "deny",
+        "policy_id": "invariant:agents-capability-required",
+        "policy_version": "invariant-v1",
+        "reason": "agents.* actions require capability claim for 'invoke'",
+        "required_ledger_level": "full"
+      },
+
+      "ledger_event": {
+        "correlation_id": "660e8400-e29b-41d4-a716-446655440001",
+        "intent_id": null,
+        "sequence_num": 0,
+        "layer": "mesh",
+        "host": "agents.blackroad.network",
+        "service": "operator-ws",
+        "policy_scope": "agents.*",
+        "actor": {
+          "user_id": "user-xyz789",
+          "role": "agent",
+          "agent_id": "cece.assistant.v1",
+          "delegation_id": "del-987654"
+        },
+        "action": "agents:invoke",
+        "resource_type": "agent",
+        "resource_id": "lucidia.system.v1",
+        "decision": "allow",
+        "policy_id": "agents.invoke.capability-allow",
+        "policy_version": "mesh-v1",
+        "asserted_facts": ["has_invoke_capability", "target_agent_registered"],
+        "fact_evidence": {
+          "has_invoke_capability": {
+            "capability": "invoke",
+            "verified_at": "2025-12-01T12:05:00Z"
+          },
+          "target_agent_registered": {
+            "agent_id": "lucidia.system.v1",
+            "registered_at": "2025-11-01T00:00:00Z"
+          }
+        },
+        "claims": [
+          {
+            "type": "capability",
+            "capabilities": ["invoke", "message"],
+            "agent_id": "cece.assistant.v1",
+            "granted_by": "alice.governor.v1"
+          },
+          {
+            "type": "delegation",
+            "delegation_id": "del-987654",
+            "delegator": "alexa.operator.v1",
+            "scope": ["agents.*"]
+          }
+        ],
+        "ledger_level": "full",
+        "metadata": {
+          "agent_id": "lucidia.system.v1",
+          "capability": "invoke",
+          "payload_summary": {
+            "message_type": "task_request",
+            "content_length": 256
+          },
+          "event_type": "agent:invoked",
+          "language_version": "0.1.0",
+          "policy_pack": "mesh-policies",
+          "policy_pack_version": "1.0.0"
+        },
+        "request_context": {
+          "agent_id": "lucidia.system.v1",
+          "capability": "invoke"
+        },
+        "response_summary": {
+          "invoked": true
+        }
+      }
+    },
+
+    "operator_restart": {
+      "description": "Operator restarting a service",
+      "invariant": "infra.* requires role=operator, logged at full fidelity",
+
+      "policy_evaluate_request": {
+        "subject": {
+          "user_id": "alexa",
+          "role": "operator",
+          "attributes": {}
+        },
+        "action": "operator:restart",
+        "resource": {
+          "type": "service",
+          "id": "gov-api"
+        },
+        "context": {
+          "claims": [],
+          "asserted_facts": [],
+          "fact_evidence": {},
+          "request_metadata": {
+            "host": "infra.blackroad.systems",
+            "service": "operator-ws",
+            "correlation_id": "770e8400-e29b-41d4-a716-446655440002"
+          }
+        }
+      },
+
+      "policy_evaluate_response_allow": {
+        "decision": "allow",
+        "policy_id": "infra.service.restart.operator-only",
+        "policy_version": "infra-v1",
+        "reason": "Operator role may restart services",
+        "required_ledger_level": "full"
+      },
+
+      "policy_evaluate_response_deny_non_operator": {
+        "decision": "deny",
+        "policy_id": "infra.default-deny",
+        "policy_version": "infra-v1",
+        "reason": "Only operators may perform infrastructure actions",
+        "required_ledger_level": "full"
+      },
+
+      "ledger_event": {
+        "correlation_id": "770e8400-e29b-41d4-a716-446655440002",
+        "intent_id": null,
+        "sequence_num": 0,
+        "layer": "infra",
+        "host": "infra.blackroad.systems",
+        "service": "operator-ws",
+        "policy_scope": "infra.*",
+        "actor": {
+          "user_id": "alexa",
+          "role": "operator",
+          "agent_id": null,
+          "delegation_id": null
+        },
+        "action": "operator:restart",
+        "resource_type": "service",
+        "resource_id": "gov-api",
+        "decision": "allow",
+        "policy_id": "infra.service.restart.operator-only",
+        "policy_version": "infra-v1",
+        "asserted_facts": [],
+        "fact_evidence": {},
+        "claims": [],
+        "ledger_level": "full",
+        "metadata": {
+          "operation_type": "restart",
+          "target_service": "gov-api",
+          "details": {
+            "reason": "memory usage spike",
+            "initiated_at": "2025-12-01T12:10:00Z"
+          },
+          "event_type": "operator:restart",
+          "language_version": "0.1.0",
+          "policy_pack": "infra-policies",
+          "policy_pack_version": "1.0.0"
+        },
+        "request_context": {
+          "operation_id": "op-restart-001",
+          "operation_type": "restart",
+          "target_service": "gov-api"
+        },
+        "response_summary": {
+          "executed": true
+        }
+      }
+    },
+
+    "operator_scale": {
+      "description": "Operator scaling a service",
+      "invariant": "infra.* requires role=operator, logged at full fidelity",
+
+      "policy_evaluate_request": {
+        "subject": {
+          "user_id": "alexa",
+          "role": "operator",
+          "attributes": {}
+        },
+        "action": "operator:scale",
+        "resource": {
+          "type": "service",
+          "id": "mesh-router"
+        },
+        "context": {
+          "claims": [],
+          "asserted_facts": [],
+          "fact_evidence": {},
+          "request_metadata": {
+            "host": "infra.blackroad.systems",
+            "service": "operator-ws",
+            "correlation_id": "880e8400-e29b-41d4-a716-446655440003"
+          }
+        }
+      },
+
+      "policy_evaluate_response_allow": {
+        "decision": "allow",
+        "policy_id": "infra.service.scale.operator-only",
+        "policy_version": "infra-v1",
+        "reason": "Operator role may scale services",
+        "required_ledger_level": "full"
+      },
+
+      "ledger_event": {
+        "correlation_id": "880e8400-e29b-41d4-a716-446655440003",
+        "intent_id": null,
+        "sequence_num": 0,
+        "layer": "infra",
+        "host": "infra.blackroad.systems",
+        "service": "operator-ws",
+        "policy_scope": "infra.*",
+        "actor": {
+          "user_id": "alexa",
+          "role": "operator",
+          "agent_id": null,
+          "delegation_id": null
+        },
+        "action": "operator:scale",
+        "resource_type": "service",
+        "resource_id": "mesh-router",
+        "decision": "allow",
+        "policy_id": "infra.service.scale.operator-only",
+        "policy_version": "infra-v1",
+        "asserted_facts": [],
+        "fact_evidence": {},
+        "claims": [],
+        "ledger_level": "full",
+        "metadata": {
+          "operation_type": "scale",
+          "target_service": "mesh-router",
+          "details": {
+            "from_replicas": 2,
+            "to_replicas": 4,
+            "reason": "increased mesh traffic"
+          },
+          "event_type": "operator:scale",
+          "language_version": "0.1.0",
+          "policy_pack": "infra-policies",
+          "policy_pack_version": "1.0.0"
+        },
+        "request_context": {
+          "operation_id": "op-scale-002",
+          "operation_type": "scale",
+          "target_service": "mesh-router"
+        },
+        "response_summary": {
+          "executed": true
+        }
+      }
+    },
+
+    "db_migrate": {
+      "description": "Operator running database migration",
+      "invariant": "infra.* requires role=operator, logged at full fidelity",
+
+      "policy_evaluate_request": {
+        "subject": {
+          "user_id": "alexa",
+          "role": "operator",
+          "attributes": {}
+        },
+        "action": "operator:migrate",
+        "resource": {
+          "type": "database",
+          "id": "ledger-db"
+        },
+        "context": {
+          "claims": [],
+          "asserted_facts": [],
+          "fact_evidence": {},
+          "request_metadata": {
+            "host": "db.blackroad.systems",
+            "service": "operator-ws",
+            "correlation_id": "990e8400-e29b-41d4-a716-446655440004"
+          }
+        }
+      },
+
+      "policy_evaluate_response_allow": {
+        "decision": "allow",
+        "policy_id": "infra.db.migrate.operator-only",
+        "policy_version": "infra-v1",
+        "reason": "Operator role may run database migrations",
+        "required_ledger_level": "full"
+      },
+
+      "ledger_event": {
+        "correlation_id": "990e8400-e29b-41d4-a716-446655440004",
+        "intent_id": null,
+        "sequence_num": 0,
+        "layer": "infra",
+        "host": "db.blackroad.systems",
+        "service": "operator-ws",
+        "policy_scope": "infra.*",
+        "actor": {
+          "user_id": "alexa",
+          "role": "operator",
+          "agent_id": null,
+          "delegation_id": null
+        },
+        "action": "operator:migrate",
+        "resource_type": "database",
+        "resource_id": "ledger-db",
+        "decision": "allow",
+        "policy_id": "infra.db.migrate.operator-only",
+        "policy_version": "infra-v1",
+        "asserted_facts": [],
+        "fact_evidence": {},
+        "claims": [],
+        "ledger_level": "full",
+        "metadata": {
+          "operation_type": "migrate",
+          "database": "ledger-db",
+          "details": {
+            "migration_version": "002_add_indexes",
+            "migration_file": "migrations/002_add_indexes.sql"
+          },
+          "event_type": "operator:migrate",
+          "language_version": "0.1.0",
+          "policy_pack": "infra-policies",
+          "policy_pack_version": "1.0.0"
+        },
+        "request_context": {
+          "operation_id": "op-migrate-003",
+          "database": "ledger-db"
+        },
+        "response_summary": {
+          "executed": true
+        }
+      }
+    }
+  },
+
+  "invariant_summary": {
+    "mesh_scope": {
+      "pattern": "mesh.*",
+      "invariant": "requires delegation_id OR role=operator",
+      "ledger_level": "full",
+      "policy_pack": "mesh-policies"
+    },
+    "agents_scope": {
+      "pattern": "agents.*",
+      "invariant": "requires actor_agent_id AND capability claim",
+      "ledger_level": "full",
+      "policy_pack": "mesh-policies"
+    },
+    "infra_scope": {
+      "pattern": "infra.*",
+      "invariant": "requires role=operator",
+      "ledger_level": "full",
+      "policy_pack": "infra-policies"
+    }
+  }
+}

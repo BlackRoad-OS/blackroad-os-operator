@@ -1,0 +1,414 @@
+# railway-services.yaml
+# Canonical Railway infrastructure manifest for BlackRoad OS
+#
+# Governance:
+#   amundson: 0.1.0
+#   governor: alice.governor.v1
+#   operator: alexa.operator.v1
+#
+# This file is the source of truth for Railway service configuration.
+# Changes should be reviewed through governance before deployment.
+
+version: "1.0.0"
+last_updated: "2025-12-01"
+
+# Environment conventions
+environments:
+  dev:
+    suffix: "-dev"
+    domain_prefix: "dev."
+    br_env: "dev"
+  stg:
+    suffix: "-stg"
+    domain_prefix: "stg."
+    br_env: "stg"
+  prod:
+    suffix: ""
+    domain_prefix: ""
+    br_env: "prod"
+
+# Railway project structure
+projects:
+  blackroad-os-core:
+    description: "Core platform services"
+    environments: [dev, stg, prod]
+    services:
+      - web-app
+      - gov-api
+      - api-gateway
+      - postgres-db
+
+  blackroad-os-operator:
+    description: "Operator and mesh services"
+    environments: [dev, stg, prod]
+    services:
+      - operator-ws
+      - mesh-router
+
+# Service definitions
+services:
+  # ============================================
+  # WEB APP (Next.js)
+  # ============================================
+  web-app:
+    name: "BlackRoad Web App"
+    description: "Multi-tenant web app serving app.*, edu.*, homework.* domains"
+    org: BlackRoad-OS
+    repo: blackroad-os-home
+
+    stack:
+      runtime: node
+      version: "20"
+      framework: nextjs
+
+    build:
+      command: "npm install && npm run build"
+      watch_paths:
+        - "src/**"
+        - "app/**"
+        - "package.json"
+
+    start:
+      command: "npm run start"
+
+    domains:
+      prod:
+        - app.blackroad.io
+        - edu.blackroad.io
+        - homework.blackroad.io
+        - classroom.blackroad.io
+        - roadwork.blackroad.io
+      stg:
+        - stg.app.blackroad.io
+        - stg.edu.blackroad.io
+      dev:
+        - dev.app.blackroad.io
+
+    env_vars:
+      # Runtime
+      PORT: "3000"
+      NODE_ENV: "${BR_ENV}"
+      BR_ENV: "${BR_ENV}"
+
+      # Database
+      DATABASE_URL: "${DATABASE_URL}"
+
+      # Governance API
+      GOV_API_URL: "${GOV_API_INTERNAL_URL}"
+      NEXT_PUBLIC_GOV_API_URL: "${GOV_API_PUBLIC_URL}"
+
+      # Observability
+      LOG_LEVEL: "info"
+      OTEL_EXPORTER_OTLP_ENDPOINT: "${OTEL_ENDPOINT}"
+
+    health_check:
+      path: "/api/health"
+      interval: 30
+      timeout: 10
+
+    resources:
+      memory: "512MB"
+      cpu: "0.5"
+      replicas:
+        dev: 1
+        stg: 1
+        prod: 2
+
+  # ============================================
+  # GOV API (FastAPI - Cece's brain)
+  # ============================================
+  gov-api:
+    name: "Governance API"
+    description: "Cece governance engine - policy evaluation, ledger, intents"
+    org: BlackRoad-OS
+    repo: blackroad-os-api
+
+    stack:
+      runtime: python
+      version: "3.11"
+      framework: fastapi
+
+    build:
+      command: "pip install -r requirements.txt"
+      watch_paths:
+        - "app/**"
+        - "requirements.txt"
+        - "policies/**"
+
+    start:
+      command: "uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"
+
+    domains:
+      prod:
+        - gov.api.blackroad.io
+        - ledger.blackroad.systems
+        - policies.blackroad.systems
+        - intents.blackroad.systems
+        - claims.blackroad.systems
+        - delegations.blackroad.systems
+      stg:
+        - stg.gov.api.blackroad.io
+      dev:
+        - dev.gov.api.blackroad.io
+
+    env_vars:
+      # Runtime
+      PORT: "8000"
+      BR_ENV: "${BR_ENV}"
+
+      # Database
+      DATABASE_URL: "${DATABASE_URL}"
+      LEDGER_DB_URL: "${LEDGER_DB_URL}"
+
+      # Policy engine
+      POLICY_STORE_PATH: "policies/"
+      LANGUAGE_VERSION: "0.1.0"
+
+      # CORS
+      CORS_ORIGINS: "${CORS_ORIGINS}"
+
+      # Observability
+      LOG_LEVEL: "info"
+
+    health_check:
+      path: "/health"
+      interval: 30
+      timeout: 10
+
+    resources:
+      memory: "256MB"
+      cpu: "0.25"
+      replicas:
+        dev: 1
+        stg: 1
+        prod: 2
+
+  # ============================================
+  # API GATEWAY (Express/Fastify)
+  # ============================================
+  api-gateway:
+    name: "API Gateway"
+    description: "Public API gateway with rate limiting and routing"
+    org: BlackRoad-OS
+    repo: blackroad-os-api-gateway
+
+    stack:
+      runtime: node
+      version: "20"
+      framework: fastify
+
+    build:
+      command: "npm install && npm run build"
+
+    start:
+      command: "npm run start"
+
+    domains:
+      prod:
+        - api.blackroad.io
+      stg:
+        - stg.api.blackroad.io
+      dev:
+        - dev.api.blackroad.io
+
+    env_vars:
+      PORT: "3001"
+      BR_ENV: "${BR_ENV}"
+      GOV_API_URL: "${GOV_API_INTERNAL_URL}"
+      CORE_INTERNAL_URL: "${CORE_INTERNAL_URL}"
+      LOG_LEVEL: "info"
+      ALLOWED_ORIGINS: "${CORS_ORIGINS}"
+      RATE_LIMIT_WINDOW_MS: "60000"
+      RATE_LIMIT_MAX_REQUESTS: "100"
+
+    health_check:
+      path: "/health"
+      interval: 30
+      timeout: 10
+
+    resources:
+      memory: "256MB"
+      cpu: "0.25"
+      replicas:
+        dev: 1
+        stg: 1
+        prod: 2
+
+  # ============================================
+  # OPERATOR WS (This repo - FastAPI)
+  # ============================================
+  operator-ws:
+    name: "Operator WebSocket Hub"
+    description: "Browser ↔ operator WebSocket connections, agent routing"
+    org: BlackRoad-OS
+    repo: blackroad-os-operator
+
+    stack:
+      runtime: python
+      version: "3.11"
+      framework: fastapi
+
+    build:
+      command: "pip install -r requirements.txt"
+
+    start:
+      command: "uvicorn br_operator.main:app --host 0.0.0.0 --port ${PORT:-8000}"
+
+    domains:
+      prod:
+        - ws.blackroad.io
+        - agents.blackroad.network
+      stg:
+        - stg.ws.blackroad.io
+      dev:
+        - dev.ws.blackroad.io
+
+    env_vars:
+      PORT: "8000"
+      BR_ENV: "${BR_ENV}"
+      DATABASE_URL: "${DATABASE_URL}"
+      GOV_API_URL: "${GOV_API_INTERNAL_URL}"
+      CATALOG_PATH: "agent-catalog/agents.yaml"
+      LOG_LEVEL: "info"
+      OLLAMA_BASE_URL: "${OLLAMA_BASE_URL}"
+      LLM_MODEL: "${LLM_MODEL}"
+      RAG_API_URL: "${RAG_API_URL}"
+
+    health_check:
+      path: "/health"
+      interval: 30
+      timeout: 10
+
+    resources:
+      memory: "512MB"
+      cpu: "0.5"
+      replicas:
+        dev: 1
+        stg: 1
+        prod: 2
+
+  # ============================================
+  # MESH ROUTER
+  # ============================================
+  mesh-router:
+    name: "Mesh Router"
+    description: "Agent mesh entry point for cloud and edge nodes"
+    org: BlackRoad-OS
+    repo: blackroad-os-operator
+
+    stack:
+      runtime: python
+      version: "3.11"
+      framework: fastapi
+
+    build:
+      command: "pip install -r requirements.txt"
+
+    start:
+      command: "uvicorn br_operator.main:app --host 0.0.0.0 --port ${PORT:-8000}"
+
+    domains:
+      prod:
+        - mesh.blackroad.network
+        - pi.mesh.blackroad.network
+        - edge.blackroad.network
+      stg:
+        - stg.mesh.blackroad.network
+      dev:
+        - dev.mesh.blackroad.network
+
+    env_vars:
+      PORT: "8000"
+      BR_ENV: "${BR_ENV}"
+      DATABASE_URL: "${DATABASE_URL}"
+      GOV_API_URL: "${GOV_API_INTERNAL_URL}"
+      MESH_MODE: "true"
+      LOG_LEVEL: "info"
+
+    health_check:
+      path: "/health"
+      interval: 30
+      timeout: 10
+
+    resources:
+      memory: "256MB"
+      cpu: "0.25"
+      replicas:
+        dev: 1
+        stg: 1
+        prod: 3
+
+  # ============================================
+  # POSTGRES DATABASE
+  # ============================================
+  postgres-db:
+    name: "Primary Postgres"
+    description: "Managed PostgreSQL for all services"
+    type: database
+    provider: railway  # or neon, supabase
+
+    domains:
+      prod:
+        - db.blackroad.systems
+
+    config:
+      engine: postgres
+      version: "15"
+
+    resources:
+      storage:
+        dev: "1GB"
+        stg: "5GB"
+        prod: "20GB"
+      memory:
+        dev: "256MB"
+        stg: "512MB"
+        prod: "2GB"
+
+    backups:
+      enabled: true
+      retention_days: 30
+      schedule: "0 2 * * *"  # 2 AM daily
+
+# Shared environment variable templates
+env_templates:
+  database:
+    DATABASE_URL: "postgresql://${PGUSER}:${PGPASSWORD}@${PGHOST}:${PGPORT}/${PGDATABASE}"
+    LEDGER_DB_URL: "postgresql://${PGUSER}:${PGPASSWORD}@${PGHOST}:${PGPORT}/${PGDATABASE}"
+
+  cors:
+    CORS_ORIGINS: |
+      https://app.blackroad.io,
+      https://edu.blackroad.io,
+      https://homework.blackroad.io,
+      https://console.blackroad.io
+
+  internal_urls:
+    GOV_API_INTERNAL_URL: "http://gov-api.railway.internal:8000"
+    CORE_INTERNAL_URL: "http://web-app.railway.internal:3000"
+
+  public_urls:
+    GOV_API_PUBLIC_URL: "https://gov.api.blackroad.io"
+
+# Deployment order (dependency graph)
+deployment_order:
+  1: [postgres-db]
+  2: [gov-api]
+  3: [api-gateway, operator-ws, mesh-router]
+  4: [web-app]
+
+# Railway CLI commands reference
+cli_commands:
+  link_project: "railway link"
+  deploy: "railway up"
+  run_local: "railway run <command>"
+  logs: "railway logs"
+  variables: "railway variables"
+  shell: "railway shell"
+
+  # Recommended workflow
+  workflow:
+    - "railway link                    # Link to project"
+    - "railway variables --set KEY=val # Set env vars"
+    - "railway up                      # Deploy"
+    - "railway logs -f                 # Follow logs"

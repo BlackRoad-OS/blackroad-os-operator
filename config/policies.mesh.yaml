@@ -1,0 +1,209 @@
+# policies.mesh.yaml
+# Mesh and Agent policy pack - v1
+#
+# Governance semantics:
+#   - Scope: mesh.*, agents.*
+#   - Default stance: deny
+#   - Default ledger_level: full
+#
+# CRITICAL INVARIANTS:
+#   - mesh.* actions require delegation_id OR actor_role=operator
+#   - agents.* actions require actor_agent_id AND capability claim
+#   - All mesh/agent actions logged at full fidelity
+
+# Amundson language header
+amundson: "0.1.0"
+governor: alice.governor.v1
+operator: alexa.operator.v1
+policy_pack: mesh-policies
+policy_pack_version: "1.0.0"
+
+# Pack metadata
+version: "mesh-v1"
+scope: "mesh.*"
+default_stance: deny
+default_ledger_level: full
+
+policies:
+  # ============================================
+  # MESH CONNECTION
+  # ============================================
+
+  - id: mesh.connect.operator-allow
+    description: "Operators may connect to the mesh without delegation."
+    effect: allow
+    priority: 200
+    subject:
+      role: operator
+    action: "mesh:connect"
+    resource: "mesh"
+    condition: {}
+    ledger_level: full
+
+  - id: mesh.connect.delegated-allow
+    description: "Any actor with a valid delegation may connect to the mesh."
+    effect: allow
+    priority: 100
+    subject:
+      role: "*"
+    action: "mesh:connect"
+    resource: "mesh"
+    condition:
+      claim_check: "delegation"
+      caller_asserts:
+        - "delegation_valid"
+    ledger_level: full
+
+  # ============================================
+  # MESH ROUTING
+  # ============================================
+
+  - id: mesh.route.operator-allow
+    description: "Operators may route messages across the mesh."
+    effect: allow
+    priority: 200
+    subject:
+      role: operator
+    action: "mesh:route"
+    resource: "mesh"
+    condition: {}
+    ledger_level: full
+
+  - id: mesh.route.delegated-allow
+    description: "Delegated actors may route messages within their delegation scope."
+    effect: allow
+    priority: 100
+    subject:
+      role: "*"
+    action: "mesh:route"
+    resource: "mesh"
+    condition:
+      claim_check: "delegation"
+      caller_asserts:
+        - "delegation_valid"
+        - "route_within_scope"
+    ledger_level: full
+
+  # ============================================
+  # AGENT INVOCATION
+  # ============================================
+
+  - id: agents.invoke.operator-allow
+    description: "Operators may invoke any agent."
+    effect: allow
+    priority: 200
+    subject:
+      role: operator
+    action: "agents:invoke"
+    resource: "agent"
+    condition: {}
+    ledger_level: full
+
+  - id: agents.invoke.capability-allow
+    description: "Agents with matching capability claim may invoke other agents."
+    effect: allow
+    priority: 100
+    subject:
+      role: "*"
+    action: "agents:invoke"
+    resource: "agent"
+    condition:
+      claim_check: "capability"
+      caller_asserts:
+        - "has_invoke_capability"
+        - "target_agent_registered"
+    ledger_level: full
+
+  # ============================================
+  # AGENT REGISTRATION
+  # ============================================
+
+  - id: agents.register.operator-only
+    description: "Only operators may register new agents."
+    effect: allow
+    priority: 100
+    subject:
+      role: operator
+    action: "agents:register"
+    resource: "agent"
+    condition: {}
+    ledger_level: full
+
+  # ============================================
+  # AGENT HEALTH CHECK
+  # ============================================
+
+  - id: agents.health.any-allow
+    description: "Any authenticated actor may check agent health."
+    effect: allow
+    priority: 100
+    subject:
+      role: "*"
+    action: "agents:health"
+    resource: "agent"
+    condition:
+      caller_asserts:
+        - "is_authenticated"
+    ledger_level: action
+
+  # ============================================
+  # PI MESH SPECIFIC
+  # ============================================
+
+  - id: mesh.pi.connect.device-cert
+    description: "Pi nodes may connect with valid device certificate."
+    effect: allow
+    priority: 150
+    subject:
+      role: "pi-node"
+    action: "mesh:connect"
+    resource: "mesh"
+    condition:
+      claim_check: "device-certificate"
+      caller_asserts:
+        - "device_cert_valid"
+    ledger_level: full
+
+  # ============================================
+  # EDGE DEVICES
+  # ============================================
+
+  - id: mesh.edge.connect.authenticated
+    description: "Edge devices may connect with valid authentication."
+    effect: allow
+    priority: 150
+    subject:
+      role: "edge-device"
+    action: "mesh:connect"
+    resource: "mesh"
+    condition:
+      claim_check: "device-auth"
+      caller_asserts:
+        - "device_authenticated"
+    ledger_level: full
+
+  # ============================================
+  # DEFAULT DENY (catch-all)
+  # ============================================
+
+  - id: mesh.default-deny
+    description: "Deny any mesh/agent action not explicitly allowed above."
+    effect: deny
+    priority: 0
+    subject:
+      role: "*"
+    action: "mesh:*"
+    resource: "*"
+    condition: {}
+    ledger_level: full
+
+  - id: agents.default-deny
+    description: "Deny any agent action not explicitly allowed above."
+    effect: deny
+    priority: 0
+    subject:
+      role: "*"
+    action: "agents:*"
+    resource: "*"
+    condition: {}
+    ledger_level: full

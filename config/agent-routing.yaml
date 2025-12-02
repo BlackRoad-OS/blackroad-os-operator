@@ -1,0 +1,198 @@
+# agent-routing.yaml
+# Agent DNS routing configuration for blackroad-os-operator
+#
+# This maps:
+#   - DNS patterns -> internal routing
+#   - Agent IDs -> handler modules
+#   - agent-{id}.agents.blackroad.network -> catalog agent
+#
+# Usage:
+#   from br_operator.agent_routing import load_routing_config, resolve_agent_by_hostname
+#   cfg = load_routing_config()
+#   agent = resolve_agent_by_hostname(cfg, "agent-deploy-bot.agents.blackroad.network")
+
+dns_patterns:
+  agents_root:
+    hostname: "agents.blackroad.network"
+    description: "Agent registry root - lists all agents"
+
+  agent_hosts:
+    pattern: "agent-{id}.agents.blackroad.network"
+    description: "Per-agent host pattern; {id} maps to agent_id in catalog"
+
+  mesh_root:
+    hostname: "mesh.blackroad.network"
+    description: "Agent mesh entrypoint for cloud agents"
+
+  pi_mesh:
+    hostname: "pi.mesh.blackroad.network"
+    description: "Pi mesh entrypoint for edge nodes"
+
+# Default handler settings
+defaults:
+  timeout_seconds: 30
+  max_retries: 3
+  health_check_interval: 60
+
+# Agent catalog routing
+# Each agent maps to:
+#   - hostname: DNS name for direct agent access
+#   - handler: Python module:function path
+#   - capabilities: What the agent can do
+#   - operator_level: If true, has elevated permissions
+#   - category: Logical grouping
+agents:
+  echo-agent:
+    id: "echo-agent"
+    hostname: "agent-echo-agent.agents.blackroad.network"
+    handler: "br_operator.agents.echo:handle"
+    capabilities:
+      - echo
+    operator_level: false
+    category: testing
+    notes:
+      - "Simple echo agent for connectivity tests"
+      - "Returns input message unchanged"
+
+  summarizer:
+    id: "summarizer"
+    hostname: "agent-summarizer.agents.blackroad.network"
+    handler: "br_operator.agents.summarizer:handle"
+    capabilities:
+      - summarize
+      - outline
+    operator_level: false
+    category: nlp
+    notes:
+      - "Summarizes provided text snippets"
+      - "Can also generate outlines"
+
+  deploy-bot:
+    id: "deploy-bot"
+    hostname: "agent-deploy-bot.agents.blackroad.network"
+    handler: "br_operator.agents.deploy_bot:handle"
+    capabilities:
+      - deploy
+      - rollback
+      - health-check
+    operator_level: true
+    category: deployment
+    notes:
+      - "Automates Railway deployment rollouts"
+      - "Safety checks and rollback capabilities"
+
+  sweep-bot:
+    id: "sweep-bot"
+    hostname: "agent-sweep-bot.agents.blackroad.network"
+    handler: "br_operator.agents.sweep_bot:handle"
+    capabilities:
+      - sweep
+      - merge-ready-check
+      - code-quality
+    operator_level: true
+    category: quality
+    notes:
+      - "Performs merge-ready sweeps across repositories"
+      - "Ensures code quality and consistency"
+
+  policy-bot:
+    id: "policy-bot"
+    hostname: "agent-policy-bot.agents.blackroad.network"
+    handler: "br_operator.agents.policy_bot:handle"
+    capabilities:
+      - policy-enforcement
+      - compliance-check
+      - audit
+    operator_level: true
+    category: compliance
+    compliance_sensitive: true
+    notes:
+      - "Enforces compliance policies across services"
+      - "Finance, identity, and regulatory workflows"
+
+  sync-agent:
+    id: "sync-agent"
+    hostname: "agent-sync-agent.agents.blackroad.network"
+    handler: "br_operator.agents.sync_agent:handle"
+    capabilities:
+      - sync
+      - state-reconciliation
+      - consistency-check
+    operator_level: true
+    category: orchestration
+    notes:
+      - "Synchronizes state across OS, Prism, Infra, and Packs"
+
+  health-monitor:
+    id: "health-monitor"
+    hostname: "agent-health-monitor.agents.blackroad.network"
+    handler: "br_operator.agents.health_monitor:handle"
+    capabilities:
+      - health-check
+      - monitoring
+      - alerting
+    operator_level: true
+    category: observability
+    notes:
+      - "Continuous health monitoring"
+      - "Alerting for all BlackRoad OS services"
+
+  archive-bot:
+    id: "archive-bot"
+    hostname: "agent-archive-bot.agents.blackroad.network"
+    handler: "br_operator.agents.archive_bot:handle"
+    capabilities:
+      - archive
+      - audit-log
+      - compliance-record
+    operator_level: true
+    category: compliance
+    compliance_sensitive: true
+    notes:
+      - "Routes critical operation outcomes to blackroad-os-archive"
+      - "Compliance and audit trails"
+
+# Capability registry
+# Maps capabilities to the agents that provide them
+capability_index:
+  echo:
+    - echo-agent
+  summarize:
+    - summarizer
+  outline:
+    - summarizer
+  deploy:
+    - deploy-bot
+  rollback:
+    - deploy-bot
+  health-check:
+    - deploy-bot
+    - health-monitor
+  sweep:
+    - sweep-bot
+  merge-ready-check:
+    - sweep-bot
+  code-quality:
+    - sweep-bot
+  policy-enforcement:
+    - policy-bot
+  compliance-check:
+    - policy-bot
+  audit:
+    - policy-bot
+  sync:
+    - sync-agent
+  state-reconciliation:
+    - sync-agent
+  consistency-check:
+    - sync-agent
+  monitoring:
+    - health-monitor
+  alerting:
+    - health-monitor
+  archive:
+    - archive-bot
+  audit-log:
+    - archive-bot
+  compliance-record:
+    - archive-bot
