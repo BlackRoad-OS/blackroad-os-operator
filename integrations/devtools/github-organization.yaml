@@ -1,0 +1,728 @@
+# GitHub Organization Configuration
+# BlackRoad OS Repository Architecture
+#
+# Complete mapping of 24 repositories to domains and infrastructure
+#
+# @blackroad_name: BlackRoad Code
+# @tier: Enterprise
+# @operator: alexa.operator.v1
+
+version: "github-org-v1"
+
+# ============================================
+# ORGANIZATION
+# ============================================
+
+organization:
+  name: "BlackRoad-OS"
+  display_name: "BlackRoad OS"
+  email: "dev@blackroad.io"
+  blog: "https://blackroad.io"
+  location: "San Francisco, CA"
+  description: "AI Governance & Agent Orchestration Platform"
+
+  settings:
+    default_repository_permission: read
+    members_can_create_repositories: false
+    members_can_create_public_repositories: false
+    members_can_create_private_repositories: false
+    members_can_fork_private_repositories: true
+    web_commit_signoff_required: true
+    two_factor_requirement: true
+
+# ============================================
+# REPOSITORY INVENTORY (24 Repos)
+# ============================================
+
+repositories:
+  # ==========================================
+  # TIER 1: CORE PLATFORM
+  # ==========================================
+
+  blackroad-os:
+    description: "BlackRoad OS - Main platform monorepo"
+    visibility: private
+    tier: core
+    domain: blackroad.io
+
+    topics:
+      - blackroad
+      - platform
+      - monorepo
+      - governance
+
+    settings:
+      has_issues: true
+      has_projects: true
+      has_wiki: true
+      has_discussions: true
+      allow_squash_merge: true
+      allow_merge_commit: false
+      allow_rebase_merge: true
+      delete_branch_on_merge: true
+
+    branch_protection:
+      main:
+        required_status_checks:
+          strict: true
+          contexts:
+            - test
+            - lint
+            - build
+        required_pull_request_reviews:
+          required_approving_review_count: 1
+          dismiss_stale_reviews: true
+        enforce_admins: false
+
+    deployment:
+      railway_service: null  # Monorepo - individual services deploy
+      domains: []
+
+  blackroad-os-core:
+    description: "Core libraries, shared utilities, and base components"
+    visibility: private
+    tier: core
+    domain: blackroad.io
+
+    topics:
+      - core
+      - libraries
+      - shared
+      - typescript
+      - python
+
+    packages:
+      - "@blackroad/core"
+      - "@blackroad/utils"
+      - "@blackroad/types"
+      - "blackroad-core-py"
+
+    deployment:
+      npm_publish: true
+      pypi_publish: true
+
+  blackroad-os-master:
+    description: "Master configuration, schemas, and protocol definitions"
+    visibility: private
+    tier: core
+    domain: blackroad.systems
+
+    topics:
+      - config
+      - schemas
+      - protocols
+      - amundson
+
+    contents:
+      - config/
+      - schemas/
+      - protocols/
+      - migrations/
+
+  # ==========================================
+  # TIER 2: API & SERVICES
+  # ==========================================
+
+  blackroad-os-operator:
+    description: "BlackRoad OS Governance Engine (Python/FastAPI)"
+    visibility: private
+    tier: api
+    domain: api.blackroad.io
+
+    topics:
+      - api
+      - governance
+      - fastapi
+      - python
+
+    deployment:
+      railway_service: blackroad-os-api-gateway
+      domains:
+        - api.blackroad.io
+        - api.lucidia.earth
+      healthcheck: /health
+
+    services:
+      - policy_engine
+      - ledger_service
+      - intent_service
+      - chat_endpoint
+
+  blackroad-os-api-gateway:
+    description: "API Gateway and request routing layer"
+    visibility: private
+    tier: api
+    domain: api.blackroad.io
+
+    topics:
+      - api-gateway
+      - routing
+      - rate-limiting
+      - authentication
+
+    deployment:
+      railway_service: blackroad-os-api-gateway
+      domains:
+        - api.blackroad.io
+        - api.lucidia.earth
+        - api.blackroadai.com
+
+  blackroad-os-api:
+    description: "Public API SDK and client libraries"
+    visibility: public
+    tier: api
+    domain: docs.blackroad.io
+
+    topics:
+      - sdk
+      - api-client
+      - typescript
+      - python
+
+    packages:
+      - "@blackroad/api-client"
+      - "blackroad-api-py"
+
+  # ==========================================
+  # TIER 3: WEB & FRONTEND
+  # ==========================================
+
+  blackroad-os-web:
+    description: "Main web application (Next.js)"
+    visibility: private
+    tier: web
+    domain: app.blackroad.io
+
+    topics:
+      - nextjs
+      - react
+      - typescript
+      - web
+
+    deployment:
+      railway_service: blackroad-os-web
+      domains:
+        - blackroad.io
+        - app.blackroad.io
+        - www.blackroad.io
+      build_command: "npm run build"
+      start_command: "npm start"
+
+  blackroad-os-prism-console:
+    description: "Admin console and operator dashboard"
+    visibility: private
+    tier: web
+    domain: console.lucidia.earth
+
+    topics:
+      - admin
+      - dashboard
+      - console
+      - react
+
+    deployment:
+      railway_service: blackroad-os-prism-console
+      domains:
+        - console.lucidia.earth
+        - admin.blackroad.io
+
+  blackroad-os-demo:
+    description: "Interactive product demos and showcases"
+    visibility: private
+    tier: web
+    domain: demo.blackroad.io
+
+    topics:
+      - demo
+      - showcase
+      - interactive
+
+    deployment:
+      railway_service: blackroad-os-demo
+      domains:
+        - demo.blackroad.io
+
+  blackroad-os-home:
+    description: "Landing pages and marketing site"
+    visibility: private
+    tier: web
+    domain: blackroad.io
+
+    topics:
+      - landing
+      - marketing
+      - nextjs
+
+    deployment:
+      cloudflare_pages: true
+      domains:
+        - blackroad.io
+        - blackroadinc.us
+        - blackroadai.com
+        - blackroadquantum.com
+
+  # ==========================================
+  # TIER 4: AGENTS & AI
+  # ==========================================
+
+  blackroad-os-agents:
+    description: "Lucidia agent runtime and orchestration"
+    visibility: private
+    tier: agents
+    domain: agents.lucidia.earth
+
+    topics:
+      - agents
+      - lucidia
+      - ai
+      - orchestration
+
+    deployment:
+      railway_service: lucidia-agents
+      domains:
+        - agents.lucidia.earth
+        - agents.blackroad.me
+      replicas: 5
+
+    services:
+      - agent_runtime
+      - memory_manager
+      - capability_registry
+      - event_bus
+
+  blackroad-os-beacon:
+    description: "AI model routing, load balancing, and inference gateway"
+    visibility: private
+    tier: agents
+    domain: api.blackroadai.com
+
+    topics:
+      - llm
+      - inference
+      - routing
+      - load-balancing
+
+    deployment:
+      railway_service: blackroad-beacon
+      domains:
+        - api.blackroadai.com
+        - models.blackroadai.com
+
+  # ==========================================
+  # TIER 5: INFRASTRUCTURE
+  # ==========================================
+
+  blackroad-os-infra:
+    description: "Infrastructure as Code (Terraform, Kubernetes, Helm)"
+    visibility: private
+    tier: infra
+    domain: blackroad.network
+
+    topics:
+      - infrastructure
+      - terraform
+      - kubernetes
+      - helm
+
+    contents:
+      - terraform/
+      - kubernetes/
+      - helm/
+      - ansible/
+      - scripts/
+
+    deployment:
+      terraform_cloud: true
+      argocd: true
+
+  # ==========================================
+  # TIER 6: DOCUMENTATION & RESEARCH
+  # ==========================================
+
+  blackroad-os-docs:
+    description: "Developer documentation and guides"
+    visibility: public
+    tier: docs
+    domain: docs.blackroad.io
+
+    topics:
+      - documentation
+      - guides
+      - api-docs
+      - tutorials
+
+    deployment:
+      cloudflare_pages: true
+      domains:
+        - docs.blackroad.io
+        - docs.lucidia.earth
+
+  blackroad-os-research:
+    description: "Research papers, experiments, and technical reports"
+    visibility: private
+    tier: research
+    domain: research.blackroadqi.com
+
+    topics:
+      - research
+      - papers
+      - experiments
+      - quantum
+
+    deployment:
+      cloudflare_pages: true
+      domains:
+        - research.blackroadqi.com
+        - papers.blackroadqi.com
+
+  blackroad-os-ideas:
+    description: "Ideation, RFCs, and proposal documents"
+    visibility: private
+    tier: research
+    domain: null
+
+    topics:
+      - ideas
+      - rfcs
+      - proposals
+      - planning
+
+  blackroad-os-archive:
+    description: "Archived projects, legacy code, and historical data"
+    visibility: private
+    tier: archive
+    domain: null
+
+    topics:
+      - archive
+      - legacy
+      - historical
+
+  # ==========================================
+  # TIER 7: PACKS (Vertical Solutions)
+  # ==========================================
+
+  blackroad-os-pack-research-lab:
+    description: "Research Lab Pack - Scientific research and experimentation tools"
+    visibility: private
+    tier: pack
+    domain: lab.blackroadqi.com
+
+    topics:
+      - pack
+      - research
+      - science
+      - experiments
+
+    deployment:
+      railway_service: blackroad-pack-research
+      domains:
+        - lab.blackroadqi.com
+
+  blackroad-os-pack-finance:
+    description: "Finance Pack - Financial analysis and trading tools"
+    visibility: private
+    tier: pack
+    domain: null
+
+    topics:
+      - pack
+      - finance
+      - trading
+      - analysis
+
+  blackroad-os-pack-education:
+    description: "Education Pack - Learning and tutoring tools"
+    visibility: private
+    tier: pack
+    domain: null
+
+    topics:
+      - pack
+      - education
+      - learning
+      - tutoring
+
+  blackroad-os-pack-creator-studio:
+    description: "Creator Studio Pack - Content creation and creative tools"
+    visibility: private
+    tier: pack
+    domain: lucidia.studio
+
+    topics:
+      - pack
+      - creative
+      - content
+      - studio
+
+    deployment:
+      railway_service: lucidia-creator-studio
+      domains:
+        - lucidia.studio
+        - create.lucidia.studio
+
+  blackroad-os-pack-legal:
+    description: "Legal Pack - Legal research and document analysis"
+    visibility: private
+    tier: pack
+    domain: null
+
+    topics:
+      - pack
+      - legal
+      - compliance
+      - documents
+
+  blackroad-os-pack-infra-devops:
+    description: "DevOps Pack - Infrastructure and operations tools"
+    visibility: private
+    tier: pack
+    domain: blackroad.systems
+
+    topics:
+      - pack
+      - devops
+      - infrastructure
+      - automation
+
+    deployment:
+      domains:
+        - devops.blackroad.systems
+
+  # ==========================================
+  # TIER 8: BRAND & ASSETS
+  # ==========================================
+
+  blackroad-os-brand:
+    description: "Brand assets, design system, and style guides"
+    visibility: private
+    tier: brand
+    domain: brand.blackroad.io
+
+    topics:
+      - brand
+      - design-system
+      - assets
+      - figma
+
+    contents:
+      - logos/
+      - icons/
+      - fonts/
+      - colors/
+      - guidelines/
+
+# ============================================
+# TEAMS
+# ============================================
+
+teams:
+  # Core teams
+  platform:
+    description: "Core platform development"
+    privacy: closed
+    permission: push
+    repositories:
+      - blackroad-os
+      - blackroad-os-core
+      - blackroad-os-master
+      - blackroad-os-operator
+      - blackroad-os-api-gateway
+      - blackroad-os-infra
+
+  agents:
+    description: "Agent development and AI"
+    privacy: closed
+    permission: push
+    repositories:
+      - blackroad-os-agents
+      - blackroad-os-beacon
+
+  frontend:
+    description: "Web and frontend development"
+    privacy: closed
+    permission: push
+    repositories:
+      - blackroad-os-web
+      - blackroad-os-prism-console
+      - blackroad-os-demo
+      - blackroad-os-home
+
+  research:
+    description: "Research and experimentation"
+    privacy: closed
+    permission: push
+    repositories:
+      - blackroad-os-research
+      - blackroad-os-pack-research-lab
+      - blackroad-os-ideas
+
+  docs:
+    description: "Documentation"
+    privacy: closed
+    permission: push
+    repositories:
+      - blackroad-os-docs
+      - blackroad-os-api
+
+  packs:
+    description: "Vertical solution packs"
+    privacy: closed
+    permission: push
+    repositories:
+      - blackroad-os-pack-research-lab
+      - blackroad-os-pack-finance
+      - blackroad-os-pack-education
+      - blackroad-os-pack-creator-studio
+      - blackroad-os-pack-legal
+      - blackroad-os-pack-infra-devops
+
+# ============================================
+# REPOSITORY GROUPS BY DOMAIN
+# ============================================
+
+domain_mapping:
+  # blackroad.io
+  "blackroad.io":
+    primary: blackroad-os-web
+    related:
+      - blackroad-os-home
+      - blackroad-os
+      - blackroad-os-core
+
+  # api.blackroad.io
+  "api.blackroad.io":
+    primary: blackroad-os-operator
+    related:
+      - blackroad-os-api-gateway
+      - blackroad-os-api
+
+  # lucidia.earth
+  "lucidia.earth":
+    primary: blackroad-os-agents
+    related:
+      - blackroad-os-web
+
+  # console.lucidia.earth
+  "console.lucidia.earth":
+    primary: blackroad-os-prism-console
+
+  # lucidia.studio
+  "lucidia.studio":
+    primary: blackroad-os-pack-creator-studio
+
+  # blackroad.network
+  "blackroad.network":
+    primary: blackroad-os-infra
+
+  # blackroad.systems
+  "blackroad.systems":
+    primary: blackroad-os-master
+    related:
+      - blackroad-os-pack-infra-devops
+
+  # docs.blackroad.io
+  "docs.blackroad.io":
+    primary: blackroad-os-docs
+
+  # blackroadai.com
+  "blackroadai.com":
+    primary: blackroad-os-beacon
+
+  # blackroadqi.com
+  "blackroadqi.com":
+    primary: blackroad-os-research
+    related:
+      - blackroad-os-pack-research-lab
+
+  # demo.blackroad.io
+  "demo.blackroad.io":
+    primary: blackroad-os-demo
+
+# ============================================
+# CI/CD CONFIGURATION
+# ============================================
+
+ci_cd:
+  # Shared workflows
+  shared_workflows:
+    repository: blackroad-os-infra
+    path: .github/workflows
+
+  # Default workflow triggers
+  default_triggers:
+    push:
+      branches: [main, develop]
+    pull_request:
+      branches: [main]
+
+  # Deployment environments
+  environments:
+    production:
+      url: "https://blackroad.io"
+      protection_rules:
+        required_reviewers: 1
+        wait_timer: 0
+
+    staging:
+      url: "https://staging.blackroad.io"
+      protection_rules:
+        required_reviewers: 0
+
+    development:
+      url: "https://dev.blackroad.io"
+
+# ============================================
+# SECRETS (Organization Level)
+# ============================================
+
+secrets:
+  # API Keys
+  - ANTHROPIC_API_KEY
+  - OPENAI_API_KEY
+  - PINECONE_API_KEY
+  - HUGGINGFACE_API_KEY
+
+  # Infrastructure
+  - RAILWAY_TOKEN
+  - CLOUDFLARE_API_TOKEN
+  - CLOUDFLARE_ACCOUNT_ID
+  - AWS_ACCESS_KEY_ID
+  - AWS_SECRET_ACCESS_KEY
+  - GCP_SERVICE_ACCOUNT_KEY
+
+  # Databases
+  - DATABASE_URL
+  - REDIS_URL
+  - SUPABASE_URL
+  - SUPABASE_ANON_KEY
+
+  # Auth
+  - AUTH0_DOMAIN
+  - AUTH0_CLIENT_ID
+  - AUTH0_CLIENT_SECRET
+  - JWT_SECRET
+
+  # Payments
+  - STRIPE_SECRET_KEY
+  - STRIPE_WEBHOOK_SECRET
+
+  # Observability
+  - DATADOG_API_KEY
+  - SENTRY_DSN
+  - SENTRY_AUTH_TOKEN
+
+  # Notifications
+  - SLACK_WEBHOOK_URL
+  - DISCORD_WEBHOOK_URL
+
+# ============================================
+# VARIABLES (Organization Level)
+# ============================================
+
+variables:
+  - ENVIRONMENT: production
+  - REGISTRY: ghcr.io/blackroad-os
+  - GOVERNOR: alice.governor.v1
+  - OPERATOR: alexa.operator.v1
+  - AMUNDSON_VERSION: "0.1.0"

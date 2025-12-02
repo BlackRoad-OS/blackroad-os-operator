@@ -1,0 +1,427 @@
+# Repository to Domain Mapping
+# BlackRoad OS Service Architecture
+#
+# Maps all 24 repositories to their domains and deployment targets
+#
+# @blackroad_name: BlackRoad Service Map
+# @operator: alexa.operator.v1
+
+version: "repo-domain-v1"
+
+# ============================================
+# DEPLOYMENT MATRIX
+# ============================================
+
+deployments:
+  # ==========================================
+  # RAILWAY DEPLOYMENTS
+  # ==========================================
+
+  railway:
+    # API Services
+    - repo: blackroad-os-operator
+      service: blackroad-os-api-gateway
+      domains:
+        - api.blackroad.io
+        - api.lucidia.earth
+      environment:
+        PORT: 8080
+        GOVERNANCE_MODE: strict
+      healthcheck: /health
+      replicas: 2
+
+    - repo: blackroad-os-api-gateway
+      service: blackroad-os-gateway
+      domains:
+        - gateway.blackroad.io
+      environment:
+        PORT: 8080
+      replicas: 2
+
+    # Web Applications
+    - repo: blackroad-os-web
+      service: blackroad-os-web
+      domains:
+        - app.blackroad.io
+      build_command: npm run build
+      start_command: npm start
+      replicas: 2
+
+    - repo: blackroad-os-prism-console
+      service: blackroad-os-prism-console
+      domains:
+        - console.lucidia.earth
+        - admin.blackroad.io
+      build_command: npm run build
+      start_command: npm start
+
+    - repo: blackroad-os-demo
+      service: blackroad-os-demo
+      domains:
+        - demo.blackroad.io
+
+    # Agent Services
+    - repo: blackroad-os-agents
+      service: lucidia-agents
+      domains:
+        - agents.lucidia.earth
+      environment:
+        MAX_AGENTS_PER_INSTANCE: 100
+        MEMORY_BACKEND: pinecone
+      replicas: 5
+
+    - repo: blackroad-os-beacon
+      service: blackroad-beacon
+      domains:
+        - models.blackroadai.com
+        - inference.blackroadai.com
+      environment:
+        LLM_ROUTING: true
+      replicas: 3
+
+    # Pack Services
+    - repo: blackroad-os-pack-research-lab
+      service: blackroad-pack-research
+      domains:
+        - lab.blackroadqi.com
+        - research.blackroadqi.com
+
+    - repo: blackroad-os-pack-creator-studio
+      service: lucidia-creator-studio
+      domains:
+        - create.lucidia.studio
+        - studio.lucidia.studio
+
+    - repo: blackroad-os-pack-infra-devops
+      service: blackroad-devops-tools
+      domains:
+        - devops.blackroad.systems
+
+  # ==========================================
+  # CLOUDFLARE PAGES DEPLOYMENTS
+  # ==========================================
+
+  cloudflare_pages:
+    # Documentation
+    - repo: blackroad-os-docs
+      project: blackroad-os-docs
+      domains:
+        - docs.blackroad.io
+        - docs.lucidia.earth
+      build_command: npm run build
+      output_directory: dist
+      framework: vitepress
+
+    # Landing Pages
+    - repo: blackroad-os-home
+      project: blackroad-os-home
+      domains:
+        - blackroad.io
+        - www.blackroad.io
+        - blackroadinc.us
+        - www.blackroadinc.us
+        - blackroadai.com
+        - www.blackroadai.com
+        - blackroadquantum.com
+        - www.blackroadquantum.com
+        - aliceqi.com
+        - www.aliceqi.com
+      build_command: npm run build
+      output_directory: out
+      framework: nextjs
+
+    # Research Publications
+    - repo: blackroad-os-research
+      project: blackroad-research
+      domains:
+        - papers.blackroadqi.com
+      build_command: npm run build
+      output_directory: dist
+      framework: astro
+
+    # API Documentation
+    - repo: blackroad-os-api
+      project: blackroad-api-docs
+      domains:
+        - api-docs.blackroad.io
+      build_command: npm run build
+      output_directory: dist
+      framework: redoc
+
+    # Brand Assets
+    - repo: blackroad-os-brand
+      project: blackroad-brand
+      domains:
+        - brand.blackroad.io
+      build_command: npm run build
+      output_directory: dist
+
+  # ==========================================
+  # NPM PACKAGES
+  # ==========================================
+
+  npm:
+    - repo: blackroad-os-core
+      packages:
+        - name: "@blackroad/core"
+          path: packages/core
+        - name: "@blackroad/utils"
+          path: packages/utils
+        - name: "@blackroad/types"
+          path: packages/types
+
+    - repo: blackroad-os-api
+      packages:
+        - name: "@blackroad/api-client"
+          path: packages/client
+
+  # ==========================================
+  # PYPI PACKAGES
+  # ==========================================
+
+  pypi:
+    - repo: blackroad-os-core
+      packages:
+        - name: blackroad-core
+          path: python/blackroad_core
+
+    - repo: blackroad-os-api
+      packages:
+        - name: blackroad-api
+          path: python/blackroad_api
+
+    - repo: blackroad-os-operator
+      packages:
+        - name: br-operator
+          path: .
+
+# ============================================
+# DOMAIN TO REPOSITORY LOOKUP
+# ============================================
+
+domain_lookup:
+  # Primary domains
+  blackroad.io:
+    repo: blackroad-os-home
+    deployment: cloudflare_pages
+    ssl: full_strict
+
+  app.blackroad.io:
+    repo: blackroad-os-web
+    deployment: railway
+    ssl: full_strict
+
+  api.blackroad.io:
+    repo: blackroad-os-operator
+    deployment: railway
+    ssl: full_strict
+    cors:
+      - https://blackroad.io
+      - https://app.blackroad.io
+      - https://lucidia.earth
+
+  docs.blackroad.io:
+    repo: blackroad-os-docs
+    deployment: cloudflare_pages
+    ssl: full_strict
+
+  demo.blackroad.io:
+    repo: blackroad-os-demo
+    deployment: railway
+    ssl: full_strict
+
+  # Lucidia domains
+  lucidia.earth:
+    repo: blackroad-os-home
+    deployment: cloudflare_pages
+    ssl: full_strict
+
+  app.lucidia.earth:
+    repo: blackroad-os-web
+    deployment: railway
+    ssl: full_strict
+
+  api.lucidia.earth:
+    repo: blackroad-os-operator
+    deployment: railway
+    ssl: full_strict
+
+  agents.lucidia.earth:
+    repo: blackroad-os-agents
+    deployment: railway
+    ssl: full_strict
+
+  console.lucidia.earth:
+    repo: blackroad-os-prism-console
+    deployment: railway
+    ssl: full_strict
+
+  docs.lucidia.earth:
+    repo: blackroad-os-docs
+    deployment: cloudflare_pages
+    ssl: full_strict
+
+  # Lucidia Studio
+  lucidia.studio:
+    repo: blackroad-os-pack-creator-studio
+    deployment: railway
+    ssl: full_strict
+
+  create.lucidia.studio:
+    repo: blackroad-os-pack-creator-studio
+    deployment: railway
+    ssl: full_strict
+
+  # Corporate
+  blackroadinc.us:
+    repo: blackroad-os-home
+    deployment: cloudflare_pages
+    ssl: full_strict
+
+  # AI Services
+  blackroadai.com:
+    repo: blackroad-os-home
+    deployment: cloudflare_pages
+    ssl: full_strict
+
+  models.blackroadai.com:
+    repo: blackroad-os-beacon
+    deployment: railway
+    ssl: full_strict
+
+  # User Portal
+  blackroad.me:
+    repo: blackroad-os-web
+    deployment: railway
+    ssl: full_strict
+
+  # Infrastructure
+  blackroad.network:
+    repo: blackroad-os-infra
+    deployment: documentation_only
+    ssl: full_strict
+
+  # Systems
+  blackroad.systems:
+    repo: blackroad-os-master
+    deployment: documentation_only
+    ssl: full_strict
+
+  # Quantum
+  blackroadquantum.com:
+    repo: blackroad-os-home
+    deployment: cloudflare_pages
+    ssl: full_strict
+
+  blackroadqi.com:
+    repo: blackroad-os-research
+    deployment: cloudflare_pages
+    ssl: full_strict
+
+  lab.blackroadqi.com:
+    repo: blackroad-os-pack-research-lab
+    deployment: railway
+    ssl: full_strict
+
+  lucidiaqi.com:
+    repo: blackroad-os-agents
+    deployment: railway
+    ssl: full_strict
+
+  # Agent Identity
+  aliceqi.com:
+    repo: blackroad-os-home
+    deployment: cloudflare_pages
+    ssl: full_strict
+
+  chat.aliceqi.com:
+    repo: blackroad-os-agents
+    deployment: railway
+    ssl: full_strict
+
+# ============================================
+# SERVICE MESH
+# ============================================
+
+service_mesh:
+  # Internal service discovery
+  internal_domains:
+    api-gateway: api-gateway.blackroad.internal
+    agents: agents.blackroad.internal
+    beacon: beacon.blackroad.internal
+    auth: auth.blackroad.internal
+
+  # Service dependencies
+  dependencies:
+    blackroad-os-web:
+      - blackroad-os-operator
+      - blackroad-os-agents
+
+    blackroad-os-prism-console:
+      - blackroad-os-operator
+      - blackroad-os-agents
+
+    blackroad-os-agents:
+      - blackroad-os-operator
+      - blackroad-os-beacon
+
+    blackroad-os-operator:
+      - database
+      - redis
+      - pinecone
+
+    blackroad-os-beacon:
+      - anthropic-api
+      - openai-api
+      - huggingface-api
+
+# ============================================
+# ENVIRONMENT MATRIX
+# ============================================
+
+environments:
+  production:
+    domain_suffix: ""
+    railway_environment: production
+    cloudflare_environment: production
+
+  staging:
+    domain_suffix: "staging."
+    railway_environment: staging
+    cloudflare_environment: staging
+
+  development:
+    domain_suffix: "dev."
+    railway_environment: development
+    cloudflare_environment: development
+
+# ============================================
+# HEALTH CHECKS
+# ============================================
+
+health_checks:
+  endpoints:
+    - domain: api.blackroad.io
+      path: /health
+      expected_status: 200
+      interval: 30s
+
+    - domain: agents.lucidia.earth
+      path: /health
+      expected_status: 200
+      interval: 30s
+
+    - domain: models.blackroadai.com
+      path: /health
+      expected_status: 200
+      interval: 30s
+
+    - domain: console.lucidia.earth
+      path: /
+      expected_status: 200
+      interval: 60s
+
+    - domain: blackroad.io
+      path: /
+      expected_status: 200
+      interval: 60s
