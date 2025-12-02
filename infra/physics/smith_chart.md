@@ -97,4 +97,120 @@ The chart's circular geometry connects to:
 
 ---
 
-*From whiteboard image 11*
+## Plotting Procedure
+
+> From whiteboard images 8-10 (Batch 4)
+
+### Step-by-Step Process
+
+```
+① NORMALIZE! (Divide Z_L by Z₀)
+② FIND R' ON CHART (constant resistance circle)
+③ FIND X' ON CHART (constant reactance arc)
+④ PLOT A POINT WHERE THEY MEET
+```
+
+### Worked Example
+
+**Given:**
+- Load impedance: Z_L = (50 + j50) Ω
+- Characteristic impedance: Z₀ = 50 Ω
+
+**Step 1: Normalize**
+```
+Z'_L = Z_L / Z₀ = (50 + j50) / 50 = 1 + j1
+```
+
+**Step 2: Extract Components**
+```
+R' = 1  (normalized resistance)
+X' = 1  (normalized reactance)
+```
+
+**Step 3: Locate on Chart**
+- Find R' = 1 circle (passes through center)
+- Find X' = +1 arc (upper half, inductive)
+- Intersection is your point
+
+**Step 4: Read Results**
+- Reflection coefficient Γ from distance to center
+- VSWR from the constant |Γ| circle through the point
+
+---
+
+## Impedance as Complex Number
+
+> "IMPEDANCE IS A COMPLEX NUMBER!"
+
+```
+Z = R ± jX
+```
+
+| Component | Symbol | Unit | Meaning |
+|-----------|--------|------|---------|
+| Resistance | R | Ω | Real power dissipation |
+| Reactance | X | Ω | Energy storage (L or C) |
+| +jX | Inductive | Ω | Current lags voltage |
+| -jX | Capacitive | Ω | Current leads voltage |
+
+### Why Complex Numbers?
+
+In AC circuits, voltage and current have both magnitude AND phase.
+Complex numbers naturally encode:
+- Magnitude: |Z| = √(R² + X²)
+- Phase: θ = arctan(X/R)
+
+This is why the Smith Chart works — it's a conformal map of
+complex impedances onto the unit disk.
+
+---
+
+## Python Implementation
+
+```python
+def plot_on_smith_chart(Z_L: complex, Z_0: float = 50.0) -> dict:
+    """
+    Smith Chart plotting procedure from lecture.
+
+    Args:
+        Z_L: Load impedance (complex, in Ohms)
+        Z_0: Characteristic impedance (default 50Ω)
+
+    Returns:
+        Dict with normalized values and reflection coefficient
+    """
+    # Step 1: Normalize
+    Z_prime = Z_L / Z_0
+
+    # Step 2-3: Extract R' and X'
+    R_prime = Z_prime.real
+    X_prime = Z_prime.imag
+
+    # Compute reflection coefficient
+    Gamma = (Z_L - Z_0) / (Z_L + Z_0)
+
+    # Compute VSWR
+    Gamma_mag = abs(Gamma)
+    VSWR = (1 + Gamma_mag) / (1 - Gamma_mag) if Gamma_mag < 1 else float('inf')
+
+    return {
+        "Z_L": Z_L,
+        "Z_0": Z_0,
+        "Z_normalized": Z_prime,
+        "R_prime": R_prime,
+        "X_prime": X_prime,
+        "Gamma": Gamma,
+        "Gamma_magnitude": Gamma_mag,
+        "Gamma_phase_deg": cmath.phase(Gamma) * 180 / math.pi,
+        "VSWR": VSWR,
+        "return_loss_dB": -20 * math.log10(Gamma_mag) if Gamma_mag > 0 else float('inf')
+    }
+
+# Example from whiteboard
+result = plot_on_smith_chart(complex(50, 50), 50)
+# Z'_L = 1 + j1, Γ ≈ 0.447 ∠63.4°, VSWR ≈ 2.62
+```
+
+---
+
+*From whiteboard images 8-10, 11 (Batches 2, 4)*
