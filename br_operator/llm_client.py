@@ -2,6 +2,10 @@
 LLM Client - OpenAI API wrapper for BlackRoad OS Operator
 
 Provides a clean interface for LLM calls with structured tracing.
+Uses the secrets resolver for API key management.
+
+@owner Alexa Louise Amundson
+@amundson 0.1.0
 """
 
 from __future__ import annotations
@@ -12,6 +16,8 @@ from dataclasses import dataclass, field
 from typing import List, Literal, Optional
 
 from openai import OpenAI
+
+from .secrets import resolve_secret, get_secret, SecretNotFoundError
 
 
 @dataclass
@@ -51,12 +57,18 @@ class LLMClient:
         base_url: Optional[str] = None,
         model: Optional[str] = None,
     ):
-        self.api_key = api_key or os.getenv("OPENAI_API_KEY")
+        # Use secrets resolver - alias-based lookup
+        # Falls back to direct env var for backwards compatibility
+        self.api_key = api_key or resolve_secret("openai.default") or os.getenv("OPENAI_API_KEY")
         self.base_url = base_url or os.getenv("OPENAI_BASE_URL")
-        self.model = model or os.getenv("OPENAI_MODEL", "gpt-4.1-mini")
+        self.model = model or os.getenv("OPENAI_MODEL", "gpt-4o-mini")
 
         if not self.api_key:
-            raise ValueError("OPENAI_API_KEY is required")
+            raise SecretNotFoundError(
+                alias="openai.default",
+                env_var="OPENAI_API_KEY",
+                hint="Set OPENAI_API_KEY in Railway or local .env"
+            )
 
         # Initialize OpenAI client
         client_kwargs = {"api_key": self.api_key}
