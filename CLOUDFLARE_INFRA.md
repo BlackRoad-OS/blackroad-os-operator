@@ -13,8 +13,8 @@
 | Pages Projects | 8 | ✅ Active |
 | KV Namespaces | 8 | ✅ Active |
 | Tunnel | 1 | ✅ Configured |
-| D1 Databases | 0 | - |
-| R2 Buckets | 0 | - |
+| D1 Databases | 1 | ✅ Active |
+| R2 Buckets | 0 | ⏳ Pending |
 
 ---
 
@@ -174,6 +174,59 @@
 - cloudchamber (write)
 - connectivity (admin)
 ```
+
+---
+
+## D1 Database
+
+**Name:** `blackroad-os-main`
+**ID:** `e2c6dcd9-c21a-48ac-8807-7b3a6881c4f7`
+**Region:** ENAM
+**Created:** 2025-12-02
+
+### Tables
+| Table | Purpose |
+|-------|---------|
+| users | User accounts |
+| organizations | Orgs/workspaces |
+| org_members | Org membership |
+| projects | Projects within orgs |
+| agents | AI agents |
+| agent_runs | Agent execution logs |
+| api_keys | API key management |
+| audit_log | Activity audit trail |
+
+### Binding Config
+```json
+{
+  "d1_databases": [{
+    "binding": "DB",
+    "database_name": "blackroad-os-main",
+    "database_id": "e2c6dcd9-c21a-48ac-8807-7b3a6881c4f7"
+  }]
+}
+```
+
+---
+
+## Endpoint Status (2025-12-02)
+
+### Main Domains
+| Domain | Status |
+|--------|--------|
+| blackroad.io | ✅ 200 |
+| blackroad.systems | ⚠️ 522 (Railway down) |
+| blackroadai.com | ✅ 200 |
+| blackroadquantum.com | ✅ 200 |
+| lucidia.earth | ✅ 200 |
+
+### blackroad.io Subdomains
+| Subdomain | Status |
+|-----------|--------|
+| home.blackroad.io | ✅ 200 |
+| demo.blackroad.io | ✅ 200 |
+| docs.blackroad.io | ✅ 200 |
+| api.blackroad.io | ✅ 200 |
 
 ---
 
