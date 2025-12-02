@@ -1,0 +1,162 @@
+# policies.education.yaml
+# Education vertical (RoadWork) policy pack - v1
+#
+# Governance semantics:
+#   - Scope: edu.*, homework.*
+#   - Default stance: deny
+#   - Default ledger_level: action
+#
+# Effect enum: allow | deny | warn | shadow_deny
+# Priority: higher = evaluated first (200 > 100 > 0)
+#
+# Condition types:
+#   - claim_check: Gov API verifies claim exists in context.claims
+#   - caller_asserts: Caller asserts facts; Gov API logs for audit
+
+# Amundson language header
+amundson: "0.1.0"
+governor: alice.governor.v1
+operator: alexa.operator.v1
+policy_pack: edu-policies
+policy_pack_version: "1.0.0"
+
+# Pack metadata
+version: "edu-v1"
+scope: "edu.*"
+default_stance: deny
+default_ledger_level: action
+
+policies:
+  # ============================================
+  # ASSIGNMENT CREATION
+  # ============================================
+
+  - id: edu.create-assignment.teacher-warn-first-time
+    description: "Warn (but allow) when a teacher creates their first assignment, and log at full fidelity."
+    effect: warn
+    priority: 200
+    subject:
+      role: teacher
+    action: "assignment:create"
+    resource: "assignment"
+    condition:
+      caller_asserts:
+        - "is_first_assignment_for_teacher"
+    ledger_level: full
+
+  - id: edu.create-assignment.teacher-only
+    description: "Only users with role=teacher may create assignments."
+    effect: allow
+    priority: 100
+    subject:
+      role: teacher
+    action: "assignment:create"
+    resource: "assignment"
+    condition: {}
+    ledger_level: action
+
+  # ============================================
+  # ASSIGNMENT SUBMISSION
+  # ============================================
+
+  - id: edu.submit-assignment.student-only
+    description: "Only the assigned student may submit a homework assignment."
+    effect: allow
+    priority: 100
+    subject:
+      role: student
+    action: "submission:submit"
+    resource: "assignment"
+    condition:
+      claim_check: "assignment:assignee"
+      caller_asserts:
+        - "is_assignment_assignee"
+    ledger_level: action
+
+  # ============================================
+  # SUBMISSION REVIEW
+  # ============================================
+
+  - id: edu.review-submission.teacher-only
+    description: "Only teachers may mark a submission as reviewed."
+    effect: allow
+    priority: 100
+    subject:
+      role: teacher
+    action: "submission:review"
+    resource: "submission"
+    condition: {}
+    ledger_level: action
+
+  # ============================================
+  # ASSIGNMENT VIEWING
+  # ============================================
+
+  - id: edu.view-assignment.teacher-allow
+    description: "Teachers may view any assignment."
+    effect: allow
+    priority: 100
+    subject:
+      role: teacher
+    action: "assignment:view"
+    resource: "assignment"
+    condition: {}
+    ledger_level: decision
+
+  - id: edu.view-assignment.student-own-only
+    description: "Students may only view assignments they are assigned to."
+    effect: allow
+    priority: 100
+    subject:
+      role: student
+    action: "assignment:view"
+    resource: "assignment"
+    condition:
+      claim_check: "assignment:assignee"
+      caller_asserts:
+        - "is_assignment_assignee"
+    ledger_level: decision
+
+  # ============================================
+  # SUBMISSION VIEWING
+  # ============================================
+
+  - id: edu.view-submission.teacher-allow
+    description: "Teachers may view any submission."
+    effect: allow
+    priority: 100
+    subject:
+      role: teacher
+    action: "submission:view"
+    resource: "submission"
+    condition: {}
+    ledger_level: decision
+
+  - id: edu.view-submission.student-own-only
+    description: "Students may only view their own submissions."
+    effect: allow
+    priority: 100
+    subject:
+      role: student
+    action: "submission:view"
+    resource: "submission"
+    condition:
+      claim_check: "submission:author"
+      caller_asserts:
+        - "is_submission_author"
+    ledger_level: decision
+
+  # ============================================
+  # DEFAULT DENY (catch-all)
+  # ============================================
+
+  - id: edu.default-deny-unauthorised
+    description: "Deny any other actors attempting Education actions not explicitly allowed above."
+    effect: deny
+    priority: 0
+    subject:
+      role: "*"
+    action: "edu.*"
+    resource: "*"
+    condition: {}
+    ledger_level: action

@@ -1,0 +1,454 @@
+# service_registry.yaml
+# Source of truth for host -> governance mapping
+#
+# Each service entry defines:
+#   - layer: experience | gateway | governance | mesh | infra
+#   - repo: owning GitHub repo
+#   - workstream: W1-W6 workstream identifier
+#   - pillar: logical grouping (os, governance, mesh, data, education, etc.)
+#   - policy_scope: namespace for policy matching (e.g., "edu.*")
+#   - default_stance: allow | deny
+#   - ledger_level: none | decision | action | full
+#   - invariants: non-negotiable rules for this scope
+#
+# ============================================
+# STAGE 2 INVARIANTS (Mesh/Infra Governance)
+# ============================================
+# These invariants are HARD RULES enforced in code before policy evaluation:
+#
+# mesh.* scope:
+#   - MUST have delegation_id OR role=operator
+#   - All actions logged at ledger_level=full
+#   - Policy pack: mesh-policies v1.0.0
+#
+# agents.* scope:
+#   - MUST have actor_agent_id AND capability claim matching action
+#   - All actions logged at ledger_level=full
+#   - Policy pack: mesh-policies v1.0.0
+#
+# infra.* scope:
+#   - MUST have role=operator
+#   - All mutations logged at ledger_level=full
+#   - Policy pack: infra-policies v1.0.0
+#
+# @amundson 0.1.0
+# @governor alice.governor.v1
+# @operator alexa.operator.v1
+
+version: "registry-v1"
+
+services:
+  # ============================================
+  # EXPERIENCE LAYER
+  # ============================================
+
+  app.blackroad.io:
+    layer: experience
+    repo: blackroad-os-home
+    workstream: W1-core-app
+    pillar: os
+    policy_scope: "app.*"
+    default_stance: allow
+    ledger_level: decision
+    invariants: []
+
+  edu.blackroad.io:
+    layer: experience
+    repo: blackroad-os-home
+    workstream: W4-verticals
+    pillar: education
+    policy_scope: "edu.*"
+    default_stance: deny
+    ledger_level: action
+    invariants:
+      - "All mutation actions must include role=teacher or role=student with appropriate claims."
+      - "All mutation actions must emit at least action-level ledger events."
+
+  homework.blackroad.io:
+    layer: experience
+    repo: blackroad-os-home
+    workstream: W4-verticals
+    pillar: education
+    policy_scope: "homework.*"
+    default_stance: deny
+    ledger_level: action
+    invariants:
+      - "Student actions must be scoped to their own assignments."
+      - "All submissions must be logged at action level (minimum)."
+      - "Inherits all edu.* invariants."
+
+  classroom.blackroad.io:
+    layer: experience
+    repo: blackroad-os-pack-education
+    workstream: W4-verticals
+    pillar: education
+    policy_scope: "edu.classroom.*"
+    default_stance: deny
+    ledger_level: action
+    invariants:
+      - "Teacher-student isolation enforced."
+      - "All class membership changes logged."
+
+  console.blackroad.io:
+    layer: experience
+    repo: blackroad-os-prism-console
+    workstream: W1-core-app
+    pillar: os
+    policy_scope: "console.*"
+    default_stance: deny
+    ledger_level: action
+    invariants:
+      - "Only operator role may access."
+      - "All console actions logged at action level."
+
+  demo.blackroad.io:
+    layer: experience
+    repo: blackroad-os-demo
+    workstream: W1-core-app
+    pillar: os
+    policy_scope: "demo.*"
+    default_stance: allow
+    ledger_level: decision
+    invariants:
+      - "Sandboxed environment - no persistence guarantees."
+
+  # ============================================
+  # GATEWAY LAYER
+  # ============================================
+
+  api.blackroad.io:
+    layer: gateway
+    repo: blackroad-os-api-gateway
+    workstream: W3-infra
+    pillar: os
+    policy_scope: "api.*"
+    default_stance: allow
+    ledger_level: decision
+    invariants:
+      - "Rate limits enforced at gateway."
+      - "High-risk endpoints may override to action/full at the policy level."
+
+  # ============================================
+  # GOVERNANCE LAYER
+  # ============================================
+
+  gov.blackroad.io:
+    layer: governance
+    repo: blackroad-os-master
+    workstream: W2-governance
+    pillar: governance
+    policy_scope: "gov.ui.*"
+    default_stance: deny
+    ledger_level: full
+    invariants:
+      - "Operator role required for all governance UI actions."
+
+  cece.blackroad.io:
+    layer: governance
+    repo: blackroad-os-docs
+    workstream: W2-governance
+    pillar: governance
+    policy_scope: "gov.cece.*"
+    default_stance: allow
+    ledger_level: decision
+    invariants:
+      - "Public-facing docs and demos - read-only."
+
+  gov.api.blackroad.io:
+    layer: governance
+    repo: blackroad-os-api
+    workstream: W2-governance
+    pillar: governance
+    policy_scope: "gov.api.*"
+    default_stance: deny
+    ledger_level: full
+    invariants:
+      - "All governance mutations must be logged at full fidelity."
+      - "All policy changes require explicit operator role or valid delegation."
+      - "Deny decisions must include reason in response."
+
+  ledger.blackroad.systems:
+    layer: governance
+    repo: blackroad-os-api
+    workstream: W2-governance
+    pillar: governance
+    policy_scope: "gov.ledger.*"
+    default_stance: deny
+    ledger_level: full
+    invariants:
+      - "All ledger writes must be full fidelity."
+      - "No retroactive edits without a higher-order governance event."
+      - "Append-only semantics enforced."
+
+  policies.blackroad.systems:
+    layer: governance
+    repo: blackroad-os-api
+    workstream: W2-governance
+    pillar: governance
+    policy_scope: "gov.policies.*"
+    default_stance: deny
+    ledger_level: full
+    invariants:
+      - "Policy mutations require operator role."
+      - "All policy changes versioned and logged."
+
+  intents.blackroad.systems:
+    layer: governance
+    repo: blackroad-os-api
+    workstream: W2-governance
+    pillar: governance
+    policy_scope: "gov.intents.*"
+    default_stance: deny
+    ledger_level: full
+    invariants:
+      - "Intent state transitions must be logged."
+
+  claims.blackroad.systems:
+    layer: governance
+    repo: blackroad-os-api
+    workstream: W2-governance
+    pillar: governance
+    policy_scope: "gov.claims.*"
+    default_stance: deny
+    ledger_level: full
+    invariants:
+      - "Claim issuance requires appropriate authority."
+
+  delegations.blackroad.systems:
+    layer: governance
+    repo: blackroad-os-api
+    workstream: W2-governance
+    pillar: governance
+    policy_scope: "gov.delegations.*"
+    default_stance: deny
+    ledger_level: full
+    invariants:
+      - "Delegation chains must be traceable."
+      - "Expired delegations must be rejected."
+
+  # ============================================
+  # MESH LAYER
+  # ============================================
+
+  ws.blackroad.io:
+    layer: mesh
+    repo: blackroad-os-operator
+    workstream: W5-mesh
+    pillar: mesh
+    policy_scope: "mesh.ws.*"
+    default_stance: deny
+    ledger_level: action
+    invariants:
+      - "WebSocket connections require valid session."
+
+  mesh.blackroad.network:
+    layer: mesh
+    repo: blackroad-os-operator
+    workstream: W5-mesh
+    pillar: mesh
+    policy_scope: "mesh.*"
+    default_stance: deny
+    ledger_level: full
+    invariants:
+      - "Any mesh.* action must include a valid delegation_id or actor_role=operator."
+      - "No direct mesh actions from anonymous subjects."
+
+  pi.mesh.blackroad.network:
+    layer: mesh
+    repo: blackroad-os-operator
+    workstream: W5-mesh
+    pillar: mesh
+    policy_scope: "mesh.pi.*"
+    default_stance: deny
+    ledger_level: full
+    invariants:
+      - "Pi nodes must authenticate with device certificate."
+      - "All mesh.* invariants apply."
+
+  agents.blackroad.network:
+    layer: mesh
+    repo: blackroad-os-operator
+    workstream: W5-mesh
+    pillar: mesh
+    policy_scope: "agents.*"
+    default_stance: deny
+    ledger_level: full
+    invariants:
+      - "actor_agent_id must be present for agents.* actions."
+      - "Agent must present a capability claim matching the action."
+
+  edge.blackroad.network:
+    layer: mesh
+    repo: blackroad-os-operator
+    workstream: W5-mesh
+    pillar: mesh
+    policy_scope: "mesh.edge.*"
+    default_stance: deny
+    ledger_level: full
+    invariants:
+      - "Edge devices must authenticate."
+      - "All mesh.* invariants apply."
+
+  # ============================================
+  # INFRA LAYER
+  # ============================================
+
+  db.blackroad.systems:
+    layer: infra
+    repo: blackroad-os-infra
+    workstream: W6-data
+    pillar: data
+    policy_scope: "data.db.*"
+    default_stance: deny
+    ledger_level: action
+    invariants:
+      - "Only services (not end-users) may access data.db.*."
+      - "All direct writes must emit at least action-level ledger events."
+
+  infra.blackroad.systems:
+    layer: infra
+    repo: blackroad-os-infra
+    workstream: W3-infra
+    pillar: infra
+    policy_scope: "infra.*"
+    default_stance: deny
+    ledger_level: full
+    invariants:
+      - "Operator role required."
+      - "All infra changes logged at full fidelity."
+
+  ops.blackroad.systems:
+    layer: infra
+    repo: blackroad-os-infra
+    workstream: W3-infra
+    pillar: infra
+    policy_scope: "infra.ops.*"
+    default_stance: deny
+    ledger_level: full
+    invariants:
+      - "Operator role required."
+
+  monitoring.blackroad.systems:
+    layer: infra
+    repo: blackroad-os-infra
+    workstream: W3-infra
+    pillar: infra
+    policy_scope: "infra.monitoring.*"
+    default_stance: deny
+    ledger_level: action
+    invariants:
+      - "Read access for operators."
+      - "Write access requires elevated permissions."
+
+  logs.blackroad.systems:
+    layer: infra
+    repo: blackroad-os-infra
+    workstream: W3-infra
+    pillar: infra
+    policy_scope: "infra.logs.*"
+    default_stance: deny
+    ledger_level: action
+    invariants:
+      - "Log access is audited."
+
+  # ============================================
+  # VERTICALS: Creator Tools
+  # ============================================
+
+  studio.blackroad.io:
+    layer: experience
+    repo: blackroad-os-brand
+    workstream: W4-verticals
+    pillar: creator
+    policy_scope: "studio.*"
+    default_stance: allow
+    ledger_level: decision
+    invariants:
+      - "Creator tools are permissive by default."
+
+  canvas.blackroad.io:
+    layer: experience
+    repo: blackroad-os-brand
+    workstream: W4-verticals
+    pillar: creator
+    policy_scope: "studio.canvas.*"
+    default_stance: allow
+    ledger_level: decision
+    invariants: []
+
+  video.blackroad.io:
+    layer: experience
+    repo: blackroad-os-web
+    workstream: W4-verticals
+    pillar: creator
+    policy_scope: "studio.video.*"
+    default_stance: allow
+    ledger_level: decision
+    invariants: []
+
+  writing.blackroad.io:
+    layer: experience
+    repo: blackroad-os-web
+    workstream: W4-verticals
+    pillar: creator
+    policy_scope: "studio.writing.*"
+    default_stance: allow
+    ledger_level: decision
+    invariants: []
+
+  # ============================================
+  # VERTICALS: Finance & Legal (Compliance-Sensitive)
+  # ============================================
+
+  finance.blackroad.io:
+    layer: experience
+    repo: blackroad-os-pack-finance
+    workstream: W4-verticals
+    pillar: finance
+    policy_scope: "finance.*"
+    default_stance: deny
+    ledger_level: full
+    invariants:
+      - "All actions auditable."
+      - "Compliance-sensitive scope."
+      - "Deny decisions must include reason."
+
+  legal.blackroad.io:
+    layer: experience
+    repo: blackroad-os-pack-legal
+    workstream: W4-verticals
+    pillar: legal
+    policy_scope: "legal.*"
+    default_stance: deny
+    ledger_level: full
+    invariants:
+      - "All actions auditable."
+      - "Compliance-sensitive scope."
+      - "Deny decisions must include reason."
+
+  # ============================================
+  # VERTICALS: RoadTube
+  # ============================================
+
+  roadtube.blackroad.io:
+    layer: experience
+    repo: blackroad-os-web
+    workstream: W4-verticals
+    pillar: media
+    policy_scope: "roadtube.*"
+    default_stance: allow
+    ledger_level: decision
+    invariants:
+      - "Content moderation policies apply."
+
+  studio.roadtube.blackroad.io:
+    layer: experience
+    repo: blackroad-os-web
+    workstream: W4-verticals
+    pillar: media
+    policy_scope: "roadtube.studio.*"
+    default_stance: deny
+    ledger_level: action
+    invariants:
+      - "Creator must be authenticated."
+      - "Upload actions logged at action level."

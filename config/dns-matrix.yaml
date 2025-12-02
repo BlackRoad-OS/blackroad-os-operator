@@ -1,0 +1,495 @@
+# dns-matrix.yaml
+# Source of truth for BlackRoad OS DNS → service mapping
+# Used for: Cloudflare CSV generation, internal docs, Cece context
+#
+# Layers:
+#   - experience: User-facing products (app, console, verticals)
+#   - gateway: API routing layer
+#   - governance: Cece / policy / ledger
+#   - mesh: Agent mesh / operator / WebSocket
+#   - infra: Databases, monitoring, status
+
+hosts:
+  # ============================================
+  # EXPERIENCE LAYER
+  # ============================================
+  app.blackroad.io:
+    description: "Main multi-tenant web app (OS workspace + vertical doors)"
+    layer: experience
+    service: web-app
+    org: BlackRoad-OS
+    repo: blackroad-os-home
+    railway_service: web-app
+    notes:
+      - "Hosts core app routes"
+      - "Verticals: edu.blackroad.io, homework.blackroad.io rewrite into this app"
+
+  console.blackroad.io:
+    description: "Operator / Prism console UI"
+    layer: experience
+    service: console-web
+    org: BlackRoad-OS
+    repo: blackroad-os-prism-console
+    railway_service: console-web
+    notes:
+      - "Internal / operator-facing web UI"
+      - "Talks to gov-api and operator-ws"
+
+  demo.blackroad.io:
+    description: "Public demo instances / sandboxes"
+    layer: experience
+    service: demo-app
+    org: BlackRoad-OS
+    repo: blackroad-os-demo
+    railway_service: demo-app
+    notes:
+      - "Throwaway experiment spaces for prospects"
+
+  # ============================================
+  # GATEWAY LAYER
+  # ============================================
+  api.blackroad.io:
+    description: "Public HTTP API gateway"
+    layer: gateway
+    service: api-gateway
+    org: BlackRoad-OS
+    repo: blackroad-os-api-gateway
+    railway_service: api-gateway
+    notes:
+      - "Routes to internal services (core, packs, etc.)"
+      - "Regional mirrors: na1.api, eu1.api, ap1.api"
+
+  # ============================================
+  # GOVERNANCE LAYER (Cece)
+  # ============================================
+  gov.blackroad.io:
+    description: "Governance UI - Cece's console for humans"
+    layer: governance
+    service: gov-ui
+    org: BlackRoad-OS
+    repo: blackroad-os-master
+    railway_service: gov-ui
+    notes:
+      - "Human-facing governance dashboard"
+
+  cece.blackroad.io:
+    description: "Cece as a product - docs, demos, playground"
+    layer: governance
+    service: cece-web
+    org: BlackRoad-AI
+    repo: blackroad-os-docs
+    railway_service: cece-web
+    notes:
+      - "Marketing + docs + interactive playground"
+
+  gov.api.blackroad.io:
+    description: "Governance API - Cece policy + ledger surface"
+    layer: governance
+    service: gov-api
+    org: BlackRoad-OS
+    repo: blackroad-os-api
+    railway_service: gov-api
+    notes:
+      - "Exposes /policy/evaluate, /ledger/event, /intent/:id"
+      - "Backed by Postgres via DATABASE_URL"
+
+  ledger.blackroad.systems:
+    description: "Ledger API alias for governance (v0)"
+    layer: governance
+    service: gov-api
+    org: BlackRoad-OS
+    repo: blackroad-os-api
+    railway_service: gov-api
+    notes:
+      - "DNS alias for gov-api"
+      - "Used by infra/tools as a governance-specific endpoint"
+
+  policies.blackroad.systems:
+    description: "Policy management endpoints"
+    layer: governance
+    service: gov-api
+    org: BlackRoad-OS
+    repo: blackroad-os-api
+    railway_service: gov-api
+    notes:
+      - "Alias into gov-api for policy CRUD"
+
+  intents.blackroad.systems:
+    description: "Intent lifecycle endpoints"
+    layer: governance
+    service: gov-api
+    org: BlackRoad-OS
+    repo: blackroad-os-api
+    railway_service: gov-api
+    notes:
+      - "Intent creation, tracking, status transitions"
+
+  claims.blackroad.systems:
+    description: "Claims API (ownership, roles)"
+    layer: governance
+    service: gov-api
+    org: BlackRoad-OS
+    repo: blackroad-os-api
+    railway_service: gov-api
+    notes:
+      - "Ownership and role claims"
+
+  delegations.blackroad.systems:
+    description: "Delegation API"
+    layer: governance
+    service: gov-api
+    org: BlackRoad-OS
+    repo: blackroad-os-api
+    railway_service: gov-api
+    notes:
+      - "Delegation check and management"
+
+  # ============================================
+  # MESH LAYER (Operator + Agents)
+  # ============================================
+  ws.blackroad.io:
+    description: "WebSocket hub for browser <-> operator"
+    layer: mesh
+    service: operator-ws
+    org: BlackRoad-OS
+    repo: blackroad-os-operator
+    railway_service: operator-ws
+    notes:
+      - "Mounted from blackroad-os-operator FastAPI/WebSocket runtime"
+      - "Used by Prism console & future app experiences needing realtime agent interaction"
+
+  mesh.blackroad.network:
+    description: "Agent mesh entrypoint (cloud-facing)"
+    layer: mesh
+    service: mesh-router
+    org: BlackRoad-OS
+    repo: blackroad-os-operator
+    railway_service: mesh-router
+    notes:
+      - "Operator-facing entry for agents connecting from cloud or other data centers"
+      - "May share code/runtime with blackroad-os-operator"
+
+  pi.mesh.blackroad.network:
+    description: "Pi mesh entrypoint"
+    layer: mesh
+    service: mesh-router
+    org: BlackRoad-OS
+    repo: blackroad-os-operator
+    railway_service: mesh-router
+    notes:
+      - "Specialized entry for Pi/edge nodes"
+      - "Can share hostname/router with mesh.blackroad.network in v0"
+
+  agents.blackroad.network:
+    description: "Agent registry API"
+    layer: mesh
+    service: agents-registry
+    org: BlackRoad-OS
+    repo: blackroad-os-operator
+    railway_service: operator-ws
+    notes:
+      - "List agents, capabilities, health"
+      - "Implemented inside blackroad-os-operator in v0"
+      - "Pattern: agent-{id}.agents.blackroad.network"
+
+  edge.blackroad.network:
+    description: "Jetsons / phones / other edge nodes"
+    layer: mesh
+    service: edge-router
+    org: BlackRoad-OS
+    repo: blackroad-os-operator
+    railway_service: edge-router
+    notes:
+      - "Non-Pi edge devices"
+
+  # ============================================
+  # INFRA LAYER
+  # ============================================
+  db.blackroad.systems:
+    description: "Canonical Postgres entrypoint"
+    layer: infra
+    service: postgres-db
+    org: BlackRoad-OS
+    repo: blackroad-os-infra
+    railway_service: postgres-db
+    notes:
+      - "Used by gov-api, web-app, and other services"
+      - "Backed by Railway/Neon/Supabase in practice"
+
+  infra.blackroad.systems:
+    description: "Infra control plane / Terraform / docs"
+    layer: infra
+    service: infra-ui
+    org: BlackRoad-OS
+    repo: blackroad-os-infra
+    railway_service: infra-ui
+    notes:
+      - "Internal infra dashboard"
+
+  ops.blackroad.systems:
+    description: "Ops dashboard"
+    layer: infra
+    service: ops-ui
+    org: BlackRoad-OS
+    repo: blackroad-os-infra
+    railway_service: ops-ui
+    notes:
+      - "Operational dashboards and runbooks"
+
+  monitoring.blackroad.systems:
+    description: "Grafana / Prometheus / alerts"
+    layer: infra
+    service: monitoring
+    org: BlackRoad-OS
+    repo: blackroad-os-infra
+    railway_service: monitoring
+    notes:
+      - "Observability stack"
+
+  logs.blackroad.systems:
+    description: "Log viewer / Loki / ELK"
+    layer: infra
+    service: logs
+    org: BlackRoad-OS
+    repo: blackroad-os-infra
+    railway_service: logs
+    notes:
+      - "Centralized logging"
+
+  status.blackroad.io:
+    description: "Public status page"
+    layer: infra
+    service: status-page
+    org: BlackRoad-OS
+    repo: blackroad-os-infra
+    railway_service: null
+    notes:
+      - "May be third-party (Statuspage, Better Uptime, etc.)"
+
+  # ============================================
+  # PRODUCTS: RoadTube
+  # ============================================
+  roadtube.blackroad.io:
+    description: "RoadTube web entry"
+    layer: experience
+    service: roadtube-web
+    org: BlackRoad-OS
+    repo: blackroad-os-web
+    railway_service: roadtube-web
+    notes:
+      - "Creator-first video platform"
+
+  studio.roadtube.blackroad.io:
+    description: "RoadTube creator dashboard"
+    layer: experience
+    service: roadtube-studio
+    org: BlackRoad-OS
+    repo: blackroad-os-web
+    railway_service: roadtube-studio
+    notes:
+      - "Uploads, analytics, AI pipeline"
+
+  api.roadtube.blackroad.io:
+    description: "RoadTube public API"
+    layer: gateway
+    service: roadtube-api
+    org: BlackRoad-OS
+    repo: blackroad-os-api
+    railway_service: roadtube-api
+    notes:
+      - "Video metadata, playlists, etc."
+
+  cdn.roadtube.blackroad.io:
+    description: "RoadTube CDN"
+    layer: infra
+    service: roadtube-cdn
+    org: BlackRoad-OS
+    repo: blackroad-os-infra
+    railway_service: null
+    notes:
+      - "Video / thumbnail CDN (Cloudflare R2 or similar)"
+
+  # ============================================
+  # PRODUCTS: Education / RoadWork
+  # ============================================
+  edu.blackroad.io:
+    description: "Education product landing (RoadWork)"
+    layer: experience
+    service: edu-web
+    org: BlackRoad-Education
+    repo: blackroad-os-pack-education
+    railway_service: edu-web
+    notes:
+      - "RoadWork education platform"
+
+  classroom.blackroad.io:
+    description: "Student / teacher portal"
+    layer: experience
+    service: classroom-web
+    org: BlackRoad-Education
+    repo: blackroad-os-pack-education
+    railway_service: classroom-web
+    notes:
+      - "LMS-style interface"
+
+  homework.blackroad.io:
+    description: "Homework help + AI tutor interface"
+    layer: experience
+    service: homework-web
+    org: BlackRoad-Education
+    repo: blackroad-os-pack-education
+    railway_service: homework-web
+    notes:
+      - "AI-powered homework assistance"
+
+  api.edu.blackroad.io:
+    description: "Education APIs"
+    layer: gateway
+    service: edu-api
+    org: BlackRoad-Education
+    repo: blackroad-os-pack-education
+    railway_service: edu-api
+    notes:
+      - "LTI, LMS, homework endpoints"
+
+  # ============================================
+  # PRODUCTS: Creator Tools
+  # ============================================
+  canvas.blackroad.io:
+    description: "Canvas Studio (beyond Canva)"
+    layer: experience
+    service: canvas-web
+    org: BlackRoad-OS
+    repo: blackroad-os-brand
+    railway_service: canvas-web
+    notes:
+      - "Design tool interface"
+
+  video.blackroad.io:
+    description: "Video Portal / editor"
+    layer: experience
+    service: video-web
+    org: BlackRoad-OS
+    repo: blackroad-os-web
+    railway_service: video-web
+    notes:
+      - "Video editing tools"
+
+  writing.blackroad.io:
+    description: "Writing Portal / longform tools"
+    layer: experience
+    service: writing-web
+    org: BlackRoad-OS
+    repo: blackroad-os-web
+    railway_service: writing-web
+    notes:
+      - "Longform content creation"
+
+  infographic.blackroad.io:
+    description: "Chat-to-infographic service"
+    layer: experience
+    service: infographic-web
+    org: BlackRoad-OS
+    repo: blackroad-os-web
+    railway_service: infographic-web
+    notes:
+      - "Conversational data -> visuals"
+
+  # ============================================
+  # PRODUCTS: Finance / Legal / DevOps
+  # ============================================
+  finance.blackroad.io:
+    description: "Finance pack vertical"
+    layer: experience
+    service: finance-web
+    org: BlackRoad-OS
+    repo: blackroad-os-pack-finance
+    railway_service: finance-web
+    notes:
+      - "Financial tools and workflows"
+
+  legal.blackroad.io:
+    description: "Legal pack vertical"
+    layer: experience
+    service: legal-web
+    org: BlackRoad-OS
+    repo: blackroad-os-pack-legal
+    railway_service: legal-web
+    notes:
+      - "Legal document tools"
+
+  devops.blackroad.io:
+    description: "DevOps pack vertical"
+    layer: experience
+    service: devops-web
+    org: BlackRoad-OS
+    repo: blackroad-os-pack-infra-devops
+    railway_service: devops-web
+    notes:
+      - "Infrastructure and DevOps tools"
+
+  # ============================================
+  # LUCIDIA DOMAINS
+  # ============================================
+  lucidia.earth:
+    description: "Story site for Lucidia as AI self"
+    layer: experience
+    service: lucidia-web
+    org: BlackRoad-AI
+    repo: blackroad-os-docs
+    railway_service: lucidia-web
+    notes:
+      - "Narrative / brand site"
+
+  app.lucidia.earth:
+    description: "Skinned entry into app.blackroad.io"
+    layer: experience
+    service: web-app
+    org: BlackRoad-AI
+    repo: blackroad-os-home
+    railway_service: web-app
+    notes:
+      - "CNAME to app.blackroad.io"
+
+  lucidia.studio:
+    description: "Creative studio brand home"
+    layer: experience
+    service: lucidia-studio
+    org: BlackRoad-AI
+    repo: blackroad-os-brand
+    railway_service: lucidia-studio
+    notes:
+      - "Creator-focused brand"
+
+  # ============================================
+  # CORPORATE
+  # ============================================
+  blackroadinc.us:
+    description: "Corporate homepage"
+    layer: experience
+    service: corp-web
+    org: BlackRoad-Foundation
+    repo: blackroad-os-docs
+    railway_service: corp-web
+    notes:
+      - "Investor, legal, careers"
+
+  investor.blackroadinc.us:
+    description: "Investor portal"
+    layer: experience
+    service: investor-web
+    org: BlackRoad-Foundation
+    repo: blackroad-os-docs
+    railway_service: investor-web
+    notes:
+      - "Investor relations"
+
+  careers.blackroadinc.us:
+    description: "Hiring portal"
+    layer: experience
+    service: careers-web
+    org: BlackRoad-Foundation
+    repo: blackroad-os-docs
+    railway_service: careers-web
+    notes:
+      - "Job listings"

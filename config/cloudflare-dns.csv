@@ -1,0 +1,115 @@
+Type,Name,Content,TTL,Proxied,Comment
+# ============================================
+# CORE: Gateway + App
+# ============================================
+CNAME,app.blackroad.io,web-app.up.railway.app,300,true,Main multi-tenant web app (Next.js)
+CNAME,api.blackroad.io,api-gateway.up.railway.app,300,true,HTTP API gateway
+CNAME,console.blackroad.io,console-web.up.railway.app,300,true,Prism / operator console UI
+CNAME,demo.blackroad.io,demo-app.up.railway.app,300,true,Public demo instances
+CNAME,status.blackroad.io,status.betteruptime.com,300,true,Public status page
+
+# ============================================
+# GOVERNANCE: Cece
+# ============================================
+CNAME,gov.blackroad.io,gov-ui.up.railway.app,300,true,Governance UI (Cece console for humans)
+CNAME,cece.blackroad.io,cece-web.up.railway.app,300,true,Cece product entry (docs/demos)
+CNAME,gov.api.blackroad.io,gov-api.up.railway.app,300,true,Governance API (Cece)
+
+# ============================================
+# GOVERNANCE: blackroad.systems aliases
+# ============================================
+CNAME,ledger.blackroad.systems,gov-api.up.railway.app,300,false,Ledger API alias
+CNAME,policies.blackroad.systems,gov-api.up.railway.app,300,false,Policy management endpoints
+CNAME,intents.blackroad.systems,gov-api.up.railway.app,300,false,Intent lifecycle endpoints
+CNAME,claims.blackroad.systems,gov-api.up.railway.app,300,false,Claims API
+CNAME,delegations.blackroad.systems,gov-api.up.railway.app,300,false,Delegation API
+
+# ============================================
+# MESH: Operator + Agents (this repo)
+# ============================================
+CNAME,ws.blackroad.io,operator-ws.up.railway.app,300,true,WebSocket hub (browser <-> operator)
+CNAME,mesh.blackroad.network,mesh-router.up.railway.app,300,true,Agent mesh entrypoint (cloud)
+CNAME,pi.mesh.blackroad.network,mesh-router.up.railway.app,300,true,Pi mesh entrypoint
+CNAME,agents.blackroad.network,operator-ws.up.railway.app,300,true,Agent registry API
+CNAME,edge.blackroad.network,edge-router.up.railway.app,300,true,Edge device router
+
+# ============================================
+# MESH: Regional (80M scale)
+# ============================================
+CNAME,na1.mesh.blackroad.network,mesh-router-na1.up.railway.app,300,true,NA mesh endpoint
+CNAME,eu1.mesh.blackroad.network,mesh-router-eu1.up.railway.app,300,true,EU mesh endpoint
+CNAME,ap1.mesh.blackroad.network,mesh-router-ap1.up.railway.app,300,true,APAC mesh endpoint
+
+# ============================================
+# INFRA: blackroad.systems
+# ============================================
+CNAME,db.blackroad.systems,postgres-db.railway.internal,300,false,Primary Postgres endpoint
+CNAME,infra.blackroad.systems,infra-ui.up.railway.app,300,false,Infra control plane
+CNAME,ops.blackroad.systems,ops-ui.up.railway.app,300,false,Ops dashboard
+CNAME,monitoring.blackroad.systems,monitoring.up.railway.app,300,false,Grafana/Prometheus
+CNAME,logs.blackroad.systems,logs.up.railway.app,300,false,Log viewer (Loki)
+
+# ============================================
+# PRODUCTS: RoadTube
+# ============================================
+CNAME,roadtube.blackroad.io,roadtube-web.up.railway.app,300,true,RoadTube web entry
+CNAME,studio.roadtube.blackroad.io,roadtube-studio.up.railway.app,300,true,RoadTube creator dashboard
+CNAME,api.roadtube.blackroad.io,roadtube-api.up.railway.app,300,true,RoadTube API
+CNAME,cdn.roadtube.blackroad.io,cdn.cloudflare.com,300,true,RoadTube CDN (R2)
+
+# ============================================
+# PRODUCTS: Education / RoadWork
+# ============================================
+CNAME,edu.blackroad.io,edu-web.up.railway.app,300,true,Education landing (RoadWork)
+CNAME,classroom.blackroad.io,classroom-web.up.railway.app,300,true,Student/teacher portal
+CNAME,homework.blackroad.io,homework-web.up.railway.app,300,true,Homework help + AI tutor
+CNAME,roadwork.blackroad.io,edu-web.up.railway.app,300,true,RoadWork brand alias
+CNAME,api.edu.blackroad.io,edu-api.up.railway.app,300,true,Education APIs
+
+# ============================================
+# PRODUCTS: Creator Tools
+# ============================================
+CNAME,canvas.blackroad.io,canvas-web.up.railway.app,300,true,Canvas Studio
+CNAME,video.blackroad.io,video-web.up.railway.app,300,true,Video Portal
+CNAME,writing.blackroad.io,writing-web.up.railway.app,300,true,Writing Portal
+CNAME,infographic.blackroad.io,infographic-web.up.railway.app,300,true,Chat-to-infographic
+
+# ============================================
+# PRODUCTS: Verticals
+# ============================================
+CNAME,finance.blackroad.io,finance-web.up.railway.app,300,true,Finance pack
+CNAME,legal.blackroad.io,legal-web.up.railway.app,300,true,Legal pack
+CNAME,devops.blackroad.io,devops-web.up.railway.app,300,true,DevOps pack
+
+# ============================================
+# LUCIDIA DOMAINS
+# ============================================
+CNAME,lucidia.earth,lucidia-web.up.railway.app,300,true,Lucidia story site
+CNAME,app.lucidia.earth,web-app.up.railway.app,300,true,Lucidia app (alias to app.blackroad.io)
+CNAME,agents.lucidia.earth,operator-ws.up.railway.app,300,true,Lucidia agent gallery
+CNAME,lucidia.studio,lucidia-studio.up.railway.app,300,true,Creative studio brand
+CNAME,app.lucidia.studio,canvas-web.up.railway.app,300,true,Lucidia studio app
+
+# ============================================
+# QUANTUM / QI
+# ============================================
+CNAME,blackroadqi.com,qi-web.up.railway.app,300,true,QI docs + demos
+CNAME,blackroadquantum.com,quantum-web.up.railway.app,300,true,Quantum research brand
+CNAME,docs.blackroadquantum.com,quantum-docs.up.railway.app,300,true,Quantum research docs
+CNAME,labs.blackroadquantum.com,quantum-labs.up.railway.app,300,true,Experiments/prototypes
+
+# ============================================
+# CORPORATE: blackroadinc.us
+# ============================================
+CNAME,blackroadinc.us,corp-web.up.railway.app,300,true,Corporate homepage
+CNAME,investor.blackroadinc.us,investor-web.up.railway.app,300,true,Investor portal
+CNAME,legal.blackroadinc.us,legal-corp.up.railway.app,300,true,Terms/policies
+CNAME,careers.blackroadinc.us,careers-web.up.railway.app,300,true,Hiring
+CNAME,ventures.blackroadinc.us,ventures-web.up.railway.app,300,true,BlackRoad Ventures
+
+# ============================================
+# PERSONAL: blackroad.me
+# ============================================
+CNAME,blackroad.me,personal-web.up.railway.app,300,true,Personal hub
+CNAME,app.blackroad.me,personal-console.up.railway.app,300,true,Personal Lucidia console
+CNAME,sandbox.blackroad.me,personal-sandbox.up.railway.app,300,true,Private testbed
