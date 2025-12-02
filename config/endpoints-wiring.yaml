@@ -1,0 +1,406 @@
+# endpoints-wiring.yaml
+# BlackRoad OS - Unified Endpoint Wiring Configuration
+# Connects: Cloudflare, Railway, DigitalOcean, GitHub, Stripe
+#
+# @amundson 0.1.0
+# Generated: 2025-12-02
+
+version: "wiring-v1"
+
+# ============================================
+# CLOUDFLARE WORKERS - Edge Endpoints
+# ============================================
+
+cloudflare:
+  account_id: "848cf0b18d51e0170e0d1537aec3505a"
+
+  workers:
+    # Core Gateway
+    - name: "blackroad-gateway"
+      route: "api.blackroad.io/*"
+      script: "gateway/worker.js"
+      kv_bindings:
+        - IDENTITIES
+        - RATE_LIMITS
+      d1_bindings:
+        - blackroad-edge-db
+      github_deploy:
+        repo: "BlackRoad-OS/blackroad-os-operator"
+        path: "gateway/"
+        branch: "main"
+        action: "deploy-gateway.yml"
+
+    # Stripe Billing Worker
+    - name: "blackroad-stripe"
+      route: "billing.blackroad.io/*"
+      script: "gateway/stripe-worker.js"
+      secrets:
+        - STRIPE_SECRET_KEY
+        - STRIPE_WEBHOOK_SECRET
+        - STRIPE_PUBLISHABLE_KEY
+      github_deploy:
+        repo: "BlackRoad-OS/blackroad-os-operator"
+        path: "gateway/stripe-worker.js"
+
+    # Router Worker
+    - name: "blackroad-router"
+      route: "edge.blackroad.io/*"
+      script: "workers/router/src/index.js"
+
+    # Status Worker
+    - name: "blackroad-status"
+      route: "status.blackroad.io/*"
+      script: "workers/status/src/index.js"
+
+    # Identity Worker
+    - name: "blackroad-identity"
+      route: "identity.blackroad.io/*"
+      script: "workers/identity/src/index.js"
+      kv_bindings:
+        - IDENTITIES
+        - SESSIONS
+
+    # Cipher Worker
+    - name: "blackroad-cipher"
+      route: "cipher.blackroad.io/*"
+      script: "workers/cipher/src/index.js"
+
+    # Billing Worker
+    - name: "blackroad-billing"
+      route: "pay.blackroad.io/*"
+      script: "workers/billing/src/index.js"
+      secrets:
+        - STRIPE_SECRET_KEY
+
+    # Sovereignty Worker
+    - name: "blackroad-sovereignty"
+      route: "sovereign.blackroad.io/*"
+      script: "workers/sovereignty/src/index.js"
+
+    # Intercept Worker (security layer)
+    - name: "blackroad-intercept"
+      route: "guard.blackroad.io/*"
+      script: "workers/intercept/src/index.js"
+
+  pages:
+    - name: "blackroad-web"
+      domain: "blackroad.io"
+      github_repo: "BlackRoad-OS/blackroad-web"
+      build_command: "npm run build"
+      output_dir: "out"
+
+    - name: "blackroad-docs"
+      domain: "docs.blackroad.io"
+      github_repo: "BlackRoad-OS/blackroad-docs"
+
+    - name: "blackroad-console"
+      domain: "console.blackroad.io"
+      github_repo: "blackboxprogramming/blackroad-prism-console"
+
+  kv_namespaces:
+    - name: "IDENTITIES"
+      id: "production"
+    - name: "RATE_LIMITS"
+      id: "production"
+    - name: "SESSIONS"
+      id: "production"
+    - name: "AGENT_STATE"
+      id: "production"
+    - name: "MESH_ROUTING"
+      id: "production"
+
+  d1_databases:
+    - name: "blackroad-edge-db"
+      location: "wnam"  # Western North America
+
+  tunnels:
+    - name: "lucidia-tunnel"
+      target: "192.168.4.49:8080"
+      hostname: "lucidia.blackroad.io"
+
+    - name: "codex-tunnel"
+      target: "159.65.43.12:8080"
+      hostname: "codex.blackroad.io"
+
+# ============================================
+# RAILWAY - App Deployments
+# ============================================
+
+railway:
+  team: "blackroad"
+
+  services:
+    - name: "blackroad-os-core"
+      project_id: "602cb63b-6c98-4032-9362-64b7a90f7d94"
+      github_repo: "BlackRoad-OS/blackroad-os-operator"
+      domain: "core.blackroad.io"
+      env:
+        - CLOUDFLARE_ACCOUNT_ID
+        - CLOUDFLARE_API_TOKEN
+        - STRIPE_SECRET_KEY
+        - DATABASE_URL
+        - REDIS_URL
+
+    - name: "blackroad-api"
+      project_id: "f9116368-9135-418c-9050-39496aa9079a"
+      github_repo: "blackboxprogramming/blackroad-api"
+      domain: "api-rail.blackroad.io"
+
+    - name: "blackroad-web"
+      project_id: "ced8da45-fcdd-4a86-8f3e-093f5a0723ff"
+      github_repo: "BlackRoad-OS/blackroad-web"
+      domain: "app.blackroad.io"
+
+    - name: "blackroad-docs"
+      project_id: "a4efb8cd-0d67-4b19-a7f3-b6dbcedf2079"
+      github_repo: "BlackRoad-OS/blackroad-docs"
+      domain: "docs-rail.blackroad.io"
+
+    - name: "blackroad-prism-console"
+      project_id: "70ce678e-1e2f-4734-9024-6fb32ee5c8eb"
+      github_repo: "blackboxprogramming/blackroad-prism-console"
+      domain: "prism.blackroad.io"
+
+    - name: "blackroad-login"
+      project_id: "21f5c719-4d84-4647-83bb-eacdae864f09"
+      github_repo: "BlackRoad-OS/blackroad-auth"
+      domain: "login.blackroad.io"
+
+# ============================================
+# DIGITALOCEAN - VPS Infrastructure
+# ============================================
+
+digitalocean:
+  droplets:
+    - name: "codex-infinity"
+      ip: "159.65.43.12"
+      region: "nyc1"
+      size: "s-2vcpu-4gb"
+      services:
+        - name: "blackroad-operator"
+          port: 8080
+          github_repo: "BlackRoad-OS/blackroad-os-operator"
+          deploy_script: "scripts/deploy-operator.sh"
+
+        - name: "ollama"
+          port: 11434
+          purpose: "Local LLM inference"
+
+        - name: "redis"
+          port: 6379
+          purpose: "Cache and pub/sub"
+
+      cloudflare_tunnel:
+        hostname: "codex.blackroad.io"
+
+      domains:
+        - blackroad.io
+        - blackroadinc.us
+
+  container_registry:
+    host: "registry.digitalocean.com/blackroad"
+    repositories:
+      - blackroad-operator
+      - blackroad-api
+      - lucidia-core
+
+# ============================================
+# GITHUB - Source Control & CI/CD
+# ============================================
+
+github:
+  user: "blackboxprogramming"
+
+  organizations:
+    primary:
+      - name: "BlackRoad-OS"
+        purpose: "Core operating system repos"
+        repos:
+          - blackroad-os-operator
+          - blackroad-web
+          - blackroad-docs
+          - blackroad-auth
+
+      - name: "BlackRoad-AI"
+        purpose: "AI/ML repos"
+        repos:
+          - lucidia-core
+          - agent-sdk
+
+      - name: "BlackRoad-Cloud"
+        purpose: "Infrastructure repos"
+        repos:
+          - terraform-blackroad
+          - k8s-manifests
+
+    secondary:
+      - Blackbox-Enterprises
+      - BlackRoad-Labs
+      - BlackRoad-Ventures
+      - BlackRoad-Foundation
+      - BlackRoad-Media
+      - BlackRoad-Hardware
+      - BlackRoad-Education
+      - BlackRoad-Gov
+      - BlackRoad-Security
+      - BlackRoad-Interactive
+      - BlackRoad-Archive
+      - BlackRoad-Studio
+
+  actions:
+    # Cloudflare Worker Deployments
+    - workflow: "deploy-workers.yml"
+      triggers:
+        - push: "workers/**"
+        - push: "gateway/**"
+      secrets:
+        - CLOUDFLARE_API_TOKEN
+        - CLOUDFLARE_ACCOUNT_ID
+
+    # Railway Deployments
+    - workflow: "deploy-railway.yml"
+      triggers:
+        - push: "br_operator/**"
+        - push: "src/**"
+      secrets:
+        - RAILWAY_TOKEN
+
+    # DigitalOcean Deployments
+    - workflow: "deploy-droplet.yml"
+      triggers:
+        - push: "scripts/**"
+      secrets:
+        - DIGITALOCEAN_ACCESS_TOKEN
+        - DROPLET_SSH_KEY
+
+  webhooks:
+    # Notify Cloudflare on push
+    - event: "push"
+      target: "https://api.blackroad.io/webhooks/github"
+      secret: "GITHUB_WEBHOOK_SECRET"
+
+    # Notify Stripe on release
+    - event: "release"
+      target: "https://billing.blackroad.io/webhooks/release"
+
+# ============================================
+# STRIPE - Payments & Billing
+# ============================================
+
+stripe:
+  mode: "live"  # or "test"
+
+  endpoints:
+    webhook: "https://billing.blackroad.io/webhooks/stripe"
+    checkout: "https://billing.blackroad.io/checkout"
+    portal: "https://billing.blackroad.io/portal"
+
+  products:
+    - name: "BlackRoad Pro"
+      id: "prod_blackroad_pro"
+      prices:
+        - interval: "month"
+          amount: 2900  # $29/mo
+        - interval: "year"
+          amount: 29000  # $290/yr (2 months free)
+
+    - name: "BlackRoad Team"
+      id: "prod_blackroad_team"
+      prices:
+        - interval: "month"
+          amount: 9900  # $99/mo
+        - interval: "year"
+          amount: 99000  # $990/yr
+
+    - name: "BlackRoad Enterprise"
+      id: "prod_blackroad_enterprise"
+      custom_pricing: true
+
+  integrations:
+    cloudflare_worker: "blackroad-stripe"
+    railway_service: "blackroad-billing-api"
+    github_action: "sync-stripe-products.yml"
+
+# ============================================
+# WEBHOOK MESH - Event Routing
+# ============================================
+
+webhook_mesh:
+  # GitHub -> Cloudflare
+  - source: "github"
+    target: "cloudflare"
+    events: ["push", "release", "workflow_run"]
+    endpoint: "https://api.blackroad.io/webhooks/github"
+
+  # GitHub -> Railway
+  - source: "github"
+    target: "railway"
+    events: ["push"]
+    endpoint: "https://api.railway.app/v2/webhook"
+
+  # Stripe -> Cloudflare
+  - source: "stripe"
+    target: "cloudflare"
+    events: ["checkout.session.completed", "customer.subscription.*"]
+    endpoint: "https://billing.blackroad.io/webhooks/stripe"
+
+  # Cloudflare -> DigitalOcean
+  - source: "cloudflare"
+    target: "digitalocean"
+    events: ["tunnel.status", "worker.error"]
+    endpoint: "https://codex.blackroad.io/webhooks/cf"
+
+# ============================================
+# DNS ROUTING
+# ============================================
+
+dns_routing:
+  blackroad.io:
+    # Main site
+    "@":
+      type: "CNAME"
+      target: "blackroad-web.pages.dev"
+      proxied: true
+
+    # API endpoints (Cloudflare Workers)
+    "api":
+      type: "CNAME"
+      target: "blackroad-gateway.workers.dev"
+      proxied: true
+
+    "billing":
+      type: "CNAME"
+      target: "blackroad-stripe.workers.dev"
+      proxied: true
+
+    "identity":
+      type: "CNAME"
+      target: "blackroad-identity.workers.dev"
+      proxied: true
+
+    "status":
+      type: "CNAME"
+      target: "blackroad-status.workers.dev"
+      proxied: true
+
+    # Railway apps
+    "app":
+      type: "CNAME"
+      target: "blackroad-web.up.railway.app"
+      proxied: true
+
+    "prism":
+      type: "CNAME"
+      target: "blackroad-prism.up.railway.app"
+      proxied: true
+
+    # Tunnels
+    "lucidia":
+      type: "CNAME"
+      target: "lucidia-tunnel.cfargotunnel.com"
+      proxied: true
+
+    "codex":
+      type: "CNAME"
+      target: "codex-tunnel.cfargotunnel.com"
+      proxied: true

@@ -1,0 +1,78 @@
+name: Deploy to DigitalOcean
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/deploy-*.sh'
+      - 'infra/pi/**'
+  workflow_dispatch:
+    inputs:
+      target:
+        description: 'Deployment target'
+        required: true
+        default: 'codex-infinity'
+        type: choice
+        options:
+          - codex-infinity
+          - lucidia-pi
+          - all
+
+jobs:
+  deploy-codex:
+    runs-on: ubuntu-latest
+    if: github.event.inputs.target == 'codex-infinity' || github.event.inputs.target == 'all' || github.event_name == 'push'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.DROPLET_SSH_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H 159.65.43.12 >> ~/.ssh/known_hosts
+
+      - name: Deploy to codex-infinity
+        run: |
+          ssh root@159.65.43.12 << 'EOF'
+            cd /opt/blackroad
+            git pull origin main
+            docker-compose pull
+            docker-compose up -d
+            echo "Deployment complete at $(date)"
+          EOF
+
+      - name: Health check
+        run: |
+          sleep 10
+          curl -f https://codex.blackroad.io/health || exit 1
+
+  deploy-pi:
+    runs-on: ubuntu-latest
+    if: github.event.inputs.target == 'lucidia-pi' || github.event.inputs.target == 'all'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Deploy to Lucidia via Cloudflare Tunnel
+        run: |
+          curl -X POST https://lucidia.blackroad.io/deploy \
+            -H "Authorization: Bearer ${{ secrets.PI_DEPLOY_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            -d '{"commit": "${{ github.sha }}", "branch": "main"}'
+
+  notify:
+    needs: [deploy-codex]
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: Notify BlackRoad API
+        run: |
+          curl -X POST https://api.blackroad.io/webhooks/deploy \
+            -H "Content-Type: application/json" \
+            -H "X-Deploy-Secret: ${{ secrets.DEPLOY_WEBHOOK_SECRET }}" \
+            -d '{
+              "service": "digitalocean",
+              "target": "${{ github.event.inputs.target || 'codex-infinity' }}",
+              "status": "${{ needs.deploy-codex.result }}",
+              "commit": "${{ github.sha }}"
+            }'
