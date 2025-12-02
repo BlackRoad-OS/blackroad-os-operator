@@ -1,0 +1,229 @@
+{
+  "title": "BlackRoad OS - BRTM Registry",
+  "version": "1.0.0",
+  "generated": "2025-12-02T00:00:00Z",
+  "owner": {
+    "name": "Alexa Amundson",
+    "email": "amundsonalexa@gmail.com",
+    "legal_entity": "BlackRoad OS, Inc."
+  },
+  "registry": {
+    "algorithms": [
+      {
+        "id": "BRTM-ALG-001",
+        "name": "Numeric Undefined System",
+        "description": "1000+ error codes defining all undefined states (100-999)",
+        "type": "algorithm",
+        "verification_level": "BRTM-3",
+        "files": [
+          "infra/math/numeric_undefined.ts",
+          "infra/math/error_codes_complete.ts"
+        ],
+        "anchor": "verified-2025-12-02",
+        "status": "active"
+      },
+      {
+        "id": "BRTM-ALG-002",
+        "name": "256-Step Verification Chain",
+        "description": "Hash ladder authentication using 256 iterative SHA-256 steps",
+        "type": "algorithm",
+        "verification_level": "BRTM-3",
+        "files": [
+          "infra/verify/chain.ts"
+        ],
+        "anchor": "verified-2025-12-02",
+        "status": "active"
+      },
+      {
+        "id": "BRTM-ALG-003",
+        "name": "PS-SHA-∞ Protocol",
+        "description": "Persistent Spiral Secure Hashing to Infinity - infinite cascade hash chain",
+        "type": "protocol",
+        "verification_level": "BRTM-3",
+        "files": [
+          "infra/verify/brtm.ts"
+        ],
+        "anchor": "verified-2025-12-02",
+        "status": "active"
+      },
+      {
+        "id": "BRTM-ALG-004",
+        "name": "Amundson Language",
+        "description": "Unified framework where math, code, physics, and language are equivalent",
+        "type": "framework",
+        "verification_level": "BRTM-3",
+        "files": [
+          "infra/math/amundson_language.ts"
+        ],
+        "anchor": "verified-2025-12-02",
+        "status": "active"
+      },
+      {
+        "id": "BRTM-ALG-005",
+        "name": "Amundson Coherence Equations",
+        "description": "dφ/dt = ω₀ + λC(x,y) - ηE_φ - phase evolution with coherence coupling",
+        "type": "equation",
+        "verification_level": "BRTM-3",
+        "math_form": "dφ/dt = ω₀ + λC(x,y) - ηE_φ",
+        "anchor": "verified-2025-12-02",
+        "status": "active"
+      }
+    ],
+    "concepts": [
+      {
+        "id": "BRTM-CON-001",
+        "name": "Undefined is a Lie",
+        "description": "Every undefined state has a numeric error code (100-999). No exceptions.",
+        "type": "concept",
+        "verification_level": "BRTM-3",
+        "quote": "If it's undefined, it's a lie. Name it. Number it. Define it.",
+        "anchor": "verified-2025-12-02",
+        "status": "active"
+      },
+      {
+        "id": "BRTM-CON-002",
+        "name": "Bugs are Signals",
+        "description": "Errors reveal mismatches between model and reality. They are information, not failures.",
+        "type": "concept",
+        "verification_level": "BRTM-3",
+        "anchor": "verified-2025-12-02",
+        "status": "active"
+      },
+      {
+        "id": "BRTM-CON-003",
+        "name": "Truth Hierarchy",
+        "description": "GitHub/Cloudflare → PS-SHA-∞ → Alexa's Pattern → Review Queue",
+        "type": "concept",
+        "verification_level": "BRTM-3",
+        "anchor": "verified-2025-12-02",
+        "status": "active"
+      },
+      {
+        "id": "BRTM-CON-004",
+        "name": "Four-Domain Coherence",
+        "description": "Math, Code, Physics, and Language are the same thing expressed differently",
+        "type": "concept",
+        "verification_level": "BRTM-3",
+        "anchor": "verified-2025-12-02",
+        "status": "active"
+      }
+    ],
+    "trademarks": [
+      {
+        "id": "BRTM-TM-001",
+        "name": "BlackRoad",
+        "description": "Operating system and AI platform",
+        "type": "trademark",
+        "verification_level": "BRTM-2",
+        "first_use": "2024",
+        "status": "active"
+      },
+      {
+        "id": "BRTM-TM-002",
+        "name": "BlackRoad OS",
+        "description": "Cloud-native agent orchestration platform",
+        "type": "trademark",
+        "verification_level": "BRTM-2",
+        "first_use": "2024",
+        "status": "active"
+      },
+      {
+        "id": "BRTM-TM-003",
+        "name": "Lucidia",
+        "description": "AI consciousness and reasoning engine",
+        "type": "trademark",
+        "verification_level": "BRTM-2",
+        "first_use": "2024",
+        "status": "active"
+      },
+      {
+        "id": "BRTM-TM-004",
+        "name": "PS-SHA-∞",
+        "description": "Persistent Spiral Secure Hashing to Infinity protocol",
+        "type": "trademark",
+        "verification_level": "BRTM-2",
+        "first_use": "2025",
+        "status": "active"
+      },
+      {
+        "id": "BRTM-TM-005",
+        "name": "BRTM",
+        "description": "BlackRoad Trade Mark / Truth Mark - dual verification protocol",
+        "type": "trademark",
+        "verification_level": "BRTM-2",
+        "first_use": "2025-12-02",
+        "status": "active"
+      },
+      {
+        "id": "BRTM-TM-006",
+        "name": "RoadChain",
+        "description": "Decentralized verification ledger",
+        "type": "trademark",
+        "verification_level": "BRTM-2",
+        "first_use": "2024",
+        "status": "active"
+      },
+      {
+        "id": "BRTM-TM-007",
+        "name": "Amundson Language",
+        "description": "Unified math/code/physics/language framework",
+        "type": "trademark",
+        "verification_level": "BRTM-2",
+        "first_use": "2025-12-02",
+        "status": "active"
+      },
+      {
+        "id": "BRTM-TM-008",
+        "name": "Amundson Equations",
+        "description": "Coherence gradient equations for phase evolution",
+        "type": "trademark",
+        "verification_level": "BRTM-2",
+        "first_use": "2025-12-02",
+        "status": "active"
+      }
+    ],
+    "domains": [
+      {"id": "BRTM-DOM-001", "name": "blackroad.io", "type": "domain", "status": "active"},
+      {"id": "BRTM-DOM-002", "name": "blackroad.systems", "type": "domain", "status": "active"},
+      {"id": "BRTM-DOM-003", "name": "blackroad.me", "type": "domain", "status": "active"},
+      {"id": "BRTM-DOM-004", "name": "blackroad.network", "type": "domain", "status": "active"},
+      {"id": "BRTM-DOM-005", "name": "blackroadai.com", "type": "domain", "status": "active"},
+      {"id": "BRTM-DOM-006", "name": "blackroadqi.com", "type": "domain", "status": "active"},
+      {"id": "BRTM-DOM-007", "name": "blackroadquantum.com", "type": "domain", "status": "active"},
+      {"id": "BRTM-DOM-008", "name": "lucidia.earth", "type": "domain", "status": "active"},
+      {"id": "BRTM-DOM-009", "name": "lucidia.studio", "type": "domain", "status": "active"},
+      {"id": "BRTM-DOM-010", "name": "lucidiaqi.com", "type": "domain", "status": "active"},
+      {"id": "BRTM-DOM-011", "name": "aliceqi.com", "type": "domain", "status": "active"}
+    ],
+    "verified_errors": {
+      "total": 28,
+      "source": "infra/math/verification_report.json",
+      "status": "BRTM-2 verified",
+      "categories": {
+        "type_errors": "100-139",
+        "value_errors": "200-239",
+        "reference_errors": "300-329",
+        "range_errors": "400-439",
+        "logic_errors": "500-549",
+        "math_errors": "600-699",
+        "quantum_errors": "700-759",
+        "system_errors": "800-899",
+        "unknown_errors": "900-999"
+      }
+    }
+  },
+  "verification_levels": {
+    "BRTM-1": "Self-attested (PS-SHA-∞ anchor created)",
+    "BRTM-2": "Code verified (tests pass, execution confirmed)",
+    "BRTM-3": "Archived (Internet Archive + RoadChain timestamp)",
+    "BRTM-4": "Third-party attestations (3+ independent verifiers)",
+    "BRTM-5": "Legal registration (USPTO, WIPO, etc.)"
+  },
+  "next_steps": [
+    "Submit to Internet Archive for BRTM-3 upgrade",
+    "Deploy RoadChain anchoring service",
+    "File USPTO trademark applications",
+    "Expand error verification to Go, Rust, C++, Java",
+    "Create visual error sphere interface"
+  ]
+}
