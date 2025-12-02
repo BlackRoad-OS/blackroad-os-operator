@@ -104,6 +104,64 @@ pnpm start
 - TODO(op-next): multi-queue orchestration policies
 
 
+---
+
+## Railway Production v1 - Service Requirements
+
+> See `docs/operator-engine-railway-v1.md` for full architecture details.
+
+### REQUIRED Services (9 total)
+
+| Service | Role |
+|---------|------|
+| **Primary** | Main API application |
+| **Caddy** | Reverse proxy, TLS termination |
+| **Worker** | Background job processor |
+| **blackroad-os-operator** | Agent orchestration (this repo) |
+| **GPT-OSS Model** | LLM gateway (Ollama) |
+| **RAG API** | Retrieval/context service |
+| **Postgres** | Primary relational database |
+| **Meilisearch** | Search + vector store |
+| **Redis** | Cache + job queues |
+
+### OPTIONAL Services
+
+| Service | When to Enable |
+|---------|----------------|
+| **LibreChat** | Chat UI for development/testing |
+| **Browserless** | Web scraping workflows |
+| **MongoDB** | Only if LibreChat is enabled |
+
+### Hero Flows — Chat with Cece
+
+The `/chat` endpoint is the **canonical Operator entrypoint** for talking to Cece:
+
+```bash
+curl -X POST "https://blackroad-os-operator-production-8d28.up.railway.app/chat" \
+  -H "Content-Type: application/json" \
+  -d '{"message": "Hello Cece!"}'
+```
+
+Or run the test script:
+```bash
+./scripts/hero-flow-test.sh
+```
+
+**Hero Flow #1**: `/chat` without RAG (fallback behavior)
+**Hero Flow #2**: `/chat` with RAG enrichment (current default - auto-falls back to #1 if RAG unavailable)
+
+Check `trace.used_rag` in the response to see which flow was used.
+
+See [docs/operator-engine-railway-v1.md](docs/operator-engine-railway-v1.md) for full API contract and details.
+
+### Related Docs
+
+- `docs/operator-engine-railway-v1.md` - Full architecture specification + Hero Flows #1 & #2
+- `docs/RAILWAY_CLEANUP_PLAYBOOK.md` - Steps to clean up redundant services
+- `docs/GPT_OSS_MODEL_VOLUME_FIX.md` - Fix for "volume is FULL" errors
+
+---
+
 ## Agent catalog operator
 
 The operator now sources agent registrations from `agent-catalog/agents.yaml` (override via `CATALOG_PATH`). The catalog file is parsed on startup and hot-reloaded on changes. Key HTTP routes:

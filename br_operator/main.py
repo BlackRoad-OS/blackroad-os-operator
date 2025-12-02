@@ -8,12 +8,15 @@ from pathlib import Path
 from typing import Any, Dict
 
 from fastapi import FastAPI, HTTPException, Request
-from fastapi.responses import JSONResponse
 
 from .catalog import AgentCatalog
 from .versioning import get_git_sha
+from .llm_service import generate_chat_response, check_llm_health, check_rag_health
+from .models import ChatRequest, ChatResponse, LLMHealthResponse, RAGHealthResponse
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
+
+
 DEFAULT_CATALOG_PATH = Path(
     os.getenv("CATALOG_PATH", REPO_ROOT / "agent-catalog" / "agents.yaml")
 )
@@ -76,6 +79,48 @@ def create_app(catalog_path: Path | None = None, enable_watch: bool = True) -> F
             "catalog_version": catalog.catalog_version,
             "service": "blackroad-os-operator",
         }
+    # ============================================
+    # HERO FLOW #1 & #2: Chat with Cece
+    # ============================================
+    # Hero Flow #1: User → Operator → GPT-OSS Model → Response
+    # Hero Flow #2: User → Operator → RAG API → GPT-OSS Model → Response
+    #
+    # RAG is enabled by default (use_rag=True). If RAG API is unavailable,
+    # falls back gracefully to Hero Flow #1 behavior.
+
+    @app.post("/chat", response_model=ChatResponse)
+    async def chat(request: ChatRequest) -> ChatResponse:
+        """Chat with Cece through the Operator Engine.
+
+        Hero Flow #2 (default): Attempts RAG context retrieval, then LLM
+        Hero Flow #1 (fallback): Direct LLM call if RAG unavailable
+        """
+        if not request.message or not request.message.strip():
+            raise HTTPException(status_code=400, detail="message is required")
+
+        try:
+            # Hero Flow #2: RAG enabled by default
+            response = await generate_chat_response(
+                message=request.message.strip(),
+                user_id=request.userId,
+                model=request.model,
+                use_rag=True,  # Enable RAG - falls back gracefully if unavailable
+            )
+            return ChatResponse(**response)
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=str(e))
+
+    @app.get("/llm/health", response_model=LLMHealthResponse)
+    async def llm_health() -> LLMHealthResponse:
+        """Check LLM gateway health."""
+        data = await check_llm_health()
+        return LLMHealthResponse(**data)
+
+    @app.get("/rag/health", response_model=RAGHealthResponse)
+    async def rag_health() -> RAGHealthResponse:
+        """Check RAG API health."""
+        data = await check_rag_health()
+        return RAGHealthResponse(**data)
 
     return app
 
