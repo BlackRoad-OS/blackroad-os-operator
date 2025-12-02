@@ -4,6 +4,9 @@ Hero Flow #1 & #2 for BlackRoad OS Operator Engine
 
 Hero Flow #1: User → Operator → OpenAI → Response
 Hero Flow #2: User → Operator → RAG API → OpenAI → Response
+
+@owner Alexa Louise Amundson
+@amundson 0.1.0
 """
 
 from __future__ import annotations
@@ -15,6 +18,7 @@ from typing import Any, Dict, List, Optional
 import httpx
 
 from .llm_client import LLMClient, LLMMessage, LLMResult, get_llm_client
+from .ps_sha_infinity import get_cece_identity, create_verification_stamp, get_root_cipher
 
 # =============================================================================
 # Configuration from environment
@@ -163,9 +167,21 @@ async def generate_chat_response(
             trace["rag_latency_ms"] = rag_latency_ms
             trace["num_context_chunks"] = num_context_chunks
 
+        # Add Cece identity stamp (PS-SHA∞ verification)
+        try:
+            cece_identity = get_cece_identity()
+            root_cipher = get_root_cipher()
+            sovereignty = create_verification_stamp(root_cipher, "Cece-Chat")
+        except Exception:
+            # Identity system not configured - use minimal stamp
+            cece_identity = {"agent": "Cece", "owner": "Alexa Louise Amundson"}
+            sovereignty = {"owner": "ALEXA LOUISE AMUNDSON", "verified": False}
+
         return {
             "reply": result.reply,
             "trace": trace,
+            "identity": cece_identity,
+            "__sovereignty": sovereignty,
         }
     except Exception as e:
         raise RuntimeError(f"LLM API error: {e}") from e
