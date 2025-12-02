@@ -20,3 +20,6 @@ tests/**/*.js.map
 
 __pycache__
 *.pyc
+
+# Claude Code local config
+.claude/
