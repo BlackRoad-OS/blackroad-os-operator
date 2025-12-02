@@ -1,0 +1,208 @@
+# BlackRoad OS - Railway Projects Configuration
+# Generated: 2025-12-02
+# Source: ~/.railway/config.json
+
+# ===========================================
+# MAIN PROJECT: BlackRoad OS
+# ===========================================
+blackroad_os:
+  project_id: 03ce1e43-5086-4255-b2bc-0146c8916f4c
+  environment: production
+  environment_id: 57e6ac32-0e86-4bde-a337-948535e27bcc
+
+  services:
+    # Core Services
+    - name: blackroad-os-api-gateway
+      service_id: 8e8d45b6-9628-402f-973d-76ba7fd0f935
+      local_path: /Users/alexa/blackroad-os-api-gateway
+
+    - name: blackroad-os-agents
+      service_id: 33ed1229-e250-4f19-acb0-b8c08eb9fca0
+      local_path: /Users/alexa/blackroad-os-agents
+      environment: RAILWAY_TOKEN
+      environment_id: 15580361-8cdb-47fa-974e-4962468129ec
+
+    - name: blackroad-os-archive
+      service_id: a065d8f9-79c1-4ad9-97f7-382cb6a25fd4
+      local_path: /Users/alexa/blackroad-os-archive
+
+    - name: blackroad-os-beacon
+      service_id: 5f7d7aa4-79e6-4301-9580-fa8e23e59406
+      local_path: /Users/alexa/blackroad-os-beacon
+
+    - name: blackroad-os-brand
+      service_id: 81a66108-87d1-4a87-8478-c97b7303b22f
+      local_path: /Users/alexa/blackroad-os-brand
+
+    - name: blackroad-os-demo
+      service_id: bca1d549-7ef2-408a-b2f6-8c66dcd8b284
+      local_path: /Users/alexa/blackroad-os-demo
+
+    - name: blackroad-os-home
+      service_id: 28a42b50-d6a9-41eb-977b-a8b412a15aef
+      local_path: /Users/alexa/blackroad-os-home
+
+    - name: blackroad-os-ideas
+      service_id: 7eaca993-4785-4c35-a428-32ca3a87d768
+      local_path: /Users/alexa/blackroad-os-ideas
+
+    - name: blackroad-os-infra
+      service_id: 7b14e1a1-648f-4b91-8b8e-426245ba3642
+      local_path: /Users/alexa/blackroad-os-infra
+
+    - name: blackroad-os-master
+      service_id: 21661aa8-b704-4988-bcc5-2fb8b0c4ff99
+      local_path: /Users/alexa/blackroad-os-master
+
+    - name: blackroad-os-research
+      service_id: 6c160e3e-76c2-4fa2-8105-d5e447e12832
+      local_path: /Users/alexa/blackroad-os-research
+
+    # Packs
+    - name: blackroad-os-pack-creator-studio
+      service_id: 63bcbc47-08d1-441f-9428-10768a2acd8b
+      local_path: /Users/alexa/blackroad-os-pack-creator-studio
+
+    - name: blackroad-os-pack-education
+      service_id: a77cd39e-4072-4b0c-8daf-76422c63c06f
+      local_path: /Users/alexa/blackroad-os-pack-education
+
+    - name: blackroad-os-pack-finance
+      service_id: 76edf28d-eb5c-49e9-93be-9bcc08032b38
+      local_path: /Users/alexa/blackroad-os-pack-finance
+
+    - name: blackroad-os-pack-infra-devops
+      service_id: b4d178cf-6134-4a11-a1b5-97b1932f2d20
+      local_path: /Users/alexa/blackroad-os-pack-infra-devops
+
+    - name: blackroad-os-pack-legal
+      service_id: eec74ab9-da16-4c01-9dff-04362ce1176e
+      local_path: /Users/alexa/blackroad-os-pack-legal
+
+    - name: blackroad-os-pack-research-lab
+      service_id: 0134a069-7c71-4e23-9484-9067166a7d02
+      local_path: /Users/alexa/blackroad-os-pack-research-lab
+
+# ===========================================
+# STANDALONE PROJECTS
+# ===========================================
+
+blackroad_os_core:
+  project_id: 602cb63b-6c98-4032-9362-64b7a90f7d94
+  environments:
+    all:
+      environment_id: 85cbb38c-94c8-4978-b98c-b1b7f5482b6b
+      service_id: 1b320759-3195-4c7e-8b77-e35ba4fbddca
+    dev:
+      environment_id: 8ebc75ee-2ae6-4725-929d-477ee008a03a
+      service_id: 9cb98486-6330-43a5-8222-0d24f6621f00
+  local_path: /Users/alexa/blackroad-os-core
+
+blackroad_os_api:
+  project_id: f9116368-9135-418c-9050-39496aa9079a
+  environment: staging
+  environment_id: a56494d8-3cbc-4b7d-a65e-51293281c6ce
+  service_id: 557178b7-d8d3-40b0-9246-608c954cb4ae
+  local_path: /Users/alexa/blackroad-os-api
+
+blackroad_os_docs:
+  project_id: a4efb8cd-0d67-4b19-a7f3-b6dbcedf2079
+  environment: production
+  environment_id: a41a126f-ecf9-47b1-8bd6-11ff9a02d799
+  service_id: 7970eb92-3480-46e7-bbc6-3933da56eb09
+  local_path: /Users/alexa/blackroad-os-docs
+
+blackroad_os_prism_console:
+  project_id: 70ce678e-1e2f-4734-9024-6fb32ee5c8eb
+  environment: production
+  environment_id: 36d7ec6a-a84a-4254-9d20-20d0c14f0fa3
+  service_id: 24df2651-781b-4c29-b06a-06a8d35787e4
+  local_path: /Users/alexa/blackroad-os-prism-console
+
+blackroad_os_web:
+  project_id: ced8da45-fcdd-4a86-8f3e-093f5a0723ff
+  environment: production
+  environment_id: dd1a4dd1-86e1-46c1-bcb4-f71df973bbab
+  local_path: /Users/alexa/blackroad-os-web
+
+blackroad_os_operator:
+  project_id: ee43ab16-44c3-4be6-b6cf-e5faf380f709
+  environment: production
+  environment_id: fcb7ca85-0e63-42fc-8201-5fb0450c4fb2
+  service_id: 4f870fd0-c968-49a7-974e-ef41bcab5199
+  local_path: /private/tmp/blackroad-pi-mesh/blackroad-os-operator
+
+blackroad_login:
+  project_id: 21f5c719-4d84-4647-83bb-eacdae864f09
+  environment: production
+  environment_id: 436b5b82-40ad-443e-9761-93c84aeba66d
+  local_path: /Users/alexa/cloudflare-hello-world/blackroad-login
+
+lucidia_platform:
+  project_id: 5c99157a-ff22-496c-b295-55e98145540f
+  environment: production
+  environment_id: c88303d7-25ff-4b94-be2c-e9e583177312
+  service_id: 9352a01e-d37b-47bc-9c05-9149cd639a90
+  local_path: /Users/alexa/lucidia-platform
+
+# ===========================================
+# LEGACY/OTHER PROJECTS
+# ===========================================
+
+blackroad_api:
+  project_id: 7f9a0232-650e-425f-9c32-dd66ecd789aa
+  environment: production
+  environment_id: d8eb6ca0-fd23-4988-aea4-a072e4a435be
+  service_id: 87d1d9dd-e44f-4272-9599-c83d1fdd769e
+  local_path: /private/tmp/blackroad-pi-mesh/blackroad-os-api
+
+blackroad_portal:
+  project_id: 971ec28a-57cb-4745-9e91-8c1a5f8a1fb5
+  environment: production
+  environment_id: 707c5332-22b3-4d4f-8597-c49e445f2c44
+  service_id: d05a29f1-3337-4bb6-8450-37247439322b
+  local_path: /private/tmp/blackroad-pi-mesh/blackroad-os-web
+
+railway_blackroad_os:
+  project_id: 3cd57284-eca3-41a3-90ed-2185f22e7b2c
+  environment: production
+  environment_id: fab32493-5fb0-4eeb-9f3f-88f12fe7567a
+  local_path: /Users/alexa/projects/BlackRoad-Operating-System
+
+# ===========================================
+# DNS MAPPING
+# ===========================================
+
+dns_to_service_map:
+  # blackroad.systems (production via tunnel)
+  api.blackroad.systems: blackroad-os-api-gateway
+  core.blackroad.systems: blackroad-os-core
+  operator.blackroad.systems: blackroad-os-operator
+  prism.blackroad.systems: blackroad-os-prism-console
+  console.blackroad.systems: blackroad-os-prism-console
+  docs.blackroad.systems: blackroad-os-docs
+  brand.blackroad.systems: blackroad-os-brand
+  research.blackroad.systems: blackroad-os-research
+  ideas.blackroad.systems: blackroad-os-ideas
+  infra.blackroad.systems: blackroad-os-infra
+  archive.blackroad.systems: blackroad-os-archive
+  beacon.blackroad.systems: blackroad-os-beacon
+  agents.blackroad.systems: blackroad-os-agents
+  master.blackroad.systems: blackroad-os-master
+  demo.blackroad.systems: blackroad-os-demo
+
+  # blackroad.io (development via Pages/Railway dev)
+  api.blackroad.io: blackroad-os-api-gateway-dev
+  core.blackroad.io: blackroad-os-core-dev
+  operator.blackroad.io: blackroad-os-operator-dev
+
+# ===========================================
+# METADATA
+# ===========================================
+
+metadata:
+  version: "1.0.0"
+  generated: "2025-12-02T08:30:00Z"
+  generated_by: "cece"
+  total_projects: 12
+  total_services: 25+
