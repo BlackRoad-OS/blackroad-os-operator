@@ -1,0 +1,462 @@
+# BlackRoad OS - Cloudflare DNS Zones Configuration
+# Generated: 2025-12-02
+# This is the authoritative source for all DNS configuration
+
+account_id: 848cf0b18d51e0170e0d1537aec3505a
+tunnel_id: 52915859-da18-4aa6-add5-7bd9fcac2e0b
+
+zones:
+  # ===========================================
+  # PRIMARY ZONES
+  # ===========================================
+
+  blackroad.io:
+    zone_id: d6566eba4500b460ffec6650d3b4baf6
+    purpose: development
+    provider: cloudflare-pages
+    records:
+      - name: "@"
+        type: CNAME
+        content: blackroad-os-web.pages.dev
+        proxied: true
+      - name: www
+        type: CNAME
+        content: blackroad-os-web.pages.dev
+        proxied: true
+      - name: api
+        type: CNAME
+        content: blackroad-os-api-gateway-dev.up.railway.app
+        proxied: true
+      - name: app
+        type: CNAME
+        content: blackroad-console.pages.dev
+        proxied: true
+      - name: brand
+        type: CNAME
+        content: blackroad-os-brand.pages.dev
+        proxied: true
+      - name: core
+        type: CNAME
+        content: blackroad-os-core-dev.up.railway.app
+        proxied: true
+      - name: demo
+        type: CNAME
+        content: blackroad-os-demo.pages.dev
+        proxied: true
+      - name: docs
+        type: CNAME
+        content: blackroad-os-docs.pages.dev
+        proxied: true
+      - name: home
+        type: CNAME
+        content: blackroad-os-home.pages.dev
+        proxied: true
+      - name: operator
+        type: CNAME
+        content: blackroad-os-operator-dev-9b4a.up.railway.app
+        proxied: true
+      - name: status
+        type: CNAME
+        content: blackroad-status.pages.dev
+        proxied: true
+      - name: lucidia
+        type: AAAA
+        content: "100::"
+        proxied: true
+        note: Workers route
+    txt_records:
+      - name: "@"
+        content: "openai-domain-verification=dv-4OO806iYOpJ5MvaNRffYQ6nu"
+      - name: "@"
+        content: "openai-domain-verification=dv-e4E2EkJQX380YCnuPrSlWY7o"
+      - name: "@"
+        content: "openai-domain-verification=dv-scoL4u4zSFBAVDl0HplaX93N"
+      - name: "@"
+        content: "atlassian-domain-verification=uzOdZgG6iNkM3XJAaFdNHcIOaNChlGYAUGBYJL3bpycJEpQAprsapnZO2MzHK07M"
+    caa_records:
+      - name: "@"
+        content: '0 issue "letsencrypt.org"'
+
+  blackroad.systems:
+    zone_id: 13293825c2b0491085cbece9fc02e401
+    purpose: production
+    provider: cloudflare-tunnel
+    tunnel: 52915859-da18-4aa6-add5-7bd9fcac2e0b
+    records:
+      - name: "@"
+        type: CNAME
+        content: blackroad-os-web.pages.dev
+        proxied: true
+      - name: www
+        type: CNAME
+        content: blackroad.systems
+        proxied: true
+      - name: web
+        type: CNAME
+        content: 52915859-da18-4aa6-add5-7bd9fcac2e0b.cfargotunnel.com
+        proxied: true
+      - name: api
+        type: CNAME
+        content: 52915859-da18-4aa6-add5-7bd9fcac2e0b.cfargotunnel.com
+        proxied: true
+      - name: core
+        type: CNAME
+        content: 52915859-da18-4aa6-add5-7bd9fcac2e0b.cfargotunnel.com
+        proxied: true
+      - name: operator
+        type: CNAME
+        content: 52915859-da18-4aa6-add5-7bd9fcac2e0b.cfargotunnel.com
+        proxied: true
+      - name: prism
+        type: CNAME
+        content: 52915859-da18-4aa6-add5-7bd9fcac2e0b.cfargotunnel.com
+        proxied: true
+      - name: console
+        type: CNAME
+        content: 52915859-da18-4aa6-add5-7bd9fcac2e0b.cfargotunnel.com
+        proxied: true
+      - name: docs
+        type: CNAME
+        content: 52915859-da18-4aa6-add5-7bd9fcac2e0b.cfargotunnel.com
+        proxied: true
+      - name: brand
+        type: CNAME
+        content: 52915859-da18-4aa6-add5-7bd9fcac2e0b.cfargotunnel.com
+        proxied: true
+      - name: research
+        type: CNAME
+        content: 52915859-da18-4aa6-add5-7bd9fcac2e0b.cfargotunnel.com
+        proxied: true
+      - name: ideas
+        type: CNAME
+        content: 52915859-da18-4aa6-add5-7bd9fcac2e0b.cfargotunnel.com
+        proxied: true
+      - name: infra
+        type: CNAME
+        content: 52915859-da18-4aa6-add5-7bd9fcac2e0b.cfargotunnel.com
+        proxied: true
+      - name: archive
+        type: CNAME
+        content: 52915859-da18-4aa6-add5-7bd9fcac2e0b.cfargotunnel.com
+        proxied: true
+      - name: beacon
+        type: CNAME
+        content: 52915859-da18-4aa6-add5-7bd9fcac2e0b.cfargotunnel.com
+        proxied: true
+      - name: agents
+        type: CNAME
+        content: 52915859-da18-4aa6-add5-7bd9fcac2e0b.cfargotunnel.com
+        proxied: true
+      - name: master
+        type: CNAME
+        content: 52915859-da18-4aa6-add5-7bd9fcac2e0b.cfargotunnel.com
+        proxied: true
+      - name: pi
+        type: CNAME
+        content: 52915859-da18-4aa6-add5-7bd9fcac2e0b.cfargotunnel.com
+        proxied: true
+      - name: demo
+        type: CNAME
+        content: 52915859-da18-4aa6-add5-7bd9fcac2e0b.cfargotunnel.com
+        proxied: true
+      - name: router
+        type: CNAME
+        content: 52915859-da18-4aa6-add5-7bd9fcac2e0b.cfargotunnel.com
+        proxied: true
+    mx_records:
+      - name: "@"
+        content: route1.mx.cloudflare.net
+        priority: 86
+      - name: "@"
+        content: route2.mx.cloudflare.net
+        priority: 13
+      - name: "@"
+        content: route3.mx.cloudflare.net
+        priority: 36
+    txt_records:
+      - name: "@"
+        content: "v=spf1 include:_spf.mx.cloudflare.net ~all"
+      - name: _dmarc
+        content: "v=DMARC1; p=quarantine; adkim=r; aspf=r; rua=mailto:dmarc_rua@onsecureserver.net;"
+
+  # ===========================================
+  # BRAND DOMAINS - All point to blackroad-os-web.pages.dev
+  # ===========================================
+
+  blackroadai.com:
+    zone_id: 590afe2b9b2ae222e77d89c10b7412d3
+    purpose: brand
+    records:
+      - name: "@"
+        type: CNAME
+        content: blackroad-os-web.pages.dev
+        proxied: true
+      - name: www
+        type: CNAME
+        content: blackroadai.com
+        proxied: true
+
+  blackroadqi.com:
+    zone_id: e24dbdfd8868183e4093b8cdba709240
+    purpose: brand
+    records:
+      - name: "@"
+        type: CNAME
+        content: blackroad-os-web.pages.dev
+        proxied: true
+      - name: www
+        type: CNAME
+        content: blackroadqi.com
+        proxied: true
+
+  blackroadquantum.com:
+    zone_id: 1c93ece77e64728f506d635f5b58c60a
+    purpose: brand
+    records:
+      - name: "@"
+        type: CNAME
+        content: blackroad-os-web.pages.dev
+        proxied: true
+      - name: www
+        type: CNAME
+        content: blackroadquantum.com
+        proxied: true
+
+  blackroadquantum.net:
+    zone_id: 7d606471c0feab151c8ad493fd8a5c8e
+    purpose: brand
+    records:
+      - name: "@"
+        type: CNAME
+        content: blackroad-os-web.pages.dev
+        proxied: true
+      - name: www
+        type: CNAME
+        content: blackroadquantum.net
+        proxied: true
+
+  blackroadquantum.info:
+    zone_id: 9855ce5bf6602150ea9195f3cd975d3e
+    purpose: brand
+    records:
+      - name: "@"
+        type: CNAME
+        content: blackroad-os-web.pages.dev
+        proxied: true
+      - name: www
+        type: CNAME
+        content: blackroadquantum.info
+        proxied: true
+
+  blackroadquantum.shop:
+    zone_id: b842746ff2e811c1be959e5a843b25e6
+    purpose: commerce
+    records:
+      - name: "@"
+        type: CNAME
+        content: blackroad-os-web.pages.dev
+        proxied: true
+      - name: www
+        type: CNAME
+        content: blackroadquantum.shop
+        proxied: true
+
+  blackroadquantum.store:
+    zone_id: 498fef62d7a9812e69413e7451edf3b1
+    purpose: commerce
+    records:
+      - name: "@"
+        type: CNAME
+        content: blackroad-os-web.pages.dev
+        proxied: true
+      - name: www
+        type: CNAME
+        content: blackroadquantum.store
+        proxied: true
+
+  blackroad.me:
+    zone_id: 622395674d479bad0a7d3790722c14be
+    purpose: personal
+    note: GitHub Pages configured
+    records:
+      - name: "@"
+        type: A
+        content: 185.199.108.153
+        proxied: true
+      - name: "@"
+        type: A
+        content: 185.199.109.153
+        proxied: true
+      - name: "@"
+        type: A
+        content: 185.199.110.153
+        proxied: true
+      - name: "@"
+        type: A
+        content: 185.199.111.153
+        proxied: true
+      - name: www
+        type: CNAME
+        content: blackroad.me
+        proxied: true
+
+  blackroad.network:
+    zone_id: fae5a76a78154e0509bede2e3eba8124
+    purpose: infrastructure
+    records:
+      - name: "@"
+        type: CNAME
+        content: blackroad-os-web.pages.dev
+        proxied: true
+      - name: www
+        type: CNAME
+        content: blackroad.network
+        proxied: true
+
+  blackroadinc.us:
+    zone_id: decb1bf816ff29197d88751228ad0017
+    purpose: corporate
+    note: Legacy - needs migration from 174.138.44.45
+    records:
+      - name: "@"
+        type: A
+        content: 174.138.44.45
+        proxied: true
+        status: legacy
+      - name: www
+        type: A
+        content: 174.138.44.45
+        proxied: true
+        status: legacy
+      - name: api
+        type: A
+        content: 174.138.44.45
+        proxied: true
+        status: legacy
+
+  # ===========================================
+  # LUCIDIA ECOSYSTEM
+  # ===========================================
+
+  lucidia.earth:
+    zone_id: a91af33930bb9b9ddfa0cf12c0232460
+    purpose: lucidia-main
+    records:
+      - name: "@"
+        type: CNAME
+        content: blackroad-os-web.pages.dev
+        proxied: true
+      - name: www
+        type: CNAME
+        content: lucidia.earth
+        proxied: true
+
+  lucidia.studio:
+    zone_id: 43edda4c64475e5d81934ec7f64f6801
+    purpose: lucidia-creative
+    records:
+      - name: "@"
+        type: CNAME
+        content: blackroad-os-web.pages.dev
+        proxied: true
+      - name: www
+        type: CNAME
+        content: lucidia.studio
+        proxied: true
+
+  lucidiaqi.com:
+    zone_id: 8a787536b6dd285bdf06dde65e96e8c0
+    purpose: lucidia-qi
+    note: Microsoft 365 configured
+    records:
+      - name: "@"
+        type: A
+        content: 13.248.243.5
+        proxied: true
+      - name: "@"
+        type: A
+        content: 76.223.105.230
+        proxied: true
+      - name: www
+        type: CNAME
+        content: lucidiaqi.com
+        proxied: true
+      - name: autodiscover
+        type: CNAME
+        content: autodiscover.outlook.com
+        proxied: true
+      - name: lyncdiscover
+        type: CNAME
+        content: webdir.online.lync.com
+        proxied: true
+      - name: msoid
+        type: CNAME
+        content: clientconfig.microsoftonline-p.net
+        proxied: true
+      - name: sip
+        type: CNAME
+        content: sipdir.online.lync.com
+        proxied: true
+    mx_records:
+      - name: "@"
+        content: mx1-usg2.ppe-hosted.com
+        priority: 10
+      - name: "@"
+        content: mx2-usg2.ppe-hosted.com
+        priority: 10
+      - name: "@"
+        content: mx3-usg2.ppe-hosted.com
+        priority: 10
+
+  # ===========================================
+  # ALICE QI ECOSYSTEM
+  # ===========================================
+
+  aliceqi.com:
+    zone_id: 927cead26cb27df79577db1bffbf2dfa
+    purpose: alice-qi
+    note: Mailgun configured
+    records:
+      - name: "@"
+        type: A
+        content: 15.197.148.33
+        proxied: true
+        status: godaddy-parking
+      - name: "@"
+        type: A
+        content: 3.33.130.190
+        proxied: true
+        status: godaddy-parking
+      - name: www
+        type: CNAME
+        content: aliceqi.com
+        proxied: true
+      - name: email
+        type: CNAME
+        content: mailgun.org
+        proxied: true
+      - name: pay
+        type: CNAME
+        content: paylinks.commerce.godaddy.com
+        proxied: true
+    mx_records:
+      - name: "@"
+        content: mxa.mailgun.org
+        priority: 10
+      - name: "@"
+        content: mxb.mailgun.org
+        priority: 10
+    txt_records:
+      - name: "@"
+        content: "v=spf1 include:mailgun.org ~all"
+
+# ===========================================
+# METADATA
+# ===========================================
+
+metadata:
+  version: "1.0.0"
+  generated: "2025-12-02T08:23:00Z"
+  generated_by: "cece"
+  total_zones: 16
+  total_records: 150+
