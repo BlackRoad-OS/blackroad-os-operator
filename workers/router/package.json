@@ -1,0 +1,17 @@
+{
+  "name": "blackroad-router",
+  "version": "1.0.0",
+  "description": "BlackRoad OS Edge Router - Cloudflare Worker",
+  "main": "src/index.js",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "tail": "wrangler tail"
+  },
+  "keywords": ["cloudflare", "worker", "edge", "router"],
+  "author": "BlackRoad OS",
+  "license": "MIT",
+  "devDependencies": {
+    "wrangler": "^3.0.0"
+  }
+}
