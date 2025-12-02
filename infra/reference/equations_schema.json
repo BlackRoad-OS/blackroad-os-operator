@@ -1,0 +1,262 @@
+{
+  "metadata": {
+    "source": "handwritten_notes",
+    "author": "Alexa Louise Amundson",
+    "digitized": "2025-12-02",
+    "original_date": "2025-06-25",
+    "header": "YHWH / Holy Spirit",
+    "purpose": "Alice coding agent reference"
+  },
+
+  "constants": {
+    "golden_ratio": {
+      "symbol": "φ",
+      "latex": "\\phi = \\frac{1 + \\sqrt{5}}{2}",
+      "value": 1.618033988749,
+      "notes": "Fibonacci limit"
+    },
+    "fine_structure": {
+      "symbol": "α",
+      "latex": "\\alpha \\approx \\frac{1}{137}",
+      "value": 0.007297352569,
+      "notes": "Electromagnetic coupling"
+    },
+    "euler_identity": {
+      "latex": "e^{i\\pi} + 1 = 0",
+      "notes": "Connects e, i, π, 1, 0"
+    }
+  },
+
+  "trigonometry": {
+    "unit_circle": [
+      {"angle_deg": 0,   "radians": "0",      "sin": "0",      "cos": "1",      "tan": "0",         "coords": [1, 0]},
+      {"angle_deg": 30,  "radians": "π/6",    "sin": "1/2",    "cos": "√3/2",   "tan": "1/√3",      "coords": ["√3/2", "1/2"]},
+      {"angle_deg": 45,  "radians": "π/4",    "sin": "√2/2",   "cos": "√2/2",   "tan": "1",         "coords": ["√2/2", "√2/2"]},
+      {"angle_deg": 60,  "radians": "π/3",    "sin": "√3/2",   "cos": "1/2",    "tan": "√3",        "coords": ["1/2", "√3/2"]},
+      {"angle_deg": 90,  "radians": "π/2",    "sin": "1",      "cos": "0",      "tan": "undefined", "coords": [0, 1]}
+    ],
+    "identities": {
+      "soh_cah_toa": {
+        "sin": "opposite / hypotenuse",
+        "cos": "adjacent / hypotenuse",
+        "tan": "opposite / adjacent = sin/cos"
+      },
+      "reciprocals": {
+        "sec": "1/cos(θ)",
+        "csc": "1/sin(θ)",
+        "cot": "cos(θ)/sin(θ)"
+      },
+      "euler": "e^(iθ) = cos(θ) + i·sin(θ)"
+    },
+    "wave_form": {
+      "general": "y = A·sin(ωx - φ) + K",
+      "parameters": {
+        "A": "amplitude",
+        "ω": "angular_frequency",
+        "φ": "phase_shift",
+        "K": "vertical_translation"
+      },
+      "period": "2π/ω",
+      "phase_shift_formula": "φ/ω"
+    }
+  },
+
+  "spherical_coordinates": {
+    "definitions": {
+      "θ": "angle in xy-plane from positive x-axis",
+      "φ": "angle from positive z-axis (0 to π)",
+      "r": "radial distance from origin"
+    },
+    "conversions": {
+      "x": "r·sin(φ)·cos(θ)",
+      "y": "r·sin(φ)·sin(θ)",
+      "z": "r·cos(φ)"
+    }
+  },
+
+  "complex_numbers": {
+    "polar_form": "z = r(cos(θ) + i·sin(θ)) = r·e^(iθ)",
+    "example_45deg_mag5": {
+      "z": "5(cos(45°) + i·sin(45°))",
+      "rectangular": "(5√2/2) + (5√2/2)i",
+      "verification": "r = √[(5√2/2)² + (5√2/2)²] = 5"
+    }
+  },
+
+  "differential_geometry": {
+    "gauss_bonnet": {
+      "latex": "\\iint_M K \\, dA = 2\\pi\\chi(M)",
+      "plain": "∬_M K dA = 2πχ(M)",
+      "variables": {
+        "K": "Gaussian curvature",
+        "M": "surface/manifold",
+        "χ(M)": "Euler characteristic"
+      }
+    }
+  },
+
+  "z_framework": {
+    "definition": "Z := yw - w",
+    "states": {
+      "equilibrium": "Z = ∅",
+      "adapt": "Z ≠ ∅"
+    },
+    "differential": {
+      "equation": "d/dt g₀(z) = -g₁(z) - W(t)",
+      "result": "g₀(z) = Z"
+    },
+    "principle": "∂(human + AI)/∂t → division breaks the system"
+  },
+
+  "physics_equations": {
+    "dirac": {
+      "latex": "(i\\hbar\\gamma^\\mu \\partial_\\mu - mc)\\psi = 0",
+      "simplified": "iℏ∂ψ - mcψ = 0"
+    },
+    "schrodinger": {
+      "time_dependent": "iℏ ∂ψ/∂t = Ĥψ"
+    },
+    "hamiltonian": {
+      "classical": "H = T + V",
+      "operator": "Ĥ = -ℏ²/2m ∇² + V(x)"
+    },
+    "lagrangian": {
+      "classical": "L = T - V"
+    },
+    "decay_growth": {
+      "equation": "dS/dt = α - γS(t)",
+      "solution": "S(t) = α/γ + (S₀ - α/γ)e^(-γt)"
+    },
+    "nonlinear_pendulum": {
+      "equation": "d²θ/dt² = a·sin(θ)",
+      "note": "Not analytically solvable; requires elliptic integrals"
+    }
+  },
+
+  "functional_analysis": {
+    "sobolev_inequality": {
+      "latex": "\\left(\\iint_{\\mathbb{R}^n} |f|^{\\gamma^*} dx\\right)^{1/\\gamma^*} \\leq C_n \\iint_{\\mathbb{R}^n} |df| dx",
+      "constraint": "f with compact support",
+      "sobolev_conjugate": "γₙ* = nγₙ/(n - γₙ)"
+    },
+    "holder_conjugates": "1/p + 1/q + 1/r = 1"
+  },
+
+  "number_theory": {
+    "partition_formula": {
+      "name": "Hardy-Ramanujan-Rademacher",
+      "latex": "p(n) = \\frac{2\\pi}{(24n-1)^{3/4}} \\sum_{k=1}^{\\infty} \\frac{A_k(n)}{k} I_{3/2}\\left(\\frac{\\pi\\sqrt{24n-1}}{6k}\\right)"
+    }
+  },
+
+  "riemann_zeta": {
+    "definition": {
+      "latex": "\\zeta(s) = \\sum_{n=1}^{\\infty} \\frac{1}{n^s}",
+      "domain": "s ∈ ℂ, n ∈ ℕ"
+    },
+    "riemann_hypothesis": {
+      "statement": "All non-trivial zeros lie on critical line Re(s) = 1/2",
+      "zeros": "ζ(s) = 0 ⟺ s = 1/2 + ti",
+      "status": "Millennium Problem - Unproven"
+    },
+    "euler_product": {
+      "latex": "\\zeta(s) = \\prod_p (1 - p^{-s})^{-1}",
+      "constraint": "Re(s) > 1",
+      "note": "Product over all primes p"
+    },
+    "functional_equation": "ζ(s) = 2^s π^(s-1) sin(πs/2) Γ(1-s) ζ(1-s)",
+    "trivial_zeros": "ζ(-2n) = 0 for n = 1, 2, 3, ...",
+    "special_values": {
+      "zeta_2": "π²/6",
+      "zeta_4": "π⁴/90",
+      "zeta_minus1": "-1/12 (regularized)"
+    }
+  },
+
+  "born_rule": {
+    "author": "Max Born",
+    "year": 1926,
+    "probability_interpretation": {
+      "latex": "\\int_{-\\infty}^{+\\infty} |\\Psi|^2(r,t) d^3r",
+      "meaning": "Probability of finding particle at point r at time t"
+    },
+    "wave_superposition": {
+      "double_slit": "Ψ = A₁cos(kR₁ - ωt) + A₂cos(kR₂ - ωt)",
+      "complex_form": "Ψ = A₁e^{i(kR₁ - ωt)} + A₂e^{i(kR₂ - ωt)}"
+    },
+    "probability_density": {
+      "formula": "ψ*ψ = |Ψ|²",
+      "interference": "|Ψ|² = 2A²cos²((k(R₁ - R₂))/2) · cos²(ωt)"
+    },
+    "interference_conditions": {
+      "constructive": "R₁ - R₂ = nλ (n = 0, 1, 2, ...)",
+      "destructive": "R₁ - R₂ = (n + ½)λ"
+    },
+    "normalization": "∫_{-∞}^{+∞} |Ψ|² d³r = 1"
+  },
+
+  "algebra": {
+    "associativity": [
+      "a + (b + 1) = (a + b) + 1",
+      "a(b + 1) = ab + a"
+    ],
+    "quadratic_factoring": {
+      "given": "x² + bx + c = 0",
+      "method": "Find m, n where m + n = b and m·n = c",
+      "example": {
+        "equation": "x² + 32x + 192",
+        "solution": "(x + 8)(x + 24)",
+        "midpoint_method": {
+          "midpoint": 16,
+          "formula": "(16 - c)(16 + c) = 192",
+          "solve": "256 - c² = 192 → c = 8"
+        }
+      }
+    }
+  },
+
+  "pauli_model_1234": {
+    "operators": {
+      "U_hat": {"symbol": "Û", "matrix": "σz", "meaning": "Structure"},
+      "C_hat": {"symbol": "Ĉ", "matrix": "σx", "meaning": "Change"},
+      "L_hat": {"symbol": "L̂", "matrix": "σy", "meaning": "Scale"}
+    },
+    "algebra": "su(2)",
+    "triple_product": "Û·Ĉ·L̂ = iI",
+    "emergence": "Ŝ = iI (Strength as scalar invariant)",
+    "ontological_primitives": {
+      "1": "Change",
+      "2": "Strength (emerges from 1×3×4)",
+      "3": "Structure",
+      "4": "Scale"
+    }
+  },
+
+  "magic_squares": {
+    "lo_shu_3x3": {
+      "grid": [[4, 9, 2], [3, 5, 7], [8, 1, 6]],
+      "magic_constant": 15,
+      "formula": "n(n² + 1)/2"
+    },
+    "durer_4x4": {
+      "grid": [[16, 3, 2, 13], [5, 10, 11, 8], [9, 6, 7, 12], [4, 15, 14, 1]],
+      "magic_constant": 34,
+      "fine_structure_connection": "34 × 4 + 1 = 137 ≈ 1/α",
+      "year_encoded": "1514"
+    }
+  },
+
+  "concept_grid": {
+    "description": "Mathematical physics concept map",
+    "grid": [
+      ["Lorentz", "Shannon", "Laplacian", "Time", "Biophysical Computing"],
+      ["Cantor Diagonal", "Dirac", "Hilbert", "W(k,n)", "Spin-Einstein"],
+      ["Legendre", "Boltzmann", "Heisenberg", "dS/dt", "Quadratic Factoring"],
+      ["Δ=24729", "A+B=C+C", "Gödel", "Polyatomic Ions", ""],
+      ["Birndates", "UNDEFINED", "Matrix", "Avogadro", ""],
+      ["Zeckendorf", "Imaginary Numbers", "", "Born Equation", ""],
+      ["Q Matrix", "Constants", "Schrödinger", "Hamiltonian", ""],
+      ["Concatenation", "Unit Circle", "Wave Function", "Lagrangian", ""]
+    ]
+  }
+}
