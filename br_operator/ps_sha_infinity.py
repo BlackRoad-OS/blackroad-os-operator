@@ -144,6 +144,44 @@ def derive_session_identity(root_cipher: bytes, session_id: str, timestamp: Opti
     return hashlib.sha512(root_cipher + label).digest()
 
 
+def derive_tool_identity(root_cipher: bytes, tool_name: str, sha256_hash: str) -> bytes:
+    """
+    Derive a deterministic identity for an adopted tool.
+
+    Continuity Principle: Adoption = Continuity. No tests. No waiting.
+    The tool gets identity immediately upon adoption into BlackRoad.
+
+    Args:
+        root_cipher: The 2048-bit root cipher
+        tool_name: Tool identifier (e.g., "tool.jq")
+        sha256_hash: SHA-256 of the tool's canonical state at adoption
+
+    Returns:
+        512-bit (64 bytes) tool identity seed
+    """
+    # First derive the tools root
+    tools_root = hashlib.sha512(root_cipher + b":tools-root:BlackRoad-Tools-Root").digest()
+    # Then derive this specific tool's identity
+    label = f":tool:{tool_name}:{sha256_hash}".encode("utf-8")
+    return hashlib.sha512(tools_root + label).digest()
+
+
+def get_tool_fingerprint(tool_name: str, sha256_hash: str) -> str:
+    """
+    Get a tool's PS-SHA∞ fingerprint.
+
+    Args:
+        tool_name: Tool identifier (e.g., "tool.jq")
+        sha256_hash: SHA-256 of the tool's canonical state
+
+    Returns:
+        Fingerprint string like "PS∞-A19C8D34EF01..."
+    """
+    root = get_root_cipher()
+    tool_seed = derive_tool_identity(root, tool_name, sha256_hash)
+    return f"PS∞-{ps_sha_infinity_fingerprint(tool_seed, 8).upper()}"
+
+
 # =============================================================================
 # VERIFICATION HELPERS
 # =============================================================================

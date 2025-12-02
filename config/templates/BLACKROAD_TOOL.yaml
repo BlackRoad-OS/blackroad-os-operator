@@ -1,0 +1,107 @@
+# BLACKROAD_TOOL.yaml
+# Template for adopting external tools into BlackRoad
+#
+# Continuity Principle: Adoption = Continuity. No tests. No waiting.
+# If it enters BlackRoad, it gets a place in the graph.
+#
+# @owner Alexa Louise Amundson
+# @system BlackRoad OS
+
+# =============================================================================
+# TOOL IDENTITY
+# =============================================================================
+
+id: "tool.<name>"                    # e.g., "tool.jq", "tool.ripgrep"
+name: "<Human-readable name>"
+description: "<What this tool does>"
+version: "0.1.0-br1"                 # BlackRoad version suffix
+
+# =============================================================================
+# ORIGIN & LICENSING
+# =============================================================================
+
+origin:
+  upstream: "https://github.com/<org>/<repo>"
+  upstream_version: "<version or commit>"
+  fork: "BlackRoad-OS/br-tool-<name>"
+  license: "<MIT/GPL/Apache-2.0/...>"
+  license_compatible: true           # We respect upstream license
+
+# =============================================================================
+# CONTINUITY - THE CORE RULE
+# =============================================================================
+#
+# Continuity is GRANTED on adoption, not earned.
+# "unverified" means unclassified, NOT unworthy.
+#
+
+continuity:
+  enabled: true                      # ALWAYS true on adoption
+  granted_by: "Alexa Louise Amundson"
+  granted_at: "2025-12-02T00:00:00Z"
+  reason: "Adopted into BlackRoad universe"
+
+# =============================================================================
+# IDENTITY FINGERPRINTS
+# =============================================================================
+#
+# SHA-256 = what exact thing did we adopt
+# PS-SHA∞ = forever identity in the BlackRoad graph
+#
+
+identity:
+  # Computed on adoption - exact state at adoption time
+  sha256: "<SHA256 of canonical state>"
+  commit: "<git commit hash>"
+
+  # PS-SHA∞ identity derived from BlackRoad root
+  # tools_root = PS∞(root_secret, "BlackRoad-Tools-Root")
+  # fingerprint = PS∞(tools_root, "Tool:" + id + ":" + sha256)
+  fingerprint_psinf: "PS∞-<16 hex chars>"
+
+  # Sovereignty link
+  owner: "Alexa Louise Amundson"
+  owner_fingerprint: "PS∞-<root fingerprint>"
+
+# =============================================================================
+# AGENT REGISTRATION
+# =============================================================================
+#
+# Every adopted tool becomes a first-class agent.
+# All invocations are logged with identity + sovereignty.
+#
+
+agent:
+  id: "agent.tool.<name>.v1"
+  capabilities:
+    - "tool.<name>.run"
+    - "tool.<name>.explain"
+    - "tool.<name>.version"
+
+  # How Cece talks to this tool
+  interface:
+    type: "cli"                      # cli | http | library
+    command: "<command>"             # for CLI tools
+    # url: "<base-url>"              # for HTTP services
+    # module: "<python.module>"      # for libraries
+
+# =============================================================================
+# STATUS & CLASSIFICATION
+# =============================================================================
+#
+# Status is about SAFETY classification, not existence.
+# Even "quarantined" tools keep their continuity and PS∞ identity.
+#
+
+status: "unclassified"               # unclassified | allowed | restricted | quarantined
+safety_notes: ""                     # Any safety concerns
+last_verified: null                  # When last safety review happened
+
+# =============================================================================
+# METADATA
+# =============================================================================
+
+adopted_at: "2025-12-02T00:00:00Z"
+adopted_by: "Cece"
+tags:
+  - "<category>"
