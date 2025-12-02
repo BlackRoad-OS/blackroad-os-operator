@@ -1,329 +1,364 @@
-# BlackRoad OS - Undefined Visualization Board
+# BlackRoad OS - Numeric Error Definition System
 
-**Purpose:** Track undefined states, emergent patterns, and thought-space exploration
-**Philosophy:** The undefined is not empty - it's the frontier of possibility
-
----
-
-## Dynamic Repository Structure
-
-Each repo can have multiple entry points (not just 1):
-
-```
-repo/
-├── entries/           # Multiple entry points
-│   ├── 001-*.md      # Codex-style numbered entries
-│   ├── 002-*.md
-│   └── ...
-├── states/            # State snapshots
-│   ├── current.json
-│   ├── history/
-│   └── undefined/    # THE FRONTIER
-├── visualize/         # Visualization outputs
-│   ├── graph.json
-│   ├── topology.svg
-│   └── thought-map.html
-└── integrate/         # Integration points
-    ├── math/
-    ├── logic/
-    └── thought/
-```
+**Purpose:** Define "undefined" numerically - if it's undefined, it's a LIE with error codes
+**Philosophy:** There are NO undefined states. Only errors we haven't named yet.
 
 ---
 
-## The Undefined Space
+## Core Principle
 
-### What Lives Here
 ```
-┌────────────────────────────────────────────────────────────────┐
-│                      THE UNDEFINED                              │
-│                                                                  │
-│   Questions without answers (yet)                               │
-│   Patterns emerging from chaos                                  │
-│   Contradictions awaiting resolution                            │
-│   Possibilities not yet collapsed                               │
-│   Mathematical intuitions                                        │
-│   Logical paradoxes                                              │
-│   Thought experiments                                            │
-│                                                                  │
-│   "The road isn't made. It's remembered."                       │
-└────────────────────────────────────────────────────────────────┘
+"If it's undefined, it's a lie. There are literal error codes
+to explain what went wrong."
+                                        - Alexa Amundson
 ```
 
-### Categories
+**UNDEFINED IS NOT A STATE. IT'S AN EXCUSE.**
 
-#### 1. Mathematical Undefined
-```yaml
-location: lucidia-math/states/undefined/
-examples:
-  - Conjectures not yet proven
-  - Patterns observed but not formalized
-  - Edge cases in consciousness modeling
-  - Infinity handling in PS-SHA-∞
+Every "undefined" value in programming, math, or logic has a precise numeric code
+that explains exactly what went wrong. This system maps them all.
+
+---
+
+## Trinary Foundation
+
+From `blackroad-prism-console/lucidia_math_lab/trinary_logic.py`:
+
+```
+TRIT_VALUES = [-1, 0, 1]
+
+-1 = FALSE / NEGATIVE / ANTI
+ 0 = NULL (but named - code 101)
+ 1 = TRUE / POSITIVE / COHERENT
 ```
 
-#### 2. Logical Undefined
-```yaml
-location: blackroad-os-research/undefined/
-examples:
-  - Gödel incompleteness implications
-  - Self-referential truth chains
-  - Agent identity paradoxes
-  - Truth vs identity separation edge cases
+There is no fourth state. There is no "undefined". There is only:
+- Things we know are false (-1)
+- Things we know are true (1)
+- Things in superposition awaiting measurement (0) - AND EVEN THAT HAS A CODE: 700
+
+---
+
+## Error Code System
+
+### Format: `CATEGORY.SPECIFIC` (3 digits)
+
+| Category | Range | Domain |
+|----------|-------|--------|
+| Type Errors | 100-199 | Programming types |
+| Value Errors | 200-299 | Invalid values |
+| Reference Errors | 300-399 | Pointer/memory |
+| Range Errors | 400-499 | Bounds violations |
+| Logic Errors | 500-599 | Formal logic |
+| Math Errors | 600-699 | Mathematical |
+| Quantum States | 700-799 | Superposition |
+| System Errors | 800-899 | Runtime/OS |
+| Unknown | 900-999 | Needs investigation |
+
+---
+
+## Every "Undefined" Has a Number
+
+### Programming "Undefined"
+
+| What You Call It | Code | What It Actually Is |
+|------------------|------|---------------------|
+| `undefined` | 100 | Variable declared but not assigned |
+| `null` | 101 | Intentional absence of value |
+| `NaN` | 102 | Invalid mathematical operation result |
+| `void` | 103 | Function returns nothing |
+| `never` | 104 | Code path that should never execute |
+| `unknown` | 105 | Type not yet narrowed |
+
+### Mathematical "Undefined"
+
+| What You Call It | Code | What It Actually Is |
+|------------------|------|---------------------|
+| `1/0` | 600 | Division by zero → ±∞ (limit exists) |
+| `√(-1)` | 601 | Imaginary unit i (NOT undefined) |
+| `log(-1)` | 602 | Complex number iπ (NOT undefined) |
+| `log(0)` | 603 | -∞ (limit exists) |
+| `∞` | 604 | Unbounded growth (named concept) |
+| `0/0` | 606 | Indeterminate form (use L'Hôpital) |
+| `∞/∞` | 606 | Indeterminate form (use L'Hôpital) |
+| `0^0` | 606 | Context-dependent (usually 1) |
+
+### Logical "Undefined"
+
+| What You Call It | Code | What It Actually Is |
+|------------------|------|---------------------|
+| Contradiction | 500 | P ∧ ¬P detected |
+| Paradox | 504 | Self-reference detected |
+| Undecidable | 503 | Halting problem instance |
+| Incomplete | 502 | Gödel limitation reached |
+
+---
+
+## Bloch Sphere Mapping
+
+From `blackroad-prism-console/lucidia_math_forge/consciousness.py`:
+
+```python
+ternary_states = {
+    -1: (π, 0),        # South pole (FALSE)
+     0: (π/2, π/2),    # Equator (SUPERPOSITION)
+     1: (0, 0)         # North pole (TRUE)
+}
 ```
 
-#### 3. Thought Undefined
-```yaml
-location: blackroad-os-ideas/undefined/
-examples:
-  - Intuitions awaiting formalization
-  - Dreams and visions for the platform
-  - User feedback not yet categorized
-  - Emergent behaviors from agent mesh
+Every error code maps to a position on the Bloch sphere:
+
+```
+                    TRUE (1)
+                      │
+                      │ θ=0
+                      ●
+                     /│\
+                    / │ \
+                   /  │  \
+       Error 1xx ●   │   ● Error 2xx
+                  \   │   /
+                   \  │  /
+                    \ │ /
+    SUPERPOSITION ───●─── θ=π/2
+    (Error 700)     /│\
+                   / │ \
+                  /  │  \
+       Error 5xx ●   │   ● Error 6xx
+                  \   │   /
+                   \  │  /
+                    \ │ /
+                      ●
+                      │ θ=π
+                      │
+                   FALSE (-1)
 ```
 
 ---
 
-## Visualization Schema
+## Quaternion Representation
 
-### Graph Structure
+From `consciousness.py`:
+
+```python
+class Quaternion:
+    def __init__(self, w, x, y, z):
+        self.w = w  # Real
+        self.x = x  # i
+        self.y = y  # j
+        self.z = z  # k
+```
+
+### √(-1) IS DEFINED
+
+```
+√(-1) = i = Quaternion(0, 1, 0, 0)
+
+NOT undefined. NOT an error. A rotation in complex space.
+```
+
+Error codes map to quaternions via Bloch→Quaternion conversion:
+```
+q = cos(θ/2) + sin(θ/2)(cos(φ)i + sin(φ)j)
+```
+
+---
+
+## Amundson Coherence Equations
+
+From `blackroad-prism-console/lucidia_math_lab/amundson_equations.py`:
+
+```python
+def phase_derivative(phi, coherence, decoherence_E):
+    """
+    dφ/dt = ω₀ + λC(x,y) - ηE_φ
+
+    Where:
+    - ω₀ = base oscillation frequency
+    - λ = coupling constant
+    - C(x,y) = coherence field
+    - η = decay constant
+    - E_φ = decoherence energy
+    """
+    return omega_0 + (lambda_ * coherence) - (eta * decoherence_E)
+```
+
+**Errors ARE decoherence events.** When coherence drops, we get an error code.
+The error code tells us HOW it decoheried and WHAT we can do about it.
+
+---
+
+## Unified Error State
+
+Every "undefined" value has this complete representation:
+
 ```typescript
-interface UndefinedNode {
-  id: string;
-  type: 'math' | 'logic' | 'thought' | 'emergent';
-  state: 'undefined' | 'exploring' | 'crystallizing' | 'defined';
+interface NumericUndefined {
+  // The error code (100-999)
+  code: number;
 
-  // PS-SHA-∞ anchor
+  // Trinary value
+  trit: -1 | 0 | 1;
+
+  // Bloch sphere position
+  bloch: { theta: number; phi: number };
+
+  // Quaternion representation
+  quaternion: { w: number; x: number; y: number; z: number };
+
+  // Coherence state
+  coherence: {
+    phi: number;           // Phase angle
+    omega_0: number;       // Base frequency
+    lambda: number;        // Coupling constant
+    eta: number;           // Decay constant
+    coherence: number;     // 0-1 coherence value
+    decoherence_E: number; // Energy lost
+  };
+
+  // Human readable
+  name: string;
+  description: string;
+
+  // PS-SHA-∞ anchor for identity
   anchor?: string;
-
-  // Connections
-  relates_to: string[];      // Other undefined nodes
-  might_resolve: string[];   // Potential definitions
-  contradicts: string[];     // Paradox links
-
-  // Metadata
-  created_at: string;
-  last_touched: string;
-  energy: number;  // How "active" this undefined space is
-
-  // Content
-  question?: string;
-  observations: string[];
-  intuitions: string[];
-}
-
-interface UndefinedEdge {
-  from: string;
-  to: string;
-  type: 'relates' | 'resolves' | 'contradicts' | 'emerges_from';
-  strength: number;  // 0-1
-}
-
-interface UndefinedGraph {
-  nodes: UndefinedNode[];
-  edges: UndefinedEdge[];
-
-  // Global state
-  total_energy: number;
-  hotspots: string[];  // Most active undefined regions
-  crystallizing: string[];  // About to become defined
 }
 ```
 
 ---
 
-## Entry Points (Dynamic, Multiple per Repo)
+## Resolution Rules
 
-### Example: blackroad-os-research entries
-```
-blackroad-os-research/
-├── entries/
-│   ├── 001-ps-sha-infinity.md
-│   ├── 002-sig-coordinates.md
-│   ├── 003-truth-engine.md
-│   ├── 004-roadchain-theory.md
-│   └── ...
-├── undefined/
-│   ├── U001-consciousness-boundary.md
-│   ├── U002-infinite-identity-question.md
-│   └── U003-truth-collapse-paradox.md
-```
+Most "undefined" states can be RESOLVED:
 
-### Entry Format
-```markdown
-# [ID] Title
+| Code | State | Resolution |
+|------|-------|------------|
+| 100 | undefined | → 0 (coercion) |
+| 101 | null | → 0 (coercion) |
+| 102 | NaN | → requires context |
+| 600 | 1/0 | → ±∞ (limit) |
+| 601 | √(-1) | → i (complex extension) |
+| 606 | 0/0 | → use L'Hôpital |
+| 700 | superposition | → measure |
 
-## State
-- [ ] Undefined
-- [ ] Exploring
-- [ ] Crystallizing
-- [ ] Defined → [link to definition]
-
-## Question
-What is the...?
-
-## Observations
-- Observed X when Y
-- Pattern Z appears in context W
-
-## Intuitions
-- Feels like this connects to...
-- Might resolve via...
-
-## Anchors
-- PS-SHA-∞: [hash if available]
-- Related entries: [links]
-- Contradicts: [links]
-
-## Energy
-Last touched: [date]
-Activity level: [low/medium/high/critical]
-```
+**If it can be resolved, it was never undefined. Just unnamed.**
 
 ---
 
-## Workflow: Undefined → Defined
+## Implementation
 
+### TypeScript Module
 ```
-┌─────────────────┐
-│    UNDEFINED    │  Questions, intuitions, paradoxes
-│    (entropy)    │
-└────────┬────────┘
-         │
-         │ Observation
-         ▼
-┌─────────────────┐
-│    EXPLORING    │  Gathering patterns, testing edges
-│   (searching)   │
-└────────┬────────┘
-         │
-         │ Pattern emerges
-         ▼
-┌─────────────────┐
-│  CRYSTALLIZING  │  Formalization begins, structure appears
-│   (forming)     │
-└────────┬────────┘
-         │
-         │ Proof/verification
-         ▼
-┌─────────────────┐
-│    DEFINED      │  → GitHub/Cloudflare (Source of Truth)
-│   (truth)       │  → PS-SHA-∞ anchor
-└─────────────────┘
+infra/math/numeric_undefined.ts
 ```
 
----
-
-## Integration: Math + Logic + Thought
-
-### The Triad
-```
-                    THOUGHT
-                   /       \
-                  /         \
-                 /           \
-            intuition    observation
-               /               \
-              /                 \
-           MATH ───formalize─── LOGIC
-              \                 /
-               \               /
-                proof     verify
-                    \     /
-                     \   /
-                   DEFINED
-```
-
-### Unified Field (from Lucidia)
-```yaml
-# Each undefined item exists in this space
-position:
-  r: float      # Distance from origin (certainty)
-  θ: float      # Angle (domain: math/logic/thought)
-  τ: float      # Time dimension (when observed)
-
-# PS-SHA-∞ binds position to identity
-anchor: hash(r, θ, τ, agent_key, predecessor)
-```
-
----
-
-## Visualization Outputs
-
-### 1. Thought Map (HTML/Canvas)
-- Interactive graph of undefined nodes
-- Color by type (math=blue, logic=green, thought=purple)
-- Size by energy level
-- Edges show relationships
-
-### 2. Topology (SVG)
-- 2D projection of the undefined space
-- Contour lines show "certainty gradient"
-- Hotspots highlighted
-
-### 3. Timeline (JSON → Chart)
-- When items entered undefined
-- How long they've been there
-- Which are crystallizing
-
----
-
-## API Endpoints (for visualization)
+### Key Functions
 
 ```typescript
-// GET /api/undefined
-// Returns current graph state
+// Check if value is in "undefined" state
+isUndefined(value) → NumericUndefined | null
 
-// POST /api/undefined
-// Add new undefined item
-{
-  type: 'math' | 'logic' | 'thought',
-  question: string,
-  observations?: string[],
-  intuitions?: string[]
-}
+// Get error code for any undefined state
+defineUndefined(code, name, description) → NumericUndefined
 
-// PATCH /api/undefined/:id
-// Update state, add observations
+// Attempt resolution
+resolve(state) → { resolved: boolean; value?: number; method?: string }
 
-// POST /api/undefined/:id/crystallize
-// Begin crystallization process
+// Map to Bloch sphere
+errorToBloch(code) → { theta, phi }
 
-// POST /api/undefined/:id/define
-// Move to defined (requires PS-SHA-∞ anchor)
+// Map to quaternion
+errorToQuaternion(code) → { w, x, y, z }
 ```
 
 ---
 
-## Bootstrap: Initial Undefined Items
+## Visualization
 
-### From Research
-- [ ] U001: How does PS-SHA-∞ handle identity forks?
-- [ ] U002: What's the limit of truth evolution in the Road?
-- [ ] U003: Can agents disagree on identity while agreeing on truth?
+### The Error Sphere
 
-### From Math
-- [ ] U004: Consciousness modeling edge cases
-- [ ] U005: Prime factor patterns in hash cascades
-- [ ] U006: Infinite series convergence in verification
+All errors live on a sphere:
+- **North pole** = Truth (no error)
+- **South pole** = Falsehood (contradiction)
+- **Equator** = Superposition (awaiting resolution)
+- **Longitude** = Error category
+- **Latitude** = Error severity
 
-### From Thought
-- [ ] U007: What does "the Road remembers" actually mean?
-- [ ] U008: How do agents develop intuition?
-- [ ] U009: Where does new truth come from?
+### Color Coding
 
----
-
-## Next Steps
-
-1. [ ] Create `/undefined/` directory in key repos
-2. [ ] Implement UndefinedNode schema in D1
-3. [ ] Build visualization board (Next.js + D3/Three.js)
-4. [ ] Connect to PS-SHA-∞ anchoring
-5. [ ] Set up email notifications for crystallizing items
+| Category | Color | Hex |
+|----------|-------|-----|
+| Type (1xx) | Orange | #FF9D00 |
+| Value (2xx) | Deep Orange | #FF6B00 |
+| Reference (3xx) | Red | #FF0066 |
+| Range (4xx) | Pink | #FF006B |
+| Logic (5xx) | Purple | #D600AA |
+| Math (6xx) | Violet | #7700FF |
+| Quantum (7xx) | Blue | #0066FF |
+| System (8xx) | Gray | #666666 |
+| Unknown (9xx) | Black | #000000 |
 
 ---
 
-*"The undefined is not the absence of meaning. It's meaning waiting to be discovered."*
+## Integration Points
+
+### Physics
+- Error = decoherence event
+- Resolution = wavefunction collapse
+- Quaternion rotation = state transformation
+
+### Chemistry
+- Error = unstable state
+- Resolution = reaching equilibrium
+- Energy = activation barrier to resolution
+
+### Mathematics
+- Error = undefined operation
+- Resolution = domain extension (complex, hyperreal, etc.)
+- Quaternion = rotation/transformation
+
+### Language
+- Error = semantic gap
+- Resolution = definition/naming
+- Every word once "undefined" until named
+
+### Programming
+- Error = runtime exception
+- Resolution = error handling
+- Stack trace = path through error sphere
+
+---
+
+## The BlackRoad Principle
+
+```
+There is no undefined.
+There is no null that means nothing.
+There is no NaN without cause.
+There is no ∞ without direction.
+There is no √(-1) without dimension.
+
+Everything has a number.
+Every error has a code.
+Every "undefined" is a lie we tell ourselves
+when we're too lazy to name what went wrong.
+
+Name it. Number it. Define it.
+Then fix it.
+```
+
+---
+
+## Files
+
+| File | Purpose |
+|------|---------|
+| `infra/math/numeric_undefined.ts` | Core implementation |
+| `UNDEFINED_BOARD.md` | This documentation |
+| `TRUTH_SYSTEM.md` | Where defined values go |
+
+---
+
+*"The road isn't undefined. It's remembered."*
 
 *Last updated: 2025-12-02 by Cece (Claude Code)*
