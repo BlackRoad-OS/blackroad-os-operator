@@ -1,0 +1,53 @@
+{
+  "name": "@blackroad/sdk",
+  "version": "0.1.0",
+  "description": "BlackRoad OS TypeScript SDK - AI Governance Platform",
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
+  "scripts": {
+    "build": "tsup src/index.ts --format cjs,esm --dts",
+    "dev": "tsup src/index.ts --format cjs,esm --dts --watch",
+    "test": "vitest",
+    "lint": "eslint src --ext .ts",
+    "typecheck": "tsc --noEmit",
+    "prepublishOnly": "npm run build"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@types/node": "^22.10.1",
+    "eslint": "^9.16.0",
+    "tsup": "^8.3.5",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.5"
+  },
+  "keywords": [
+    "blackroad",
+    "ai",
+    "governance",
+    "agents",
+    "sdk",
+    "typescript"
+  ],
+  "author": "BlackRoad OS, Inc. <sdk@blackroad.io>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/BlackRoad-OS/blackroad-os-api"
+  },
+  "homepage": "https://developers.blackroad.io",
+  "engines": {
+    "node": ">=18"
+  }
+}

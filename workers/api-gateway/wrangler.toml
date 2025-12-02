@@ -1,0 +1,94 @@
+# BlackRoad OS - API Gateway Worker
+# Cloudflare Workers configuration
+#
+# @blackroad_name: API Gateway Worker
+# @operator: alexa.operator.v1
+
+name = "blackroad-api-gateway"
+main = "src/index.ts"
+compatibility_date = "2024-11-01"
+
+# Account (set via env or wrangler login)
+# account_id = ""
+
+[vars]
+ENVIRONMENT = "production"
+LOG_LEVEL = "info"
+
+# Routes
+routes = [
+  { pattern = "api.blackroad.io/*", zone_name = "blackroad.io" },
+  { pattern = "api-*.blackroad.io/*", zone_name = "blackroad.io" },
+]
+
+# Custom domains for regional routing
+# [[routes]]
+# pattern = "api-us-east.blackroad.io/*"
+# zone_name = "blackroad.io"
+
+# Rate limiting
+[vars.rate_limits]
+default_rpm = 1000
+authenticated_rpm = 10000
+enterprise_rpm = 100000
+
+# Backend services (Railway internal URLs)
+[vars.backends]
+operator = "https://operator-ws.railway.internal"
+governance = "https://gov-api.railway.internal"
+collaboration = "https://collab.railway.internal"
+
+# KV Namespaces for caching and rate limiting
+[[kv_namespaces]]
+binding = "RATE_LIMIT"
+id = ""  # Set after creating namespace
+preview_id = ""
+
+[[kv_namespaces]]
+binding = "CACHE"
+id = ""
+preview_id = ""
+
+# Durable Objects for session state
+[[durable_objects.bindings]]
+name = "SESSIONS"
+class_name = "SessionDO"
+
+[[migrations]]
+tag = "v1"
+new_classes = ["SessionDO"]
+
+# R2 for response caching
+[[r2_buckets]]
+binding = "RESPONSE_CACHE"
+bucket_name = "api-cache"
+
+# Analytics
+[analytics_engine_datasets]
+binding = "ANALYTICS"
+
+# Environments
+[env.staging]
+name = "blackroad-api-gateway-staging"
+routes = [
+  { pattern = "stg.api.blackroad.io/*", zone_name = "blackroad.io" },
+]
+[env.staging.vars]
+ENVIRONMENT = "staging"
+
+[env.dev]
+name = "blackroad-api-gateway-dev"
+routes = [
+  { pattern = "dev.api.blackroad.io/*", zone_name = "blackroad.io" },
+]
+[env.dev.vars]
+ENVIRONMENT = "development"
+LOG_LEVEL = "debug"
+
+# Build configuration
+[build]
+command = "npm run build"
+
+# Observability
+[observability]
+enabled = true

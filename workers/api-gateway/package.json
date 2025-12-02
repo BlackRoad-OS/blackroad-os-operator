@@ -1,0 +1,27 @@
+{
+  "name": "@blackroad/api-gateway",
+  "version": "1.0.0",
+  "description": "BlackRoad OS API Gateway - Cloudflare Workers",
+  "main": "src/index.ts",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "deploy:staging": "wrangler deploy --env staging",
+    "deploy:dev": "wrangler deploy --env dev",
+    "build": "tsc --noEmit",
+    "test": "vitest",
+    "tail": "wrangler tail"
+  },
+  "dependencies": {
+    "itty-router": "^4.0.27"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20241127.0",
+    "typescript": "^5.6.3",
+    "vitest": "^2.1.5",
+    "wrangler": "^3.92.0"
+  },
+  "author": "BlackRoad OS, Inc.",
+  "license": "UNLICENSED",
+  "private": true
+}
