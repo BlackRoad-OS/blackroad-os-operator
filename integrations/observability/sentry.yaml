@@ -1,0 +1,355 @@
+# Sentry Configuration
+# BlackRoad OS Error Tracking
+#
+# Exception tracking, performance monitoring, and release health
+#
+# @blackroad_name: BlackRoad Error Tracking
+# @tier: Team
+# @operator: alexa.operator.v1
+
+version: "sentry-v1"
+
+# ============================================
+# CONNECTION
+# ============================================
+
+connection:
+  dsn: "${SENTRY_DSN}"
+  organization: "blackroad"
+  auth_token: "${SENTRY_AUTH_TOKEN}"
+
+# ============================================
+# PROJECTS
+# ============================================
+
+projects:
+  # API Project
+  blackroad-api:
+    name: "blackroad-api"
+    platform: python-fastapi
+    dsn: "${SENTRY_DSN_API}"
+
+    sdk:
+      traces_sample_rate: 0.1
+      profiles_sample_rate: 0.1
+      send_default_pii: false
+      attach_stacktrace: true
+      max_breadcrumbs: 100
+
+    integrations:
+      - fastapi
+      - sqlalchemy
+      - redis
+      - httpx
+      - logging
+
+    # Error filtering
+    ignore_errors:
+      - "KeyboardInterrupt"
+      - "SystemExit"
+      - "ConnectionResetError"
+
+    # Transaction filtering
+    traces_sampler:
+      - path: "/health"
+        sample_rate: 0
+      - path: "/metrics"
+        sample_rate: 0
+      - path: "/evaluate"
+        sample_rate: 1.0
+      - default: 0.1
+
+  # Worker Project
+  blackroad-worker:
+    name: "blackroad-worker"
+    platform: python
+    dsn: "${SENTRY_DSN_WORKER}"
+
+    sdk:
+      traces_sample_rate: 0.2
+      max_breadcrumbs: 50
+
+    integrations:
+      - redis
+      - celery
+      - sqlalchemy
+
+  # Web Project
+  blackroad-web:
+    name: "blackroad-web"
+    platform: javascript-nextjs
+    dsn: "${SENTRY_DSN_WEB}"
+
+    sdk:
+      traces_sample_rate: 0.1
+      replays_session_sample_rate: 0.1
+      replays_on_error_sample_rate: 1.0
+
+    integrations:
+      - BrowserTracing
+      - Replay
+
+  # Lucidia Project
+  lucidia:
+    name: "lucidia"
+    platform: python
+    dsn: "${SENTRY_DSN_LUCIDIA}"
+
+    sdk:
+      traces_sample_rate: 0.1
+      profiles_sample_rate: 0.05
+
+# ============================================
+# ENVIRONMENTS
+# ============================================
+
+environments:
+  - name: production
+    url: "https://blackroad.io"
+
+  - name: staging
+    url: "https://staging.blackroad.io"
+
+  - name: development
+    url: "http://localhost:8000"
+
+# ============================================
+# RELEASE TRACKING
+# ============================================
+
+releases:
+  # Auto-create releases from CI
+  auto_create: true
+  version_prefix: "blackroad-os@"
+
+  # Associate commits
+  commits:
+    enabled: true
+    repository: "blackroad/blackroad-os-operator"
+
+  # Deploy tracking
+  deploys:
+    auto_track: true
+    environments:
+      - production
+      - staging
+
+  # Release health
+  health:
+    crash_free_sessions_threshold: 99.0
+    crash_free_users_threshold: 99.5
+
+# ============================================
+# ISSUE MANAGEMENT
+# ============================================
+
+issues:
+  # Auto-assignment
+  auto_assign:
+    enabled: true
+    rules:
+      - match: "path:br_operator/policy_engine*"
+        assignee: "@governance-team"
+      - match: "path:br_operator/ledger*"
+        assignee: "@governance-team"
+      - match: "path:br_operator/intent*"
+        assignee: "@platform-team"
+      - default: "@on-call"
+
+  # Issue grouping
+  fingerprinting:
+    rules:
+      # Group database errors by query type
+      - matchers:
+          - type: DatabaseError
+        fingerprint:
+          - "{{ default }}"
+          - "{{ tags.db.operation }}"
+
+      # Group LLM errors by provider
+      - matchers:
+          - message: "*API*error*"
+          - tags.llm.provider: "*"
+        fingerprint:
+          - "llm-error"
+          - "{{ tags.llm.provider }}"
+
+  # Ignore rules
+  ignore:
+    - title: "*HealthCheck*"
+    - title: "*CancelledError*"
+
+# ============================================
+# ALERTS
+# ============================================
+
+alerts:
+  # Critical errors
+  - name: "Critical Error Spike"
+    conditions:
+      - type: event_frequency
+        value: 100
+        interval: 1h
+        comparisonType: count
+    filters:
+      - type: level
+        value: error
+    actions:
+      - type: slack
+        channel: "#blackroad-alerts"
+      - type: pagerduty
+        service: "${SENTRY_PAGERDUTY_SERVICE}"
+
+  # New issues
+  - name: "New Issue in Production"
+    conditions:
+      - type: first_seen_event
+    filters:
+      - type: environment
+        value: production
+    actions:
+      - type: slack
+        channel: "#blackroad-errors"
+
+  # Regression
+  - name: "Issue Regression"
+    conditions:
+      - type: regression_event
+    actions:
+      - type: slack
+        channel: "#blackroad-errors"
+      - type: email
+        targetType: team
+
+  # High error rate
+  - name: "Error Rate Threshold"
+    conditions:
+      - type: event_frequency_percent
+        value: 5
+        interval: 1h
+        comparisonType: percent
+    actions:
+      - type: slack
+        channel: "#blackroad-alerts"
+
+# ============================================
+# PERFORMANCE MONITORING
+# ============================================
+
+performance:
+  # Transaction thresholds
+  thresholds:
+    api:
+      p75: 500ms
+      p95: 1000ms
+      p99: 2000ms
+
+    database:
+      p75: 100ms
+      p95: 250ms
+      p99: 500ms
+
+  # Slow transaction alerts
+  slow_transactions:
+    enabled: true
+    threshold_percentile: 95
+    threshold_value: 2000ms
+
+  # Web vitals (frontend)
+  web_vitals:
+    lcp: 2500ms
+    fid: 100ms
+    cls: 0.1
+
+# ============================================
+# CONTEXT & TAGS
+# ============================================
+
+context:
+  # Always include
+  tags:
+    - environment
+    - release
+    - server_name
+
+  # Custom tags
+  custom_tags:
+    - organization_id
+    - user_id
+    - agent_id
+    - correlation_id
+    - request_id
+
+  # User context
+  user:
+    include_ip: false
+    include_email: false
+    id_field: "user_id"
+
+  # Extra context
+  extra:
+    - governance.policy_pack
+    - governance.effect
+    - llm.provider
+    - llm.model
+
+# ============================================
+# INTEGRATIONS
+# ============================================
+
+integrations:
+  # Slack
+  slack:
+    workspace: "blackroad"
+    channels:
+      errors: "#blackroad-errors"
+      alerts: "#blackroad-alerts"
+
+  # GitHub
+  github:
+    organization: "blackroad"
+    repositories:
+      - "blackroad-os-operator"
+      - "blackroad-web"
+      - "lucidia"
+    stack_trace_linking: true
+    commit_tracking: true
+
+  # PagerDuty
+  pagerduty:
+    service_key: "${SENTRY_PAGERDUTY_SERVICE}"
+
+  # Linear
+  linear:
+    enabled: true
+    team_id: "${LINEAR_TEAM_ID}"
+    auto_create_issues: false
+
+# ============================================
+# DATA SCRUBBING
+# ============================================
+
+data_scrubbing:
+  enabled: true
+
+  # Sensitive fields
+  sensitive_fields:
+    - password
+    - secret
+    - token
+    - api_key
+    - apikey
+    - authorization
+    - cookie
+    - credit_card
+    - ssn
+
+  # Safe fields (never scrub)
+  safe_fields:
+    - id
+    - correlation_id
+    - request_id
+
+  # Default scrubbing
+  scrub_defaults: true
+  scrub_ip_addresses: true

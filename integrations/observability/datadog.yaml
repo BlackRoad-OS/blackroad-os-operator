@@ -1,0 +1,402 @@
+# Datadog Configuration
+# BlackRoad OS Observability Platform
+#
+# Metrics, logs, traces, and APM
+#
+# @blackroad_name: BlackRoad Observability
+# @tier: Pro
+# @operator: alexa.operator.v1
+
+version: "datadog-v1"
+
+# ============================================
+# CONNECTION
+# ============================================
+
+connection:
+  api_key: "${DD_API_KEY}"
+  app_key: "${DD_APP_KEY}"
+  site: "datadoghq.com"
+
+# ============================================
+# AGENT CONFIGURATION
+# ============================================
+
+agent:
+  # Agent deployment
+  deployment:
+    type: docker
+    image: "gcr.io/datadoghq/agent:7"
+
+  # Core settings
+  settings:
+    hostname: "${DD_HOSTNAME}"
+    tags:
+      - "env:${ENVIRONMENT}"
+      - "service:blackroad-os"
+      - "team:platform"
+
+    # Logging
+    logs_enabled: true
+    logs_config:
+      container_collect_all: true
+      auto_multi_line_detection: true
+
+    # APM
+    apm_enabled: true
+    apm_config:
+      apm_non_local_traffic: true
+
+    # Process monitoring
+    process_config:
+      enabled: true
+
+    # Network monitoring
+    network_config:
+      enabled: true
+
+# ============================================
+# METRICS
+# ============================================
+
+metrics:
+  # Custom metrics prefix
+  prefix: "blackroad"
+
+  # Application metrics
+  application:
+    - name: api.requests
+      type: count
+      tags: [endpoint, method, status]
+
+    - name: api.latency
+      type: histogram
+      tags: [endpoint, method]
+      unit: milliseconds
+
+    - name: policy.evaluations
+      type: count
+      tags: [policy_pack, effect]
+
+    - name: policy.latency
+      type: histogram
+      tags: [policy_pack]
+      unit: milliseconds
+
+    - name: ledger.events
+      type: count
+      tags: [event_type, layer]
+
+    - name: intents.created
+      type: count
+      tags: [template, state]
+
+    - name: intents.duration
+      type: histogram
+      tags: [template]
+      unit: seconds
+
+    - name: agents.active
+      type: gauge
+      tags: [organization_id]
+
+    - name: agents.invocations
+      type: count
+      tags: [agent_id, model]
+
+  # LLM metrics
+  llm:
+    - name: llm.tokens.input
+      type: count
+      tags: [provider, model]
+
+    - name: llm.tokens.output
+      type: count
+      tags: [provider, model]
+
+    - name: llm.latency
+      type: histogram
+      tags: [provider, model]
+      unit: milliseconds
+
+    - name: llm.cost
+      type: count
+      tags: [provider, model, organization_id]
+      unit: dollar
+
+    - name: llm.errors
+      type: count
+      tags: [provider, model, error_type]
+
+  # Database metrics
+  database:
+    - name: db.query.count
+      type: count
+      tags: [database, operation]
+
+    - name: db.query.latency
+      type: histogram
+      tags: [database, operation]
+      unit: milliseconds
+
+    - name: db.connections.active
+      type: gauge
+      tags: [database]
+
+    - name: db.connections.waiting
+      type: gauge
+      tags: [database]
+
+# ============================================
+# LOGS
+# ============================================
+
+logs:
+  # Log sources
+  sources:
+    # API logs
+    api:
+      source: python
+      service: blackroad-api
+      log_processing_rules:
+        - type: mask_sequences
+          name: mask_api_keys
+          pattern: "(api_key|apikey|token)[=:]['\"]?[a-zA-Z0-9-_]{20,}['\"]?"
+          replace_placeholder: "[REDACTED]"
+
+    # Worker logs
+    worker:
+      source: python
+      service: blackroad-worker
+
+    # Governance logs
+    governance:
+      source: python
+      service: blackroad-governance
+      log_processing_rules:
+        - type: include_at_match
+          name: governance_events
+          pattern: "\\[GOVERNANCE\\]"
+
+  # Log pipelines
+  pipelines:
+    - name: blackroad-api
+      filter:
+        query: "source:python service:blackroad-api"
+      processors:
+        - type: grok-parser
+          name: parse_api_logs
+          source: message
+          samples:
+            - "[2024-01-01 12:00:00] INFO [api] POST /evaluate 200 45ms"
+          rules:
+            - "\\[%{date(\"yyyy-MM-dd HH:mm:ss\"):timestamp}\\] %{word:level} \\[%{word:logger}\\] %{word:method} %{notSpace:endpoint} %{number:status} %{number:duration}ms"
+
+        - type: category-processor
+          name: categorize_status
+          target: http.status_category
+          categories:
+            - filter:
+                query: "@http.status_code:[200 TO 299]"
+              name: success
+            - filter:
+                query: "@http.status_code:[400 TO 499]"
+              name: client_error
+            - filter:
+                query: "@http.status_code:[500 TO 599]"
+              name: server_error
+
+# ============================================
+# APM (TRACING)
+# ============================================
+
+apm:
+  # Service naming
+  services:
+    - name: blackroad-api
+      type: web
+      language: python
+
+    - name: blackroad-worker
+      type: worker
+      language: python
+
+    - name: blackroad-governance
+      type: serverless
+      language: python
+
+  # Trace sampling
+  sampling:
+    default_rate: 0.1  # 10%
+    rules:
+      - service: blackroad-api
+        sample_rate: 0.5
+      - name: governance.*
+        sample_rate: 1.0  # 100% for governance
+      - name: health.*
+        sample_rate: 0.01  # 1% for health checks
+
+  # Span tags
+  span_tags:
+    global:
+      - env
+      - version
+    custom:
+      - organization_id
+      - user_id
+      - agent_id
+      - correlation_id
+
+# ============================================
+# DASHBOARDS
+# ============================================
+
+dashboards:
+  # API Overview
+  api-overview:
+    title: "BlackRoad API Overview"
+    widgets:
+      - type: timeseries
+        title: "Request Rate"
+        requests:
+          - q: "sum:blackroad.api.requests{*}.as_rate()"
+            display_type: line
+
+      - type: timeseries
+        title: "Latency (p95)"
+        requests:
+          - q: "p95:blackroad.api.latency{*}"
+            display_type: line
+
+      - type: toplist
+        title: "Top Endpoints"
+        requests:
+          - q: "sum:blackroad.api.requests{*} by {endpoint}.as_count()"
+
+      - type: query_value
+        title: "Error Rate"
+        requests:
+          - q: "sum:blackroad.api.requests{status:5*}.as_rate() / sum:blackroad.api.requests{*}.as_rate() * 100"
+
+  # Governance Dashboard
+  governance:
+    title: "Governance & Policy"
+    widgets:
+      - type: timeseries
+        title: "Policy Evaluations"
+        requests:
+          - q: "sum:blackroad.policy.evaluations{*} by {effect}.as_count()"
+
+      - type: timeseries
+        title: "Policy Latency"
+        requests:
+          - q: "avg:blackroad.policy.latency{*}"
+
+      - type: timeseries
+        title: "Ledger Events"
+        requests:
+          - q: "sum:blackroad.ledger.events{*} by {layer}.as_count()"
+
+  # LLM Dashboard
+  llm:
+    title: "LLM Usage & Costs"
+    widgets:
+      - type: timeseries
+        title: "Token Usage"
+        requests:
+          - q: "sum:blackroad.llm.tokens.input{*} by {provider}"
+          - q: "sum:blackroad.llm.tokens.output{*} by {provider}"
+
+      - type: query_value
+        title: "Daily Cost"
+        requests:
+          - q: "sum:blackroad.llm.cost{*}.rollup(sum, 86400)"
+            aggregator: last
+
+      - type: timeseries
+        title: "LLM Latency"
+        requests:
+          - q: "p95:blackroad.llm.latency{*} by {model}"
+
+# ============================================
+# MONITORS (ALERTS)
+# ============================================
+
+monitors:
+  # API Health
+  - name: "API Error Rate High"
+    type: metric alert
+    query: "sum(last_5m):sum:blackroad.api.requests{status:5*}.as_count() / sum:blackroad.api.requests{*}.as_count() * 100 > 5"
+    message: |
+      API error rate is above 5%
+      Current value: {{value}}%
+      @slack-blackroad-alerts
+    thresholds:
+      critical: 5
+      warning: 2
+
+  - name: "API Latency High"
+    type: metric alert
+    query: "avg(last_5m):p95:blackroad.api.latency{*} > 2000"
+    message: |
+      API p95 latency is above 2 seconds
+      @slack-blackroad-alerts
+    thresholds:
+      critical: 2000
+      warning: 1000
+
+  # Governance
+  - name: "Policy Evaluation Failures"
+    type: metric alert
+    query: "sum(last_5m):sum:blackroad.policy.evaluations{effect:error}.as_count() > 10"
+    message: |
+      Policy evaluation failures detected
+      @slack-blackroad-governance
+    thresholds:
+      critical: 10
+      warning: 5
+
+  # LLM
+  - name: "LLM Cost Alert"
+    type: metric alert
+    query: "sum(last_1d):sum:blackroad.llm.cost{*} > 100"
+    message: |
+      Daily LLM cost exceeded $100
+      @slack-blackroad-finance
+    thresholds:
+      critical: 100
+      warning: 75
+
+  # Infrastructure
+  - name: "Database Connection Pool Exhausted"
+    type: metric alert
+    query: "avg(last_5m):avg:blackroad.db.connections.waiting{*} > 10"
+    message: |
+      Database connection pool is exhausted
+      @pagerduty-blackroad
+    thresholds:
+      critical: 10
+      warning: 5
+
+# ============================================
+# INTEGRATIONS
+# ============================================
+
+integrations:
+  # Slack
+  slack:
+    webhook_url: "${DD_SLACK_WEBHOOK}"
+    channels:
+      alerts: "#blackroad-alerts"
+      governance: "#blackroad-governance"
+      finance: "#blackroad-finance"
+
+  # PagerDuty
+  pagerduty:
+    api_key: "${DD_PAGERDUTY_KEY}"
+    service_key: "${DD_PAGERDUTY_SERVICE}"
+
+  # GitHub
+  github:
+    enabled: true
+    repo: "blackroad/blackroad-os-operator"

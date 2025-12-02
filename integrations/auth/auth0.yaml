@@ -1,0 +1,422 @@
+# Auth0 Configuration
+# BlackRoad OS Identity & Access Management
+#
+# Authentication, authorization, and user management
+#
+# @blackroad_name: BlackRoad Identity
+# @tier: Professional
+# @operator: alexa.operator.v1
+
+version: "auth0-v1"
+
+# ============================================
+# TENANT CONFIGURATION
+# ============================================
+
+tenant:
+  domain: "${AUTH0_DOMAIN}"
+  custom_domain: "auth.blackroad.io"
+  region: us
+
+  branding:
+    logo_url: "https://blackroad.io/logo.png"
+    colors:
+      primary: "#FF6B00"
+      page_background: "#0A0A0A"
+    favicon_url: "https://blackroad.io/favicon.ico"
+
+# ============================================
+# APPLICATIONS
+# ============================================
+
+applications:
+  # Main web application
+  blackroad-web:
+    name: "BlackRoad Web"
+    type: spa
+    client_id: "${AUTH0_WEB_CLIENT_ID}"
+
+    settings:
+      allowed_callback_urls:
+        - "https://blackroad.io/callback"
+        - "https://app.blackroad.io/callback"
+        - "http://localhost:3000/callback"
+      allowed_logout_urls:
+        - "https://blackroad.io"
+        - "https://app.blackroad.io"
+        - "http://localhost:3000"
+      allowed_web_origins:
+        - "https://blackroad.io"
+        - "https://app.blackroad.io"
+        - "http://localhost:3000"
+      allowed_origins:
+        - "https://blackroad.io"
+        - "https://app.blackroad.io"
+
+    grant_types:
+      - authorization_code
+      - refresh_token
+
+    token_settings:
+      rotation_type: rotating
+      expiration_type: expiring
+      token_lifetime: 86400  # 24 hours
+      infinite_token_lifetime: false
+
+  # API application
+  blackroad-api:
+    name: "BlackRoad API"
+    type: non_interactive
+    client_id: "${AUTH0_API_CLIENT_ID}"
+    client_secret: "${AUTH0_API_CLIENT_SECRET}"
+
+    grant_types:
+      - client_credentials
+
+  # Mobile application
+  blackroad-mobile:
+    name: "BlackRoad Mobile"
+    type: native
+    client_id: "${AUTH0_MOBILE_CLIENT_ID}"
+
+    settings:
+      allowed_callback_urls:
+        - "blackroad://callback"
+      allowed_logout_urls:
+        - "blackroad://logout"
+
+    grant_types:
+      - authorization_code
+      - refresh_token
+
+  # CLI application
+  blackroad-cli:
+    name: "BlackRoad CLI"
+    type: native
+    client_id: "${AUTH0_CLI_CLIENT_ID}"
+
+    grant_types:
+      - urn:ietf:params:oauth:grant-type:device_code
+      - refresh_token
+
+  # Lucidia application
+  lucidia-web:
+    name: "Lucidia"
+    type: spa
+    client_id: "${AUTH0_LUCIDIA_CLIENT_ID}"
+
+    settings:
+      allowed_callback_urls:
+        - "https://lucidia.earth/callback"
+        - "https://app.lucidia.earth/callback"
+      allowed_logout_urls:
+        - "https://lucidia.earth"
+        - "https://app.lucidia.earth"
+      allowed_web_origins:
+        - "https://lucidia.earth"
+        - "https://app.lucidia.earth"
+
+# ============================================
+# APIs
+# ============================================
+
+apis:
+  # BlackRoad API
+  blackroad-api:
+    name: "BlackRoad API"
+    identifier: "https://api.blackroad.io"
+    signing_algorithm: RS256
+
+    scopes:
+      - name: "read:profile"
+        description: "Read user profile"
+      - name: "write:profile"
+        description: "Update user profile"
+      - name: "read:agents"
+        description: "Read agents"
+      - name: "write:agents"
+        description: "Create and manage agents"
+      - name: "invoke:agents"
+        description: "Invoke agents"
+      - name: "read:governance"
+        description: "Read governance data"
+      - name: "write:governance"
+        description: "Manage governance"
+      - name: "admin:organization"
+        description: "Organization admin"
+
+    token_settings:
+      lifetime: 3600  # 1 hour
+      lifetime_for_web: 7200  # 2 hours
+
+  # Lucidia API
+  lucidia-api:
+    name: "Lucidia API"
+    identifier: "https://api.lucidia.earth"
+    signing_algorithm: RS256
+
+    scopes:
+      - name: "read:memories"
+        description: "Read agent memories"
+      - name: "write:memories"
+        description: "Store agent memories"
+      - name: "chat:agents"
+        description: "Chat with agents"
+
+# ============================================
+# CONNECTIONS
+# ============================================
+
+connections:
+  # Username/password
+  database:
+    name: "Username-Password-Authentication"
+    strategy: auth0
+
+    options:
+      password_policy: excellent
+      password_complexity:
+        min_length: 12
+      password_history:
+        enable: true
+        size: 5
+      password_no_personal_info:
+        enable: true
+      brute_force_protection: true
+      requires_username: false
+
+  # Social connections
+  social:
+    google:
+      strategy: google-oauth2
+      client_id: "${GOOGLE_CLIENT_ID}"
+      client_secret: "${GOOGLE_CLIENT_SECRET}"
+      scopes:
+        - email
+        - profile
+
+    github:
+      strategy: github
+      client_id: "${GITHUB_OAUTH_CLIENT_ID}"
+      client_secret: "${GITHUB_OAUTH_CLIENT_SECRET}"
+      scopes:
+        - user:email
+        - read:user
+
+    apple:
+      strategy: apple
+      client_id: "${APPLE_CLIENT_ID}"
+      team_id: "${APPLE_TEAM_ID}"
+      key_id: "${APPLE_KEY_ID}"
+      scopes:
+        - email
+        - name
+
+  # Enterprise connections
+  enterprise:
+    okta:
+      strategy: okta
+      enabled: false
+      # Configure per customer
+
+    saml:
+      strategy: samlp
+      enabled: false
+      # Configure per customer
+
+# ============================================
+# ROLES & PERMISSIONS
+# ============================================
+
+roles:
+  # System roles
+  - name: operator
+    description: "System operator with full access"
+    permissions:
+      - "read:*"
+      - "write:*"
+      - "admin:*"
+
+  - name: admin
+    description: "Organization administrator"
+    permissions:
+      - "read:profile"
+      - "write:profile"
+      - "read:agents"
+      - "write:agents"
+      - "invoke:agents"
+      - "read:governance"
+      - "write:governance"
+      - "admin:organization"
+
+  - name: developer
+    description: "Developer with agent management"
+    permissions:
+      - "read:profile"
+      - "write:profile"
+      - "read:agents"
+      - "write:agents"
+      - "invoke:agents"
+      - "read:governance"
+
+  - name: user
+    description: "Standard user"
+    permissions:
+      - "read:profile"
+      - "write:profile"
+      - "read:agents"
+      - "invoke:agents"
+
+  - name: viewer
+    description: "Read-only access"
+    permissions:
+      - "read:profile"
+      - "read:agents"
+
+# ============================================
+# RULES & ACTIONS
+# ============================================
+
+actions:
+  # Post-login action
+  post-login:
+    name: "Enrich User Profile"
+    runtime: node18
+    code: |
+      exports.onExecutePostLogin = async (event, api) => {
+        // Add organization claim
+        const org = event.user.app_metadata?.organization_id;
+        if (org) {
+          api.idToken.setCustomClaim('organization_id', org);
+          api.accessToken.setCustomClaim('organization_id', org);
+        }
+
+        // Add role claim
+        const roles = event.authorization?.roles || [];
+        api.idToken.setCustomClaim('roles', roles);
+        api.accessToken.setCustomClaim('roles', roles);
+
+        // Track login
+        api.accessToken.setCustomClaim('login_count', event.stats.logins_count);
+      };
+
+  # Post-registration action
+  post-registration:
+    name: "Setup New User"
+    runtime: node18
+    code: |
+      exports.onExecutePostUserRegistration = async (event, api) => {
+        // Create user in BlackRoad database
+        const response = await fetch('https://api.blackroad.io/internal/users', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${event.secrets.INTERNAL_API_KEY}`
+          },
+          body: JSON.stringify({
+            auth0_id: event.user.user_id,
+            email: event.user.email,
+            name: event.user.name
+          })
+        });
+
+        if (!response.ok) {
+          console.error('Failed to create user in BlackRoad');
+        }
+      };
+
+# ============================================
+# MFA
+# ============================================
+
+mfa:
+  enabled: true
+  policy: adaptive
+
+  factors:
+    - type: otp
+      enabled: true
+    - type: push
+      enabled: true
+    - type: webauthn-roaming
+      enabled: true
+    - type: webauthn-platform
+      enabled: true
+    - type: recovery-code
+      enabled: true
+
+  # Require MFA for admin roles
+  rules:
+    - condition: "roles contains 'operator' OR roles contains 'admin'"
+      require: always
+
+# ============================================
+# ORGANIZATIONS
+# ============================================
+
+organizations:
+  enabled: true
+
+  branding:
+    enable_custom_branding: true
+
+  connections:
+    - name: "Username-Password-Authentication"
+      assign_membership_on_login: false
+
+  member_roles:
+    - owner
+    - admin
+    - member
+    - viewer
+
+# ============================================
+# ATTACK PROTECTION
+# ============================================
+
+attack_protection:
+  # Brute force protection
+  brute_force:
+    enabled: true
+    max_attempts: 10
+    mode: count_per_identifier_and_ip
+
+  # Breached password detection
+  breached_password:
+    enabled: true
+    admin_notification_frequency: immediately
+
+  # Bot detection
+  bot_detection:
+    enabled: true
+    mode: passive
+
+  # Suspicious IP throttling
+  suspicious_ip:
+    enabled: true
+    shields:
+      - block
+      - admin_notification
+
+# ============================================
+# LOGS
+# ============================================
+
+logs:
+  # Log streams
+  streams:
+    datadog:
+      type: datadog
+      sink:
+        datadogApiKey: "${DD_API_KEY}"
+        datadogRegion: us
+
+    webhook:
+      type: webhook
+      sink:
+        httpEndpoint: "https://api.blackroad.io/webhooks/auth0"
+        httpContentType: application/json
+        httpAuthorization: "Bearer ${AUTH0_WEBHOOK_SECRET}"
+
+  # Retention
+  retention_days: 30

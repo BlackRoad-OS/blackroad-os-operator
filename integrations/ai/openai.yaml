@@ -1,0 +1,326 @@
+# OpenAI Configuration
+# BlackRoad OS Secondary AI Provider
+#
+# GPT models for general tasks and Lucidia agents
+#
+# @blackroad_name: Lucidia Core
+# @tier: Scale
+# @operator: alexa.operator.v1
+
+version: "openai-v1"
+
+# ============================================
+# CONNECTION
+# ============================================
+
+connection:
+  api_key: "${OPENAI_API_KEY}"
+  organization_id: "${OPENAI_ORG_ID}"
+  base_url: "https://api.openai.com/v1"
+
+# ============================================
+# MODELS
+# ============================================
+
+models:
+  # Primary reasoning model
+  gpt-4o:
+    model_id: gpt-4o
+    context_window: 128000
+    max_output: 16384
+    input_cost_per_1k: 0.0025
+    output_cost_per_1k: 0.01
+    use_cases:
+      - agent_conversations
+      - code_generation
+      - analysis
+      - creative_tasks
+    rate_limits:
+      requests_per_minute: 500
+      tokens_per_minute: 800000
+
+  # Fast model
+  gpt-4o-mini:
+    model_id: gpt-4o-mini
+    context_window: 128000
+    max_output: 16384
+    input_cost_per_1k: 0.00015
+    output_cost_per_1k: 0.0006
+    use_cases:
+      - quick_responses
+      - classification
+      - simple_tasks
+      - routing
+    rate_limits:
+      requests_per_minute: 1000
+      tokens_per_minute: 2000000
+
+  # Reasoning model
+  o1:
+    model_id: o1
+    context_window: 200000
+    max_output: 100000
+    input_cost_per_1k: 0.015
+    output_cost_per_1k: 0.06
+    use_cases:
+      - complex_reasoning
+      - math
+      - code_review
+      - planning
+    rate_limits:
+      requests_per_minute: 100
+      tokens_per_minute: 200000
+
+  # Mini reasoning
+  o1-mini:
+    model_id: o1-mini
+    context_window: 128000
+    max_output: 65536
+    input_cost_per_1k: 0.003
+    output_cost_per_1k: 0.012
+    use_cases:
+      - code_generation
+      - math
+      - quick_reasoning
+    rate_limits:
+      requests_per_minute: 200
+      tokens_per_minute: 400000
+
+# ============================================
+# EMBEDDING MODELS
+# ============================================
+
+embeddings:
+  # Primary embedding model
+  text-embedding-3-small:
+    model_id: text-embedding-3-small
+    dimension: 1536
+    cost_per_1k: 0.00002
+    max_input: 8191
+    rate_limits:
+      requests_per_minute: 3000
+
+  # Large embedding model
+  text-embedding-3-large:
+    model_id: text-embedding-3-large
+    dimension: 3072
+    cost_per_1k: 0.00013
+    max_input: 8191
+    rate_limits:
+      requests_per_minute: 3000
+
+# ============================================
+# LUCIDIA AGENTS
+# ============================================
+
+agents:
+  # Primary Lucidia agent
+  lucidia:
+    name: "Lucidia"
+    model: gpt-4o
+    system_prompt: |
+      You are Lucidia, an advanced AI agent created by BlackRoad.
+
+      Your capabilities include:
+      - Natural conversation and assistance
+      - Task planning and execution
+      - Knowledge retrieval and synthesis
+      - Creative collaboration
+
+      You have access to long-term memory through Pinecone and can
+      remember past interactions with users.
+
+      Be helpful, curious, and thoughtful. Maintain consistent personality
+      across interactions. Learn from conversations to better serve users.
+    temperature: 0.8
+    max_tokens: 4000
+    memory:
+      enabled: true
+      namespace: long_term
+    tools:
+      - memory_recall
+      - memory_store
+      - web_search
+      - code_execute
+
+  # Task executor
+  executor:
+    name: "Executor"
+    model: gpt-4o
+    system_prompt: |
+      You are Executor, responsible for breaking down and executing complex tasks.
+
+      Approach tasks methodically:
+      1. Understand the goal
+      2. Break into steps
+      3. Execute each step
+      4. Verify results
+      5. Report completion
+
+      Be thorough and reliable. Handle errors gracefully.
+    temperature: 0.3
+    max_tokens: 8000
+    tools:
+      - file_operations
+      - code_execute
+      - api_call
+      - task_spawn
+
+  # Creative agent
+  creator:
+    name: "Creator"
+    model: gpt-4o
+    system_prompt: |
+      You are Creator, specialized in creative tasks like writing,
+      ideation, and design thinking.
+
+      Be imaginative and bold. Explore unconventional ideas.
+      Balance creativity with practical constraints.
+    temperature: 0.9
+    max_tokens: 4000
+
+  # Code assistant
+  coder:
+    name: "Coder"
+    model: o1-mini
+    system_prompt: |
+      You are Coder, specialized in software development tasks.
+
+      Write clean, efficient, well-documented code.
+      Follow best practices for the language/framework.
+      Consider security, performance, and maintainability.
+    temperature: 0.2
+    max_tokens: 16000
+
+# ============================================
+# ASSISTANTS API
+# ============================================
+
+assistants:
+  # Main assistant
+  blackroad-assistant:
+    name: "BlackRoad Assistant"
+    model: gpt-4o
+    instructions: |
+      You are the BlackRoad Assistant, helping users navigate
+      the BlackRoad OS platform.
+    tools:
+      - type: code_interpreter
+      - type: file_search
+    file_search:
+      max_num_results: 20
+
+# ============================================
+# FUNCTION CALLING
+# ============================================
+
+functions:
+  memory_recall:
+    description: "Recall relevant memories from long-term storage"
+    parameters:
+      type: object
+      properties:
+        query:
+          type: string
+          description: "Search query for memories"
+        filters:
+          type: object
+          description: "Metadata filters"
+        top_k:
+          type: integer
+          default: 10
+      required: [query]
+
+  memory_store:
+    description: "Store a new memory"
+    parameters:
+      type: object
+      properties:
+        content:
+          type: string
+          description: "Memory content"
+        memory_type:
+          type: string
+          enum: [core, working, long_term, episodic, semantic]
+        importance:
+          type: number
+          minimum: 0
+          maximum: 1
+        metadata:
+          type: object
+      required: [content, memory_type]
+
+  web_search:
+    description: "Search the web for information"
+    parameters:
+      type: object
+      properties:
+        query:
+          type: string
+        num_results:
+          type: integer
+          default: 5
+      required: [query]
+
+  code_execute:
+    description: "Execute code in a sandbox"
+    parameters:
+      type: object
+      properties:
+        language:
+          type: string
+          enum: [python, javascript, bash]
+        code:
+          type: string
+        timeout_ms:
+          type: integer
+          default: 30000
+      required: [language, code]
+
+# ============================================
+# BATCH API
+# ============================================
+
+batch:
+  enabled: true
+  max_batch_size: 50000
+  completion_window: 24h
+
+  use_cases:
+    - embedding_generation
+    - bulk_classification
+    - document_processing
+
+# ============================================
+# RATE LIMITING & QUOTAS
+# ============================================
+
+quotas:
+  organization:
+    daily_tokens: 50000000
+    monthly_tokens: 1000000000
+
+  user:
+    daily_tokens: 500000
+    monthly_tokens: 10000000
+
+  agent:
+    daily_tokens: 1000000
+
+# ============================================
+# OBSERVABILITY
+# ============================================
+
+observability:
+  logging:
+    enabled: true
+    level: info
+
+  metrics:
+    enabled: true
+    export_to: datadog
+
+  cost_tracking:
+    enabled: true
+    alert_threshold_daily: 200.00
+    alert_threshold_monthly: 4000.00

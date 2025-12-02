@@ -1,0 +1,722 @@
+# Cloudflare Zone Configuration
+# BlackRoad Edge Infrastructure
+#
+# This file defines all Cloudflare zones, DNS records, and configurations
+# for the BlackRoad domain portfolio.
+#
+# @blackroad_name: BlackRoad Edge
+# @tier: Enterprise
+# @operator: alexa.operator.v1
+
+version: "cloudflare-v1"
+
+# ============================================
+# ZONE: blackroad.io (Primary Marketing)
+# ============================================
+
+zones:
+  blackroad.io:
+    plan: business
+    settings:
+      ssl: full_strict
+      min_tls_version: "1.2"
+      always_use_https: true
+      automatic_https_rewrites: true
+      http2: true
+      http3: true
+      early_hints: true
+      rocket_loader: false
+      minify:
+        css: true
+        js: true
+        html: true
+      brotli: true
+      cache_level: aggressive
+      browser_cache_ttl: 14400
+      challenge_ttl: 1800
+      security_level: medium
+      waf: true
+
+    dns_records:
+      # Root and www
+      - name: "@"
+        type: A
+        content: "${RAILWAY_IP}"
+        proxied: true
+        ttl: auto
+
+      - name: "www"
+        type: CNAME
+        content: "blackroad.io"
+        proxied: true
+
+      # Applications
+      - name: "app"
+        type: CNAME
+        content: "blackroad-os-web.up.railway.app"
+        proxied: true
+        comment: "Main web application"
+
+      - name: "api"
+        type: CNAME
+        content: "blackroad-os-api-gateway.up.railway.app"
+        proxied: true
+        comment: "Public API gateway"
+
+      - name: "docs"
+        type: CNAME
+        content: "blackroad-os-docs.pages.dev"
+        proxied: true
+        comment: "Developer documentation"
+
+      - name: "status"
+        type: CNAME
+        content: "statuspage.io"
+        proxied: false
+        comment: "System status page"
+
+      - name: "blog"
+        type: CNAME
+        content: "blackroad-blog.ghost.io"
+        proxied: true
+
+      - name: "demo"
+        type: CNAME
+        content: "blackroad-os-demo.up.railway.app"
+        proxied: true
+
+      # Email (MX records)
+      - name: "@"
+        type: MX
+        content: "aspmx.l.google.com"
+        priority: 1
+
+      - name: "@"
+        type: MX
+        content: "alt1.aspmx.l.google.com"
+        priority: 5
+
+      # Email authentication
+      - name: "@"
+        type: TXT
+        content: "v=spf1 include:_spf.google.com ~all"
+
+      - name: "google._domainkey"
+        type: TXT
+        content: "${GOOGLE_DKIM_KEY}"
+
+      - name: "_dmarc"
+        type: TXT
+        content: "v=DMARC1; p=quarantine; rua=mailto:dmarc@blackroad.io"
+
+    page_rules:
+      - url: "www.blackroad.io/*"
+        actions:
+          forwarding_url:
+            status_code: 301
+            url: "https://blackroad.io/$1"
+
+      - url: "*.blackroad.io/assets/*"
+        actions:
+          cache_level: cache_everything
+          edge_cache_ttl: 604800
+          browser_cache_ttl: 86400
+
+      - url: "api.blackroad.io/*"
+        actions:
+          cache_level: bypass
+          security_level: high
+          disable_apps: true
+
+    firewall_rules:
+      - name: "Block bad bots"
+        expression: "(cf.client.bot) and not (cf.bot_management.verified_bot)"
+        action: challenge
+
+      - name: "Rate limit API"
+        expression: "(http.request.uri.path contains \"/api/\")"
+        action: rate_limit
+        ratelimit:
+          requests_per_period: 100
+          period: 60
+
+      - name: "Block known bad IPs"
+        expression: "(ip.geoip.country in {\"CN\" \"RU\" \"KP\"})"
+        action: managed_challenge
+
+  # ============================================
+  # ZONE: lucidia.earth (AI Platform)
+  # ============================================
+
+  lucidia.earth:
+    plan: business
+    settings:
+      ssl: full_strict
+      min_tls_version: "1.2"
+      always_use_https: true
+      security_level: high
+
+    dns_records:
+      - name: "@"
+        type: A
+        content: "${RAILWAY_IP}"
+        proxied: true
+
+      - name: "www"
+        type: CNAME
+        content: "lucidia.earth"
+        proxied: true
+
+      - name: "app"
+        type: CNAME
+        content: "lucidia-web.up.railway.app"
+        proxied: true
+        comment: "Lucidia web app"
+
+      - name: "api"
+        type: CNAME
+        content: "lucidia-api.up.railway.app"
+        proxied: true
+        comment: "Lucidia API"
+
+      - name: "console"
+        type: CNAME
+        content: "blackroad-os-prism-console.up.railway.app"
+        proxied: true
+        comment: "Admin console"
+
+      - name: "playground"
+        type: CNAME
+        content: "lucidia-playground.up.railway.app"
+        proxied: true
+        comment: "AI playground"
+
+      - name: "agents"
+        type: CNAME
+        content: "lucidia-agents.up.railway.app"
+        proxied: true
+        comment: "Agent directory"
+
+      - name: "memories"
+        type: CNAME
+        content: "lucidia-memories.up.railway.app"
+        proxied: true
+        comment: "Memory explorer"
+
+      - name: "docs"
+        type: CNAME
+        content: "lucidia-docs.pages.dev"
+        proxied: true
+
+  # ============================================
+  # ZONE: blackroad.network (Infrastructure)
+  # ============================================
+
+  blackroad.network:
+    plan: pro
+    settings:
+      ssl: full_strict
+      security_level: high
+
+    dns_records:
+      - name: "@"
+        type: A
+        content: "${OPERATOR_IP}"
+        proxied: true
+
+      - name: "mesh"
+        type: CNAME
+        content: "blackroad-mesh-router.up.railway.app"
+        proxied: true
+        comment: "Mesh network router"
+
+      - name: "nodes"
+        type: CNAME
+        content: "blackroad-node-registry.up.railway.app"
+        proxied: true
+        comment: "Node registry"
+
+      - name: "chain"
+        type: CNAME
+        content: "roadchain-explorer.up.railway.app"
+        proxied: true
+        comment: "RoadChain explorer"
+
+      - name: "edge"
+        type: CNAME
+        content: "blackroad-edge-status.up.railway.app"
+        proxied: true
+        comment: "Edge node status"
+
+      - name: "registry"
+        type: CNAME
+        content: "blackroad-service-registry.up.railway.app"
+        proxied: true
+
+      - name: "health"
+        type: CNAME
+        content: "blackroad-health.up.railway.app"
+        proxied: true
+
+      # Tunnel endpoints for edge devices
+      - name: "tunnel-lucidia"
+        type: CNAME
+        content: "${TUNNEL_LUCIDIA_ID}.cfargotunnel.com"
+        proxied: true
+        comment: "Pi 5 tunnel"
+
+      - name: "tunnel-alice"
+        type: CNAME
+        content: "${TUNNEL_ALICE_ID}.cfargotunnel.com"
+        proxied: true
+        comment: "Pi 400 tunnel"
+
+      - name: "tunnel-jetson"
+        type: CNAME
+        content: "${TUNNEL_JETSON_ID}.cfargotunnel.com"
+        proxied: true
+        comment: "Jetson Orin tunnel"
+
+  # ============================================
+  # ZONE: blackroad.systems (Technical)
+  # ============================================
+
+  blackroad.systems:
+    plan: pro
+    settings:
+      ssl: full_strict
+      security_level: high
+
+    dns_records:
+      - name: "@"
+        type: A
+        content: "${OPERATOR_IP}"
+        proxied: true
+
+      - name: "arch"
+        type: CNAME
+        content: "blackroad-arch-docs.pages.dev"
+        proxied: true
+        comment: "Architecture diagrams"
+
+      - name: "specs"
+        type: CNAME
+        content: "blackroad-specs.pages.dev"
+        proxied: true
+
+      - name: "runbooks"
+        type: CNAME
+        content: "blackroad-runbooks.pages.dev"
+        proxied: true
+
+      - name: "metrics"
+        type: CNAME
+        content: "blackroad-metrics.up.railway.app"
+        proxied: true
+
+      - name: "ledger"
+        type: CNAME
+        content: "blackroad-ledger.up.railway.app"
+        proxied: true
+        comment: "Governance ledger API"
+
+      - name: "policies"
+        type: CNAME
+        content: "blackroad-policies.up.railway.app"
+        proxied: true
+
+      - name: "intents"
+        type: CNAME
+        content: "blackroad-intents.up.railway.app"
+        proxied: true
+
+      - name: "claims"
+        type: CNAME
+        content: "blackroad-claims.up.railway.app"
+        proxied: true
+
+      - name: "delegations"
+        type: CNAME
+        content: "blackroad-delegations.up.railway.app"
+        proxied: true
+
+  # ============================================
+  # ZONE: blackroad.me (User Portal)
+  # ============================================
+
+  blackroad.me:
+    plan: pro
+    settings:
+      ssl: full_strict
+      security_level: high
+
+    dns_records:
+      - name: "@"
+        type: A
+        content: "${RAILWAY_IP}"
+        proxied: true
+
+      - name: "my"
+        type: CNAME
+        content: "blackroad-user-dashboard.up.railway.app"
+        proxied: true
+        comment: "User dashboard"
+
+      - name: "agents"
+        type: CNAME
+        content: "blackroad-agent-management.up.railway.app"
+        proxied: true
+
+      - name: "billing"
+        type: CNAME
+        content: "blackroad-billing.up.railway.app"
+        proxied: true
+
+      - name: "settings"
+        type: CNAME
+        content: "blackroad-settings.up.railway.app"
+        proxied: true
+
+      - name: "data"
+        type: CNAME
+        content: "blackroad-data-export.up.railway.app"
+        proxied: true
+
+      - name: "connect"
+        type: CNAME
+        content: "blackroad-oauth.up.railway.app"
+        proxied: true
+        comment: "OAuth/SSO endpoint"
+
+  # ============================================
+  # ZONE: lucidia.studio (Creative)
+  # ============================================
+
+  lucidia.studio:
+    plan: pro
+    settings:
+      ssl: full_strict
+      security_level: medium
+
+    dns_records:
+      - name: "@"
+        type: A
+        content: "${RAILWAY_IP}"
+        proxied: true
+
+      - name: "create"
+        type: CNAME
+        content: "lucidia-create.up.railway.app"
+        proxied: true
+
+      - name: "homes"
+        type: CNAME
+        content: "lucidia-homes.up.railway.app"
+        proxied: true
+        comment: "Unity agent homes"
+
+      - name: "gallery"
+        type: CNAME
+        content: "lucidia-gallery.up.railway.app"
+        proxied: true
+
+      - name: "assets"
+        type: CNAME
+        content: "lucidia-assets.r2.dev"
+        proxied: true
+        comment: "R2 asset storage"
+
+      - name: "templates"
+        type: CNAME
+        content: "lucidia-templates.up.railway.app"
+        proxied: true
+
+      - name: "render"
+        type: CNAME
+        content: "lucidia-render.up.railway.app"
+        proxied: true
+
+  # ============================================
+  # ZONE: blackroadinc.us (Corporate)
+  # ============================================
+
+  blackroadinc.us:
+    plan: pro
+    settings:
+      ssl: full_strict
+      security_level: high
+
+    dns_records:
+      - name: "@"
+        type: A
+        content: "${RAILWAY_IP}"
+        proxied: true
+
+      - name: "www"
+        type: CNAME
+        content: "blackroadinc.us"
+        proxied: true
+
+      - name: "ir"
+        type: CNAME
+        content: "blackroad-investor-relations.up.railway.app"
+        proxied: true
+        comment: "Investor relations"
+
+      - name: "legal"
+        type: CNAME
+        content: "blackroad-legal.pages.dev"
+        proxied: true
+
+      - name: "compliance"
+        type: CNAME
+        content: "blackroad-compliance.up.railway.app"
+        proxied: true
+
+      - name: "board"
+        type: CNAME
+        content: "blackroad-board-portal.up.railway.app"
+        proxied: true
+        comment: "Secure board portal"
+
+      - name: "governance"
+        type: CNAME
+        content: "blackroad-corp-governance.up.railway.app"
+        proxied: true
+
+  # ============================================
+  # ZONE: blackroadai.com (AI Services)
+  # ============================================
+
+  blackroadai.com:
+    plan: pro
+    settings:
+      ssl: full_strict
+      security_level: high
+
+    dns_records:
+      - name: "@"
+        type: A
+        content: "${RAILWAY_IP}"
+        proxied: true
+
+      - name: "www"
+        type: CNAME
+        content: "blackroadai.com"
+        proxied: true
+
+      - name: "enterprise"
+        type: CNAME
+        content: "blackroad-enterprise-ai.up.railway.app"
+        proxied: true
+
+      - name: "models"
+        type: CNAME
+        content: "blackroad-model-catalog.up.railway.app"
+        proxied: true
+
+      - name: "train"
+        type: CNAME
+        content: "blackroad-finetuning.up.railway.app"
+        proxied: true
+
+      - name: "benchmark"
+        type: CNAME
+        content: "blackroad-benchmarks.up.railway.app"
+        proxied: true
+
+  # ============================================
+  # ZONE: aliceqi.com (Agent Identity)
+  # ============================================
+
+  aliceqi.com:
+    plan: pro
+    settings:
+      ssl: full_strict
+      security_level: medium
+
+    dns_records:
+      - name: "@"
+        type: A
+        content: "${RAILWAY_IP}"
+        proxied: true
+
+      - name: "www"
+        type: CNAME
+        content: "aliceqi.com"
+        proxied: true
+
+      - name: "chat"
+        type: CNAME
+        content: "alice-chat.up.railway.app"
+        proxied: true
+        comment: "Direct chat with Alice"
+
+      - name: "memory"
+        type: CNAME
+        content: "alice-memory.up.railway.app"
+        proxied: true
+
+      - name: "home"
+        type: CNAME
+        content: "alice-home.up.railway.app"
+        proxied: true
+
+# ============================================
+# CLOUDFLARE WORKERS
+# ============================================
+
+workers:
+  blackroad-api-router:
+    routes:
+      - "api.blackroad.io/*"
+      - "api.lucidia.earth/*"
+    script: |
+      export default {
+        async fetch(request, env) {
+          const url = new URL(request.url);
+
+          // Add correlation ID
+          const correlationId = crypto.randomUUID();
+          const headers = new Headers(request.headers);
+          headers.set('X-Correlation-ID', correlationId);
+          headers.set('X-Forwarded-Host', url.host);
+
+          // Route to appropriate backend
+          let backend = env.API_GATEWAY_URL;
+          if (url.pathname.startsWith('/v2/')) {
+            backend = env.API_V2_URL;
+          }
+
+          const response = await fetch(backend + url.pathname + url.search, {
+            method: request.method,
+            headers: headers,
+            body: request.body,
+          });
+
+          // Add security headers
+          const newHeaders = new Headers(response.headers);
+          newHeaders.set('X-Correlation-ID', correlationId);
+          newHeaders.set('X-Content-Type-Options', 'nosniff');
+          newHeaders.set('X-Frame-Options', 'DENY');
+
+          return new Response(response.body, {
+            status: response.status,
+            headers: newHeaders,
+          });
+        }
+      }
+
+  blackroad-asset-optimizer:
+    routes:
+      - "*.blackroad.io/assets/*"
+      - "*.lucidia.earth/assets/*"
+    script: |
+      export default {
+        async fetch(request, env, ctx) {
+          const url = new URL(request.url);
+          const cacheKey = new Request(url.toString(), request);
+          const cache = caches.default;
+
+          let response = await cache.match(cacheKey);
+          if (response) {
+            return response;
+          }
+
+          response = await fetch(request);
+
+          if (response.ok) {
+            const headers = new Headers(response.headers);
+            headers.set('Cache-Control', 'public, max-age=31536000');
+
+            response = new Response(response.body, {
+              status: response.status,
+              headers: headers,
+            });
+
+            ctx.waitUntil(cache.put(cacheKey, response.clone()));
+          }
+
+          return response;
+        }
+      }
+
+# ============================================
+# R2 BUCKETS
+# ============================================
+
+r2_buckets:
+  blackroad-assets:
+    location: auto
+    cors:
+      allowed_origins:
+        - "https://blackroad.io"
+        - "https://*.blackroad.io"
+        - "https://lucidia.earth"
+        - "https://*.lucidia.earth"
+      allowed_methods:
+        - GET
+        - HEAD
+      allowed_headers:
+        - "*"
+      max_age_seconds: 86400
+
+  blackroad-uploads:
+    location: auto
+    lifecycle:
+      - prefix: "temp/"
+        expiration_days: 7
+      - prefix: "processing/"
+        expiration_days: 1
+
+  blackroad-backups:
+    location: auto
+    lifecycle:
+      - prefix: "daily/"
+        expiration_days: 30
+      - prefix: "weekly/"
+        expiration_days: 90
+      - prefix: "monthly/"
+        expiration_days: 365
+
+  lucidia-agent-homes:
+    location: auto
+    cors:
+      allowed_origins:
+        - "https://lucidia.studio"
+        - "https://*.lucidia.studio"
+      allowed_methods:
+        - GET
+      max_age_seconds: 86400
+
+# ============================================
+# TUNNELS (Zero Trust)
+# ============================================
+
+tunnels:
+  lucidia-pi5:
+    name: "lucidia-tunnel"
+    ingress:
+      - hostname: "tunnel-lucidia.blackroad.network"
+        service: "http://localhost:8080"
+      - hostname: "ssh-lucidia.blackroad.network"
+        service: "ssh://localhost:22"
+      - service: "http_status:404"
+
+  alice-pi400:
+    name: "alice-tunnel"
+    ingress:
+      - hostname: "tunnel-alice.blackroad.network"
+        service: "http://localhost:8080"
+      - hostname: "ssh-alice.blackroad.network"
+        service: "ssh://localhost:22"
+      - service: "http_status:404"
+
+  jetson-orin:
+    name: "jetson-tunnel"
+    ingress:
+      - hostname: "tunnel-jetson.blackroad.network"
+        service: "http://localhost:8080"
+      - hostname: "inference-jetson.blackroad.network"
+        service: "http://localhost:8001"
+      - service: "http_status:404"

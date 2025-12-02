@@ -1,0 +1,370 @@
+# Raspberry Pi Fleet Configuration
+# BlackRoad OS Edge Infrastructure
+#
+# Defines Pi devices, their roles, and software configurations
+#
+# @blackroad_name: BlackRoad Edge Fleet
+# @tier: Self-hosted
+# @operator: alexa.operator.v1
+
+version: "edge-pi-v1"
+
+# ============================================
+# DEVICE FLEET
+# ============================================
+
+devices:
+  # Primary edge node - Lucidia
+  lucidia-pi5:
+    blackroad_name: "Lucidia"
+    hostname: "lucidia-edge"
+    model: "Raspberry Pi 5"
+    memory: 8GB
+    storage:
+      type: NVMe
+      size: 256GB
+      mount: "/dev/nvme0n1"
+    role: primary_edge
+    location: "Home Office - Primary"
+
+    network:
+      # Ethernet (primary)
+      eth0:
+        type: ethernet
+        ip: "192.168.1.100"
+        gateway: "192.168.1.1"
+        dns:
+          - "1.1.1.1"
+          - "8.8.8.8"
+
+      # WiFi (backup)
+      wlan0:
+        type: wifi
+        ssid: "${WIFI_SSID}"
+        psk: "${WIFI_PASSWORD}"
+
+      # Tailscale mesh
+      tailscale0:
+        type: tailscale
+        hostname: "lucidia-edge"
+        ip: "${LUCIDIA_TAILSCALE_IP}"
+        accept_routes: true
+        advertise_exit_node: false
+
+    services:
+      # Ollama for local inference
+      ollama:
+        enabled: true
+        port: 11434
+        models:
+          - phi3:mini
+          - llama3.2:1b
+          - nomic-embed-text
+        gpu_layers: 0
+        num_parallel: 2
+
+      # BlackRoad edge agent
+      br-agent:
+        enabled: true
+        port: 8080
+        config: /etc/blackroad/agent.yaml
+        auto_start: true
+
+      # Cloudflare tunnel
+      cloudflared:
+        enabled: true
+        tunnel_id: "${TUNNEL_LUCIDIA_ID}"
+        config: /etc/cloudflared/config.yml
+
+      # Prometheus node exporter
+      node_exporter:
+        enabled: true
+        port: 9100
+
+      # Redis (local cache)
+      redis:
+        enabled: true
+        port: 6379
+        maxmemory: 512mb
+
+    gpio:
+      # Status LED
+      led_status:
+        pin: 17
+        mode: output
+        description: "System status LED"
+
+      # Activity LED
+      led_activity:
+        pin: 27
+        mode: output
+        description: "Network activity LED"
+
+  # Secondary edge node - Alice
+  alice-pi400:
+    blackroad_name: "Alice"
+    hostname: "alice-edge"
+    model: "Raspberry Pi 400"
+    memory: 4GB
+    storage:
+      type: SD
+      size: 128GB
+    role: governance_edge
+    location: "Home Office - Secondary"
+
+    network:
+      eth0:
+        type: ethernet
+        ip: "192.168.1.101"
+        gateway: "192.168.1.1"
+
+      tailscale0:
+        type: tailscale
+        hostname: "alice-edge"
+        ip: "${ALICE_TAILSCALE_IP}"
+
+    services:
+      ollama:
+        enabled: true
+        port: 11434
+        models:
+          - phi3:mini
+          - tinyllama:1.1b
+        num_parallel: 1
+
+      br-agent:
+        enabled: true
+        port: 8080
+        config: /etc/blackroad/agent.yaml
+        role: governance_node
+
+      cloudflared:
+        enabled: true
+        tunnel_id: "${TUNNEL_ALICE_ID}"
+
+      node_exporter:
+        enabled: true
+        port: 9100
+
+# ============================================
+# BASE OS CONFIGURATION
+# ============================================
+
+os_config:
+  distribution: "Raspberry Pi OS (64-bit)"
+  version: "bookworm"
+
+  packages:
+    system:
+      - vim
+      - htop
+      - tmux
+      - git
+      - curl
+      - wget
+      - jq
+      - python3-pip
+      - python3-venv
+      - docker.io
+      - docker-compose
+
+    networking:
+      - tailscale
+      - cloudflared
+      - wireguard
+
+    monitoring:
+      - prometheus-node-exporter
+
+  services:
+    enabled:
+      - ssh
+      - docker
+      - tailscaled
+      - cloudflared
+
+    disabled:
+      - bluetooth
+      - avahi-daemon
+
+  security:
+    ssh:
+      port: 22
+      permit_root_login: false
+      password_authentication: false
+      allowed_users:
+        - blackroad
+
+    firewall:
+      enabled: true
+      rules:
+        - port: 22
+          proto: tcp
+          source: tailscale
+        - port: 8080
+          proto: tcp
+          source: tailscale
+        - port: 11434
+          proto: tcp
+          source: tailscale
+        - port: 9100
+          proto: tcp
+          source: tailscale
+
+  users:
+    blackroad:
+      groups:
+        - sudo
+        - docker
+        - gpio
+      ssh_keys:
+        - "${BLACKROAD_SSH_PUBKEY}"
+
+# ============================================
+# BLACKROAD AGENT CONFIG
+# ============================================
+
+agent_config:
+  # /etc/blackroad/agent.yaml
+  version: "1.0.0"
+
+  identity:
+    agent_id: "${DEVICE_AGENT_ID}"
+    agent_name: "${DEVICE_NAME}"
+    organization_id: "${BLACKROAD_ORG_ID}"
+
+  governance:
+    governor: "alice.governor.v1"
+    operator: "alexa.operator.v1"
+    amundson_version: "0.1.0"
+
+  api:
+    listen: "0.0.0.0:8080"
+    tls: false  # Behind cloudflared
+
+  upstream:
+    api_gateway: "https://api.blackroad.io"
+    ws_gateway: "wss://ws.blackroad.io"
+    health_interval: 30
+
+  local_inference:
+    enabled: true
+    ollama_url: "http://localhost:11434"
+    default_model: "phi3:mini"
+    fallback_to_cloud: true
+
+  cache:
+    redis_url: "redis://localhost:6379"
+    ttl_seconds: 300
+
+  logging:
+    level: info
+    format: json
+    output: /var/log/blackroad/agent.log
+
+  metrics:
+    enabled: true
+    port: 9090
+    path: /metrics
+
+# ============================================
+# MONITORING
+# ============================================
+
+monitoring:
+  prometheus:
+    scrape_interval: 15s
+    targets:
+      - localhost:9100  # Node exporter
+      - localhost:9090  # BR agent metrics
+
+  alerts:
+    - name: high_cpu
+      condition: cpu_usage > 80%
+      duration: 5m
+      severity: warning
+
+    - name: high_memory
+      condition: memory_usage > 85%
+      duration: 5m
+      severity: warning
+
+    - name: disk_full
+      condition: disk_usage > 90%
+      severity: critical
+
+    - name: temperature_high
+      condition: cpu_temp > 75
+      severity: warning
+
+    - name: service_down
+      condition: service_status != running
+      severity: critical
+
+  health_checks:
+    - name: ollama
+      endpoint: http://localhost:11434/api/health
+      interval: 30s
+
+    - name: br_agent
+      endpoint: http://localhost:8080/health
+      interval: 30s
+
+    - name: cloudflared
+      command: "cloudflared tunnel info ${TUNNEL_ID}"
+      interval: 60s
+
+# ============================================
+# BACKUP & RECOVERY
+# ============================================
+
+backup:
+  # What to backup
+  paths:
+    - /etc/blackroad/
+    - /var/lib/blackroad/
+    - /etc/cloudflared/
+    - /home/blackroad/.config/
+
+  # Exclude
+  exclude:
+    - "*.log"
+    - "*.tmp"
+    - "__pycache__"
+
+  # Schedule
+  schedule: "0 3 * * *"  # Daily at 3 AM
+
+  # Destination
+  destination:
+    type: r2
+    bucket: blackroad-edge-backups
+    prefix: "${DEVICE_NAME}/"
+
+  retention:
+    daily: 7
+    weekly: 4
+    monthly: 3
+
+# ============================================
+# UPDATE MANAGEMENT
+# ============================================
+
+updates:
+  # System updates
+  os:
+    auto_update: true
+    schedule: "0 4 * * 0"  # Weekly Sunday 4 AM
+    reboot_allowed: true
+    reboot_window: "04:00-06:00"
+
+  # BlackRoad agent
+  agent:
+    auto_update: true
+    channel: stable
+    check_interval: 3600
+
+  # Ollama models
+  models:
+    auto_update: false
+    notify_new_versions: true

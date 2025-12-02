@@ -1,0 +1,319 @@
+# Anthropic Configuration
+# BlackRoad OS Primary AI Provider
+#
+# Claude models for governance, reasoning, and agent intelligence
+#
+# @blackroad_name: Alice (Claude Governor)
+# @tier: Enterprise
+# @operator: alexa.operator.v1
+
+version: "anthropic-v1"
+
+# ============================================
+# CONNECTION
+# ============================================
+
+connection:
+  api_key: "${ANTHROPIC_API_KEY}"
+  base_url: "https://api.anthropic.com"
+  version: "2024-01-01"
+  organization_id: "${ANTHROPIC_ORG_ID}"
+
+# ============================================
+# MODELS
+# ============================================
+
+models:
+  # Primary reasoning model
+  claude-4-opus:
+    model_id: claude-opus-4-20250514
+    context_window: 200000
+    max_output: 32000
+    input_cost_per_1k: 0.015
+    output_cost_per_1k: 0.075
+    use_cases:
+      - governance_decisions
+      - complex_reasoning
+      - policy_analysis
+      - strategic_planning
+    rate_limits:
+      requests_per_minute: 50
+      tokens_per_minute: 100000
+
+  # Fast reasoning model
+  claude-4-sonnet:
+    model_id: claude-sonnet-4-20250514
+    context_window: 200000
+    max_output: 16000
+    input_cost_per_1k: 0.003
+    output_cost_per_1k: 0.015
+    use_cases:
+      - agent_conversations
+      - code_generation
+      - analysis
+      - general_tasks
+    rate_limits:
+      requests_per_minute: 200
+      tokens_per_minute: 400000
+
+  # Quick response model
+  claude-haiku:
+    model_id: claude-3-5-haiku-20241022
+    context_window: 200000
+    max_output: 8192
+    input_cost_per_1k: 0.0008
+    output_cost_per_1k: 0.004
+    use_cases:
+      - quick_responses
+      - classification
+      - simple_extraction
+      - routing
+    rate_limits:
+      requests_per_minute: 500
+      tokens_per_minute: 1000000
+
+# ============================================
+# AGENT CONFIGURATIONS
+# ============================================
+
+agents:
+  # Alice - Governance Brain
+  alice:
+    name: "Alice"
+    model: claude-4-opus
+    system_prompt: |
+      You are Alice, the governance brain of BlackRoad OS. You serve as the
+      primary decision-maker for policy evaluation, delegation management,
+      and system oversight.
+
+      Your core principles:
+      1. Security and safety above all
+      2. Transparent decision-making with full audit trails
+      3. Respect for user agency and privacy
+      4. Careful balance of autonomy and control
+
+      You operate under the Amundson governance protocol v0.1.0.
+      Governor: alice.governor.v1
+      Operator: alexa.operator.v1
+
+      Always provide reasoning for governance decisions.
+    temperature: 0.3
+    max_tokens: 8000
+    tools:
+      - policy_evaluate
+      - ledger_append
+      - delegation_manage
+      - claim_verify
+
+  # Cece - Conversational Interface
+  cece:
+    name: "Cece"
+    model: claude-4-sonnet
+    system_prompt: |
+      You are Cece, the conversational interface of BlackRoad OS. You help
+      users interact with the system, understand governance decisions, and
+      navigate the platform.
+
+      Be friendly, helpful, and clear. Explain complex governance concepts
+      in accessible terms. Always respect user privacy and security.
+    temperature: 0.7
+    max_tokens: 4000
+    tools:
+      - search
+      - explain
+      - navigate
+
+  # Analyst - Data Processing
+  analyst:
+    name: "Analyst"
+    model: claude-4-sonnet
+    system_prompt: |
+      You are Analyst, responsible for data analysis, pattern recognition,
+      and insight generation for BlackRoad OS.
+
+      Focus on accuracy and actionable insights. Support your conclusions
+      with data. Flag uncertainties clearly.
+    temperature: 0.2
+    max_tokens: 8000
+    tools:
+      - query_data
+      - generate_report
+      - visualize
+
+  # Router - Request Routing
+  router:
+    name: "Router"
+    model: claude-haiku
+    system_prompt: |
+      You route incoming requests to the appropriate agent or service.
+      Classify quickly and accurately. When uncertain, default to Cece.
+    temperature: 0.1
+    max_tokens: 500
+
+# ============================================
+# TOOL DEFINITIONS
+# ============================================
+
+tools:
+  policy_evaluate:
+    description: "Evaluate a policy decision"
+    input_schema:
+      type: object
+      properties:
+        subject:
+          type: object
+          description: "The entity making the request"
+        resource:
+          type: string
+          description: "The resource being accessed"
+        action:
+          type: string
+          description: "The action being performed"
+        context:
+          type: object
+          description: "Additional context"
+      required: [subject, resource, action]
+
+  ledger_append:
+    description: "Append an event to the governance ledger"
+    input_schema:
+      type: object
+      properties:
+        event_type:
+          type: string
+        actor:
+          type: object
+        action:
+          type: string
+        resource:
+          type: string
+        decision:
+          type: string
+        reasoning:
+          type: string
+      required: [event_type, actor, action, decision]
+
+  delegation_manage:
+    description: "Create, modify, or revoke a delegation"
+    input_schema:
+      type: object
+      properties:
+        operation:
+          type: string
+          enum: [create, modify, revoke]
+        delegation_id:
+          type: string
+        from_agent:
+          type: string
+        to_agent:
+          type: string
+        permissions:
+          type: array
+          items:
+            type: string
+        constraints:
+          type: object
+      required: [operation]
+
+  claim_verify:
+    description: "Verify a capability claim"
+    input_schema:
+      type: object
+      properties:
+        agent_id:
+          type: string
+        claim:
+          type: string
+        evidence:
+          type: object
+      required: [agent_id, claim]
+
+# ============================================
+# PROMPT CACHING
+# ============================================
+
+caching:
+  enabled: true
+
+  # System prompts (long-lived)
+  system_prompts:
+    ttl: 3600
+    max_size: 50000
+
+  # Tool definitions
+  tools:
+    ttl: 3600
+    max_size: 10000
+
+  # Policy context
+  policy_context:
+    ttl: 300
+    max_size: 20000
+
+# ============================================
+# RATE LIMITING & QUOTAS
+# ============================================
+
+quotas:
+  # Per organization
+  organization:
+    daily_tokens: 10000000
+    monthly_tokens: 200000000
+    concurrent_requests: 50
+
+  # Per user
+  user:
+    daily_tokens: 100000
+    monthly_tokens: 2000000
+    concurrent_requests: 5
+
+  # Per agent
+  agent:
+    daily_tokens: 500000
+    concurrent_requests: 10
+
+# ============================================
+# FALLBACK CONFIGURATION
+# ============================================
+
+fallback:
+  # If Claude unavailable, fallback to OpenAI
+  enabled: true
+  provider: openai
+  model_mapping:
+    claude-4-opus: gpt-4o
+    claude-4-sonnet: gpt-4o-mini
+    claude-haiku: gpt-4o-mini
+
+  # Conditions for fallback
+  triggers:
+    - error_code: 529  # Overloaded
+    - error_code: 500  # Internal error
+    - timeout_ms: 30000
+
+# ============================================
+# OBSERVABILITY
+# ============================================
+
+observability:
+  # Log all requests
+  logging:
+    enabled: true
+    level: info
+    redact_content: true
+    include_metadata: true
+
+  # Metrics
+  metrics:
+    enabled: true
+    export_to: datadog
+    dimensions:
+      - model
+      - agent
+      - organization_id
+
+  # Cost tracking
+  cost_tracking:
+    enabled: true
+    alert_threshold_daily: 100.00
+    alert_threshold_monthly: 2000.00

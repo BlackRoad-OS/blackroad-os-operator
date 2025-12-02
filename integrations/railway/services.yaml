@@ -1,0 +1,542 @@
+# Railway Services Configuration
+# BlackRoad OS Deployment Platform
+#
+# This file defines all Railway services, environments, and deployment configurations.
+#
+# @blackroad_name: BlackRoad Railway Fleet
+# @tier: Pro ($20/seat + usage)
+# @operator: alexa.operator.v1
+
+version: "railway-v1"
+
+# ============================================
+# PROJECT CONFIGURATION
+# ============================================
+
+projects:
+  blackroad-os:
+    name: "BlackRoad OS"
+    description: "Core operating system and governance platform"
+    team: blackroad
+
+    environments:
+      production:
+        name: "Production"
+        region: us-west1
+        replicas: 2
+        auto_scaling:
+          min: 2
+          max: 10
+          target_cpu: 70
+
+      staging:
+        name: "Staging"
+        region: us-west1
+        replicas: 1
+
+      development:
+        name: "Development"
+        region: us-west1
+        replicas: 1
+
+    # ============================================
+    # CORE SERVICES
+    # ============================================
+
+    services:
+      # API Gateway
+      api-gateway:
+        name: "blackroad-os-api-gateway"
+        source:
+          repo: "blackroad/blackroad-os-operator"
+          branch: main
+          root_directory: "/"
+        build:
+          builder: nixpacks
+          dockerfile: Dockerfile
+        deploy:
+          healthcheck_path: /health
+          healthcheck_timeout: 30
+          start_command: "python -m uvicorn br_operator.main:app --host 0.0.0.0 --port $PORT"
+          num_replicas: 2
+          restart_policy: always
+        resources:
+          memory: 1024
+          cpu: 1
+        env:
+          NODE_ENV: production
+          LOG_LEVEL: info
+          GOVERNANCE_MODE: strict
+          AMUNDSON_VERSION: "0.1.0"
+        domains:
+          - api.blackroad.io
+          - api.lucidia.earth
+
+      # Web Application
+      web:
+        name: "blackroad-os-web"
+        source:
+          repo: "blackroad/blackroad-web"
+          branch: main
+        build:
+          builder: nixpacks
+        deploy:
+          healthcheck_path: /
+          start_command: "npm start"
+        resources:
+          memory: 512
+          cpu: 0.5
+        domains:
+          - app.blackroad.io
+          - blackroad.io
+
+      # Worker Service
+      worker:
+        name: "blackroad-os-worker"
+        source:
+          repo: "blackroad/blackroad-os-operator"
+          branch: main
+        build:
+          builder: nixpacks
+        deploy:
+          start_command: "python -m br_operator.worker"
+          num_replicas: 3
+        resources:
+          memory: 2048
+          cpu: 2
+        env:
+          WORKER_CONCURRENCY: 10
+          QUEUE_PREFIX: blackroad
+
+      # Scheduler Service
+      scheduler:
+        name: "blackroad-os-scheduler"
+        source:
+          repo: "blackroad/blackroad-os-operator"
+          branch: main
+        deploy:
+          start_command: "python -m br_operator.scheduler"
+          num_replicas: 1
+        resources:
+          memory: 256
+          cpu: 0.25
+
+      # Intent Processor
+      intent-processor:
+        name: "blackroad-os-intent-processor"
+        source:
+          repo: "blackroad/blackroad-os-operator"
+          branch: main
+        deploy:
+          start_command: "python -m br_operator.intent_worker"
+          num_replicas: 2
+        resources:
+          memory: 1024
+          cpu: 1
+        env:
+          INTENT_QUEUE: intents
+          MAX_CONCURRENT_INTENTS: 50
+
+    # ============================================
+    # DATABASES
+    # ============================================
+
+    databases:
+      postgres:
+        name: "blackroad-os-postgres"
+        plugin: postgresql
+        version: "15"
+        high_availability: true
+        storage_size: 100GB
+        backup:
+          enabled: true
+          retention_days: 30
+
+      redis:
+        name: "blackroad-os-redis"
+        plugin: redis
+        version: "7"
+        maxmemory_policy: allkeys-lru
+        maxmemory: 512mb
+
+  # ============================================
+  # LUCIDIA PROJECT
+  # ============================================
+
+  lucidia:
+    name: "Lucidia"
+    description: "AI agent platform and services"
+    team: blackroad
+
+    environments:
+      production:
+        region: us-west1
+        replicas: 2
+      staging:
+        region: us-west1
+        replicas: 1
+
+    services:
+      # Lucidia API
+      api:
+        name: "lucidia-api"
+        source:
+          repo: "blackroad/lucidia"
+          branch: main
+        build:
+          builder: nixpacks
+        deploy:
+          healthcheck_path: /health
+          start_command: "python -m uvicorn lucidia.main:app --host 0.0.0.0 --port $PORT"
+        resources:
+          memory: 2048
+          cpu: 2
+        env:
+          OPENAI_MODEL: gpt-4o
+          ANTHROPIC_MODEL: claude-sonnet-4-20250514
+          RAG_ENABLED: true
+        domains:
+          - api.lucidia.earth
+
+      # Lucidia Web
+      web:
+        name: "lucidia-web"
+        source:
+          repo: "blackroad/lucidia-web"
+          branch: main
+        build:
+          builder: nixpacks
+        resources:
+          memory: 512
+          cpu: 0.5
+        domains:
+          - lucidia.earth
+          - app.lucidia.earth
+
+      # Agent Runtime
+      agents:
+        name: "lucidia-agents"
+        source:
+          repo: "blackroad/lucidia-agents"
+          branch: main
+        deploy:
+          start_command: "python -m lucidia.agent_runtime"
+          num_replicas: 5
+        resources:
+          memory: 4096
+          cpu: 4
+        env:
+          MAX_AGENTS_PER_INSTANCE: 100
+          AGENT_TIMEOUT: 300
+          MEMORY_BACKEND: pinecone
+        domains:
+          - agents.lucidia.earth
+
+      # Memory Service
+      memories:
+        name: "lucidia-memories"
+        source:
+          repo: "blackroad/lucidia-memories"
+          branch: main
+        deploy:
+          healthcheck_path: /health
+          start_command: "python -m uvicorn memories.main:app --host 0.0.0.0 --port $PORT"
+        resources:
+          memory: 2048
+          cpu: 2
+        env:
+          PINECONE_INDEX: lucidia-memories
+          EMBEDDING_MODEL: text-embedding-3-small
+        domains:
+          - memories.lucidia.earth
+
+      # Playground
+      playground:
+        name: "lucidia-playground"
+        source:
+          repo: "blackroad/lucidia-playground"
+          branch: main
+        build:
+          builder: nixpacks
+        resources:
+          memory: 512
+          cpu: 0.5
+        domains:
+          - playground.lucidia.earth
+
+  # ============================================
+  # GOVERNANCE PROJECT
+  # ============================================
+
+  governance:
+    name: "Governance"
+    description: "Policy, ledger, and compliance services"
+    team: blackroad
+
+    services:
+      # Policy Engine
+      policy-engine:
+        name: "blackroad-policy-engine"
+        source:
+          repo: "blackroad/blackroad-os-operator"
+          branch: main
+        deploy:
+          healthcheck_path: /health
+          start_command: "python -m br_operator.policy_engine"
+        resources:
+          memory: 1024
+          cpu: 1
+        env:
+          POLICY_CACHE_TTL: 300
+          EVALUATION_TIMEOUT: 5000
+        domains:
+          - policies.blackroad.systems
+
+      # Ledger Service
+      ledger:
+        name: "blackroad-ledger"
+        source:
+          repo: "blackroad/blackroad-os-operator"
+          branch: main
+        deploy:
+          healthcheck_path: /health
+          start_command: "python -m br_operator.ledger_service"
+        resources:
+          memory: 1024
+          cpu: 1
+        env:
+          LEDGER_RETENTION_DAYS: 365
+          COMPACT_INTERVAL: 86400
+        domains:
+          - ledger.blackroad.systems
+
+      # Intent Service
+      intents:
+        name: "blackroad-intents"
+        source:
+          repo: "blackroad/blackroad-os-operator"
+          branch: main
+        deploy:
+          healthcheck_path: /health
+          start_command: "python -m br_operator.intent_service"
+        resources:
+          memory: 1024
+          cpu: 1
+        domains:
+          - intents.blackroad.systems
+
+  # ============================================
+  # INFRASTRUCTURE PROJECT
+  # ============================================
+
+  infrastructure:
+    name: "Infrastructure"
+    description: "Mesh, routing, and infrastructure services"
+    team: blackroad
+
+    services:
+      # Mesh Router
+      mesh-router:
+        name: "blackroad-mesh-router"
+        source:
+          repo: "blackroad/blackroad-mesh"
+          branch: main
+        deploy:
+          healthcheck_path: /health
+          num_replicas: 3
+        resources:
+          memory: 512
+          cpu: 1
+        env:
+          MESH_PROTOCOL: tailscale
+          MAX_NODES: 1000
+        domains:
+          - mesh.blackroad.network
+
+      # Node Registry
+      node-registry:
+        name: "blackroad-node-registry"
+        source:
+          repo: "blackroad/blackroad-nodes"
+          branch: main
+        deploy:
+          healthcheck_path: /health
+        resources:
+          memory: 512
+          cpu: 0.5
+        domains:
+          - nodes.blackroad.network
+
+      # Service Registry
+      service-registry:
+        name: "blackroad-service-registry"
+        source:
+          repo: "blackroad/blackroad-os-operator"
+          branch: main
+        deploy:
+          healthcheck_path: /health
+        resources:
+          memory: 256
+          cpu: 0.25
+        domains:
+          - registry.blackroad.network
+
+      # Health Dashboard
+      health:
+        name: "blackroad-health"
+        source:
+          repo: "blackroad/blackroad-health"
+          branch: main
+        deploy:
+          healthcheck_path: /
+        resources:
+          memory: 256
+          cpu: 0.25
+        domains:
+          - health.blackroad.network
+
+  # ============================================
+  # SUPPORT SERVICES
+  # ============================================
+
+  support:
+    name: "Support Services"
+    description: "Documentation, demos, and support"
+    team: blackroad
+
+    services:
+      # Documentation (Cloudflare Pages fallback)
+      docs:
+        name: "blackroad-os-docs"
+        source:
+          repo: "blackroad/blackroad-docs"
+          branch: main
+        build:
+          builder: static
+          build_command: "npm run build"
+          output_directory: "dist"
+        domains:
+          - docs.blackroad.io
+
+      # Demo Environment
+      demo:
+        name: "blackroad-os-demo"
+        source:
+          repo: "blackroad/blackroad-demo"
+          branch: main
+        build:
+          builder: nixpacks
+        resources:
+          memory: 512
+          cpu: 0.5
+        domains:
+          - demo.blackroad.io
+
+# ============================================
+# SHARED VARIABLES
+# ============================================
+
+shared_variables:
+  # Database URLs (auto-injected from plugins)
+  DATABASE_URL: "${{Postgres.DATABASE_URL}}"
+  REDIS_URL: "${{Redis.REDIS_URL}}"
+
+  # External Services
+  PINECONE_API_KEY: "${{shared.PINECONE_API_KEY}}"
+  OPENAI_API_KEY: "${{shared.OPENAI_API_KEY}}"
+  ANTHROPIC_API_KEY: "${{shared.ANTHROPIC_API_KEY}}"
+
+  # Auth
+  AUTH0_DOMAIN: "${{shared.AUTH0_DOMAIN}}"
+  AUTH0_CLIENT_ID: "${{shared.AUTH0_CLIENT_ID}}"
+  AUTH0_CLIENT_SECRET: "${{shared.AUTH0_CLIENT_SECRET}}"
+
+  # Observability
+  DATADOG_API_KEY: "${{shared.DATADOG_API_KEY}}"
+  SENTRY_DSN: "${{shared.SENTRY_DSN}}"
+
+  # Governance
+  GOVERNOR: "alice.governor.v1"
+  OPERATOR: "alexa.operator.v1"
+  AMUNDSON_VERSION: "0.1.0"
+
+# ============================================
+# DEPLOYMENT PIPELINES
+# ============================================
+
+pipelines:
+  production:
+    trigger:
+      branch: main
+      auto_deploy: true
+    stages:
+      - name: test
+        commands:
+          - pytest tests/ -v
+          - python -m mypy br_operator/
+      - name: build
+        commands:
+          - docker build -t $IMAGE .
+      - name: deploy
+        environments:
+          - production
+        approval_required: false
+
+  staging:
+    trigger:
+      branch: develop
+      auto_deploy: true
+    stages:
+      - name: test
+        commands:
+          - pytest tests/ -v
+      - name: deploy
+        environments:
+          - staging
+
+# ============================================
+# CRON JOBS
+# ============================================
+
+cron_jobs:
+  ledger-compaction:
+    schedule: "0 2 * * *"  # Daily at 2 AM
+    service: ledger
+    command: "python -m br_operator.tasks.compact_ledger"
+
+  policy-sync:
+    schedule: "*/15 * * * *"  # Every 15 minutes
+    service: policy-engine
+    command: "python -m br_operator.tasks.sync_policies"
+
+  health-report:
+    schedule: "0 * * * *"  # Hourly
+    service: health
+    command: "python -m br_operator.tasks.health_report"
+
+  backup-databases:
+    schedule: "0 3 * * *"  # Daily at 3 AM
+    service: scheduler
+    command: "python -m br_operator.tasks.backup_all"
+
+  intent-cleanup:
+    schedule: "0 4 * * *"  # Daily at 4 AM
+    service: intent-processor
+    command: "python -m br_operator.tasks.cleanup_stale_intents"
+
+# ============================================
+# VOLUME MOUNTS
+# ============================================
+
+volumes:
+  agent-state:
+    size: 50GB
+    mount_path: /data/agents
+    services:
+      - lucidia-agents
+
+  ledger-archive:
+    size: 100GB
+    mount_path: /data/ledger
+    services:
+      - blackroad-ledger

@@ -1,0 +1,292 @@
+# Ollama Configuration
+# BlackRoad OS Local AI Provider
+#
+# Self-hosted models for edge deployment and privacy-sensitive tasks
+#
+# @blackroad_name: BlackRoad Edge AI
+# @tier: Self-hosted
+# @operator: alexa.operator.v1
+
+version: "ollama-v1"
+
+# ============================================
+# DEPLOYMENT TARGETS
+# ============================================
+
+deployments:
+  # Lucidia Pi 5 (8GB)
+  lucidia-pi5:
+    host: "tunnel-lucidia.blackroad.network"
+    port: 11434
+    tailscale_ip: "${LUCIDIA_PI_TAILSCALE_IP}"
+    local_ip: "192.168.1.100"
+
+    hardware:
+      device: "Raspberry Pi 5"
+      memory: 8GB
+      storage: 256GB NVMe
+
+    models:
+      - name: phi3:mini
+        size: 2.3GB
+        context: 4096
+        use_case: "Quick local responses"
+
+      - name: llama3.2:1b
+        size: 1.3GB
+        context: 8192
+        use_case: "Lightweight tasks"
+
+      - name: nomic-embed-text
+        size: 274MB
+        context: 8192
+        use_case: "Local embeddings"
+
+  # Alice Pi 400 (4GB)
+  alice-pi400:
+    host: "tunnel-alice.blackroad.network"
+    port: 11434
+    tailscale_ip: "${ALICE_PI_TAILSCALE_IP}"
+    local_ip: "192.168.1.101"
+
+    hardware:
+      device: "Raspberry Pi 400"
+      memory: 4GB
+      storage: 128GB SD
+
+    models:
+      - name: phi3:mini
+        size: 2.3GB
+        context: 2048
+        use_case: "Governance edge decisions"
+
+      - name: tinyllama:1.1b
+        size: 637MB
+        context: 2048
+        use_case: "Ultra-light tasks"
+
+  # Jetson Orin (32GB)
+  jetson-orin:
+    host: "tunnel-jetson.blackroad.network"
+    port: 11434
+    tailscale_ip: "${JETSON_TAILSCALE_IP}"
+    local_ip: "192.168.1.102"
+
+    hardware:
+      device: "NVIDIA Jetson AGX Orin"
+      memory: 32GB
+      gpu: "Ampere GPU, 2048 CUDA cores"
+      storage: 512GB NVMe
+
+    models:
+      - name: llama3.1:8b
+        size: 4.7GB
+        context: 32768
+        use_case: "Primary edge inference"
+
+      - name: codellama:7b
+        size: 3.8GB
+        context: 16384
+        use_case: "Code generation"
+
+      - name: mistral:7b
+        size: 4.1GB
+        context: 32768
+        use_case: "General tasks"
+
+      - name: nomic-embed-text
+        size: 274MB
+        context: 8192
+        use_case: "Local embeddings"
+
+      - name: llava:7b
+        size: 4.5GB
+        context: 4096
+        use_case: "Vision tasks"
+
+  # Development Mac
+  dev-local:
+    host: "localhost"
+    port: 11434
+
+    models:
+      - name: llama3.1:8b
+      - name: codellama:13b
+      - name: mistral:7b
+      - name: phi3:medium
+      - name: nomic-embed-text
+
+# ============================================
+# MODEL CONFIGURATIONS
+# ============================================
+
+models:
+  # Llama 3.1 8B - Best balance
+  llama3.1:8b:
+    parameters:
+      temperature: 0.7
+      top_p: 0.9
+      top_k: 40
+      repeat_penalty: 1.1
+      num_ctx: 32768
+      num_predict: 4096
+
+    system_prompt: |
+      You are a helpful AI assistant running locally on BlackRoad edge hardware.
+      Respond concisely and accurately. You have limited context, so focus on
+      the immediate task.
+
+  # Phi-3 Mini - Ultra efficient
+  phi3:mini:
+    parameters:
+      temperature: 0.7
+      top_p: 0.9
+      num_ctx: 4096
+      num_predict: 1024
+
+    system_prompt: |
+      You are a compact AI assistant optimized for edge deployment.
+      Be brief and direct in your responses.
+
+  # CodeLlama - Code tasks
+  codellama:7b:
+    parameters:
+      temperature: 0.2
+      top_p: 0.95
+      num_ctx: 16384
+      num_predict: 4096
+      stop: ["```", "</code>"]
+
+    system_prompt: |
+      You are a code assistant. Write clean, efficient code.
+      Focus on correctness and readability.
+
+  # Mistral 7B - General purpose
+  mistral:7b:
+    parameters:
+      temperature: 0.7
+      top_p: 0.9
+      num_ctx: 32768
+      num_predict: 4096
+
+  # Nomic Embed - Embeddings
+  nomic-embed-text:
+    parameters:
+      num_ctx: 8192
+
+# ============================================
+# ROUTING RULES
+# ============================================
+
+routing:
+  # Default to cloud, fallback to edge
+  default_strategy: cloud_first
+
+  rules:
+    # Privacy-sensitive -> edge only
+    - condition:
+        privacy_level: high
+      target: edge_only
+      preferred_deployment: jetson-orin
+
+    # Low latency required -> nearest edge
+    - condition:
+        latency_requirement_ms: 100
+      target: nearest_edge
+
+    # Code tasks on Jetson
+    - condition:
+        task_type: code_generation
+      target: jetson-orin
+      model: codellama:7b
+
+    # Vision tasks on Jetson
+    - condition:
+        task_type: vision
+      target: jetson-orin
+      model: llava:7b
+
+    # Quick classification -> Pi
+    - condition:
+        task_type: classification
+        max_tokens: 100
+      target: lucidia-pi5
+      model: phi3:mini
+
+    # Offline mode -> any available edge
+    - condition:
+        network_status: offline
+      target: any_edge
+
+# ============================================
+# LOAD BALANCING
+# ============================================
+
+load_balancing:
+  strategy: least_connections
+  health_check_interval: 30
+
+  weights:
+    jetson-orin: 10
+    lucidia-pi5: 3
+    alice-pi400: 1
+
+  failover:
+    enabled: true
+    max_retries: 2
+    fallback_to_cloud: true
+
+# ============================================
+# CACHING
+# ============================================
+
+caching:
+  # Prompt caching
+  prompt_cache:
+    enabled: true
+    max_size_mb: 512
+
+  # Response caching
+  response_cache:
+    enabled: true
+    ttl_seconds: 300
+    max_entries: 1000
+
+  # Model caching
+  model_cache:
+    keep_alive: 5m
+    preload_on_start: true
+
+# ============================================
+# MONITORING
+# ============================================
+
+monitoring:
+  metrics:
+    - name: inference_latency
+      labels: [deployment, model]
+    - name: tokens_per_second
+      labels: [deployment, model]
+    - name: memory_usage
+      labels: [deployment]
+    - name: gpu_utilization
+      labels: [deployment]
+
+  health_endpoints:
+    - deployment: jetson-orin
+      endpoint: /api/health
+      interval: 30s
+    - deployment: lucidia-pi5
+      endpoint: /api/health
+      interval: 60s
+    - deployment: alice-pi400
+      endpoint: /api/health
+      interval: 60s
+
+  alerts:
+    - name: edge_node_down
+      condition: health_check_failed
+      severity: warning
+    - name: high_latency
+      condition: inference_latency > 5000ms
+      severity: warning

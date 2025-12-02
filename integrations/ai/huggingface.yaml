@@ -1,0 +1,242 @@
+# HuggingFace Configuration
+# BlackRoad OS Model Hub & Inference
+#
+# Access to open models and fine-tuning infrastructure
+#
+# @blackroad_name: BlackRoad Model Hub
+# @tier: Pro
+# @operator: alexa.operator.v1
+
+version: "huggingface-v1"
+
+# ============================================
+# CONNECTION
+# ============================================
+
+connection:
+  api_key: "${HUGGINGFACE_API_KEY}"
+  organization: "blackroad"
+
+# ============================================
+# INFERENCE ENDPOINTS
+# ============================================
+
+inference_endpoints:
+  # Custom fine-tuned models
+  blackroad-embeddings:
+    name: "blackroad-embeddings"
+    model: "blackroad/br-embed-v1"
+    instance_type: cpu-basic
+    region: us-east-1
+    scaling:
+      min_replicas: 1
+      max_replicas: 4
+    use_case: "Custom embeddings for BlackRoad domain"
+
+  blackroad-classifier:
+    name: "blackroad-classifier"
+    model: "blackroad/intent-classifier-v1"
+    instance_type: cpu-basic
+    region: us-east-1
+    scaling:
+      min_replicas: 0
+      max_replicas: 2
+    use_case: "Intent classification"
+
+  # Fine-tuned Llama for governance
+  governance-llm:
+    name: "governance-llm"
+    model: "blackroad/governance-llama-7b"
+    instance_type: gpu-medium
+    region: us-east-1
+    scaling:
+      min_replicas: 0
+      max_replicas: 2
+    use_case: "Governance decision support"
+
+# ============================================
+# SERVERLESS INFERENCE
+# ============================================
+
+serverless:
+  # Embedding models
+  embeddings:
+    - model: "sentence-transformers/all-MiniLM-L6-v2"
+      dimension: 384
+      use_case: "Fast local embeddings"
+
+    - model: "BAAI/bge-small-en-v1.5"
+      dimension: 384
+      use_case: "High quality small embeddings"
+
+    - model: "BAAI/bge-large-en-v1.5"
+      dimension: 1024
+      use_case: "High quality large embeddings"
+
+  # Classification models
+  classification:
+    - model: "facebook/bart-large-mnli"
+      use_case: "Zero-shot classification"
+
+    - model: "MoritzLaworx/toxic-comment-model"
+      use_case: "Content moderation"
+
+  # NER models
+  ner:
+    - model: "dslim/bert-base-NER"
+      use_case: "Named entity recognition"
+
+  # Summarization
+  summarization:
+    - model: "facebook/bart-large-cnn"
+      use_case: "Document summarization"
+
+# ============================================
+# MODEL HUB
+# ============================================
+
+model_hub:
+  # Models we maintain
+  organization_models:
+    - name: "blackroad/br-embed-v1"
+      base_model: "BAAI/bge-small-en-v1.5"
+      fine_tuned: true
+      training_data: "governance_corpus"
+
+    - name: "blackroad/intent-classifier-v1"
+      base_model: "distilbert-base-uncased"
+      fine_tuned: true
+      training_data: "intent_labels"
+
+    - name: "blackroad/governance-llama-7b"
+      base_model: "meta-llama/Llama-2-7b-hf"
+      fine_tuned: true
+      training_data: "governance_decisions"
+      lora: true
+
+  # Models we use
+  external_models:
+    # Text generation
+    - "mistralai/Mistral-7B-Instruct-v0.2"
+    - "meta-llama/Meta-Llama-3.1-8B-Instruct"
+    - "microsoft/phi-3-mini-4k-instruct"
+
+    # Embeddings
+    - "sentence-transformers/all-mpnet-base-v2"
+    - "intfloat/e5-large-v2"
+
+    # Code
+    - "codellama/CodeLlama-7b-Instruct-hf"
+    - "Salesforce/codegen25-7b-mono"
+
+    # Vision
+    - "llava-hf/llava-1.5-7b-hf"
+    - "Salesforce/blip2-opt-2.7b"
+
+# ============================================
+# DATASETS
+# ============================================
+
+datasets:
+  # Private datasets
+  private:
+    - name: "blackroad/governance-corpus"
+      description: "Governance decisions and policies"
+      size: "10K examples"
+
+    - name: "blackroad/intent-labels"
+      description: "Labeled intent data"
+      size: "50K examples"
+
+    - name: "blackroad/agent-conversations"
+      description: "Agent interaction logs"
+      size: "100K conversations"
+
+  # Public datasets we use
+  public:
+    - "databricks/databricks-dolly-15k"
+    - "Open-Orca/OpenOrca"
+    - "teknium/OpenHermes-2.5"
+
+# ============================================
+# SPACES
+# ============================================
+
+spaces:
+  # Demo spaces
+  blackroad-demo:
+    name: "blackroad/agent-demo"
+    sdk: gradio
+    hardware: cpu-basic
+    visibility: public
+
+  governance-explorer:
+    name: "blackroad/governance-explorer"
+    sdk: streamlit
+    hardware: cpu-basic
+    visibility: private
+
+# ============================================
+# AUTOTRAIN
+# ============================================
+
+autotrain:
+  # Fine-tuning configurations
+  configs:
+    embeddings:
+      task: sentence_transformers
+      base_model: "BAAI/bge-small-en-v1.5"
+      epochs: 3
+      batch_size: 32
+      learning_rate: 2e-5
+
+    classification:
+      task: text_classification
+      base_model: "distilbert-base-uncased"
+      epochs: 5
+      batch_size: 16
+      learning_rate: 5e-5
+
+    llm_lora:
+      task: llm_lora
+      base_model: "meta-llama/Meta-Llama-3.1-8B"
+      epochs: 1
+      batch_size: 4
+      learning_rate: 1e-4
+      lora_r: 16
+      lora_alpha: 32
+
+# ============================================
+# RATE LIMITS
+# ============================================
+
+rate_limits:
+  serverless:
+    requests_per_hour: 1000
+    concurrent_requests: 10
+
+  inference_endpoints:
+    requests_per_second: 100
+
+# ============================================
+# MONITORING
+# ============================================
+
+monitoring:
+  logging:
+    enabled: true
+    level: info
+
+  metrics:
+    - inference_latency
+    - request_count
+    - error_rate
+    - endpoint_status
+
+  alerts:
+    - name: endpoint_down
+      condition: status != running
+      severity: critical
+    - name: high_latency
+      condition: latency_p99 > 5000ms
+      severity: warning

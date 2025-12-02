@@ -1,0 +1,437 @@
+# MCP Server Configuration
+# BlackRoad OS Model Context Protocol
+#
+# Defines MCP servers for Claude Code and agent integrations
+#
+# @blackroad_name: BlackRoad MCP Layer
+# @tier: Enterprise
+# @operator: alexa.operator.v1
+
+version: "mcp-v1"
+
+# ============================================
+# MCP SERVER DEFINITIONS
+# ============================================
+
+servers:
+  # BlackRoad Governance MCP Server
+  blackroad-governance:
+    name: "BlackRoad Governance"
+    description: "Policy evaluation, ledger access, and governance operations"
+    transport: stdio
+    command: "python"
+    args:
+      - "-m"
+      - "br_operator.mcp.governance_server"
+
+    tools:
+      # Policy evaluation
+      - name: evaluate_policy
+        description: "Evaluate a policy decision for a given subject, resource, and action"
+        input_schema:
+          type: object
+          properties:
+            subject:
+              type: object
+              description: "The entity making the request"
+              properties:
+                user_id:
+                  type: string
+                agent_id:
+                  type: string
+                organization_id:
+                  type: string
+                role:
+                  type: string
+            resource:
+              type: string
+              description: "The resource being accessed (e.g., agents.invoke, mesh.route)"
+            action:
+              type: string
+              description: "The action being performed (e.g., read, write, execute)"
+            context:
+              type: object
+              description: "Additional context for policy evaluation"
+          required: [subject, resource, action]
+
+      # Ledger query
+      - name: query_ledger
+        description: "Query governance ledger events"
+        input_schema:
+          type: object
+          properties:
+            correlation_id:
+              type: string
+            actor_id:
+              type: string
+            action:
+              type: string
+            start_time:
+              type: string
+              format: date-time
+            end_time:
+              type: string
+              format: date-time
+            limit:
+              type: integer
+              default: 100
+
+      # Create delegation
+      - name: create_delegation
+        description: "Create a delegation from one agent to another"
+        input_schema:
+          type: object
+          properties:
+            from_agent:
+              type: string
+            to_agent:
+              type: string
+            permissions:
+              type: array
+              items:
+                type: string
+            constraints:
+              type: object
+            expires_at:
+              type: string
+              format: date-time
+          required: [from_agent, to_agent, permissions]
+
+      # Intent management
+      - name: create_intent
+        description: "Create a new intent chain"
+        input_schema:
+          type: object
+          properties:
+            template_name:
+              type: string
+            parameters:
+              type: object
+            initiator:
+              type: string
+          required: [template_name, parameters, initiator]
+
+      - name: get_intent_status
+        description: "Get the status of an intent chain"
+        input_schema:
+          type: object
+          properties:
+            intent_id:
+              type: string
+          required: [intent_id]
+
+    resources:
+      - uri: "governance://policies"
+        name: "Policy Pack List"
+        description: "List all available policy packs"
+        mime_type: "application/json"
+
+      - uri: "governance://ledger/recent"
+        name: "Recent Ledger Events"
+        description: "Most recent governance events"
+        mime_type: "application/json"
+
+  # BlackRoad Memory MCP Server
+  blackroad-memory:
+    name: "BlackRoad Memory"
+    description: "Agent memory storage and retrieval via Pinecone"
+    transport: stdio
+    command: "python"
+    args:
+      - "-m"
+      - "br_operator.mcp.memory_server"
+
+    tools:
+      - name: store_memory
+        description: "Store a new memory for an agent"
+        input_schema:
+          type: object
+          properties:
+            agent_id:
+              type: string
+            content:
+              type: string
+            memory_type:
+              type: string
+              enum: [core, working, long_term, episodic, semantic]
+            importance:
+              type: number
+              minimum: 0
+              maximum: 1
+            metadata:
+              type: object
+          required: [agent_id, content, memory_type]
+
+      - name: recall_memories
+        description: "Retrieve relevant memories for an agent"
+        input_schema:
+          type: object
+          properties:
+            agent_id:
+              type: string
+            query:
+              type: string
+            memory_types:
+              type: array
+              items:
+                type: string
+            top_k:
+              type: integer
+              default: 10
+            min_score:
+              type: number
+              default: 0.7
+          required: [agent_id, query]
+
+      - name: forget_memory
+        description: "Remove a specific memory"
+        input_schema:
+          type: object
+          properties:
+            memory_id:
+              type: string
+          required: [memory_id]
+
+  # BlackRoad Infrastructure MCP Server
+  blackroad-infra:
+    name: "BlackRoad Infrastructure"
+    description: "Infrastructure management and service mesh operations"
+    transport: stdio
+    command: "python"
+    args:
+      - "-m"
+      - "br_operator.mcp.infra_server"
+
+    tools:
+      - name: list_services
+        description: "List all registered services"
+        input_schema:
+          type: object
+          properties:
+            layer:
+              type: string
+              enum: [experience, gateway, governance, mesh, infra]
+            status:
+              type: string
+              enum: [healthy, degraded, unhealthy]
+
+      - name: get_service_health
+        description: "Get health status of a service"
+        input_schema:
+          type: object
+          properties:
+            service_name:
+              type: string
+          required: [service_name]
+
+      - name: scale_service
+        description: "Scale a service up or down"
+        input_schema:
+          type: object
+          properties:
+            service_name:
+              type: string
+            replicas:
+              type: integer
+              minimum: 0
+              maximum: 10
+          required: [service_name, replicas]
+
+      - name: deploy_service
+        description: "Deploy a new version of a service"
+        input_schema:
+          type: object
+          properties:
+            service_name:
+              type: string
+            version:
+              type: string
+            environment:
+              type: string
+          required: [service_name, version, environment]
+
+    resources:
+      - uri: "infra://services"
+        name: "Service Registry"
+        description: "All registered services"
+        mime_type: "application/json"
+
+      - uri: "infra://health"
+        name: "System Health"
+        description: "Overall system health status"
+        mime_type: "application/json"
+
+  # Database MCP Server
+  blackroad-database:
+    name: "BlackRoad Database"
+    description: "Database query and management operations"
+    transport: stdio
+    command: "python"
+    args:
+      - "-m"
+      - "br_operator.mcp.database_server"
+
+    tools:
+      - name: query
+        description: "Execute a read-only SQL query"
+        input_schema:
+          type: object
+          properties:
+            sql:
+              type: string
+              description: "SQL query (SELECT only)"
+            parameters:
+              type: object
+              description: "Query parameters"
+          required: [sql]
+
+      - name: get_table_schema
+        description: "Get schema for a table"
+        input_schema:
+          type: object
+          properties:
+            table_name:
+              type: string
+          required: [table_name]
+
+    resources:
+      - uri: "database://schema"
+        name: "Database Schema"
+        description: "Full database schema"
+        mime_type: "application/json"
+
+  # External: Filesystem
+  filesystem:
+    name: "Filesystem"
+    description: "Local filesystem access for config and data"
+    transport: stdio
+    command: "npx"
+    args:
+      - "-y"
+      - "@modelcontextprotocol/server-filesystem"
+      - "/etc/blackroad"
+      - "/var/lib/blackroad"
+      - "/home/blackroad/workspace"
+
+  # External: GitHub
+  github:
+    name: "GitHub"
+    description: "GitHub repository access"
+    transport: stdio
+    command: "npx"
+    args:
+      - "-y"
+      - "@modelcontextprotocol/server-github"
+    env:
+      GITHUB_PERSONAL_ACCESS_TOKEN: "${GITHUB_TOKEN}"
+
+  # External: Slack
+  slack:
+    name: "Slack"
+    description: "Slack messaging"
+    transport: stdio
+    command: "npx"
+    args:
+      - "-y"
+      - "@modelcontextprotocol/server-slack"
+    env:
+      SLACK_BOT_TOKEN: "${SLACK_BOT_TOKEN}"
+      SLACK_TEAM_ID: "${SLACK_TEAM_ID}"
+
+# ============================================
+# CLIENT CONFIGURATIONS
+# ============================================
+
+clients:
+  # Claude Code configuration
+  claude-code:
+    servers:
+      - blackroad-governance
+      - blackroad-memory
+      - blackroad-infra
+      - filesystem
+      - github
+
+  # Agent runtime configuration
+  agent-runtime:
+    servers:
+      - blackroad-governance
+      - blackroad-memory
+      - blackroad-database
+
+  # Operator console
+  operator-console:
+    servers:
+      - blackroad-governance
+      - blackroad-infra
+      - blackroad-database
+      - github
+      - slack
+
+# ============================================
+# PROMPTS
+# ============================================
+
+prompts:
+  # Governance prompts
+  policy-review:
+    name: "Policy Review"
+    description: "Review and analyze policy configurations"
+    arguments:
+      - name: policy_pack
+        description: "The policy pack to review"
+        required: true
+
+  # Infrastructure prompts
+  deployment-plan:
+    name: "Deployment Plan"
+    description: "Create a deployment plan for a service"
+    arguments:
+      - name: service
+        description: "Service to deploy"
+        required: true
+      - name: environment
+        description: "Target environment"
+        required: true
+
+  # Memory prompts
+  memory-summary:
+    name: "Memory Summary"
+    description: "Summarize an agent's memories"
+    arguments:
+      - name: agent_id
+        description: "Agent to summarize"
+        required: true
+
+# ============================================
+# SECURITY
+# ============================================
+
+security:
+  # Tool authorization
+  authorization:
+    # Require governance approval for certain tools
+    require_approval:
+      - scale_service
+      - deploy_service
+      - create_delegation
+
+    # Restricted tools (operator only)
+    operator_only:
+      - query  # Database queries
+
+  # Rate limiting
+  rate_limits:
+    default:
+      requests_per_minute: 60
+    tools:
+      evaluate_policy:
+        requests_per_minute: 200
+      store_memory:
+        requests_per_minute: 100
+
+  # Audit logging
+  audit:
+    enabled: true
+    log_requests: true
+    log_responses: false  # Don't log potentially sensitive responses

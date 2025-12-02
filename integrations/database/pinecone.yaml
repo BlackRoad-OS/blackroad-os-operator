@@ -1,0 +1,285 @@
+# Pinecone Configuration
+# BlackRoad OS Vector Database
+#
+# Memory and knowledge storage for agents
+#
+# @blackroad_name: BlackRoad Memory Layer
+# @tier: Standard
+# @operator: alexa.operator.v1
+
+version: "pinecone-v1"
+
+# ============================================
+# CONNECTION
+# ============================================
+
+connection:
+  api_key: "${PINECONE_API_KEY}"
+  environment: us-west1-gcp
+  project_id: "${PINECONE_PROJECT_ID}"
+
+# ============================================
+# INDEXES
+# ============================================
+
+indexes:
+  # Primary agent memory index
+  lucidia-memories:
+    name: lucidia-memories
+    dimension: 1536  # OpenAI text-embedding-3-small
+    metric: cosine
+    pods: 1
+    replicas: 2
+    pod_type: p1.x1
+
+    metadata_config:
+      indexed:
+        - agent_id
+        - user_id
+        - organization_id
+        - memory_type
+        - created_at
+        - importance
+        - tags
+
+    namespaces:
+      # Long-term memories
+      - name: long_term
+        description: "Persistent agent memories"
+
+      # Episodic memories (conversations)
+      - name: episodic
+        description: "Conversation and interaction memories"
+
+      # Semantic knowledge
+      - name: semantic
+        description: "Learned facts and knowledge"
+
+      # Procedural memories
+      - name: procedural
+        description: "Learned behaviors and skills"
+
+  # Document embeddings
+  blackroad-docs:
+    name: blackroad-docs
+    dimension: 1536
+    metric: cosine
+    pods: 1
+    replicas: 1
+    pod_type: p1.x1
+
+    metadata_config:
+      indexed:
+        - doc_type
+        - source
+        - organization_id
+        - created_at
+        - updated_at
+        - chunk_index
+
+    namespaces:
+      - name: policies
+        description: "Policy documents"
+      - name: runbooks
+        description: "Operational runbooks"
+      - name: documentation
+        description: "Technical documentation"
+      - name: knowledge_base
+        description: "Support knowledge base"
+
+  # Agent capabilities and skills
+  agent-capabilities:
+    name: agent-capabilities
+    dimension: 1536
+    metric: cosine
+    pods: 1
+    replicas: 1
+    pod_type: s1.x1  # Starter for lower volume
+
+    metadata_config:
+      indexed:
+        - agent_id
+        - capability_type
+        - skill_level
+        - last_used
+
+  # User preferences and context
+  user-context:
+    name: user-context
+    dimension: 1536
+    metric: cosine
+    pods: 1
+    replicas: 1
+    pod_type: s1.x1
+
+    metadata_config:
+      indexed:
+        - user_id
+        - context_type
+        - organization_id
+
+# ============================================
+# EMBEDDING MODELS
+# ============================================
+
+embedding_models:
+  # Primary: OpenAI
+  openai:
+    model: text-embedding-3-small
+    dimension: 1536
+    batch_size: 100
+    rate_limit: 3000  # RPM
+
+  # Secondary: OpenAI large (for critical memories)
+  openai_large:
+    model: text-embedding-3-large
+    dimension: 3072
+    batch_size: 50
+    rate_limit: 1000
+
+  # Fallback: HuggingFace local
+  huggingface:
+    model: sentence-transformers/all-MiniLM-L6-v2
+    dimension: 384
+    local: true
+
+# ============================================
+# MEMORY TYPES
+# ============================================
+
+memory_types:
+  # Core memory (always retrieved)
+  core:
+    importance: 1.0
+    decay_rate: 0
+    max_items: 100
+    description: "Essential agent identity and core knowledge"
+
+  # Working memory (recent context)
+  working:
+    importance: 0.8
+    decay_rate: 0.1  # Per hour
+    max_items: 50
+    ttl: 86400  # 24 hours
+    description: "Recent interactions and context"
+
+  # Long-term memory (important events)
+  long_term:
+    importance: 0.6
+    decay_rate: 0.01  # Per day
+    max_items: 10000
+    description: "Significant memories"
+
+  # Episodic (conversation logs)
+  episodic:
+    importance: 0.4
+    decay_rate: 0.05  # Per day
+    max_items: 1000
+    description: "Conversation history"
+
+  # Semantic (learned facts)
+  semantic:
+    importance: 0.5
+    decay_rate: 0.02
+    max_items: 5000
+    description: "Facts and knowledge"
+
+# ============================================
+# RETRIEVAL STRATEGIES
+# ============================================
+
+retrieval:
+  # Default retrieval
+  default:
+    top_k: 10
+    include_metadata: true
+    include_values: false
+
+  # Memory retrieval for agents
+  agent_memory:
+    top_k: 20
+    score_threshold: 0.7
+    filters:
+      - agent_id
+      - memory_type
+    rerank: true
+    rerank_model: cohere-rerank
+
+  # Document retrieval
+  document_search:
+    top_k: 5
+    score_threshold: 0.75
+    filters:
+      - doc_type
+      - organization_id
+    chunk_overlap: true
+
+  # Hybrid search (dense + sparse)
+  hybrid:
+    top_k: 15
+    dense_weight: 0.7
+    sparse_weight: 0.3
+    alpha: 0.5
+
+# ============================================
+# MEMORY OPERATIONS
+# ============================================
+
+operations:
+  # Upsert batch settings
+  upsert:
+    batch_size: 100
+    parallel_requests: 5
+    retry_count: 3
+
+  # Query settings
+  query:
+    timeout_ms: 5000
+    parallel_queries: 10
+
+  # Delete settings
+  delete:
+    batch_size: 1000
+
+  # Index maintenance
+  maintenance:
+    compaction_schedule: "0 3 * * 0"  # Weekly at 3 AM Sunday
+    stats_refresh: 3600  # Hourly
+
+# ============================================
+# MEMORY CONSOLIDATION
+# ============================================
+
+consolidation:
+  # Compress similar memories
+  deduplication:
+    enabled: true
+    similarity_threshold: 0.95
+
+  # Memory importance decay
+  decay:
+    enabled: true
+    schedule: "0 * * * *"  # Hourly
+
+  # Archival to cold storage
+  archival:
+    enabled: true
+    threshold_days: 90
+    target: "r2://blackroad-memory-archive"
+
+# ============================================
+# MONITORING
+# ============================================
+
+monitoring:
+  metrics:
+    - name: query_latency_p99
+      alert_threshold_ms: 500
+    - name: index_fullness
+      alert_threshold: 0.9
+    - name: query_count
+      rate_limit: 100  # Per second
+
+  logging:
+    slow_queries: true
+    slow_query_threshold_ms: 200

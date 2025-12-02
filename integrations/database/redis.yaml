@@ -1,0 +1,349 @@
+# Redis Configuration
+# BlackRoad OS Cache & Queue Layer
+#
+# Supports Upstash, Railway Redis, and local Redis
+#
+# @blackroad_name: BlackRoad Cache
+# @tier: Production
+# @operator: alexa.operator.v1
+
+version: "redis-v1"
+
+# ============================================
+# PROVIDER CONFIGURATIONS
+# ============================================
+
+providers:
+  # Primary: Upstash (Serverless)
+  upstash:
+    database_id: "${UPSTASH_REDIS_ID}"
+    region: us-west-1
+    plan: pay_as_you_go
+
+    connection:
+      rest_url: "${UPSTASH_REDIS_REST_URL}"
+      rest_token: "${UPSTASH_REDIS_REST_TOKEN}"
+      redis_url: "${UPSTASH_REDIS_URL}"
+
+    settings:
+      eviction_policy: allkeys-lru
+      max_memory: 256mb
+      tls: true
+
+  # Secondary: Railway
+  railway:
+    plugin: redis
+    version: "7"
+    region: us-west1
+
+    settings:
+      maxmemory_policy: allkeys-lru
+      maxmemory: 512mb
+
+  # Local Development
+  local:
+    host: localhost
+    port: 6379
+    password: "${REDIS_LOCAL_PASSWORD}"
+
+# ============================================
+# KEY NAMESPACES
+# ============================================
+
+namespaces:
+  # Session storage
+  session:
+    prefix: "sess:"
+    ttl: 86400  # 24 hours
+    description: "User sessions"
+
+  # API rate limiting
+  ratelimit:
+    prefix: "rl:"
+    ttl: 60
+    description: "Rate limit counters"
+
+  # Cache
+  cache:
+    prefix: "cache:"
+    ttl: 3600  # 1 hour
+    description: "General cache"
+
+  # Policy cache
+  policy:
+    prefix: "policy:"
+    ttl: 300  # 5 minutes
+    description: "Policy evaluation cache"
+
+  # Agent state
+  agent:
+    prefix: "agent:"
+    ttl: null  # No expiry
+    description: "Agent runtime state"
+
+  # Intent tracking
+  intent:
+    prefix: "intent:"
+    ttl: 86400  # 24 hours
+    description: "Active intent state"
+
+  # Pub/Sub channels
+  pubsub:
+    prefix: "ps:"
+    description: "Real-time messaging channels"
+
+  # Distributed locks
+  lock:
+    prefix: "lock:"
+    ttl: 30
+    description: "Distributed locks"
+
+  # Queue
+  queue:
+    prefix: "q:"
+    description: "Task queues"
+
+# ============================================
+# CACHE PATTERNS
+# ============================================
+
+cache_patterns:
+  # User data
+  user:
+    key: "cache:user:{user_id}"
+    ttl: 3600
+    invalidate_on:
+      - user.updated
+      - user.deleted
+
+  # Organization
+  organization:
+    key: "cache:org:{org_id}"
+    ttl: 3600
+    invalidate_on:
+      - organization.updated
+
+  # Agent config
+  agent_config:
+    key: "cache:agent:{agent_id}:config"
+    ttl: 300
+    invalidate_on:
+      - agent.config.updated
+
+  # Policy pack
+  policy_pack:
+    key: "policy:pack:{pack_name}:{version}"
+    ttl: 300
+    invalidate_on:
+      - policy.pack.updated
+
+  # API response
+  api_response:
+    key: "cache:api:{endpoint}:{hash}"
+    ttl: 60
+    vary_by:
+      - user_id
+      - organization_id
+
+# ============================================
+# RATE LIMITING
+# ============================================
+
+rate_limits:
+  # Global API limits
+  api_global:
+    key: "rl:api:{client_ip}"
+    limit: 1000
+    window: 60
+
+  # Per-user API limits
+  api_user:
+    key: "rl:api:user:{user_id}"
+    limit: 500
+    window: 60
+
+  # Per-organization limits
+  api_org:
+    key: "rl:api:org:{org_id}"
+    limit: 5000
+    window: 60
+
+  # Agent invocations
+  agent_invoke:
+    key: "rl:agent:{agent_id}:invoke"
+    limit: 100
+    window: 60
+
+  # LLM calls
+  llm_calls:
+    key: "rl:llm:{org_id}"
+    limit: 1000
+    window: 3600
+
+  # Intent creation
+  intent_create:
+    key: "rl:intent:{user_id}:create"
+    limit: 50
+    window: 3600
+
+# ============================================
+# QUEUES
+# ============================================
+
+queues:
+  # High priority tasks
+  high:
+    name: "q:high"
+    workers: 10
+    retry_limit: 3
+    retry_delay: 1000
+    timeout: 30000
+
+  # Default tasks
+  default:
+    name: "q:default"
+    workers: 5
+    retry_limit: 3
+    retry_delay: 5000
+    timeout: 60000
+
+  # Low priority / batch tasks
+  low:
+    name: "q:low"
+    workers: 2
+    retry_limit: 5
+    retry_delay: 10000
+    timeout: 300000
+
+  # Intent processing
+  intents:
+    name: "q:intents"
+    workers: 5
+    retry_limit: 3
+    retry_delay: 5000
+    timeout: 120000
+
+  # Notifications
+  notifications:
+    name: "q:notifications"
+    workers: 3
+    retry_limit: 5
+    retry_delay: 2000
+    timeout: 10000
+
+  # Analytics
+  analytics:
+    name: "q:analytics"
+    workers: 2
+    retry_limit: 10
+    retry_delay: 30000
+    timeout: 60000
+
+# ============================================
+# PUB/SUB CHANNELS
+# ============================================
+
+pubsub:
+  channels:
+    # Governance events
+    - name: "ps:governance"
+      description: "Policy evaluation and ledger events"
+
+    # Agent lifecycle
+    - name: "ps:agents"
+      description: "Agent status changes"
+
+    # Intent updates
+    - name: "ps:intents"
+      description: "Intent state transitions"
+
+    # System health
+    - name: "ps:health"
+      description: "Health check broadcasts"
+
+    # User notifications
+    - name: "ps:user:{user_id}"
+      description: "Per-user notifications"
+
+    # Organization events
+    - name: "ps:org:{org_id}"
+      description: "Organization-wide events"
+
+# ============================================
+# DISTRIBUTED LOCKS
+# ============================================
+
+locks:
+  # Intent execution lock
+  intent_execute:
+    key: "lock:intent:{intent_id}"
+    ttl: 300
+    retry_count: 3
+    retry_delay: 1000
+
+  # Policy update lock
+  policy_update:
+    key: "lock:policy:{policy_id}"
+    ttl: 30
+    retry_count: 5
+    retry_delay: 500
+
+  # Ledger write lock (per correlation)
+  ledger_write:
+    key: "lock:ledger:{correlation_id}"
+    ttl: 10
+    retry_count: 10
+    retry_delay: 100
+
+  # Agent singleton lock
+  agent_singleton:
+    key: "lock:agent:{agent_id}:singleton"
+    ttl: 60
+    retry_count: 0
+
+# ============================================
+# STREAMS (Event Sourcing)
+# ============================================
+
+streams:
+  # Governance event stream
+  governance_events:
+    name: "stream:governance"
+    max_length: 100000
+    consumer_groups:
+      - name: "ledger-writers"
+        consumers: 3
+      - name: "analytics"
+        consumers: 1
+
+  # Intent event stream
+  intent_events:
+    name: "stream:intents"
+    max_length: 50000
+    consumer_groups:
+      - name: "intent-processors"
+        consumers: 5
+      - name: "notifications"
+        consumers: 2
+
+# ============================================
+# MONITORING
+# ============================================
+
+monitoring:
+  # Key metrics to track
+  metrics:
+    - name: used_memory
+      alert_threshold: 80%
+    - name: connected_clients
+      alert_threshold: 1000
+    - name: evicted_keys
+      alert_threshold: 1000
+    - name: keyspace_hits_ratio
+      alert_threshold: 0.9  # Below this is bad
+
+  # Slow log
+  slowlog:
+    enabled: true
+    threshold_ms: 10
+    max_entries: 128

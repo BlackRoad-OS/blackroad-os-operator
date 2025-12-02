@@ -1,0 +1,372 @@
+# Discord Configuration
+# BlackRoad OS Community Platform
+#
+# Community engagement, support, and bot integrations
+#
+# @blackroad_name: BlackRoad Discord
+# @tier: Server Boost Level 2
+# @operator: alexa.operator.v1
+
+version: "discord-v1"
+
+# ============================================
+# BOT CONFIGURATION
+# ============================================
+
+bot:
+  token: "${DISCORD_BOT_TOKEN}"
+  client_id: "${DISCORD_CLIENT_ID}"
+  client_secret: "${DISCORD_CLIENT_SECRET}"
+  public_key: "${DISCORD_PUBLIC_KEY}"
+
+  application:
+    name: "BlackRoad Bot"
+    description: "Official BlackRoad OS assistant"
+
+  intents:
+    - guilds
+    - guild_members
+    - guild_messages
+    - message_content
+    - direct_messages
+
+# ============================================
+# SERVERS (GUILDS)
+# ============================================
+
+servers:
+  blackroad-community:
+    id: "${DISCORD_GUILD_ID}"
+    name: "BlackRoad Community"
+
+    # Channels
+    channels:
+      # Welcome
+      welcome:
+        id: "${DISCORD_CHANNEL_WELCOME}"
+        type: text
+        purpose: "Welcome new members"
+
+      rules:
+        id: "${DISCORD_CHANNEL_RULES}"
+        type: text
+        purpose: "Community rules"
+
+      # General
+      general:
+        id: "${DISCORD_CHANNEL_GENERAL}"
+        type: text
+        purpose: "General discussion"
+
+      introductions:
+        id: "${DISCORD_CHANNEL_INTROS}"
+        type: text
+        purpose: "Member introductions"
+
+      # Support
+      support:
+        id: "${DISCORD_CHANNEL_SUPPORT}"
+        type: text
+        purpose: "Community support"
+
+      bug-reports:
+        id: "${DISCORD_CHANNEL_BUGS}"
+        type: text
+        purpose: "Bug reports"
+
+      feature-requests:
+        id: "${DISCORD_CHANNEL_FEATURES}"
+        type: text
+        purpose: "Feature requests"
+
+      # Development
+      dev-general:
+        id: "${DISCORD_CHANNEL_DEV}"
+        type: text
+        purpose: "Developer discussion"
+
+      api-help:
+        id: "${DISCORD_CHANNEL_API}"
+        type: text
+        purpose: "API help"
+
+      showcase:
+        id: "${DISCORD_CHANNEL_SHOWCASE}"
+        type: text
+        purpose: "Project showcase"
+
+      # Lucidia
+      lucidia-general:
+        id: "${DISCORD_CHANNEL_LUCIDIA}"
+        type: text
+        purpose: "Lucidia discussion"
+
+      agent-showcase:
+        id: "${DISCORD_CHANNEL_AGENTS}"
+        type: text
+        purpose: "Agent showcase"
+
+      # Voice
+      voice-general:
+        id: "${DISCORD_CHANNEL_VOICE}"
+        type: voice
+        purpose: "Voice chat"
+
+      # Announcements
+      announcements:
+        id: "${DISCORD_CHANNEL_ANNOUNCEMENTS}"
+        type: announcement
+        purpose: "Official announcements"
+
+      changelog:
+        id: "${DISCORD_CHANNEL_CHANGELOG}"
+        type: text
+        purpose: "Product updates"
+
+    # Roles
+    roles:
+      admin:
+        id: "${DISCORD_ROLE_ADMIN}"
+        permissions: administrator
+
+      moderator:
+        id: "${DISCORD_ROLE_MOD}"
+        permissions:
+          - manage_messages
+          - kick_members
+          - ban_members
+          - mute_members
+
+      team:
+        id: "${DISCORD_ROLE_TEAM}"
+        color: "#FF6B00"
+
+      developer:
+        id: "${DISCORD_ROLE_DEV}"
+        color: "#0066FF"
+
+      contributor:
+        id: "${DISCORD_ROLE_CONTRIBUTOR}"
+        color: "#7700FF"
+
+      member:
+        id: "${DISCORD_ROLE_MEMBER}"
+
+      verified:
+        id: "${DISCORD_ROLE_VERIFIED}"
+
+# ============================================
+# SLASH COMMANDS
+# ============================================
+
+commands:
+  - name: blackroad
+    description: "BlackRoad OS commands"
+    options:
+      - name: status
+        type: subcommand
+        description: "Check system status"
+
+      - name: docs
+        type: subcommand
+        description: "Search documentation"
+        options:
+          - name: query
+            type: string
+            description: "Search query"
+            required: true
+
+      - name: agent
+        type: subcommand
+        description: "Agent information"
+        options:
+          - name: name
+            type: string
+            description: "Agent name"
+            required: true
+
+  - name: lucidia
+    description: "Chat with Lucidia"
+    options:
+      - name: message
+        type: string
+        description: "Your message"
+        required: true
+
+  - name: ticket
+    description: "Create a support ticket"
+    options:
+      - name: title
+        type: string
+        description: "Ticket title"
+        required: true
+      - name: description
+        type: string
+        description: "Issue description"
+        required: true
+      - name: priority
+        type: string
+        description: "Priority level"
+        choices:
+          - name: Low
+            value: low
+          - name: Medium
+            value: medium
+          - name: High
+            value: high
+
+# ============================================
+# AUTOMATIONS
+# ============================================
+
+automations:
+  # Welcome message
+  welcome:
+    trigger: member_join
+    actions:
+      - type: send_dm
+        message: |
+          Welcome to the BlackRoad Community! 🎉
+
+          Here are some quick links to get started:
+          📚 Documentation: https://docs.blackroad.io
+          🚀 Quick Start: https://blackroad.io/quickstart
+          💬 Support: #support
+
+          Don't forget to introduce yourself in #introductions!
+
+      - type: add_role
+        role: member
+
+  # Verification
+  verification:
+    trigger: reaction_add
+    channel: rules
+    emoji: "✅"
+    actions:
+      - type: add_role
+        role: verified
+
+  # Auto-thread for support
+  support_threads:
+    trigger: message
+    channel: support
+    conditions:
+      - message_length: "> 50"
+    actions:
+      - type: create_thread
+        name: "Support: {{message.preview}}"
+
+# ============================================
+# WEBHOOKS
+# ============================================
+
+webhooks:
+  # GitHub integration
+  github:
+    url: "${DISCORD_WEBHOOK_GITHUB}"
+    channel: dev-general
+    events:
+      - push
+      - pull_request
+      - issues
+      - releases
+
+  # Deployment notifications
+  deploys:
+    url: "${DISCORD_WEBHOOK_DEPLOYS}"
+    channel: changelog
+
+  # Status updates
+  status:
+    url: "${DISCORD_WEBHOOK_STATUS}"
+    channel: announcements
+
+# ============================================
+# EMBEDS
+# ============================================
+
+embed_templates:
+  # Status embed
+  status:
+    title: "BlackRoad OS Status"
+    color: "#00FF00"  # Green for healthy
+    fields:
+      - name: "API"
+        value: "{{status.api}}"
+        inline: true
+      - name: "Web"
+        value: "{{status.web}}"
+        inline: true
+      - name: "Database"
+        value: "{{status.database}}"
+        inline: true
+    footer:
+      text: "Last updated"
+    timestamp: true
+
+  # Agent showcase
+  agent:
+    title: "{{agent.name}}"
+    description: "{{agent.description}}"
+    color: "#FF6B00"
+    thumbnail:
+      url: "{{agent.avatar_url}}"
+    fields:
+      - name: "Created by"
+        value: "{{agent.creator}}"
+        inline: true
+      - name: "Interactions"
+        value: "{{agent.interactions}}"
+        inline: true
+
+# ============================================
+# MODERATION
+# ============================================
+
+moderation:
+  # Auto-mod rules
+  auto_mod:
+    spam_filter:
+      enabled: true
+      max_mentions: 5
+      max_links: 3
+      duplicate_threshold: 3
+
+    word_filter:
+      enabled: true
+      action: delete
+      notify_mods: true
+
+    raid_protection:
+      enabled: true
+      join_threshold: 10
+      time_window: 60
+
+  # Logging
+  logging:
+    channel: "${DISCORD_CHANNEL_MOD_LOG}"
+    events:
+      - message_delete
+      - message_edit
+      - member_ban
+      - member_kick
+      - role_change
+
+# ============================================
+# INTEGRATIONS
+# ============================================
+
+integrations:
+  # Link Discord to BlackRoad account
+  account_linking:
+    enabled: true
+    oauth_url: "https://blackroad.io/connect/discord"
+    sync_roles: true
+
+  # Verify email domain
+  domain_verification:
+    enabled: true
+    domains:
+      - blackroad.io
+    role: team

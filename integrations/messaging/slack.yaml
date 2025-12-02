@@ -1,0 +1,396 @@
+# Slack Configuration
+# BlackRoad OS Team Communication
+#
+# Notifications, alerts, and bot integrations
+#
+# @blackroad_name: BlackRoad Slack
+# @tier: Pro
+# @operator: alexa.operator.v1
+
+version: "slack-v1"
+
+# ============================================
+# CONNECTION
+# ============================================
+
+connection:
+  bot_token: "${SLACK_BOT_TOKEN}"
+  app_token: "${SLACK_APP_TOKEN}"
+  signing_secret: "${SLACK_SIGNING_SECRET}"
+  team_id: "${SLACK_TEAM_ID}"
+
+# ============================================
+# CHANNELS
+# ============================================
+
+channels:
+  # Engineering channels
+  engineering:
+    - id: "${SLACK_CHANNEL_ENGINEERING}"
+      name: "#engineering"
+      purpose: "General engineering discussion"
+
+    - id: "${SLACK_CHANNEL_DEPLOYS}"
+      name: "#deploys"
+      purpose: "Deployment notifications"
+
+    - id: "${SLACK_CHANNEL_INCIDENTS}"
+      name: "#incidents"
+      purpose: "Incident management"
+
+  # Alerts channels
+  alerts:
+    - id: "${SLACK_CHANNEL_ALERTS}"
+      name: "#alerts"
+      purpose: "System alerts"
+      integrations:
+        - datadog
+        - sentry
+        - pagerduty
+
+    - id: "${SLACK_CHANNEL_ALERTS_CRITICAL}"
+      name: "#alerts-critical"
+      purpose: "Critical alerts only"
+
+  # Governance channels
+  governance:
+    - id: "${SLACK_CHANNEL_GOVERNANCE}"
+      name: "#governance"
+      purpose: "Governance events and decisions"
+
+    - id: "${SLACK_CHANNEL_POLICY_CHANGES}"
+      name: "#policy-changes"
+      purpose: "Policy update notifications"
+
+  # Business channels
+  business:
+    - id: "${SLACK_CHANNEL_BILLING}"
+      name: "#billing"
+      purpose: "Billing and subscription events"
+
+    - id: "${SLACK_CHANNEL_SUPPORT}"
+      name: "#support"
+      purpose: "Customer support"
+
+# ============================================
+# BOT CONFIGURATION
+# ============================================
+
+bot:
+  name: "BlackRoad Bot"
+  display_name: "BlackRoad"
+  icon_url: "https://blackroad.io/bot-icon.png"
+
+  # Home tab
+  home_tab:
+    enabled: true
+    content:
+      - type: header
+        text: "BlackRoad OS Status"
+      - type: section
+        text: "System health and quick actions"
+      - type: actions
+        elements:
+          - type: button
+            text: "View Status"
+            action_id: "view_status"
+          - type: button
+            text: "Recent Alerts"
+            action_id: "recent_alerts"
+
+  # App mentions
+  app_mentions:
+    enabled: true
+    default_response: |
+      Hi! I'm the BlackRoad Bot. Here's what I can help with:
+      • `/blackroad status` - System status
+      • `/blackroad deploy` - Deployment info
+      • `/blackroad governance` - Governance dashboard
+      • `/blackroad help` - Full command list
+
+# ============================================
+# SLASH COMMANDS
+# ============================================
+
+slash_commands:
+  - command: /blackroad
+    description: "BlackRoad OS commands"
+    usage_hint: "[status|deploy|governance|agent|help]"
+
+    subcommands:
+      status:
+        description: "Show system status"
+        response_type: in_channel
+
+      deploy:
+        description: "Show recent deployments"
+        response_type: ephemeral
+
+      governance:
+        description: "Show governance dashboard"
+        response_type: ephemeral
+
+      agent:
+        description: "Agent operations"
+        usage_hint: "[list|status <id>|invoke <id>]"
+        response_type: ephemeral
+
+      incident:
+        description: "Incident management"
+        usage_hint: "[create|list|resolve <id>]"
+        response_type: in_channel
+
+      help:
+        description: "Show help"
+        response_type: ephemeral
+
+# ============================================
+# WORKFLOWS
+# ============================================
+
+workflows:
+  # Incident management workflow
+  incident-management:
+    name: "Incident Management"
+    trigger:
+      type: shortcut
+      callback_id: "create_incident"
+
+    steps:
+      - type: form
+        fields:
+          - name: severity
+            type: static_select
+            label: "Severity"
+            options:
+              - text: "SEV1 - Critical"
+                value: sev1
+              - text: "SEV2 - Major"
+                value: sev2
+              - text: "SEV3 - Minor"
+                value: sev3
+
+          - name: title
+            type: plain_text_input
+            label: "Incident Title"
+
+          - name: description
+            type: plain_text_input
+            label: "Description"
+            multiline: true
+
+      - type: action
+        action: create_incident_channel
+        inputs:
+          severity: "{{steps.form.severity}}"
+          title: "{{steps.form.title}}"
+
+      - type: message
+        channel: "#incidents"
+        text: |
+          :rotating_light: *New Incident: {{steps.form.title}}*
+          Severity: {{steps.form.severity}}
+          Channel: #{{steps.action.channel_name}}
+
+  # Deployment approval workflow
+  deployment-approval:
+    name: "Deployment Approval"
+    trigger:
+      type: webhook
+      callback_id: "deployment_approval"
+
+    steps:
+      - type: message
+        channel: "#deploys"
+        blocks:
+          - type: section
+            text: |
+              :rocket: *Deployment Request*
+              Service: {{trigger.service}}
+              Version: {{trigger.version}}
+              Environment: {{trigger.environment}}
+              Requested by: <@{{trigger.user_id}}>
+
+          - type: actions
+            elements:
+              - type: button
+                text: "Approve"
+                style: primary
+                action_id: "approve_deploy"
+              - type: button
+                text: "Reject"
+                style: danger
+                action_id: "reject_deploy"
+
+# ============================================
+# NOTIFICATIONS
+# ============================================
+
+notifications:
+  # Alert notifications
+  alerts:
+    critical:
+      channel: "#alerts-critical"
+      mention: "@channel"
+      template: |
+        :red_circle: *CRITICAL ALERT*
+        *{{alert.title}}*
+        {{alert.message}}
+        Time: {{alert.timestamp}}
+        Source: {{alert.source}}
+
+    warning:
+      channel: "#alerts"
+      template: |
+        :warning: *Warning*
+        {{alert.title}}
+        {{alert.message}}
+
+    info:
+      channel: "#alerts"
+      template: |
+        :information_source: {{alert.title}}
+        {{alert.message}}
+
+  # Deployment notifications
+  deployments:
+    started:
+      channel: "#deploys"
+      template: |
+        :rocket: *Deployment Started*
+        Service: `{{deploy.service}}`
+        Version: `{{deploy.version}}`
+        Environment: `{{deploy.environment}}`
+        By: <@{{deploy.user_id}}>
+
+    completed:
+      channel: "#deploys"
+      template: |
+        :white_check_mark: *Deployment Completed*
+        Service: `{{deploy.service}}`
+        Version: `{{deploy.version}}`
+        Duration: {{deploy.duration}}
+
+    failed:
+      channel: "#deploys"
+      mention: "@oncall"
+      template: |
+        :x: *Deployment Failed*
+        Service: `{{deploy.service}}`
+        Version: `{{deploy.version}}`
+        Error: {{deploy.error}}
+
+  # Governance notifications
+  governance:
+    policy_violation:
+      channel: "#governance"
+      template: |
+        :shield: *Policy Violation*
+        Subject: {{event.subject}}
+        Resource: {{event.resource}}
+        Action: {{event.action}}
+        Effect: {{event.effect}}
+        Reason: {{event.reason}}
+
+    delegation_created:
+      channel: "#governance"
+      template: |
+        :key: *New Delegation*
+        From: {{event.from_agent}}
+        To: {{event.to_agent}}
+        Permissions: {{event.permissions}}
+
+  # Billing notifications
+  billing:
+    subscription_created:
+      channel: "#billing"
+      template: |
+        :moneybag: *New Subscription*
+        Customer: {{customer.name}}
+        Plan: {{subscription.plan}}
+        MRR: ${{subscription.mrr}}
+
+    payment_failed:
+      channel: "#billing"
+      template: |
+        :warning: *Payment Failed*
+        Customer: {{customer.name}}
+        Amount: ${{invoice.amount}}
+        Reason: {{error.message}}
+
+# ============================================
+# INTERACTIVE COMPONENTS
+# ============================================
+
+interactivity:
+  request_url: "https://api.blackroad.io/slack/interactions"
+
+  # Modal views
+  modals:
+    incident_form:
+      title: "Create Incident"
+      submit_label: "Create"
+      close_label: "Cancel"
+
+    deployment_details:
+      title: "Deployment Details"
+
+  # Block actions
+  actions:
+    - action_id: "approve_deploy"
+      handler: "deployment.approve"
+
+    - action_id: "reject_deploy"
+      handler: "deployment.reject"
+
+    - action_id: "view_status"
+      handler: "status.view"
+
+    - action_id: "acknowledge_alert"
+      handler: "alerts.acknowledge"
+
+# ============================================
+# EVENT SUBSCRIPTIONS
+# ============================================
+
+events:
+  request_url: "https://api.blackroad.io/slack/events"
+
+  subscriptions:
+    - app_mention
+    - message.channels
+    - message.groups
+    - reaction_added
+    - member_joined_channel
+
+  # Bot events
+  bot_events:
+    - app_home_opened
+    - message.im
+
+# ============================================
+# OAUTH & PERMISSIONS
+# ============================================
+
+oauth:
+  scopes:
+    bot:
+      - app_mentions:read
+      - channels:history
+      - channels:join
+      - channels:read
+      - chat:write
+      - commands
+      - files:read
+      - groups:history
+      - groups:read
+      - im:history
+      - im:read
+      - im:write
+      - reactions:read
+      - reactions:write
+      - users:read
+      - users:read.email
+      - workflow.steps:execute
+
+  redirect_url: "https://blackroad.io/integrations/slack/callback"

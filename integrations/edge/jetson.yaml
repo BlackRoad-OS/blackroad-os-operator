@@ -1,0 +1,389 @@
+# NVIDIA Jetson Configuration
+# BlackRoad OS GPU Edge Node
+#
+# High-performance edge inference and AI processing
+#
+# @blackroad_name: BlackRoad GPU Edge
+# @tier: Self-hosted
+# @operator: alexa.operator.v1
+
+version: "edge-jetson-v1"
+
+# ============================================
+# DEVICE SPECIFICATION
+# ============================================
+
+device:
+  blackroad_name: "Jetson Prime"
+  hostname: "jetson-edge"
+  model: "NVIDIA Jetson AGX Orin 32GB"
+  role: gpu_inference_node
+  location: "Home Office - GPU Node"
+
+  hardware:
+    cpu:
+      model: "12-core Arm Cortex-A78AE"
+      cores: 12
+      max_freq: "2.2 GHz"
+
+    gpu:
+      model: "Ampere architecture"
+      cuda_cores: 2048
+      tensor_cores: 64
+      memory: "Shared with system"
+
+    memory:
+      total: 32GB
+      type: "256-bit LPDDR5"
+      bandwidth: "204.8 GB/s"
+
+    storage:
+      primary:
+        type: NVMe
+        size: 512GB
+        mount: "/dev/nvme0n1"
+      secondary:
+        type: NVMe
+        size: 1TB
+        mount: "/dev/nvme0n2"
+        use: "Model storage"
+
+    power:
+      modes:
+        - name: MAXN
+          power: 60W
+          description: "Maximum performance"
+        - name: 50W
+          power: 50W
+          description: "High performance"
+        - name: 30W
+          power: 30W
+          description: "Balanced"
+        - name: 15W
+          power: 15W
+          description: "Power saving"
+      default_mode: 50W
+
+# ============================================
+# NETWORK CONFIGURATION
+# ============================================
+
+network:
+  # Primary ethernet
+  eth0:
+    type: ethernet
+    ip: "192.168.1.102"
+    gateway: "192.168.1.1"
+    dns:
+      - "1.1.1.1"
+      - "8.8.8.8"
+    mtu: 9000  # Jumbo frames for fast transfers
+
+  # Tailscale mesh
+  tailscale0:
+    type: tailscale
+    hostname: "jetson-edge"
+    ip: "${JETSON_TAILSCALE_IP}"
+    accept_routes: true
+    advertise_exit_node: false
+
+# ============================================
+# SERVICES
+# ============================================
+
+services:
+  # Ollama with GPU acceleration
+  ollama:
+    enabled: true
+    port: 11434
+    gpu_enabled: true
+    cuda_visible_devices: "0"
+
+    models:
+      - name: llama3.1:8b
+        size: 4.7GB
+        gpu_layers: 35
+        context: 32768
+        primary: true
+
+      - name: codellama:7b
+        size: 3.8GB
+        gpu_layers: 35
+        context: 16384
+
+      - name: mistral:7b
+        size: 4.1GB
+        gpu_layers: 35
+        context: 32768
+
+      - name: llava:7b
+        size: 4.5GB
+        gpu_layers: 30
+        context: 4096
+        multimodal: true
+
+      - name: nomic-embed-text
+        size: 274MB
+        gpu_layers: 0
+        context: 8192
+
+    config:
+      num_parallel: 4
+      num_gpu: 1
+      max_loaded_models: 2
+      flash_attention: true
+
+  # TensorRT inference server
+  triton:
+    enabled: true
+    port: 8000
+    grpc_port: 8001
+    metrics_port: 8002
+    model_repository: /models/triton
+
+    models:
+      - name: yolov8-det
+        backend: tensorrt
+        use_case: "Object detection"
+
+      - name: clip-embeddings
+        backend: tensorrt
+        use_case: "Image embeddings"
+
+  # BlackRoad edge agent
+  br-agent:
+    enabled: true
+    port: 8080
+    config: /etc/blackroad/agent.yaml
+    gpu_enabled: true
+
+  # Cloudflare tunnel
+  cloudflared:
+    enabled: true
+    tunnel_id: "${TUNNEL_JETSON_ID}"
+    config: /etc/cloudflared/config.yml
+
+  # GPU monitoring
+  dcgm-exporter:
+    enabled: true
+    port: 9400
+
+  # Prometheus node exporter
+  node_exporter:
+    enabled: true
+    port: 9100
+
+  # Redis for caching
+  redis:
+    enabled: true
+    port: 6379
+    maxmemory: 2gb
+
+# ============================================
+# CUDA & TENSORRT
+# ============================================
+
+cuda:
+  version: "12.2"
+  cudnn_version: "8.9"
+  tensorrt_version: "8.6"
+
+  environment:
+    CUDA_HOME: "/usr/local/cuda"
+    PATH: "/usr/local/cuda/bin:$PATH"
+    LD_LIBRARY_PATH: "/usr/local/cuda/lib64:$LD_LIBRARY_PATH"
+
+  optimization:
+    # Enable tensor cores
+    tensor_cores: true
+    # Use mixed precision
+    mixed_precision: true
+    # Flash attention
+    flash_attention: true
+
+# ============================================
+# JETPACK CONFIGURATION
+# ============================================
+
+jetpack:
+  version: "6.0"
+
+  components:
+    - CUDA Toolkit
+    - cuDNN
+    - TensorRT
+    - VisionWorks
+    - OpenCV
+    - Multimedia API
+
+  l4t:
+    version: "36.2"
+
+# ============================================
+# INFERENCE CONFIGURATION
+# ============================================
+
+inference:
+  # Default inference settings
+  default:
+    batch_size: 1
+    max_tokens: 4096
+    timeout_ms: 30000
+
+  # LLM settings
+  llm:
+    default_model: llama3.1:8b
+    temperature: 0.7
+    top_p: 0.9
+    top_k: 40
+    repeat_penalty: 1.1
+
+  # Vision settings
+  vision:
+    default_model: llava:7b
+    max_image_size: 1024
+    image_format: rgb
+
+  # Embedding settings
+  embeddings:
+    model: nomic-embed-text
+    batch_size: 32
+    normalize: true
+
+# ============================================
+# POWER MANAGEMENT
+# ============================================
+
+power:
+  default_mode: 50W
+
+  profiles:
+    inference:
+      mode: 50W
+      fan_profile: cool
+      description: "Optimized for inference workloads"
+
+    training:
+      mode: MAXN
+      fan_profile: cool
+      description: "Maximum performance for training"
+
+    idle:
+      mode: 15W
+      fan_profile: quiet
+      description: "Power saving when idle"
+
+  auto_scaling:
+    enabled: true
+    idle_timeout: 300  # 5 minutes
+    scale_up_threshold: 0.5  # GPU utilization
+    scale_down_threshold: 0.1
+
+  thermal:
+    max_temp: 85
+    throttle_temp: 80
+    fan_curve:
+      - temp: 40
+        speed: 30
+      - temp: 60
+        speed: 60
+      - temp: 75
+        speed: 100
+
+# ============================================
+# MONITORING
+# ============================================
+
+monitoring:
+  prometheus:
+    scrape_interval: 15s
+    targets:
+      - localhost:9100   # Node exporter
+      - localhost:9400   # DCGM exporter
+      - localhost:9090   # BR agent metrics
+      - localhost:8002   # Triton metrics
+
+  gpu_metrics:
+    - gpu_utilization
+    - memory_used
+    - memory_total
+    - temperature
+    - power_usage
+    - sm_clock
+    - memory_clock
+
+  alerts:
+    - name: gpu_temp_high
+      condition: gpu_temperature > 80
+      severity: warning
+
+    - name: gpu_memory_full
+      condition: gpu_memory_used > 90%
+      severity: critical
+
+    - name: inference_latency
+      condition: inference_latency_p99 > 5000ms
+      severity: warning
+
+# ============================================
+# MODEL MANAGEMENT
+# ============================================
+
+model_management:
+  storage_path: /models
+
+  directories:
+    ollama: /models/ollama
+    triton: /models/triton
+    custom: /models/custom
+
+  auto_download:
+    enabled: true
+    models:
+      - llama3.1:8b
+      - codellama:7b
+      - mistral:7b
+      - nomic-embed-text
+
+  cleanup:
+    enabled: true
+    max_storage_gb: 400
+    strategy: lru
+
+# ============================================
+# BACKUP & RECOVERY
+# ============================================
+
+backup:
+  paths:
+    - /etc/blackroad/
+    - /var/lib/blackroad/
+    - /etc/cloudflared/
+    - /models/custom/
+
+  exclude:
+    - /models/ollama/blobs/  # Can be re-downloaded
+
+  schedule: "0 3 * * *"
+
+  destination:
+    type: r2
+    bucket: blackroad-edge-backups
+    prefix: "jetson/"
+
+# ============================================
+# UPDATES
+# ============================================
+
+updates:
+  jetpack:
+    auto_update: false
+    notify: true
+
+  agent:
+    auto_update: true
+    channel: stable
+
+  models:
+    auto_update: false
+    notify_new_versions: true

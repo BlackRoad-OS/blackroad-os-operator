@@ -1,0 +1,339 @@
+# Linear Configuration
+# BlackRoad OS Project Management
+#
+# Issue tracking, sprint planning, and roadmap
+#
+# @blackroad_name: BlackRoad Linear
+# @tier: Business
+# @operator: alexa.operator.v1
+
+version: "linear-v1"
+
+# ============================================
+# CONNECTION
+# ============================================
+
+connection:
+  api_key: "${LINEAR_API_KEY}"
+  organization_id: "${LINEAR_ORG_ID}"
+
+# ============================================
+# TEAMS
+# ============================================
+
+teams:
+  # Platform team
+  platform:
+    name: "Platform"
+    key: "PLT"
+    description: "Core platform development"
+    icon: "🏗️"
+
+    settings:
+      default_issue_estimate: 3
+      timezone: "America/Los_Angeles"
+
+    workflow:
+      states:
+        - name: "Backlog"
+          type: backlog
+        - name: "Todo"
+          type: unstarted
+        - name: "In Progress"
+          type: started
+        - name: "In Review"
+          type: started
+        - name: "Done"
+          type: completed
+        - name: "Cancelled"
+          type: canceled
+
+    labels:
+      - name: "bug"
+        color: "#FF0000"
+      - name: "feature"
+        color: "#00FF00"
+      - name: "improvement"
+        color: "#0066FF"
+      - name: "tech-debt"
+        color: "#FF6B00"
+      - name: "security"
+        color: "#FF006B"
+      - name: "documentation"
+        color: "#7700FF"
+
+  # Governance team
+  governance:
+    name: "Governance"
+    key: "GOV"
+    description: "Governance and policy development"
+    icon: "🛡️"
+
+    workflow:
+      states:
+        - name: "Backlog"
+          type: backlog
+        - name: "Research"
+          type: unstarted
+        - name: "Design"
+          type: started
+        - name: "Implementation"
+          type: started
+        - name: "Review"
+          type: started
+        - name: "Done"
+          type: completed
+
+  # Frontend team
+  frontend:
+    name: "Frontend"
+    key: "FE"
+    description: "Web and mobile development"
+    icon: "🎨"
+
+  # Infrastructure team
+  infrastructure:
+    name: "Infrastructure"
+    key: "INF"
+    description: "DevOps and infrastructure"
+    icon: "⚙️"
+
+# ============================================
+# PROJECTS
+# ============================================
+
+projects:
+  # Stage 3 - Intent Chains
+  stage-3-intents:
+    name: "Stage 3: Intent Chains"
+    team: platform
+    status: planned
+
+    milestones:
+      - name: "3.1 Intent Engine"
+        target_date: "2024-02-01"
+      - name: "3.2 Policy Integration"
+        target_date: "2024-02-15"
+      - name: "3.3 Rollback System"
+        target_date: "2024-03-01"
+      - name: "3.4 Production Ready"
+        target_date: "2024-03-15"
+
+  # Edge Deployment
+  edge-deployment:
+    name: "Edge Deployment"
+    team: infrastructure
+    status: in_progress
+
+  # Lucidia 2.0
+  lucidia-2:
+    name: "Lucidia 2.0"
+    team: platform
+    status: planned
+
+# ============================================
+# CYCLES (SPRINTS)
+# ============================================
+
+cycles:
+  settings:
+    duration_weeks: 2
+    start_day: monday
+    auto_archive: true
+    cooldown_days: 0
+
+  # Current sprint structure
+  naming: "Sprint {{number}}"
+
+# ============================================
+# ROADMAP
+# ============================================
+
+roadmap:
+  quarters:
+    Q1-2024:
+      projects:
+        - stage-3-intents
+        - edge-deployment
+      objectives:
+        - "Complete Stage 3 Intent Chains"
+        - "Deploy edge infrastructure"
+        - "Launch Lucidia beta"
+
+    Q2-2024:
+      projects:
+        - lucidia-2
+      objectives:
+        - "Lucidia 2.0 launch"
+        - "Enterprise features"
+        - "Scale to 10K agents"
+
+# ============================================
+# INTEGRATIONS
+# ============================================
+
+integrations:
+  # GitHub
+  github:
+    enabled: true
+    organization: "blackroad"
+    auto_link_issues: true
+    auto_close_on_merge: true
+
+    repositories:
+      - blackroad-os-operator
+      - blackroad-web
+      - lucidia
+
+  # Slack
+  slack:
+    enabled: true
+    channel: "#linear-updates"
+    notifications:
+      - issue_created
+      - issue_completed
+      - cycle_started
+      - cycle_completed
+
+  # Sentry
+  sentry:
+    enabled: true
+    auto_create_issues: true
+    project: "blackroad-api"
+
+  # Figma
+  figma:
+    enabled: true
+    auto_link: true
+
+# ============================================
+# AUTOMATIONS
+# ============================================
+
+automations:
+  # Auto-assign based on label
+  auto_assign:
+    - condition:
+        label: "security"
+      assign_to: "security-team"
+
+    - condition:
+        label: "bug"
+        priority: "urgent"
+      assign_to: "on-call"
+
+  # Auto-label from GitHub
+  auto_label:
+    - condition:
+        source: github
+        type: bug
+      labels:
+        - bug
+
+  # Auto-move to in progress
+  auto_progress:
+    - condition:
+        branch_created: true
+      state: "In Progress"
+
+    - condition:
+        pr_opened: true
+      state: "In Review"
+
+    - condition:
+        pr_merged: true
+      state: "Done"
+
+# ============================================
+# TEMPLATES
+# ============================================
+
+templates:
+  # Bug template
+  bug:
+    name: "Bug Report"
+    team: platform
+    labels:
+      - bug
+    description: |
+      ## Description
+      <!-- What happened? -->
+
+      ## Steps to Reproduce
+      1.
+      2.
+      3.
+
+      ## Expected Behavior
+      <!-- What should have happened? -->
+
+      ## Environment
+      - Browser/OS:
+      - Version:
+
+  # Feature template
+  feature:
+    name: "Feature Request"
+    team: platform
+    labels:
+      - feature
+    description: |
+      ## Summary
+      <!-- Brief description -->
+
+      ## Problem
+      <!-- What problem does this solve? -->
+
+      ## Proposed Solution
+      <!-- How should we solve it? -->
+
+      ## Alternatives Considered
+      <!-- Other approaches -->
+
+  # Technical task
+  technical:
+    name: "Technical Task"
+    team: platform
+    labels:
+      - tech-debt
+    description: |
+      ## Task
+      <!-- What needs to be done? -->
+
+      ## Context
+      <!-- Why is this needed? -->
+
+      ## Acceptance Criteria
+      - [ ]
+      - [ ]
+
+# ============================================
+# VIEWS
+# ============================================
+
+views:
+  # My issues
+  my-issues:
+    filters:
+      assignee: "@me"
+      state: ["Todo", "In Progress", "In Review"]
+    sort: priority
+
+  # Team backlog
+  team-backlog:
+    filters:
+      state: "Backlog"
+    group_by: label
+    sort: priority
+
+  # Sprint board
+  sprint-board:
+    filters:
+      cycle: current
+    view_type: board
+    group_by: state
+
+  # Roadmap
+  roadmap-view:
+    view_type: roadmap
+    group_by: project

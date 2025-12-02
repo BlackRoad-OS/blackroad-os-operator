@@ -1,0 +1,333 @@
+# PostgreSQL Configuration
+# BlackRoad OS Primary Database
+#
+# Supports Supabase, Neon, and Railway Postgres
+#
+# @blackroad_name: BlackRoad Data Layer
+# @tier: Production
+# @operator: alexa.operator.v1
+
+version: "postgres-v1"
+
+# ============================================
+# PROVIDER CONFIGURATIONS
+# ============================================
+
+providers:
+  # Primary: Supabase (Production)
+  supabase:
+    project_id: "${SUPABASE_PROJECT_ID}"
+    region: us-west-1
+    plan: pro
+
+    database:
+      name: blackroad_os
+      version: "15"
+      extensions:
+        - uuid-ossp
+        - pgcrypto
+        - pg_trgm
+        - btree_gin
+        - vector          # pgvector for embeddings
+        - timescaledb     # Time-series for metrics
+
+    connection:
+      pooling_mode: transaction
+      pool_size: 25
+      max_connections: 100
+      statement_timeout: 30000
+
+    auth:
+      jwt_secret: "${SUPABASE_JWT_SECRET}"
+      service_role_key: "${SUPABASE_SERVICE_ROLE_KEY}"
+      anon_key: "${SUPABASE_ANON_KEY}"
+
+    storage:
+      buckets:
+        - name: agent-artifacts
+          public: false
+          file_size_limit: 52428800  # 50MB
+        - name: user-uploads
+          public: false
+          file_size_limit: 10485760  # 10MB
+        - name: public-assets
+          public: true
+
+    realtime:
+      enabled: true
+      channels:
+        - governance_events
+        - agent_status
+        - intent_updates
+
+    edge_functions:
+      enabled: true
+
+  # Secondary: Neon (Staging/Dev)
+  neon:
+    project_id: "${NEON_PROJECT_ID}"
+    region: aws-us-west-2
+
+    branches:
+      main:
+        name: main
+        compute_size: 0.5
+        autoscaling:
+          min_cu: 0.25
+          max_cu: 2
+        suspend_timeout: 300  # 5 minutes
+
+      staging:
+        name: staging
+        compute_size: 0.25
+        parent: main
+
+      dev:
+        name: dev
+        compute_size: 0.25
+        parent: staging
+
+    pooling:
+      mode: transaction
+      default_pool_size: 10
+
+  # Tertiary: Railway (Backup)
+  railway:
+    plugin: postgresql
+    version: "15"
+    region: us-west1
+    high_availability: true
+
+# ============================================
+# SCHEMA DEFINITIONS
+# ============================================
+
+schemas:
+  public:
+    description: "Core application tables"
+    tables:
+      - users
+      - organizations
+      - agents
+      - sessions
+
+  governance:
+    description: "Governance and policy tables"
+    tables:
+      - policies
+      - policy_evaluations
+      - ledger_events
+      - delegations
+      - claims
+
+  intents:
+    description: "Intent chain tables"
+    tables:
+      - intent_templates
+      - intents
+      - intent_steps
+      - intent_events
+
+  mesh:
+    description: "Service mesh tables"
+    tables:
+      - nodes
+      - services
+      - routes
+      - health_checks
+
+  analytics:
+    description: "Analytics and metrics"
+    tables:
+      - events
+      - metrics
+      - aggregations
+
+# ============================================
+# ROW LEVEL SECURITY POLICIES
+# ============================================
+
+rls_policies:
+  users:
+    - name: "users_self_access"
+      action: ALL
+      check: "auth.uid() = id"
+
+    - name: "users_org_read"
+      action: SELECT
+      check: "organization_id IN (SELECT organization_id FROM user_organizations WHERE user_id = auth.uid())"
+
+  agents:
+    - name: "agents_owner_access"
+      action: ALL
+      check: "owner_id = auth.uid()"
+
+    - name: "agents_org_read"
+      action: SELECT
+      check: "organization_id IN (SELECT organization_id FROM user_organizations WHERE user_id = auth.uid())"
+
+  ledger_events:
+    - name: "ledger_org_access"
+      action: SELECT
+      check: "organization_id IN (SELECT organization_id FROM user_organizations WHERE user_id = auth.uid() AND role IN ('admin', 'auditor'))"
+
+# ============================================
+# INDEXES
+# ============================================
+
+indexes:
+  # Governance indexes
+  - table: ledger_events
+    columns: [organization_id, created_at]
+    type: btree
+
+  - table: ledger_events
+    columns: [correlation_id]
+    type: hash
+
+  - table: ledger_events
+    columns: [actor_id, action]
+    type: btree
+
+  - table: policies
+    columns: [resource, action]
+    type: btree
+
+  # Intent indexes
+  - table: intents
+    columns: [correlation_id]
+    type: hash
+
+  - table: intents
+    columns: [template_name, state]
+    type: btree
+
+  - table: intent_steps
+    columns: [intent_id, sequence]
+    type: btree
+
+  # Agent indexes
+  - table: agents
+    columns: [owner_id, status]
+    type: btree
+
+  - table: agents
+    columns: [capabilities]
+    type: gin
+
+  # Full text search
+  - table: agents
+    columns: [name, description]
+    type: gin
+    using: to_tsvector('english', name || ' ' || description)
+
+# ============================================
+# FUNCTIONS & TRIGGERS
+# ============================================
+
+functions:
+  # Auto-update timestamps
+  - name: update_updated_at
+    language: plpgsql
+    body: |
+      BEGIN
+        NEW.updated_at = NOW();
+        RETURN NEW;
+      END;
+    triggers:
+      - table: users
+        event: BEFORE UPDATE
+      - table: agents
+        event: BEFORE UPDATE
+      - table: policies
+        event: BEFORE UPDATE
+      - table: intents
+        event: BEFORE UPDATE
+
+  # Ledger append-only enforcement
+  - name: ledger_immutable
+    language: plpgsql
+    body: |
+      BEGIN
+        RAISE EXCEPTION 'Ledger events are immutable';
+      END;
+    triggers:
+      - table: ledger_events
+        event: BEFORE UPDATE
+      - table: ledger_events
+        event: BEFORE DELETE
+
+  # Intent state machine validation
+  - name: validate_intent_state_transition
+    language: plpgsql
+    body: |
+      DECLARE
+        valid_transitions jsonb := '{
+          "pending": ["in_progress", "cancelled"],
+          "in_progress": ["completed", "failed", "rolled_back", "timed_out"],
+          "completed": [],
+          "failed": ["rolled_back"],
+          "rolled_back": [],
+          "cancelled": [],
+          "timed_out": ["rolled_back"]
+        }'::jsonb;
+      BEGIN
+        IF NOT (valid_transitions->OLD.state::text) ? NEW.state::text THEN
+          RAISE EXCEPTION 'Invalid state transition from % to %', OLD.state, NEW.state;
+        END IF;
+        RETURN NEW;
+      END;
+    triggers:
+      - table: intents
+        event: BEFORE UPDATE
+        when: "OLD.state IS DISTINCT FROM NEW.state"
+
+# ============================================
+# BACKUP & RECOVERY
+# ============================================
+
+backup:
+  supabase:
+    point_in_time: true
+    retention_days: 7
+    daily_snapshots: true
+    snapshot_retention_days: 30
+
+  neon:
+    history_retention: 7d
+    branch_snapshots: true
+
+  railway:
+    automated: true
+    retention_days: 30
+
+# ============================================
+# CONNECTION STRINGS
+# ============================================
+
+connection_strings:
+  production:
+    pooler: "postgres://${SUPABASE_USER}:${SUPABASE_PASSWORD}@${SUPABASE_POOLER_HOST}:6543/postgres?pgbouncer=true"
+    direct: "postgres://${SUPABASE_USER}:${SUPABASE_PASSWORD}@${SUPABASE_HOST}:5432/postgres"
+
+  staging:
+    pooler: "postgres://${NEON_USER}:${NEON_PASSWORD}@${NEON_POOLER_HOST}/neondb?sslmode=require"
+    direct: "postgres://${NEON_USER}:${NEON_PASSWORD}@${NEON_HOST}/neondb?sslmode=require"
+
+  development:
+    local: "postgres://blackroad:blackroad@localhost:5432/blackroad_dev"
+
+# ============================================
+# MIGRATIONS
+# ============================================
+
+migrations:
+  directory: migrations/
+  table: schema_migrations
+  lock_timeout: 30000
+
+  applied:
+    - "001_initial_schema.sql"
+    - "002_intents_v1.sql"
+
+  pending: []

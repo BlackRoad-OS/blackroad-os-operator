@@ -1,0 +1,398 @@
+# Stripe Configuration
+# BlackRoad OS Payment Processing
+#
+# Subscriptions, usage billing, and payment management
+#
+# @blackroad_name: BlackRoad Payments
+# @tier: Scale
+# @operator: alexa.operator.v1
+
+version: "stripe-v1"
+
+# ============================================
+# CONNECTION
+# ============================================
+
+connection:
+  api_key: "${STRIPE_SECRET_KEY}"
+  publishable_key: "${STRIPE_PUBLISHABLE_KEY}"
+  webhook_secret: "${STRIPE_WEBHOOK_SECRET}"
+  api_version: "2024-06-20"
+
+# ============================================
+# PRODUCTS
+# ============================================
+
+products:
+  # BlackRoad OS Plans
+  blackroad-os:
+    name: "BlackRoad OS"
+    description: "AI governance and agent orchestration platform"
+
+    # Free tier
+    free:
+      name: "Free"
+      price_id: "${STRIPE_PRICE_FREE}"
+      features:
+        agents: 3
+        users: 1
+        api_calls_monthly: 1000
+        storage_gb: 1
+        support: community
+        governance: basic
+
+    # Starter tier
+    starter:
+      name: "Starter"
+      price_id: "${STRIPE_PRICE_STARTER}"
+      amount: 2900  # $29/month
+      currency: usd
+      interval: month
+      features:
+        agents: 10
+        users: 5
+        api_calls_monthly: 50000
+        storage_gb: 10
+        support: email
+        governance: standard
+        ledger_retention_days: 30
+
+    # Pro tier
+    pro:
+      name: "Pro"
+      price_id: "${STRIPE_PRICE_PRO}"
+      amount: 9900  # $99/month
+      currency: usd
+      interval: month
+      features:
+        agents: 50
+        users: 25
+        api_calls_monthly: 500000
+        storage_gb: 100
+        support: priority
+        governance: advanced
+        ledger_retention_days: 90
+        custom_policies: true
+        sso: true
+
+    # Enterprise tier
+    enterprise:
+      name: "Enterprise"
+      price_id: "${STRIPE_PRICE_ENTERPRISE}"
+      custom_pricing: true
+      features:
+        agents: unlimited
+        users: unlimited
+        api_calls_monthly: unlimited
+        storage_gb: unlimited
+        support: dedicated
+        governance: enterprise
+        ledger_retention_days: 365
+        custom_policies: true
+        sso: true
+        on_premise: available
+        sla: "99.9%"
+
+  # Lucidia Plans
+  lucidia:
+    name: "Lucidia"
+    description: "AI agent platform"
+
+    free:
+      name: "Free"
+      price_id: "${STRIPE_PRICE_LUCIDIA_FREE}"
+      features:
+        agents: 1
+        conversations_monthly: 100
+        memory_gb: 0.5
+
+    creator:
+      name: "Creator"
+      price_id: "${STRIPE_PRICE_LUCIDIA_CREATOR}"
+      amount: 1900  # $19/month
+      currency: usd
+      interval: month
+      features:
+        agents: 5
+        conversations_monthly: 5000
+        memory_gb: 5
+        custom_personas: true
+
+    studio:
+      name: "Studio"
+      price_id: "${STRIPE_PRICE_LUCIDIA_STUDIO}"
+      amount: 4900  # $49/month
+      currency: usd
+      interval: month
+      features:
+        agents: 25
+        conversations_monthly: 50000
+        memory_gb: 25
+        custom_personas: true
+        api_access: true
+        analytics: true
+
+# ============================================
+# USAGE-BASED BILLING
+# ============================================
+
+metered_billing:
+  # LLM token usage
+  llm-tokens:
+    name: "LLM Tokens"
+    price_id: "${STRIPE_PRICE_LLM_TOKENS}"
+    unit_amount: 1  # $0.00001 per token (charged in batches)
+    aggregate_usage: sum
+    billing_scheme: per_unit
+
+    tiers:
+      - up_to: 1000000
+        unit_amount: 1
+      - up_to: 10000000
+        unit_amount: 0.8  # 20% discount
+      - up_to: inf
+        unit_amount: 0.6  # 40% discount
+
+  # API calls
+  api-calls:
+    name: "API Calls"
+    price_id: "${STRIPE_PRICE_API_CALLS}"
+    unit_amount: 10  # $0.0001 per call
+    aggregate_usage: sum
+    billing_scheme: tiered
+
+    tiers:
+      - up_to: 100000
+        flat_amount: 0
+      - up_to: 1000000
+        unit_amount: 8
+      - up_to: inf
+        unit_amount: 5
+
+  # Storage
+  storage:
+    name: "Storage (GB)"
+    price_id: "${STRIPE_PRICE_STORAGE}"
+    unit_amount: 100  # $0.10 per GB
+    aggregate_usage: last_during_period
+    billing_scheme: per_unit
+
+  # Agent invocations
+  agent-invocations:
+    name: "Agent Invocations"
+    price_id: "${STRIPE_PRICE_AGENT_INVOCATIONS}"
+    unit_amount: 50  # $0.005 per invocation
+    aggregate_usage: sum
+    billing_scheme: tiered
+
+    tiers:
+      - up_to: 10000
+        flat_amount: 0
+      - up_to: 100000
+        unit_amount: 40
+      - up_to: inf
+        unit_amount: 25
+
+# ============================================
+# CUSTOMER PORTAL
+# ============================================
+
+customer_portal:
+  enabled: true
+  url: "https://blackroad.io/billing"
+
+  features:
+    customer_update:
+      enabled: true
+      allowed_updates:
+        - email
+        - address
+        - phone
+        - tax_id
+
+    invoice_history:
+      enabled: true
+
+    subscription_update:
+      enabled: true
+      default_allowed_updates:
+        - price
+        - quantity
+        - promotion_code
+      proration_behavior: create_prorations
+
+    subscription_cancel:
+      enabled: true
+      mode: at_period_end
+      cancellation_reason:
+        enabled: true
+        options:
+          - too_expensive
+          - missing_features
+          - switched_service
+          - unused
+          - customer_service
+          - too_complex
+          - other
+
+    payment_method_update:
+      enabled: true
+
+# ============================================
+# WEBHOOKS
+# ============================================
+
+webhooks:
+  endpoint: "https://api.blackroad.io/webhooks/stripe"
+
+  events:
+    # Subscription events
+    - customer.subscription.created
+    - customer.subscription.updated
+    - customer.subscription.deleted
+    - customer.subscription.trial_will_end
+
+    # Payment events
+    - invoice.payment_succeeded
+    - invoice.payment_failed
+    - invoice.finalized
+
+    # Customer events
+    - customer.created
+    - customer.updated
+    - customer.deleted
+
+    # Checkout events
+    - checkout.session.completed
+    - checkout.session.expired
+
+    # Usage events
+    - billing_portal.session.created
+
+# ============================================
+# CHECKOUT
+# ============================================
+
+checkout:
+  # Session settings
+  session:
+    success_url: "https://blackroad.io/billing/success?session_id={CHECKOUT_SESSION_ID}"
+    cancel_url: "https://blackroad.io/billing/cancel"
+    payment_method_types:
+      - card
+    allow_promotion_codes: true
+    billing_address_collection: required
+    tax_id_collection:
+      enabled: true
+
+  # Pricing table
+  pricing_table:
+    id: "${STRIPE_PRICING_TABLE_ID}"
+
+# ============================================
+# TAX
+# ============================================
+
+tax:
+  automatic_tax:
+    enabled: true
+
+  tax_ids:
+    - type: us_ein
+    - type: eu_vat
+    - type: gb_vat
+    - type: au_abn
+    - type: ca_gst_hst
+
+# ============================================
+# INVOICES
+# ============================================
+
+invoices:
+  # Default settings
+  default_payment_method: card
+
+  # Footer
+  footer: |
+    BlackRoad Inc.
+    123 AI Street, San Francisco, CA 94105
+    support@blackroad.io
+
+  # Auto-advance
+  auto_advance: true
+
+  # Collection method
+  collection_method: charge_automatically
+
+  # Days until due (for manual collection)
+  days_until_due: 30
+
+# ============================================
+# FRAUD PREVENTION
+# ============================================
+
+fraud_prevention:
+  radar:
+    enabled: true
+    rules:
+      # Block high-risk payments
+      - action: block
+        condition: ":risk_level: = 'highest'"
+
+      # Review elevated risk
+      - action: review
+        condition: ":risk_level: = 'elevated'"
+
+      # Block disposable emails
+      - action: block
+        condition: ":email_domain: in @disposable_email_domains"
+
+  # 3D Secure
+  three_d_secure:
+    enabled: true
+    request_three_d_secure: automatic
+
+# ============================================
+# REPORTING
+# ============================================
+
+reporting:
+  # Revenue reports
+  revenue:
+    enabled: true
+    schedule: monthly
+    recipients:
+      - finance@blackroad.io
+
+  # Usage reports
+  usage:
+    enabled: true
+    schedule: weekly
+    metrics:
+      - api_calls
+      - llm_tokens
+      - storage
+      - agent_invocations
+
+# ============================================
+# INTEGRATIONS
+# ============================================
+
+integrations:
+  # Sync with database
+  database_sync:
+    enabled: true
+    tables:
+      - subscriptions
+      - invoices
+      - usage_records
+
+  # Analytics
+  analytics:
+    enabled: true
+    export_to: datadog
+    metrics:
+      - mrr
+      - churn_rate
+      - arpu
+      - ltv
