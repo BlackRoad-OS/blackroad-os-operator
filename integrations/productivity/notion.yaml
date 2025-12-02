@@ -1,0 +1,518 @@
+# Notion Configuration
+# BlackRoad OS Knowledge Base & Documentation
+#
+# Docs, wikis, and team databases
+#
+# @blackroad_name: BlackRoad Notes
+# @tier: Team
+# @operator: alexa.operator.v1
+
+version: "notion-v1"
+
+# ============================================
+# CONNECTION
+# ============================================
+
+connection:
+  api_key: "${NOTION_API_KEY}"
+  workspace_id: "${NOTION_WORKSPACE_ID}"
+
+# ============================================
+# WORKSPACE STRUCTURE
+# ============================================
+
+workspace:
+  name: "BlackRoad"
+
+  # Top-level pages
+  pages:
+    # Documentation
+    documentation:
+      title: "📚 Documentation"
+      icon: "📚"
+      children:
+        - title: "Getting Started"
+          type: page
+        - title: "API Reference"
+          type: page
+        - title: "Architecture"
+          type: page
+        - title: "Governance"
+          type: page
+        - title: "Deployment"
+          type: page
+
+    # Engineering
+    engineering:
+      title: "🛠️ Engineering"
+      icon: "🛠️"
+      children:
+        - title: "Technical Specs"
+          type: page
+        - title: "ADRs"
+          type: database
+        - title: "Runbooks"
+          type: page
+        - title: "Postmortems"
+          type: database
+
+    # Product
+    product:
+      title: "🚀 Product"
+      icon: "🚀"
+      children:
+        - title: "Roadmap"
+          type: page
+        - title: "Feature Specs"
+          type: database
+        - title: "User Research"
+          type: database
+        - title: "Metrics"
+          type: page
+
+    # Operations
+    operations:
+      title: "⚙️ Operations"
+      icon: "⚙️"
+      children:
+        - title: "Processes"
+          type: page
+        - title: "Vendor Info"
+          type: database
+        - title: "Incident Log"
+          type: database
+
+    # Team
+    team:
+      title: "👥 Team"
+      icon: "👥"
+      children:
+        - title: "Team Directory"
+          type: database
+        - title: "Meeting Notes"
+          type: database
+        - title: "OKRs"
+          type: database
+
+# ============================================
+# DATABASES
+# ============================================
+
+databases:
+  # Architecture Decision Records
+  adrs:
+    title: "Architecture Decision Records"
+    properties:
+      - name: "ADR Number"
+        type: number
+      - name: "Title"
+        type: title
+      - name: "Status"
+        type: select
+        options:
+          - name: "Proposed"
+            color: yellow
+          - name: "Accepted"
+            color: green
+          - name: "Deprecated"
+            color: red
+          - name: "Superseded"
+            color: gray
+      - name: "Date"
+        type: date
+      - name: "Author"
+        type: people
+      - name: "Tags"
+        type: multi_select
+        options:
+          - name: "Architecture"
+          - name: "Security"
+          - name: "Performance"
+          - name: "Governance"
+          - name: "Data"
+
+  # Feature Specs
+  feature-specs:
+    title: "Feature Specs"
+    properties:
+      - name: "Feature Name"
+        type: title
+      - name: "Status"
+        type: select
+        options:
+          - name: "Draft"
+            color: gray
+          - name: "In Review"
+            color: yellow
+          - name: "Approved"
+            color: green
+          - name: "In Development"
+            color: blue
+          - name: "Shipped"
+            color: purple
+      - name: "Priority"
+        type: select
+        options:
+          - name: "P0 - Critical"
+            color: red
+          - name: "P1 - High"
+            color: orange
+          - name: "P2 - Medium"
+            color: yellow
+          - name: "P3 - Low"
+            color: gray
+      - name: "Owner"
+        type: people
+      - name: "Target Date"
+        type: date
+      - name: "Linear Issue"
+        type: url
+      - name: "Tags"
+        type: multi_select
+
+  # User Research
+  user-research:
+    title: "User Research"
+    properties:
+      - name: "Title"
+        type: title
+      - name: "Type"
+        type: select
+        options:
+          - name: "Interview"
+          - name: "Survey"
+          - name: "Usability Test"
+          - name: "Analytics"
+      - name: "Date"
+        type: date
+      - name: "Participants"
+        type: number
+      - name: "Key Insights"
+        type: rich_text
+      - name: "Related Features"
+        type: relation
+        relation_database: feature-specs
+
+  # Vendor Info
+  vendor-info:
+    title: "Vendor Info"
+    properties:
+      - name: "Vendor"
+        type: title
+      - name: "Category"
+        type: select
+        options:
+          - name: "Cloud"
+          - name: "Database"
+          - name: "AI/ML"
+          - name: "Observability"
+          - name: "Security"
+          - name: "Payments"
+          - name: "Communication"
+      - name: "Tier"
+        type: select
+        options:
+          - name: "Tier 1 - Active"
+            color: green
+          - name: "Tier 2 - Configured"
+            color: yellow
+          - name: "Tier 3 - Available"
+            color: gray
+          - name: "Tier 4 - Aspirational"
+            color: blue
+      - name: "Monthly Cost"
+        type: number
+      - name: "Contract End"
+        type: date
+      - name: "Owner"
+        type: people
+      - name: "Login URL"
+        type: url
+      - name: "Notes"
+        type: rich_text
+
+  # Incident Log
+  incident-log:
+    title: "Incident Log"
+    properties:
+      - name: "Incident"
+        type: title
+      - name: "Severity"
+        type: select
+        options:
+          - name: "SEV1 - Critical"
+            color: red
+          - name: "SEV2 - Major"
+            color: orange
+          - name: "SEV3 - Minor"
+            color: yellow
+      - name: "Status"
+        type: select
+        options:
+          - name: "Active"
+            color: red
+          - name: "Mitigated"
+            color: yellow
+          - name: "Resolved"
+            color: green
+      - name: "Start Time"
+        type: date
+      - name: "End Time"
+        type: date
+      - name: "Duration"
+        type: formula
+      - name: "Commander"
+        type: people
+      - name: "Affected Services"
+        type: multi_select
+      - name: "Root Cause"
+        type: rich_text
+      - name: "Postmortem"
+        type: url
+
+  # Postmortems
+  postmortems:
+    title: "Postmortems"
+    properties:
+      - name: "Title"
+        type: title
+      - name: "Incident"
+        type: relation
+        relation_database: incident-log
+      - name: "Date"
+        type: date
+      - name: "Author"
+        type: people
+      - name: "Status"
+        type: select
+        options:
+          - name: "Draft"
+          - name: "In Review"
+          - name: "Published"
+      - name: "Action Items"
+        type: relation
+        relation_database: action-items
+
+  # Meeting Notes
+  meeting-notes:
+    title: "Meeting Notes"
+    properties:
+      - name: "Meeting"
+        type: title
+      - name: "Date"
+        type: date
+      - name: "Type"
+        type: select
+        options:
+          - name: "Standup"
+          - name: "Planning"
+          - name: "Retro"
+          - name: "1:1"
+          - name: "All Hands"
+          - name: "External"
+      - name: "Attendees"
+        type: people
+      - name: "Recording"
+        type: url
+      - name: "Action Items"
+        type: relation
+
+  # OKRs
+  okrs:
+    title: "OKRs"
+    properties:
+      - name: "Objective"
+        type: title
+      - name: "Quarter"
+        type: select
+        options:
+          - name: "Q1 2025"
+          - name: "Q2 2025"
+          - name: "Q3 2025"
+          - name: "Q4 2025"
+      - name: "Owner"
+        type: people
+      - name: "Status"
+        type: select
+        options:
+          - name: "On Track"
+            color: green
+          - name: "At Risk"
+            color: yellow
+          - name: "Off Track"
+            color: red
+      - name: "Progress"
+        type: number
+      - name: "Key Results"
+        type: relation
+
+  # Team Directory
+  team-directory:
+    title: "Team Directory"
+    properties:
+      - name: "Name"
+        type: title
+      - name: "Role"
+        type: select
+      - name: "Team"
+        type: select
+        options:
+          - name: "Platform"
+          - name: "Governance"
+          - name: "Frontend"
+          - name: "DevRel"
+          - name: "Operations"
+      - name: "Email"
+        type: email
+      - name: "GitHub"
+        type: url
+      - name: "Slack"
+        type: rich_text
+      - name: "Start Date"
+        type: date
+      - name: "Location"
+        type: rich_text
+
+# ============================================
+# TEMPLATES
+# ============================================
+
+templates:
+  # ADR Template
+  adr:
+    database: adrs
+    properties:
+      Status: "Proposed"
+    content: |
+      # Context
+      What is the issue that we're seeing that is motivating this decision?
+
+      # Decision
+      What is the change that we're proposing and/or doing?
+
+      # Consequences
+      What becomes easier or more difficult to do because of this change?
+
+  # Feature Spec Template
+  feature-spec:
+    database: feature-specs
+    properties:
+      Status: "Draft"
+    content: |
+      # Overview
+      Brief description of the feature.
+
+      ## Problem Statement
+      What problem are we solving?
+
+      ## Goals
+      - Goal 1
+      - Goal 2
+
+      ## Non-Goals
+      - Non-goal 1
+
+      # Solution
+      ## Proposed Solution
+      Describe the solution.
+
+      ## Technical Design
+      Technical details.
+
+      ## User Experience
+      UX considerations.
+
+      # Rollout Plan
+      How will we ship this?
+
+      # Success Metrics
+      How will we measure success?
+
+  # Postmortem Template
+  postmortem:
+    database: postmortems
+    properties:
+      Status: "Draft"
+    content: |
+      # Incident Summary
+      Brief description.
+
+      ## Timeline
+      - HH:MM - Event
+
+      ## Impact
+      - Users affected:
+      - Duration:
+      - Services affected:
+
+      # Root Cause Analysis
+      What caused the incident?
+
+      ## Contributing Factors
+      - Factor 1
+      - Factor 2
+
+      # Action Items
+      | Action | Owner | Due Date | Status |
+      |--------|-------|----------|--------|
+      |        |       |          |        |
+
+      # Lessons Learned
+      What did we learn?
+
+# ============================================
+# INTEGRATIONS
+# ============================================
+
+integrations:
+  # Slack
+  slack:
+    enabled: true
+    notifications:
+      - database: incident-log
+        channel: "#incidents"
+        trigger: created
+
+      - database: feature-specs
+        channel: "#product"
+        trigger: status_changed
+        filter:
+          Status: "Shipped"
+
+  # Linear
+  linear:
+    enabled: true
+    sync:
+      - notion_database: feature-specs
+        linear_project: true
+        field_mapping:
+          Title: title
+          Status: state
+          Owner: assignee
+
+  # GitHub
+  github:
+    enabled: true
+    link_mentions: true
+
+# ============================================
+# PERMISSIONS
+# ============================================
+
+permissions:
+  workspace:
+    default: can_edit
+
+  pages:
+    documentation:
+      default: can_view
+      team: can_edit
+
+    engineering:
+      default: can_view
+      engineering_team: can_edit
+
+  databases:
+    vendor-info:
+      default: can_view
+      ops_team: can_edit

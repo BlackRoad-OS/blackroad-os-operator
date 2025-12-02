@@ -1,0 +1,413 @@
+# Grafana Configuration
+# BlackRoad OS Visualization & Dashboards
+#
+# Metrics visualization and alerting
+#
+# @blackroad_name: BlackRoad Dash
+# @tier: Cloud Pro
+# @operator: alexa.operator.v1
+
+version: "grafana-v1"
+
+# ============================================
+# GRAFANA CLOUD
+# ============================================
+
+cloud:
+  stack_slug: "blackroad"
+  org_id: "${GRAFANA_ORG_ID}"
+  region: us
+
+  endpoints:
+    grafana: "https://blackroad.grafana.net"
+    prometheus: "https://prometheus-prod-us-east-0.grafana.net"
+    loki: "https://logs-prod-us-east-0.grafana.net"
+    tempo: "https://tempo-prod-us-east-0.grafana.net"
+
+# ============================================
+# DATA SOURCES
+# ============================================
+
+data_sources:
+  # Prometheus (metrics)
+  prometheus:
+    name: "Prometheus"
+    type: prometheus
+    url: "https://prometheus-prod-us-east-0.grafana.net/api/prom"
+    access: proxy
+    is_default: true
+    json_data:
+      httpMethod: POST
+      timeInterval: 15s
+
+  # Loki (logs)
+  loki:
+    name: "Loki"
+    type: loki
+    url: "https://logs-prod-us-east-0.grafana.net"
+    access: proxy
+    json_data:
+      maxLines: 1000
+
+  # Tempo (traces)
+  tempo:
+    name: "Tempo"
+    type: tempo
+    url: "https://tempo-prod-us-east-0.grafana.net"
+    access: proxy
+
+  # PostgreSQL (direct queries)
+  postgresql:
+    name: "BlackRoad DB"
+    type: postgres
+    url: "${POSTGRES_HOST}:5432"
+    database: blackroad
+    user: "${POSTGRES_USER}"
+    json_data:
+      sslmode: require
+      maxOpenConns: 5
+      maxIdleConns: 2
+
+  # Datadog (integration)
+  datadog:
+    name: "Datadog"
+    type: grafana-datadog-datasource
+    json_data:
+      apiKey: "${DD_API_KEY}"
+      appKey: "${DD_APP_KEY}"
+
+# ============================================
+# DASHBOARDS
+# ============================================
+
+dashboards:
+  # System Overview
+  system-overview:
+    title: "BlackRoad OS - System Overview"
+    uid: "br-system-overview"
+    tags:
+      - blackroad
+      - overview
+
+    variables:
+      - name: environment
+        type: query
+        query: "label_values(environment)"
+        default: production
+
+      - name: service
+        type: query
+        query: "label_values(blackroad_http_requests_total, service)"
+
+    rows:
+      - title: "Health Status"
+        panels:
+          - type: stat
+            title: "System Health"
+            targets:
+              - expr: "avg(up{job=~'blackroad.*'})"
+            thresholds:
+              - value: 0.9
+                color: green
+              - value: 0.7
+                color: yellow
+              - value: 0
+                color: red
+
+          - type: stat
+            title: "Active Agents"
+            targets:
+              - expr: "sum(blackroad_agents_active)"
+
+          - type: stat
+            title: "Active Users"
+            targets:
+              - expr: "sum(blackroad_users_active)"
+
+          - type: stat
+            title: "Error Rate"
+            targets:
+              - expr: "sum(rate(blackroad_http_requests_total{status=~'5..'}[5m])) / sum(rate(blackroad_http_requests_total[5m])) * 100"
+            unit: percent
+
+      - title: "Traffic"
+        panels:
+          - type: graph
+            title: "Request Rate"
+            targets:
+              - expr: "sum(rate(blackroad_http_requests_total[5m])) by (service)"
+            legend:
+              show: true
+
+          - type: graph
+            title: "Response Time (p95)"
+            targets:
+              - expr: "histogram_quantile(0.95, sum(rate(blackroad_http_request_duration_seconds_bucket[5m])) by (le, service))"
+            unit: s
+
+      - title: "Resources"
+        panels:
+          - type: graph
+            title: "CPU Usage"
+            targets:
+              - expr: "avg(rate(container_cpu_usage_seconds_total{namespace='blackroad-api'}[5m])) by (pod)"
+
+          - type: graph
+            title: "Memory Usage"
+            targets:
+              - expr: "avg(container_memory_usage_bytes{namespace='blackroad-api'}) by (pod)"
+            unit: bytes
+
+  # Agent Dashboard
+  agents:
+    title: "BlackRoad OS - Agents"
+    uid: "br-agents"
+    tags:
+      - blackroad
+      - agents
+
+    rows:
+      - title: "Agent Overview"
+        panels:
+          - type: stat
+            title: "Total Agents"
+            targets:
+              - expr: "sum(blackroad_agents_total)"
+
+          - type: stat
+            title: "Active Agents"
+            targets:
+              - expr: "sum(blackroad_agents_active)"
+
+          - type: pie
+            title: "Agents by Type"
+            targets:
+              - expr: "sum(blackroad_agents_total) by (agent_type)"
+
+      - title: "Agent Activity"
+        panels:
+          - type: graph
+            title: "Invocations per Minute"
+            targets:
+              - expr: "sum(rate(blackroad_agent_invocations_total[1m])) * 60"
+
+          - type: graph
+            title: "Invocation Latency"
+            targets:
+              - expr: "histogram_quantile(0.5, sum(rate(blackroad_agent_invocation_duration_seconds_bucket[5m])) by (le))"
+                legendFormat: "p50"
+              - expr: "histogram_quantile(0.95, sum(rate(blackroad_agent_invocation_duration_seconds_bucket[5m])) by (le))"
+                legendFormat: "p95"
+              - expr: "histogram_quantile(0.99, sum(rate(blackroad_agent_invocation_duration_seconds_bucket[5m])) by (le))"
+                legendFormat: "p99"
+
+      - title: "Memory Operations"
+        panels:
+          - type: graph
+            title: "Memory Store Rate"
+            targets:
+              - expr: "sum(rate(blackroad_memory_operations_total{operation='store'}[5m]))"
+
+          - type: graph
+            title: "Memory Recall Rate"
+            targets:
+              - expr: "sum(rate(blackroad_memory_operations_total{operation='recall'}[5m]))"
+
+  # Governance Dashboard
+  governance:
+    title: "BlackRoad OS - Governance"
+    uid: "br-governance"
+    tags:
+      - blackroad
+      - governance
+
+    rows:
+      - title: "Policy Evaluations"
+        panels:
+          - type: graph
+            title: "Evaluations by Effect"
+            targets:
+              - expr: "sum(rate(blackroad_policy_evaluations_total[5m])) by (effect)"
+
+          - type: pie
+            title: "Decision Distribution"
+            targets:
+              - expr: "sum(blackroad_policy_evaluations_total) by (effect)"
+
+      - title: "Ledger Events"
+        panels:
+          - type: graph
+            title: "Events by Layer"
+            targets:
+              - expr: "sum(rate(blackroad_ledger_events_total[5m])) by (layer)"
+
+          - type: stat
+            title: "Total Events Today"
+            targets:
+              - expr: "sum(increase(blackroad_ledger_events_total[24h]))"
+
+  # LLM Usage Dashboard
+  llm-usage:
+    title: "BlackRoad OS - LLM Usage"
+    uid: "br-llm"
+    tags:
+      - blackroad
+      - llm
+
+    rows:
+      - title: "Token Usage"
+        panels:
+          - type: graph
+            title: "Input Tokens"
+            targets:
+              - expr: "sum(rate(blackroad_llm_tokens_input_total[5m])) by (provider)"
+
+          - type: graph
+            title: "Output Tokens"
+            targets:
+              - expr: "sum(rate(blackroad_llm_tokens_output_total[5m])) by (provider)"
+
+      - title: "Costs"
+        panels:
+          - type: stat
+            title: "Cost Today"
+            targets:
+              - expr: "sum(increase(blackroad_llm_cost_total[24h]))"
+            unit: currencyUSD
+
+          - type: graph
+            title: "Cost by Provider"
+            targets:
+              - expr: "sum(rate(blackroad_llm_cost_total[1h])) by (provider) * 3600"
+            unit: currencyUSD
+
+      - title: "Performance"
+        panels:
+          - type: graph
+            title: "Latency by Model"
+            targets:
+              - expr: "histogram_quantile(0.95, sum(rate(blackroad_llm_latency_seconds_bucket[5m])) by (le, model))"
+            unit: s
+
+          - type: graph
+            title: "Error Rate"
+            targets:
+              - expr: "sum(rate(blackroad_llm_errors_total[5m])) by (provider)"
+
+# ============================================
+# ALERTING
+# ============================================
+
+alerting:
+  contact_points:
+    - name: slack-alerts
+      type: slack
+      settings:
+        url: "${SLACK_WEBHOOK_URL}"
+        channel: "#alerts"
+
+    - name: pagerduty
+      type: pagerduty
+      settings:
+        integrationKey: "${PAGERDUTY_INTEGRATION_KEY}"
+
+    - name: email-ops
+      type: email
+      settings:
+        addresses:
+          - ops@blackroad.io
+
+  notification_policies:
+    - receiver: slack-alerts
+      matchers:
+        - severity = warning
+
+    - receiver: pagerduty
+      matchers:
+        - severity = critical
+
+  alert_rules:
+    # High error rate
+    - name: high_error_rate
+      condition:
+        - query: sum(rate(blackroad_http_requests_total{status=~"5.."}[5m])) / sum(rate(blackroad_http_requests_total[5m])) * 100
+          refId: A
+        - threshold:
+            value: 5
+            op: gt
+            refId: B
+      for: 5m
+      labels:
+        severity: warning
+      annotations:
+        summary: "High error rate detected"
+        description: "Error rate is {{ $value }}%"
+
+    # API latency high
+    - name: high_api_latency
+      condition:
+        - query: histogram_quantile(0.95, sum(rate(blackroad_http_request_duration_seconds_bucket[5m])) by (le))
+          refId: A
+        - threshold:
+            value: 2
+            op: gt
+            refId: B
+      for: 5m
+      labels:
+        severity: warning
+
+    # Agent runtime down
+    - name: agent_runtime_down
+      condition:
+        - query: up{job="blackroad-agent-runtime"}
+          refId: A
+        - threshold:
+            value: 1
+            op: lt
+            refId: B
+      for: 2m
+      labels:
+        severity: critical
+
+    # LLM cost spike
+    - name: llm_cost_spike
+      condition:
+        - query: sum(increase(blackroad_llm_cost_total[1h]))
+          refId: A
+        - threshold:
+            value: 100
+            op: gt
+            refId: B
+      for: 10m
+      labels:
+        severity: warning
+
+# ============================================
+# USERS & TEAMS
+# ============================================
+
+users:
+  - email: alexa@blackroad.io
+    role: Admin
+
+  - email: ops@blackroad.io
+    role: Editor
+
+teams:
+  - name: Platform
+    members:
+      - alexa@blackroad.io
+
+  - name: Ops
+    members:
+      - ops@blackroad.io
+
+# ============================================
+# PLUGINS
+# ============================================
+
+plugins:
+  - grafana-piechart-panel
+  - grafana-worldmap-panel
+  - grafana-clock-panel
+  - grafana-datadog-datasource

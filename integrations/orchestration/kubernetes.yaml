@@ -1,0 +1,509 @@
+# Kubernetes Configuration
+# BlackRoad OS Container Orchestration
+#
+# Multi-region Kubernetes deployment for 30K agents / 1M users
+#
+# @blackroad_name: BlackRoad Orchestrate
+# @tier: Enterprise
+# @operator: alexa.operator.v1
+
+version: "kubernetes-v1"
+
+# ============================================
+# CLUSTER CONFIGURATION
+# ============================================
+
+clusters:
+  # Primary production cluster
+  production-useast:
+    provider: digitalocean  # DOKS
+    name: "blackroad-prod-useast"
+    region: nyc1
+    version: "1.29"
+
+    node_pools:
+      # General workloads
+      general:
+        name: "general-pool"
+        size: "s-4vcpu-8gb"
+        count: 3
+        auto_scale:
+          enabled: true
+          min: 3
+          max: 10
+        labels:
+          workload: general
+        taints: []
+
+      # Agent workloads (high memory)
+      agents:
+        name: "agent-pool"
+        size: "m-4vcpu-32gb"
+        count: 2
+        auto_scale:
+          enabled: true
+          min: 2
+          max: 20
+        labels:
+          workload: agents
+          dedicated: lucidia
+        taints:
+          - key: dedicated
+            value: agents
+            effect: NoSchedule
+
+      # GPU workloads (inference)
+      gpu:
+        name: "gpu-pool"
+        size: "gpu-h100x1-80gb"  # When available
+        count: 0
+        auto_scale:
+          enabled: true
+          min: 0
+          max: 4
+        labels:
+          workload: inference
+          gpu: "true"
+        taints:
+          - key: nvidia.com/gpu
+            value: "true"
+            effect: NoSchedule
+
+    networking:
+      vpc_uuid: "${DO_VPC_UUID}"
+      service_subnet: "10.245.0.0/16"
+      cluster_subnet: "10.244.0.0/16"
+
+  # Secondary region
+  production-uswest:
+    provider: digitalocean
+    name: "blackroad-prod-uswest"
+    region: sfo3
+    version: "1.29"
+
+    node_pools:
+      general:
+        name: "general-pool"
+        size: "s-4vcpu-8gb"
+        count: 2
+        auto_scale:
+          enabled: true
+          min: 2
+          max: 8
+
+  # Staging cluster
+  staging:
+    provider: digitalocean
+    name: "blackroad-staging"
+    region: nyc1
+    version: "1.29"
+
+    node_pools:
+      general:
+        name: "general-pool"
+        size: "s-2vcpu-4gb"
+        count: 2
+        auto_scale:
+          enabled: true
+          min: 1
+          max: 5
+
+# ============================================
+# NAMESPACES
+# ============================================
+
+namespaces:
+  - name: blackroad-system
+    labels:
+      tier: platform
+    resource_quota:
+      requests.cpu: "10"
+      requests.memory: "20Gi"
+      limits.cpu: "20"
+      limits.memory: "40Gi"
+
+  - name: blackroad-api
+    labels:
+      tier: api
+    resource_quota:
+      requests.cpu: "20"
+      requests.memory: "40Gi"
+
+  - name: blackroad-agents
+    labels:
+      tier: agents
+    resource_quota:
+      requests.cpu: "100"
+      requests.memory: "200Gi"
+
+  - name: blackroad-workers
+    labels:
+      tier: workers
+
+  - name: blackroad-inference
+    labels:
+      tier: inference
+      gpu: required
+
+  - name: monitoring
+    labels:
+      tier: observability
+
+  - name: ingress
+    labels:
+      tier: networking
+
+# ============================================
+# WORKLOADS
+# ============================================
+
+deployments:
+  # API Gateway
+  api-gateway:
+    namespace: blackroad-api
+    replicas: 3
+    image: "ghcr.io/blackroad/blackroad-os:${VERSION}"
+    command: ["python", "-m", "uvicorn", "br_operator.main:app", "--host", "0.0.0.0", "--port", "8080"]
+
+    resources:
+      requests:
+        cpu: "500m"
+        memory: "1Gi"
+      limits:
+        cpu: "2"
+        memory: "4Gi"
+
+    env:
+      - name: ENVIRONMENT
+        value: production
+      - name: LOG_LEVEL
+        value: info
+      - name: GOVERNANCE_MODE
+        value: strict
+
+    ports:
+      - containerPort: 8080
+        name: http
+
+    probes:
+      liveness:
+        httpGet:
+          path: /health
+          port: 8080
+        initialDelaySeconds: 10
+        periodSeconds: 10
+      readiness:
+        httpGet:
+          path: /health
+          port: 8080
+        initialDelaySeconds: 5
+        periodSeconds: 5
+
+    hpa:
+      minReplicas: 3
+      maxReplicas: 20
+      metrics:
+        - type: Resource
+          resource:
+            name: cpu
+            target:
+              type: Utilization
+              averageUtilization: 70
+        - type: Resource
+          resource:
+            name: memory
+            target:
+              type: Utilization
+              averageUtilization: 80
+
+  # Agent Runtime
+  agent-runtime:
+    namespace: blackroad-agents
+    replicas: 5
+    image: "ghcr.io/blackroad/lucidia-agents:${VERSION}"
+
+    resources:
+      requests:
+        cpu: "1"
+        memory: "4Gi"
+      limits:
+        cpu: "4"
+        memory: "16Gi"
+
+    nodeSelector:
+      workload: agents
+
+    tolerations:
+      - key: dedicated
+        operator: Equal
+        value: agents
+        effect: NoSchedule
+
+    env:
+      - name: MAX_AGENTS_PER_POD
+        value: "100"
+      - name: MEMORY_BACKEND
+        value: pinecone
+
+    hpa:
+      minReplicas: 5
+      maxReplicas: 50
+      metrics:
+        - type: Pods
+          pods:
+            metric:
+              name: active_agents
+            target:
+              type: AverageValue
+              averageValue: 80
+
+  # Worker
+  worker:
+    namespace: blackroad-workers
+    replicas: 3
+    image: "ghcr.io/blackroad/blackroad-os:${VERSION}"
+    command: ["python", "-m", "br_operator.worker"]
+
+    resources:
+      requests:
+        cpu: "500m"
+        memory: "2Gi"
+      limits:
+        cpu: "2"
+        memory: "8Gi"
+
+    hpa:
+      minReplicas: 3
+      maxReplicas: 30
+
+  # Intent Processor
+  intent-processor:
+    namespace: blackroad-workers
+    replicas: 2
+    image: "ghcr.io/blackroad/blackroad-os:${VERSION}"
+    command: ["python", "-m", "br_operator.intent_worker"]
+
+    resources:
+      requests:
+        cpu: "500m"
+        memory: "1Gi"
+      limits:
+        cpu: "2"
+        memory: "4Gi"
+
+# ============================================
+# SERVICES
+# ============================================
+
+services:
+  api-gateway:
+    type: ClusterIP
+    ports:
+      - port: 80
+        targetPort: 8080
+        name: http
+
+  agent-runtime:
+    type: ClusterIP
+    ports:
+      - port: 8080
+        targetPort: 8080
+
+# ============================================
+# INGRESS
+# ============================================
+
+ingress:
+  controller: nginx
+
+  config:
+    use-forwarded-headers: "true"
+    compute-full-forwarded-for: "true"
+    use-proxy-protocol: "true"
+    proxy-body-size: "50m"
+    proxy-read-timeout: "3600"
+    proxy-send-timeout: "3600"
+
+  rules:
+    - host: api.blackroad.io
+      paths:
+        - path: /
+          service: api-gateway
+          port: 80
+
+    - host: agents.lucidia.earth
+      paths:
+        - path: /
+          service: agent-runtime
+          port: 8080
+
+  tls:
+    - hosts:
+        - api.blackroad.io
+        - agents.lucidia.earth
+      secretName: blackroad-tls
+
+# ============================================
+# STORAGE
+# ============================================
+
+storage:
+  storage_classes:
+    # Fast SSD storage
+    fast-ssd:
+      provisioner: dobs.csi.digitalocean.com
+      parameters:
+        type: pd-ssd
+      reclaimPolicy: Retain
+      volumeBindingMode: WaitForFirstConsumer
+
+  persistent_volumes:
+    # Agent state storage
+    agent-state:
+      storageClass: fast-ssd
+      size: 100Gi
+      accessModes:
+        - ReadWriteOnce
+
+    # Ledger archive
+    ledger-archive:
+      storageClass: fast-ssd
+      size: 500Gi
+      accessModes:
+        - ReadWriteOnce
+
+# ============================================
+# SECRETS MANAGEMENT
+# ============================================
+
+secrets:
+  external_secrets:
+    provider: vault
+    vault_address: "${VAULT_ADDR}"
+
+  secrets:
+    - name: database-credentials
+      data:
+        DATABASE_URL: vault:secret/data/blackroad/database#url
+        REDIS_URL: vault:secret/data/blackroad/redis#url
+
+    - name: api-keys
+      data:
+        ANTHROPIC_API_KEY: vault:secret/data/blackroad/anthropic#api_key
+        OPENAI_API_KEY: vault:secret/data/blackroad/openai#api_key
+        PINECONE_API_KEY: vault:secret/data/blackroad/pinecone#api_key
+
+    - name: auth-secrets
+      data:
+        AUTH0_CLIENT_SECRET: vault:secret/data/blackroad/auth0#client_secret
+        JWT_SECRET: vault:secret/data/blackroad/jwt#secret
+
+# ============================================
+# CONFIG MAPS
+# ============================================
+
+config_maps:
+  - name: blackroad-config
+    data:
+      ENVIRONMENT: production
+      LOG_LEVEL: info
+      GOVERNOR: alice.governor.v1
+      OPERATOR: alexa.operator.v1
+      AMUNDSON_VERSION: "0.1.0"
+
+  - name: feature-flags
+    data:
+      ENABLE_INTENT_CHAINS: "true"
+      ENABLE_AGENT_HOMES: "false"
+      ENABLE_ROADCHAIN: "false"
+
+# ============================================
+# NETWORK POLICIES
+# ============================================
+
+network_policies:
+  # Default deny all
+  - name: default-deny
+    namespace: blackroad-api
+    spec:
+      podSelector: {}
+      policyTypes:
+        - Ingress
+        - Egress
+
+  # Allow API ingress
+  - name: allow-api-ingress
+    namespace: blackroad-api
+    spec:
+      podSelector:
+        matchLabels:
+          app: api-gateway
+      ingress:
+        - from:
+            - namespaceSelector:
+                matchLabels:
+                  name: ingress
+          ports:
+            - protocol: TCP
+              port: 8080
+
+  # Allow API to database
+  - name: allow-api-database
+    namespace: blackroad-api
+    spec:
+      podSelector:
+        matchLabels:
+          app: api-gateway
+      egress:
+        - to:
+            - ipBlock:
+                cidr: 10.0.0.0/8  # Internal services
+          ports:
+            - protocol: TCP
+              port: 5432
+            - protocol: TCP
+              port: 6379
+
+# ============================================
+# POD DISRUPTION BUDGETS
+# ============================================
+
+pdb:
+  - name: api-gateway-pdb
+    selector:
+      app: api-gateway
+    minAvailable: 2
+
+  - name: agent-runtime-pdb
+    selector:
+      app: agent-runtime
+    minAvailable: 3
+
+# ============================================
+# MONITORING
+# ============================================
+
+monitoring:
+  # Prometheus
+  prometheus:
+    enabled: true
+    namespace: monitoring
+    retention: 15d
+    storage: 100Gi
+
+  # Grafana
+  grafana:
+    enabled: true
+    namespace: monitoring
+    dashboards:
+      - kubernetes-overview
+      - blackroad-api
+      - blackroad-agents
+
+  # Metrics Server
+  metrics_server:
+    enabled: true
+
+  # kube-state-metrics
+  kube_state_metrics:
+    enabled: true

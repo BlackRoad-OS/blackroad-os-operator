@@ -1,0 +1,446 @@
+# Zapier Configuration
+# BlackRoad OS Workflow Automation
+#
+# Multi-app automation and integrations
+#
+# @blackroad_name: BlackRoad Automate
+# @tier: Professional
+# @operator: alexa.operator.v1
+
+version: "zapier-v1"
+
+# ============================================
+# CONNECTION
+# ============================================
+
+connection:
+  api_key: "${ZAPIER_API_KEY}"
+  account_id: "${ZAPIER_ACCOUNT_ID}"
+
+# ============================================
+# ZAPS (Workflows)
+# ============================================
+
+zaps:
+  # ============================================
+  # CUSTOMER LIFECYCLE
+  # ============================================
+
+  # New signup notification
+  new-signup-notification:
+    name: "New Signup → Slack + HubSpot"
+    trigger:
+      app: webhook
+      event: catch_hook
+      webhook_url: "https://hooks.zapier.com/hooks/catch/${ZAPIER_WEBHOOK_ID}/signup"
+
+    actions:
+      - app: slack
+        action: send_channel_message
+        channel: "#signups"
+        message: |
+          🎉 New signup!
+          Email: {{email}}
+          Plan: {{plan}}
+          Source: {{source}}
+
+      - app: hubspot
+        action: create_contact
+        properties:
+          email: "{{email}}"
+          firstname: "{{first_name}}"
+          lastname: "{{last_name}}"
+          lifecycle_stage: "subscriber"
+          lead_source: "{{source}}"
+
+      - app: gmail
+        action: send_email
+        to: "{{email}}"
+        subject: "Welcome to BlackRoad!"
+        body_template: welcome_email
+
+  # Trial ending reminder
+  trial-ending:
+    name: "Trial Ending → Email + Slack"
+    trigger:
+      app: schedule
+      event: every_day
+      time: "09:00"
+
+    filter:
+      - condition: "trial_days_remaining <= 3"
+
+    actions:
+      - app: gmail
+        action: send_email
+        to: "{{user_email}}"
+        subject: "Your BlackRoad trial ends in {{trial_days_remaining}} days"
+        body_template: trial_ending
+
+      - app: slack
+        action: send_channel_message
+        channel: "#sales"
+        message: |
+          ⏰ Trial ending: {{user_email}}
+          Days remaining: {{trial_days_remaining}}
+          Usage: {{agent_count}} agents, {{invocation_count}} invocations
+
+  # Customer upgraded
+  customer-upgraded:
+    name: "Upgrade → Celebrate + Update CRM"
+    trigger:
+      app: stripe
+      event: customer_subscription_updated
+      filter:
+        - previous_plan: "free"
+        - current_plan: ["starter", "pro", "enterprise"]
+
+    actions:
+      - app: slack
+        action: send_channel_message
+        channel: "#wins"
+        message: |
+          💰 New upgrade!
+          Customer: {{customer_email}}
+          Plan: {{plan_name}}
+          MRR: ${{mrr}}
+
+      - app: hubspot
+        action: update_contact
+        email: "{{customer_email}}"
+        properties:
+          lifecycle_stage: "customer"
+          plan: "{{plan_name}}"
+
+  # Customer churned
+  customer-churned:
+    name: "Churn → Alert + Survey"
+    trigger:
+      app: stripe
+      event: customer_subscription_deleted
+
+    actions:
+      - app: slack
+        action: send_channel_message
+        channel: "#churn"
+        message: |
+          😢 Customer churned
+          Email: {{customer_email}}
+          Plan: {{plan_name}}
+          Tenure: {{tenure_months}} months
+          Reason: {{cancellation_reason}}
+
+      - app: typeform
+        action: send_survey
+        to: "{{customer_email}}"
+        survey_id: "churn_feedback"
+
+  # ============================================
+  # ENGINEERING WORKFLOWS
+  # ============================================
+
+  # GitHub PR merged → Deploy notification
+  pr-merged-deploy:
+    name: "PR Merged → Deploy + Notify"
+    trigger:
+      app: github
+      event: pull_request_merged
+      repo: "blackroad/blackroad-os-operator"
+      branch: "main"
+
+    actions:
+      - app: slack
+        action: send_channel_message
+        channel: "#deploys"
+        message: |
+          🚀 PR merged to main
+          Title: {{pr_title}}
+          Author: {{pr_author}}
+          URL: {{pr_url}}
+          Deployment starting...
+
+      - app: webhook
+        action: post
+        url: "https://api.blackroad.io/internal/deploy"
+        data:
+          ref: "main"
+          triggered_by: "zapier"
+
+  # Sentry error → Create Linear issue
+  sentry-to-linear:
+    name: "Sentry Alert → Linear Issue"
+    trigger:
+      app: sentry
+      event: new_issue
+      project: "blackroad-api"
+
+    filter:
+      - level: ["error", "fatal"]
+      - events_count: "> 5"
+
+    actions:
+      - app: linear
+        action: create_issue
+        team: "Platform"
+        title: "[Sentry] {{issue_title}}"
+        description: |
+          **Error:** {{error_message}}
+          **Count:** {{events_count}}
+          **First seen:** {{first_seen}}
+          **Link:** {{sentry_url}}
+        labels:
+          - "bug"
+          - "sentry"
+
+      - app: slack
+        action: send_channel_message
+        channel: "#alerts"
+        message: |
+          🐛 New Sentry issue → Linear
+          {{issue_title}}
+          Events: {{events_count}}
+
+  # Datadog alert → PagerDuty + Slack
+  datadog-alert:
+    name: "Datadog Alert → PagerDuty"
+    trigger:
+      app: datadog
+      event: monitor_alert
+      severity: ["critical"]
+
+    actions:
+      - app: pagerduty
+        action: create_incident
+        service: "blackroad-api"
+        title: "{{alert_title}}"
+        body: "{{alert_body}}"
+        urgency: "high"
+
+      - app: slack
+        action: send_channel_message
+        channel: "#incidents"
+        message: |
+          🚨 CRITICAL: {{alert_title}}
+          {{alert_body}}
+          PagerDuty incident created.
+
+  # ============================================
+  # SUPPORT WORKFLOWS
+  # ============================================
+
+  # Support email → Ticket + Slack
+  support-email:
+    name: "Support Email → Zendesk + Slack"
+    trigger:
+      app: gmail
+      event: new_email
+      to: "support@blackroad.io"
+
+    actions:
+      - app: zendesk
+        action: create_ticket
+        subject: "{{email_subject}}"
+        body: "{{email_body}}"
+        requester_email: "{{from_email}}"
+        priority: "normal"
+
+      - app: slack
+        action: send_channel_message
+        channel: "#support"
+        message: |
+          📧 New support email
+          From: {{from_email}}
+          Subject: {{email_subject}}
+          Ticket: {{zendesk_ticket_url}}
+
+  # Discord message → Support ticket
+  discord-support:
+    name: "Discord #support → Zendesk"
+    trigger:
+      app: discord
+      event: new_message
+      channel: "#support"
+
+    filter:
+      - message_contains: ["help", "issue", "bug", "error", "problem"]
+
+    actions:
+      - app: zendesk
+        action: create_ticket
+        subject: "Discord support: {{message_preview}}"
+        body: |
+          **From Discord #support**
+          User: {{discord_user}}
+          Message: {{message_content}}
+
+  # ============================================
+  # CONTENT & MARKETING
+  # ============================================
+
+  # Blog post → Social media
+  blog-to-social:
+    name: "New Blog Post → Twitter + LinkedIn"
+    trigger:
+      app: rss
+      event: new_item
+      feed_url: "https://blackroad.io/blog/rss.xml"
+
+    actions:
+      - app: twitter
+        action: create_tweet
+        text: |
+          📝 New on the blog: {{title}}
+
+          {{description}}
+
+          Read more: {{link}}
+
+      - app: linkedin
+        action: create_post
+        text: |
+          📝 {{title}}
+
+          {{description}}
+
+          {{link}}
+
+  # ============================================
+  # INTERNAL OPS
+  # ============================================
+
+  # Weekly metrics report
+  weekly-metrics:
+    name: "Weekly Metrics → Slack + Email"
+    trigger:
+      app: schedule
+      event: every_week
+      day: monday
+      time: "09:00"
+
+    actions:
+      - app: webhook
+        action: get
+        url: "https://api.blackroad.io/internal/metrics/weekly"
+
+      - app: slack
+        action: send_channel_message
+        channel: "#metrics"
+        message: |
+          📊 Weekly Metrics Report
+
+          **Users**
+          - Active: {{active_users}}
+          - New: {{new_users}}
+          - Churned: {{churned_users}}
+
+          **Agents**
+          - Total: {{total_agents}}
+          - Active: {{active_agents}}
+          - Invocations: {{total_invocations}}
+
+          **Revenue**
+          - MRR: ${{mrr}}
+          - Change: {{mrr_change}}%
+
+      - app: gmail
+        action: send_email
+        to: "team@blackroad.io"
+        subject: "Weekly Metrics Report - {{date}}"
+        body_template: weekly_metrics
+
+  # New Linear issue → Notion
+  linear-to-notion:
+    name: "Linear Issue → Notion Sync"
+    trigger:
+      app: linear
+      event: issue_created
+      team: "Platform"
+
+    filter:
+      - labels_contains: "feature"
+
+    actions:
+      - app: notion
+        action: create_page
+        database: "Feature Specs"
+        properties:
+          Title: "{{issue_title}}"
+          Status: "Draft"
+          Linear Issue: "{{issue_url}}"
+          Owner: "{{assignee}}"
+
+# ============================================
+# WEBHOOKS (Inbound)
+# ============================================
+
+webhooks:
+  # BlackRoad events
+  blackroad-events:
+    url: "https://hooks.zapier.com/hooks/catch/${ZAPIER_WEBHOOK_ID}/events"
+    events:
+      - user_signed_up
+      - user_upgraded
+      - user_churned
+      - agent_created
+      - error_occurred
+
+# ============================================
+# PATHS (Conditional Branching)
+# ============================================
+
+paths:
+  # Route by plan type
+  plan-routing:
+    trigger:
+      event: customer_subscription_created
+    branches:
+      - name: "Enterprise"
+        condition: "plan == 'enterprise'"
+        actions:
+          - notify_sales_team
+          - schedule_onboarding_call
+          - create_slack_channel
+
+      - name: "Pro"
+        condition: "plan == 'pro'"
+        actions:
+          - send_pro_welcome_email
+          - add_to_pro_sequence
+
+      - name: "Starter"
+        condition: "plan == 'starter'"
+        actions:
+          - send_starter_welcome_email
+
+# ============================================
+# TABLES (Data Storage)
+# ============================================
+
+tables:
+  # Customer events log
+  customer-events:
+    fields:
+      - name: event_type
+        type: text
+      - name: customer_email
+        type: email
+      - name: plan
+        type: text
+      - name: timestamp
+        type: datetime
+      - name: metadata
+        type: text
+
+  # Metrics snapshots
+  metrics-snapshots:
+    fields:
+      - name: date
+        type: date
+      - name: active_users
+        type: number
+      - name: mrr
+        type: currency
+      - name: agent_count
+        type: number
+      - name: invocation_count
+        type: number

@@ -1,0 +1,452 @@
+# PostHog Configuration
+# BlackRoad OS Product Analytics
+#
+# User behavior tracking and product analytics
+#
+# @blackroad_name: BlackRoad Product
+# @tier: Scale
+# @operator: alexa.operator.v1
+
+version: "posthog-v1"
+
+# ============================================
+# CONNECTION
+# ============================================
+
+connection:
+  api_key: "${POSTHOG_API_KEY}"
+  project_id: "${POSTHOG_PROJECT_ID}"
+  host: "https://app.posthog.com"  # Or self-hosted URL
+
+# ============================================
+# PROJECTS
+# ============================================
+
+projects:
+  blackroad-os:
+    name: "BlackRoad OS"
+    timezone: "America/Los_Angeles"
+
+  lucidia:
+    name: "Lucidia"
+    timezone: "America/Los_Angeles"
+
+# ============================================
+# EVENT TRACKING
+# ============================================
+
+events:
+  # User events
+  user:
+    - name: user_signed_up
+      properties:
+        - source
+        - referrer
+        - plan
+
+    - name: user_logged_in
+      properties:
+        - method  # email, google, github
+        - mfa_used
+
+    - name: user_upgraded
+      properties:
+        - from_plan
+        - to_plan
+        - mrr_change
+
+    - name: user_churned
+      properties:
+        - reason
+        - plan
+        - tenure_days
+
+  # Agent events
+  agent:
+    - name: agent_created
+      properties:
+        - agent_type
+        - template
+        - has_custom_instructions
+
+    - name: agent_invoked
+      properties:
+        - agent_id
+        - agent_type
+        - model
+        - input_tokens
+        - output_tokens
+        - latency_ms
+        - success
+
+    - name: agent_conversation_started
+      properties:
+        - agent_id
+        - source  # web, api, mobile
+
+    - name: agent_conversation_ended
+      properties:
+        - agent_id
+        - message_count
+        - duration_seconds
+
+    - name: agent_memory_stored
+      properties:
+        - agent_id
+        - memory_type
+        - memory_count
+
+  # Feature usage
+  feature:
+    - name: feature_used
+      properties:
+        - feature_name
+        - context
+
+    - name: governance_policy_evaluated
+      properties:
+        - policy_pack
+        - effect
+        - resource
+
+    - name: intent_created
+      properties:
+        - template
+        - step_count
+
+    - name: intent_completed
+      properties:
+        - template
+        - success
+        - duration_seconds
+
+  # Errors
+  error:
+    - name: error_occurred
+      properties:
+        - error_type
+        - error_message
+        - context
+        - stack_trace
+
+    - name: rate_limit_hit
+      properties:
+        - endpoint
+        - limit_type
+
+# ============================================
+# USER IDENTIFICATION
+# ============================================
+
+identification:
+  # User properties
+  user_properties:
+    - name: email
+      type: string
+    - name: name
+      type: string
+    - name: organization_id
+      type: string
+    - name: organization_name
+      type: string
+    - name: plan
+      type: string
+    - name: role
+      type: string
+    - name: created_at
+      type: datetime
+    - name: agent_count
+      type: number
+    - name: total_invocations
+      type: number
+
+  # Group properties (organizations)
+  group_properties:
+    - name: organization
+      properties:
+        - name
+        - plan
+        - industry
+        - size
+        - created_at
+        - mrr
+        - user_count
+        - agent_count
+
+# ============================================
+# FEATURE FLAGS
+# ============================================
+
+feature_flags:
+  # Agent features
+  - key: enable_intent_chains
+    name: "Enable Intent Chains"
+    filters:
+      - type: person
+        property: plan
+        operator: in
+        value: ["pro", "enterprise"]
+
+  - key: enable_agent_homes
+    name: "Enable Agent Homes (Unity)"
+    filters:
+      - type: percent
+        value: 0  # Not yet released
+
+  - key: enable_roadchain
+    name: "Enable RoadChain"
+    filters:
+      - type: percent
+        value: 0  # Not yet released
+
+  - key: new_dashboard_ui
+    name: "New Dashboard UI"
+    filters:
+      - type: percent
+        value: 20  # 20% rollout
+
+  - key: advanced_memory_features
+    name: "Advanced Memory Features"
+    filters:
+      - type: person
+        property: plan
+        operator: in
+        value: ["enterprise"]
+
+  # Beta features
+  - key: beta_voice_agents
+    name: "Beta: Voice Agents"
+    filters:
+      - type: cohort
+        value: beta_testers
+
+  - key: beta_multimodal
+    name: "Beta: Multimodal Agents"
+    filters:
+      - type: cohort
+        value: beta_testers
+
+# ============================================
+# COHORTS
+# ============================================
+
+cohorts:
+  - name: beta_testers
+    description: "Users opted into beta features"
+    filters:
+      - type: person
+        property: beta_tester
+        operator: equals
+        value: true
+
+  - name: power_users
+    description: "Users with high engagement"
+    filters:
+      - type: behavioral
+        event: agent_invoked
+        operator: gte
+        value: 100
+        time_value: 30
+        time_unit: day
+
+  - name: enterprise_users
+    description: "Enterprise plan users"
+    filters:
+      - type: person
+        property: plan
+        operator: equals
+        value: enterprise
+
+  - name: at_risk_users
+    description: "Users showing churn signals"
+    filters:
+      - type: behavioral
+        event: user_logged_in
+        operator: lt
+        value: 2
+        time_value: 30
+        time_unit: day
+
+# ============================================
+# INSIGHTS & DASHBOARDS
+# ============================================
+
+dashboards:
+  # Executive Dashboard
+  executive:
+    name: "Executive Overview"
+    insights:
+      - name: Daily Active Users
+        type: trends
+        events:
+          - event: $pageview
+            math: dau
+
+      - name: Weekly Active Users
+        type: trends
+        events:
+          - event: $pageview
+            math: weekly_active
+
+      - name: Signup Funnel
+        type: funnel
+        events:
+          - event: user_signed_up
+          - event: agent_created
+          - event: agent_invoked
+
+      - name: Retention
+        type: retention
+        target_event: agent_invoked
+        returning_event: agent_invoked
+
+  # Product Dashboard
+  product:
+    name: "Product Analytics"
+    insights:
+      - name: Feature Adoption
+        type: trends
+        events:
+          - event: feature_used
+        breakdown: feature_name
+
+      - name: Agent Usage by Type
+        type: trends
+        events:
+          - event: agent_invoked
+        breakdown: agent_type
+
+      - name: User Journey
+        type: paths
+        start_event: user_signed_up
+        end_event: user_upgraded
+
+  # Agent Dashboard
+  agents:
+    name: "Agent Analytics"
+    insights:
+      - name: Agents Created
+        type: trends
+        events:
+          - event: agent_created
+
+      - name: Agent Invocations
+        type: trends
+        events:
+          - event: agent_invoked
+
+      - name: Avg Conversation Length
+        type: trends
+        events:
+          - event: agent_conversation_ended
+            math: avg
+            property: message_count
+
+# ============================================
+# EXPERIMENTS (A/B Tests)
+# ============================================
+
+experiments:
+  - name: onboarding_flow_v2
+    description: "Test new onboarding flow"
+    feature_flag: new_onboarding_flow
+    variants:
+      - key: control
+        rollout: 50
+      - key: test
+        rollout: 50
+    goal_metric:
+      event: agent_created
+      window_days: 7
+
+  - name: pricing_page_experiment
+    description: "Test new pricing page design"
+    feature_flag: new_pricing_page
+    variants:
+      - key: control
+        rollout: 50
+      - key: test
+        rollout: 50
+    goal_metric:
+      event: user_upgraded
+      window_days: 14
+
+# ============================================
+# SESSION RECORDING
+# ============================================
+
+session_recording:
+  enabled: true
+  sample_rate: 10  # 10% of sessions
+
+  masking:
+    # Mask sensitive inputs
+    mask_all_inputs: false
+    mask_inputs_by_selector:
+      - "[type=password]"
+      - "[name=credit_card]"
+      - ".sensitive-data"
+
+  # Don't record certain pages
+  exclude_paths:
+    - "/admin/*"
+    - "/settings/billing"
+
+# ============================================
+# HEATMAPS
+# ============================================
+
+heatmaps:
+  enabled: true
+  pages:
+    - "/dashboard"
+    - "/agents"
+    - "/pricing"
+    - "/onboarding/*"
+
+# ============================================
+# SURVEYS
+# ============================================
+
+surveys:
+  - name: nps_survey
+    type: nps
+    trigger:
+      event: agent_conversation_ended
+      conditions:
+        - property: message_count
+          operator: gte
+          value: 5
+    question: "How likely are you to recommend BlackRoad to a friend or colleague?"
+    follow_up: "What's the main reason for your score?"
+
+  - name: feature_feedback
+    type: open
+    trigger:
+      event: feature_used
+      conditions:
+        - property: feature_name
+          operator: in
+          value: ["intent_chains", "governance"]
+    question: "How was your experience with this feature?"
+
+# ============================================
+# DATA MANAGEMENT
+# ============================================
+
+data:
+  # Retention
+  retention:
+    events: 365  # days
+    session_recordings: 90  # days
+
+  # PII handling
+  pii:
+    hash_email: false  # Keep for identification
+    anonymize_ip: true
+
+  # Exports
+  exports:
+    - type: s3
+      bucket: "blackroad-analytics"
+      schedule: daily

@@ -1,0 +1,385 @@
+# Kafka / Event Streaming Configuration
+# BlackRoad OS Event Bus
+#
+# High-throughput event streaming for agent orchestration
+#
+# @blackroad_name: BlackRoad Stream
+# @tier: Standard (Confluent Cloud)
+# @operator: alexa.operator.v1
+
+version: "kafka-v1"
+
+# ============================================
+# PROVIDER CONFIGURATION
+# ============================================
+
+providers:
+  # Primary: Confluent Cloud
+  confluent:
+    environment_id: "${CONFLUENT_ENV_ID}"
+    cluster_id: "${CONFLUENT_CLUSTER_ID}"
+    bootstrap_servers: "${CONFLUENT_BOOTSTRAP_SERVERS}"
+
+    credentials:
+      api_key: "${CONFLUENT_API_KEY}"
+      api_secret: "${CONFLUENT_API_SECRET}"
+
+    cluster:
+      name: "blackroad-events"
+      type: dedicated  # Basic, Standard, or Dedicated
+      region: us-west-2
+      availability: single-zone  # Or multi-zone for HA
+
+      # Cluster Linking (for multi-region)
+      cluster_linking:
+        enabled: false
+
+  # Alternative: Redis Streams (for lower scale)
+  redis_streams:
+    enabled: true
+    use_for:
+      - development
+      - staging
+    redis_url: "${REDIS_URL}"
+
+  # Alternative: Self-hosted (Kubernetes)
+  self_hosted:
+    enabled: false
+    helm_chart: "confluentinc/cp-helm-charts"
+    version: "0.6.0"
+
+# ============================================
+# TOPICS
+# ============================================
+
+topics:
+  # Agent lifecycle events
+  agent-events:
+    name: "blackroad.agents.events"
+    partitions: 12
+    replication_factor: 3
+    retention_ms: 604800000  # 7 days
+    cleanup_policy: delete
+
+    config:
+      min.insync.replicas: 2
+      compression.type: lz4
+
+    schema:
+      type: avro
+      subject: "agent-events-value"
+      schema: |
+        {
+          "type": "record",
+          "name": "AgentEvent",
+          "namespace": "io.blackroad.events",
+          "fields": [
+            {"name": "event_id", "type": "string"},
+            {"name": "event_type", "type": {"type": "enum", "name": "EventType", "symbols": ["CREATED", "STARTED", "STOPPED", "INVOKED", "MEMORY_UPDATED", "CAPABILITY_CHANGED", "ERROR"]}},
+            {"name": "agent_id", "type": "string"},
+            {"name": "timestamp", "type": "long", "logicalType": "timestamp-millis"},
+            {"name": "correlation_id", "type": "string"},
+            {"name": "payload", "type": ["null", "string"], "default": null}
+          ]
+        }
+
+  # Governance events
+  governance-events:
+    name: "blackroad.governance.events"
+    partitions: 6
+    replication_factor: 3
+    retention_ms: 2592000000  # 30 days (compliance)
+    cleanup_policy: delete
+
+    config:
+      min.insync.replicas: 2
+
+    schema:
+      type: avro
+      subject: "governance-events-value"
+      schema: |
+        {
+          "type": "record",
+          "name": "GovernanceEvent",
+          "namespace": "io.blackroad.governance",
+          "fields": [
+            {"name": "event_id", "type": "string"},
+            {"name": "event_type", "type": "string"},
+            {"name": "actor", "type": {"type": "record", "name": "Actor", "fields": [
+              {"name": "type", "type": "string"},
+              {"name": "id", "type": "string"}
+            ]}},
+            {"name": "action", "type": "string"},
+            {"name": "resource", "type": "string"},
+            {"name": "decision", "type": "string"},
+            {"name": "reasoning", "type": ["null", "string"], "default": null},
+            {"name": "timestamp", "type": "long"},
+            {"name": "correlation_id", "type": "string"}
+          ]
+        }
+
+  # Intent chain events
+  intent-events:
+    name: "blackroad.intents.events"
+    partitions: 6
+    replication_factor: 3
+    retention_ms: 604800000  # 7 days
+
+    schema:
+      type: avro
+      subject: "intent-events-value"
+
+  # User activity events
+  user-events:
+    name: "blackroad.users.events"
+    partitions: 12
+    replication_factor: 3
+    retention_ms: 2592000000  # 30 days
+
+  # Memory persistence events
+  memory-events:
+    name: "blackroad.memory.events"
+    partitions: 24  # High volume
+    replication_factor: 3
+    retention_ms: 86400000  # 1 day (processed quickly)
+    cleanup_policy: delete
+
+  # Metrics events
+  metrics-events:
+    name: "blackroad.metrics.events"
+    partitions: 6
+    replication_factor: 3
+    retention_ms: 86400000  # 1 day
+    cleanup_policy: delete
+
+  # Dead letter queue
+  dlq:
+    name: "blackroad.dlq"
+    partitions: 3
+    replication_factor: 3
+    retention_ms: 604800000  # 7 days
+
+# ============================================
+# CONSUMER GROUPS
+# ============================================
+
+consumer_groups:
+  # Ledger writers
+  ledger-writers:
+    topics:
+      - blackroad.governance.events
+    instances: 3
+    auto_offset_reset: earliest
+    enable_auto_commit: false
+    max_poll_records: 100
+
+  # Analytics processors
+  analytics-processors:
+    topics:
+      - blackroad.agents.events
+      - blackroad.users.events
+    instances: 2
+    auto_offset_reset: latest
+    enable_auto_commit: true
+
+  # Memory persisters
+  memory-persisters:
+    topics:
+      - blackroad.memory.events
+    instances: 5
+    auto_offset_reset: earliest
+    enable_auto_commit: false
+    max_poll_records: 500
+
+  # Intent processors
+  intent-processors:
+    topics:
+      - blackroad.intents.events
+    instances: 3
+    auto_offset_reset: earliest
+
+  # Notification service
+  notifications:
+    topics:
+      - blackroad.agents.events
+      - blackroad.governance.events
+    instances: 2
+    auto_offset_reset: latest
+
+# ============================================
+# PRODUCERS
+# ============================================
+
+producers:
+  default:
+    acks: all
+    retries: 3
+    retry_backoff_ms: 100
+    linger_ms: 5
+    batch_size: 16384
+    compression_type: lz4
+    idempotence: true
+
+  high_throughput:
+    acks: 1
+    retries: 3
+    linger_ms: 50
+    batch_size: 65536
+    compression_type: snappy
+
+  critical:
+    acks: all
+    retries: 10
+    retry_backoff_ms: 500
+    idempotence: true
+    transactional_id: "blackroad-critical"
+
+# ============================================
+# KAFKA CONNECT
+# ============================================
+
+connectors:
+  # PostgreSQL CDC (Debezium)
+  postgres-source:
+    connector_class: "io.debezium.connector.postgresql.PostgresConnector"
+    tasks_max: 1
+    config:
+      database.hostname: "${POSTGRES_HOST}"
+      database.port: 5432
+      database.user: "${POSTGRES_USER}"
+      database.password: "${POSTGRES_PASSWORD}"
+      database.dbname: "blackroad"
+      database.server.name: "blackroad-db"
+      table.include.list: "public.ledger_events,public.agents,public.intents"
+      plugin.name: "pgoutput"
+      publication.name: "blackroad_publication"
+
+  # S3 Sink (for archival)
+  s3-sink:
+    connector_class: "io.confluent.connect.s3.S3SinkConnector"
+    tasks_max: 2
+    config:
+      s3.bucket.name: "blackroad-event-archive"
+      s3.region: "us-west-2"
+      topics: "blackroad.governance.events,blackroad.agents.events"
+      flush.size: 10000
+      rotate.interval.ms: 3600000
+      format.class: "io.confluent.connect.s3.format.parquet.ParquetFormat"
+      partitioner.class: "io.confluent.connect.storage.partitioner.TimeBasedPartitioner"
+      path.format: "'year'=YYYY/'month'=MM/'day'=dd/'hour'=HH"
+      partition.duration.ms: 3600000
+      locale: "en-US"
+      timezone: "UTC"
+
+  # Elasticsearch Sink (for search)
+  elasticsearch-sink:
+    connector_class: "io.confluent.connect.elasticsearch.ElasticsearchSinkConnector"
+    tasks_max: 2
+    config:
+      connection.url: "${ELASTICSEARCH_URL}"
+      topics: "blackroad.agents.events,blackroad.users.events"
+      key.ignore: true
+      schema.ignore: true
+      type.name: "_doc"
+
+# ============================================
+# KSQLDB (Stream Processing)
+# ============================================
+
+ksqldb:
+  enabled: true
+  cluster_id: "${KSQLDB_CLUSTER_ID}"
+
+  streams:
+    # Agent events stream
+    - name: AGENT_EVENTS
+      topic: blackroad.agents.events
+      value_format: AVRO
+      timestamp: timestamp
+
+    # Governance events stream
+    - name: GOVERNANCE_EVENTS
+      topic: blackroad.governance.events
+      value_format: AVRO
+      timestamp: timestamp
+
+  tables:
+    # Agent count by type
+    - name: AGENT_COUNTS
+      query: |
+        CREATE TABLE AGENT_COUNTS AS
+        SELECT
+          event_type,
+          COUNT(*) as count
+        FROM AGENT_EVENTS
+        GROUP BY event_type
+        EMIT CHANGES;
+
+    # Policy violation count
+    - name: POLICY_VIOLATIONS
+      query: |
+        CREATE TABLE POLICY_VIOLATIONS AS
+        SELECT
+          action,
+          COUNT(*) as violation_count
+        FROM GOVERNANCE_EVENTS
+        WHERE decision = 'deny'
+        GROUP BY action
+        EMIT CHANGES;
+
+# ============================================
+# MONITORING
+# ============================================
+
+monitoring:
+  # Confluent Control Center
+  control_center:
+    enabled: true
+
+  # Metrics
+  metrics:
+    jmx_enabled: true
+    export_to: datadog
+
+    tracked_metrics:
+      - kafka.producer.record-send-rate
+      - kafka.consumer.records-consumed-rate
+      - kafka.consumer.records-lag
+      - kafka.consumer.records-lag-max
+      - kafka.server.BrokerTopicMetrics.MessagesInPerSec
+
+  # Alerts
+  alerts:
+    - name: consumer_lag_high
+      condition: "kafka.consumer.records-lag-max > 10000"
+      severity: warning
+      notify:
+        - slack:#alerts
+
+    - name: under_replicated_partitions
+      condition: "kafka.server.ReplicaManager.UnderReplicatedPartitions > 0"
+      severity: critical
+      notify:
+        - pagerduty
+
+# ============================================
+# QUOTAS & LIMITS
+# ============================================
+
+quotas:
+  # Producer quotas
+  producer:
+    default_byte_rate: 10485760  # 10 MB/s
+    default_request_percentage: 50
+
+  # Consumer quotas
+  consumer:
+    default_byte_rate: 20971520  # 20 MB/s
+    default_request_percentage: 50
+
+  # Per-client quotas
+  clients:
+    agent-runtime:
+      producer_byte_rate: 52428800  # 50 MB/s
+    analytics:
+      consumer_byte_rate: 104857600  # 100 MB/s

@@ -1,0 +1,438 @@
+# Google Cloud Platform Configuration
+# BlackRoad OS Cloud Infrastructure (Tier 2)
+#
+# BigQuery analytics, Vertex AI, and ML pipelines
+#
+# @blackroad_name: BlackRoad Platform (GCP)
+# @tier: Reserved
+# @operator: alexa.operator.v1
+
+version: "gcp-v1"
+
+# ============================================
+# PROJECT CONFIGURATION
+# ============================================
+
+project:
+  project_id: "${GCP_PROJECT_ID}"
+  organization_id: "${GCP_ORG_ID}"
+  billing_account: "${GCP_BILLING_ACCOUNT}"
+  default_region: us-west1
+
+  regions:
+    primary: us-west1
+    secondary: us-east1
+    eu: europe-west1
+
+# ============================================
+# IAM & SERVICE ACCOUNTS
+# ============================================
+
+iam:
+  service_accounts:
+    # Application service account
+    blackroad-app:
+      display_name: "BlackRoad Application"
+      roles:
+        - roles/bigquery.dataEditor
+        - roles/bigquery.jobUser
+        - roles/storage.objectAdmin
+        - roles/aiplatform.user
+
+    # CI/CD service account
+    blackroad-ci:
+      display_name: "BlackRoad CI/CD"
+      roles:
+        - roles/cloudbuild.builds.builder
+        - roles/container.developer
+        - roles/storage.admin
+
+    # Analytics service account
+    blackroad-analytics:
+      display_name: "BlackRoad Analytics"
+      roles:
+        - roles/bigquery.dataViewer
+        - roles/bigquery.jobUser
+
+# ============================================
+# BIGQUERY (Analytics)
+# ============================================
+
+bigquery:
+  datasets:
+    # Events dataset
+    blackroad_events:
+      location: US
+      description: "Event data warehouse"
+      default_table_expiration_ms: null
+      access:
+        - role: READER
+          special_group: projectReaders
+        - role: WRITER
+          user_by_email: blackroad-app@${GCP_PROJECT_ID}.iam.gserviceaccount.com
+
+      tables:
+        # Agent events
+        agent_events:
+          schema:
+            - name: event_id
+              type: STRING
+              mode: REQUIRED
+            - name: event_type
+              type: STRING
+              mode: REQUIRED
+            - name: agent_id
+              type: STRING
+              mode: REQUIRED
+            - name: user_id
+              type: STRING
+            - name: organization_id
+              type: STRING
+            - name: timestamp
+              type: TIMESTAMP
+              mode: REQUIRED
+            - name: payload
+              type: JSON
+          partitioning:
+            type: DAY
+            field: timestamp
+          clustering:
+            - organization_id
+            - agent_id
+
+        # Governance events
+        governance_events:
+          schema:
+            - name: event_id
+              type: STRING
+              mode: REQUIRED
+            - name: event_type
+              type: STRING
+              mode: REQUIRED
+            - name: actor_type
+              type: STRING
+            - name: actor_id
+              type: STRING
+            - name: action
+              type: STRING
+            - name: resource
+              type: STRING
+            - name: decision
+              type: STRING
+            - name: reasoning
+              type: STRING
+            - name: timestamp
+              type: TIMESTAMP
+              mode: REQUIRED
+            - name: correlation_id
+              type: STRING
+          partitioning:
+            type: DAY
+            field: timestamp
+
+        # User activity
+        user_activity:
+          schema:
+            - name: event_id
+              type: STRING
+            - name: user_id
+              type: STRING
+            - name: organization_id
+              type: STRING
+            - name: event_type
+              type: STRING
+            - name: properties
+              type: JSON
+            - name: timestamp
+              type: TIMESTAMP
+          partitioning:
+            type: DAY
+            field: timestamp
+
+        # LLM usage
+        llm_usage:
+          schema:
+            - name: request_id
+              type: STRING
+            - name: organization_id
+              type: STRING
+            - name: user_id
+              type: STRING
+            - name: agent_id
+              type: STRING
+            - name: provider
+              type: STRING
+            - name: model
+              type: STRING
+            - name: input_tokens
+              type: INTEGER
+            - name: output_tokens
+              type: INTEGER
+            - name: latency_ms
+              type: INTEGER
+            - name: cost_usd
+              type: FLOAT
+            - name: timestamp
+              type: TIMESTAMP
+          partitioning:
+            type: DAY
+            field: timestamp
+
+    # Analytics dataset
+    blackroad_analytics:
+      location: US
+      description: "Aggregated analytics"
+
+      views:
+        # Daily active agents
+        daily_active_agents:
+          query: |
+            SELECT
+              DATE(timestamp) as date,
+              organization_id,
+              COUNT(DISTINCT agent_id) as active_agents,
+              COUNT(*) as total_invocations
+            FROM `${GCP_PROJECT_ID}.blackroad_events.agent_events`
+            WHERE event_type = 'INVOKED'
+            GROUP BY date, organization_id
+
+        # LLM cost by org
+        llm_cost_by_org:
+          query: |
+            SELECT
+              DATE(timestamp) as date,
+              organization_id,
+              provider,
+              SUM(input_tokens) as total_input_tokens,
+              SUM(output_tokens) as total_output_tokens,
+              SUM(cost_usd) as total_cost
+            FROM `${GCP_PROJECT_ID}.blackroad_events.llm_usage`
+            GROUP BY date, organization_id, provider
+
+# ============================================
+# CLOUD STORAGE
+# ============================================
+
+storage:
+  buckets:
+    # ML model artifacts
+    blackroad-models:
+      location: US
+      storage_class: STANDARD
+      versioning: true
+      lifecycle:
+        - action: SetStorageClass
+          storage_class: NEARLINE
+          age: 90
+
+    # BigQuery exports
+    blackroad-bq-exports:
+      location: US
+      storage_class: STANDARD
+      lifecycle:
+        - action: Delete
+          age: 365
+
+    # Training data
+    blackroad-training-data:
+      location: US
+      storage_class: STANDARD
+
+# ============================================
+# VERTEX AI (ML Platform)
+# ============================================
+
+vertex_ai:
+  # Feature Store
+  feature_store:
+    name: blackroad-features
+    region: us-west1
+
+    feature_groups:
+      - name: agent_features
+        entity_type: agent
+        features:
+          - name: total_invocations
+            type: INT64
+          - name: avg_response_time_ms
+            type: FLOAT
+          - name: error_rate
+            type: FLOAT
+          - name: memory_count
+            type: INT64
+
+      - name: user_features
+        entity_type: user
+        features:
+          - name: total_conversations
+            type: INT64
+          - name: agents_created
+            type: INT64
+          - name: subscription_tier
+            type: STRING
+
+  # Model Registry
+  model_registry:
+    models:
+      - name: intent-classifier
+        framework: tensorflow
+        version: "1.0"
+
+      - name: agent-embeddings
+        framework: custom
+        version: "1.0"
+
+  # Pipelines
+  pipelines:
+    # Daily metrics pipeline
+    daily-metrics:
+      schedule: "0 5 * * *"  # Daily at 5 AM
+      template: daily-metrics-pipeline
+      parameters:
+        date: "{{ ds }}"
+
+    # Weekly model retraining
+    weekly-retrain:
+      schedule: "0 0 * * 0"  # Weekly on Sunday
+      template: model-retrain-pipeline
+
+  # Endpoints (for model serving)
+  endpoints:
+    - name: intent-classifier-endpoint
+      model: intent-classifier
+      machine_type: n1-standard-4
+      min_replicas: 1
+      max_replicas: 5
+
+# ============================================
+# CLOUD FUNCTIONS
+# ============================================
+
+cloud_functions:
+  functions:
+    # BigQuery data loader
+    bq-data-loader:
+      runtime: python312
+      entry_point: load_data
+      memory: 512MB
+      timeout: 540s
+      trigger:
+        type: pubsub
+        topic: blackroad-events
+
+    # Analytics aggregator
+    analytics-aggregator:
+      runtime: python312
+      entry_point: aggregate
+      memory: 1024MB
+      timeout: 540s
+      trigger:
+        type: scheduler
+        schedule: "0 * * * *"  # Hourly
+
+# ============================================
+# PUB/SUB
+# ============================================
+
+pubsub:
+  topics:
+    # Events from Kafka Mirror
+    blackroad-events:
+      subscriptions:
+        - name: bq-loader-sub
+          push_endpoint: null  # Pull subscription
+          ack_deadline: 60
+          message_retention: 604800s  # 7 days
+
+    # Analytics triggers
+    blackroad-analytics-triggers:
+      subscriptions:
+        - name: analytics-sub
+          push_endpoint: null
+
+# ============================================
+# CLOUD SCHEDULER
+# ============================================
+
+scheduler:
+  jobs:
+    # Daily reports
+    daily-report:
+      schedule: "0 8 * * *"
+      timezone: "America/Los_Angeles"
+      target:
+        type: http
+        uri: "https://api.blackroad.io/internal/reports/daily"
+        method: POST
+        headers:
+          Authorization: "Bearer ${INTERNAL_API_KEY}"
+
+    # Weekly cleanup
+    weekly-cleanup:
+      schedule: "0 2 * * 0"
+      timezone: "UTC"
+      target:
+        type: pubsub
+        topic: blackroad-analytics-triggers
+        data:
+          action: cleanup
+
+# ============================================
+# MONITORING & LOGGING
+# ============================================
+
+monitoring:
+  # Custom metrics
+  custom_metrics:
+    - name: custom.googleapis.com/blackroad/agent_invocations
+      metric_kind: DELTA
+      value_type: INT64
+      labels:
+        - organization_id
+        - agent_type
+
+  # Alerting policies
+  alerts:
+    - name: bigquery-slot-usage
+      condition:
+        threshold: 80
+        comparison: ABOVE
+        duration: 300s
+      notification_channels:
+        - email:alerts@blackroad.io
+
+  # Dashboards
+  dashboards:
+    - name: blackroad-analytics
+      widgets:
+        - type: scorecard
+          title: Daily Active Users
+          metric: custom.googleapis.com/blackroad/daily_active_users
+
+        - type: chart
+          title: BigQuery Slot Usage
+          metric: bigquery.googleapis.com/slots/total_available
+
+# ============================================
+# COST MANAGEMENT
+# ============================================
+
+cost:
+  budgets:
+    - name: blackroad-gcp-monthly
+      amount: 1000
+      threshold_rules:
+        - threshold_percent: 0.5
+          spend_basis: CURRENT_SPEND
+        - threshold_percent: 0.8
+          spend_basis: CURRENT_SPEND
+        - threshold_percent: 1.0
+          spend_basis: CURRENT_SPEND
+      notifications:
+        - email: finance@blackroad.io
+
+  labels:
+    required:
+      - environment
+      - project
+      - owner

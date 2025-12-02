@@ -1,0 +1,470 @@
+# Tailscale Configuration
+# BlackRoad OS Zero-Trust Mesh Network
+#
+# Secure connectivity for edge devices, cloud services, and development
+#
+# @blackroad_name: BlackRoad Mesh
+# @tier: Business
+# @operator: alexa.operator.v1
+
+version: "tailscale-v1"
+
+# ============================================
+# TAILNET CONFIGURATION
+# ============================================
+
+tailnet:
+  name: "blackroad"
+  domain: "blackroad.net"
+
+  settings:
+    # Magic DNS
+    magic_dns:
+      enabled: true
+      search_domains:
+        - "blackroad.net"
+        - "internal.blackroad.io"
+
+    # HTTPS certificates
+    https_certificates:
+      enabled: true
+
+    # Machine key expiry
+    key_expiry:
+      default: 180d
+      disable_for_tagged: true
+
+# ============================================
+# DEVICES / MACHINES
+# ============================================
+
+machines:
+  # Edge Hardware
+  edge:
+    lucidia-pi5:
+      hostname: "lucidia"
+      tags:
+        - "tag:edge"
+        - "tag:primary"
+        - "tag:pi"
+      os: "linux"
+      authorized: true
+      key_expiry_disabled: true
+
+      advertised_routes:
+        - "192.168.1.0/24"  # Local network
+
+      exit_node: false
+
+      services:
+        - proto: tcp
+          port: 8080
+          description: "BR Agent API"
+        - proto: tcp
+          port: 11434
+          description: "Ollama"
+        - proto: tcp
+          port: 22
+          description: "SSH"
+
+    alice-pi400:
+      hostname: "alice"
+      tags:
+        - "tag:edge"
+        - "tag:secondary"
+        - "tag:pi"
+      os: "linux"
+      authorized: true
+      key_expiry_disabled: true
+
+      services:
+        - proto: tcp
+          port: 8080
+          description: "BR Agent API"
+        - proto: tcp
+          port: 11434
+          description: "Ollama"
+
+    pi-zero:
+      hostname: "zero"
+      tags:
+        - "tag:edge"
+        - "tag:iot"
+        - "tag:pi"
+      os: "linux"
+      authorized: true
+
+      services:
+        - proto: tcp
+          port: 8080
+          description: "Sensor API"
+
+    jetson-orin:
+      hostname: "jetson"
+      tags:
+        - "tag:edge"
+        - "tag:gpu"
+        - "tag:inference"
+      os: "linux"
+      authorized: true
+      key_expiry_disabled: true
+
+      services:
+        - proto: tcp
+          port: 8080
+          description: "BR Agent API"
+        - proto: tcp
+          port: 11434
+          description: "Ollama"
+        - proto: tcp
+          port: 8000
+          description: "Triton Inference"
+        - proto: tcp
+          port: 8001
+          description: "Triton gRPC"
+
+  # Cloud Compute
+  cloud:
+    codex-infinity:
+      hostname: "codex-infinity"
+      tags:
+        - "tag:cloud"
+        - "tag:compute"
+        - "tag:digitalocean"
+      os: "linux"
+      authorized: true
+      key_expiry_disabled: true
+
+      exit_node: true  # Can serve as exit node
+
+      services:
+        - proto: tcp
+          port: 443
+          description: "HTTPS"
+        - proto: tcp
+          port: 8080
+          description: "API Gateway"
+        - proto: tcp
+          port: 5432
+          description: "PostgreSQL"
+        - proto: tcp
+          port: 6379
+          description: "Redis"
+
+    railway-prod:
+      hostname: "railway-prod"
+      tags:
+        - "tag:cloud"
+        - "tag:railway"
+        - "tag:production"
+      os: "linux"
+      authorized: true
+
+      # Railway uses subnet router pattern
+      advertised_routes:
+        - "10.0.0.0/8"  # Railway internal
+
+    railway-staging:
+      hostname: "railway-staging"
+      tags:
+        - "tag:cloud"
+        - "tag:railway"
+        - "tag:staging"
+      os: "linux"
+      authorized: true
+
+  # Development
+  dev:
+    dev-macbook:
+      hostname: "dev-mac"
+      tags:
+        - "tag:dev"
+        - "tag:admin"
+      os: "macos"
+      authorized: true
+
+      services:
+        - proto: tcp
+          port: 3000
+          description: "Dev Server"
+        - proto: tcp
+          port: 8000
+          description: "Local API"
+
+    dev-ipad:
+      hostname: "dev-ipad"
+      tags:
+        - "tag:dev"
+        - "tag:mobile"
+      os: "ios"
+      authorized: true
+
+# ============================================
+# ACCESS CONTROL LISTS (ACLs)
+# ============================================
+
+acls:
+  # Tag definitions
+  tag_owners:
+    - tag: "tag:edge"
+      owners:
+        - "autogroup:admin"
+    - tag: "tag:cloud"
+      owners:
+        - "autogroup:admin"
+    - tag: "tag:dev"
+      owners:
+        - "autogroup:member"
+    - tag: "tag:production"
+      owners:
+        - "autogroup:admin"
+    - tag: "tag:staging"
+      owners:
+        - "autogroup:admin"
+        - "autogroup:member"
+
+  # Groups
+  groups:
+    "group:admins":
+      - "alexa@blackroad.io"
+    "group:developers":
+      - "alexa@blackroad.io"
+    "group:edge-operators":
+      - "alexa@blackroad.io"
+
+  # Access rules
+  rules:
+    # Admins can access everything
+    - action: accept
+      src:
+        - "group:admins"
+      dst:
+        - "*:*"
+
+    # Developers can access dev and staging
+    - action: accept
+      src:
+        - "group:developers"
+      dst:
+        - "tag:dev:*"
+        - "tag:staging:*"
+
+    # Edge operators can access edge devices
+    - action: accept
+      src:
+        - "group:edge-operators"
+      dst:
+        - "tag:edge:*"
+
+    # Edge devices can talk to each other
+    - action: accept
+      src:
+        - "tag:edge"
+      dst:
+        - "tag:edge:*"
+
+    # Edge can reach cloud services
+    - action: accept
+      src:
+        - "tag:edge"
+      dst:
+        - "tag:cloud:443"
+        - "tag:cloud:8080"
+        - "tag:cloud:5432"
+        - "tag:cloud:6379"
+
+    # Cloud can reach edge APIs
+    - action: accept
+      src:
+        - "tag:cloud"
+      dst:
+        - "tag:edge:8080"
+        - "tag:edge:11434"
+
+    # Production isolation
+    - action: accept
+      src:
+        - "tag:production"
+      dst:
+        - "tag:production:*"
+
+    # Staging can reach staging and dev
+    - action: accept
+      src:
+        - "tag:staging"
+      dst:
+        - "tag:staging:*"
+        - "tag:dev:*"
+
+# ============================================
+# SSH CONFIGURATION
+# ============================================
+
+ssh:
+  enabled: true
+
+  rules:
+    # Admins SSH everywhere
+    - action: accept
+      src:
+        - "group:admins"
+      dst:
+        - "*"
+      users:
+        - "autogroup:nonroot"
+        - "root"
+
+    # Developers SSH to dev/staging
+    - action: accept
+      src:
+        - "group:developers"
+      dst:
+        - "tag:dev"
+        - "tag:staging"
+      users:
+        - "autogroup:nonroot"
+
+    # Edge operators SSH to edge
+    - action: accept
+      src:
+        - "group:edge-operators"
+      dst:
+        - "tag:edge"
+      users:
+        - "blackroad"
+        - "pi"
+
+# ============================================
+# DERP (Relay) CONFIGURATION
+# ============================================
+
+derp:
+  # Use Tailscale's DERP servers
+  use_tailscale_derp: true
+
+  # Custom DERP server (optional for latency optimization)
+  custom_derp:
+    enabled: false
+    # regions:
+    #   - region_id: 900
+    #     region_code: "br-uswest"
+    #     region_name: "BlackRoad US West"
+    #     nodes:
+    #       - name: "br-derp-uswest"
+    #         host: "derp.blackroad.io"
+    #         port: 443
+
+# ============================================
+# DNS CONFIGURATION
+# ============================================
+
+dns:
+  # Override DNS servers
+  nameservers:
+    - "1.1.1.1"
+    - "8.8.8.8"
+
+  # Split DNS for internal domains
+  routes:
+    "internal.blackroad.io":
+      - "100.100.100.100"  # Internal DNS server
+    "blackroad.net":
+      - "100.100.100.100"
+
+  # Search domains
+  search_paths:
+    - "blackroad.net"
+    - "internal.blackroad.io"
+
+# ============================================
+# FUNNEL (Public HTTPS)
+# ============================================
+
+funnel:
+  enabled: true
+
+  # Publicly accessible services
+  services:
+    # Public API endpoint on Lucidia
+    lucidia-api:
+      machine: lucidia
+      port: 8080
+      path: "/api"
+      funnel_port: 443
+
+    # Jetson inference endpoint
+    jetson-inference:
+      machine: jetson
+      port: 8000
+      path: "/inference"
+      funnel_port: 443
+
+# ============================================
+# MONITORING
+# ============================================
+
+monitoring:
+  # Device health
+  health_checks:
+    interval: 60s
+    timeout: 10s
+
+  # Metrics export
+  metrics:
+    enabled: true
+    export_to: datadog
+    dimensions:
+      - hostname
+      - tags
+      - os
+
+  # Alerts
+  alerts:
+    - name: device_offline
+      condition: "device.online == false"
+      duration: 5m
+      severity: critical
+      notify:
+        - slack:#alerts
+
+    - name: high_latency
+      condition: "device.latency > 500ms"
+      duration: 10m
+      severity: warning
+
+# ============================================
+# AUTOMATION
+# ============================================
+
+automation:
+  # Auto-approve devices with specific tags
+  auto_approve:
+    enabled: true
+    conditions:
+      - tag: "tag:edge"
+        require_auth_key: true
+      - tag: "tag:dev"
+        require_auth_key: true
+
+  # Auth keys for automated provisioning
+  auth_keys:
+    edge-provisioning:
+      tags:
+        - "tag:edge"
+      expiry: 90d
+      reusable: true
+      ephemeral: false
+
+    dev-provisioning:
+      tags:
+        - "tag:dev"
+      expiry: 30d
+      reusable: true
+      ephemeral: true
+
+    ci-ephemeral:
+      tags:
+        - "tag:ci"
+      expiry: 1h
+      reusable: false
+      ephemeral: true

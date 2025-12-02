@@ -1,0 +1,398 @@
+# AWS Configuration
+# BlackRoad OS Cloud Infrastructure (Tier 2)
+#
+# Overflow compute, S3, Lambda, and enterprise integrations
+#
+# @blackroad_name: BlackRoad Cloud (AWS)
+# @tier: Reserved
+# @operator: alexa.operator.v1
+
+version: "aws-v1"
+
+# ============================================
+# ACCOUNT CONFIGURATION
+# ============================================
+
+account:
+  account_id: "${AWS_ACCOUNT_ID}"
+  organization_id: "${AWS_ORG_ID}"
+  default_region: us-west-2
+
+  # Multi-region
+  regions:
+    primary: us-west-2
+    secondary: us-east-1
+    eu: eu-west-1
+
+# ============================================
+# IAM CONFIGURATION
+# ============================================
+
+iam:
+  # Service roles
+  roles:
+    # Lambda execution role
+    blackroad-lambda-role:
+      service: lambda.amazonaws.com
+      policies:
+        - AWSLambdaBasicExecutionRole
+        - AWSLambdaVPCAccessExecutionRole
+      custom_policies:
+        - name: blackroad-s3-access
+          statements:
+            - effect: Allow
+              actions:
+                - s3:GetObject
+                - s3:PutObject
+                - s3:DeleteObject
+              resources:
+                - "arn:aws:s3:::blackroad-*/*"
+
+    # ECS task role
+    blackroad-ecs-task-role:
+      service: ecs-tasks.amazonaws.com
+      policies:
+        - AmazonECSTaskExecutionRolePolicy
+      custom_policies:
+        - name: blackroad-secrets-access
+          statements:
+            - effect: Allow
+              actions:
+                - secretsmanager:GetSecretValue
+              resources:
+                - "arn:aws:secretsmanager:*:*:secret:blackroad/*"
+
+  # IAM users
+  users:
+    blackroad-ci:
+      policies:
+        - name: ci-deploy-policy
+          statements:
+            - effect: Allow
+              actions:
+                - ecr:*
+                - ecs:UpdateService
+                - lambda:UpdateFunctionCode
+              resources: ["*"]
+
+# ============================================
+# S3 (Object Storage)
+# ============================================
+
+s3:
+  buckets:
+    # User uploads
+    blackroad-uploads:
+      region: us-west-2
+      versioning: true
+      encryption: AES256
+      lifecycle:
+        - prefix: "temp/"
+          expiration_days: 7
+        - prefix: "processing/"
+          expiration_days: 1
+      cors:
+        allowed_origins:
+          - "https://blackroad.io"
+          - "https://*.blackroad.io"
+        allowed_methods:
+          - GET
+          - PUT
+          - POST
+        allowed_headers:
+          - "*"
+        max_age_seconds: 3600
+
+    # Event archive
+    blackroad-event-archive:
+      region: us-west-2
+      versioning: false
+      encryption: AES256
+      storage_class: INTELLIGENT_TIERING
+      lifecycle:
+        - transition_days: 90
+          storage_class: GLACIER
+        - transition_days: 365
+          storage_class: DEEP_ARCHIVE
+
+    # Model artifacts
+    blackroad-models:
+      region: us-west-2
+      versioning: true
+      encryption: AES256
+
+    # Backups
+    blackroad-backups:
+      region: us-west-2
+      versioning: true
+      encryption: AES256
+      replication:
+        destination_region: us-east-1
+        destination_bucket: blackroad-backups-replica
+
+# ============================================
+# LAMBDA (Serverless Functions)
+# ============================================
+
+lambda:
+  functions:
+    # Webhook handler
+    blackroad-webhook-handler:
+      runtime: python3.12
+      handler: handler.main
+      memory: 256
+      timeout: 30
+      environment:
+        ENVIRONMENT: production
+      triggers:
+        - type: api_gateway
+          path: /webhooks/{service}
+          method: POST
+
+    # Event processor
+    blackroad-event-processor:
+      runtime: python3.12
+      handler: processor.main
+      memory: 512
+      timeout: 300
+      environment:
+        KAFKA_BOOTSTRAP: "${CONFLUENT_BOOTSTRAP_SERVERS}"
+      triggers:
+        - type: sqs
+          queue: blackroad-events-queue
+          batch_size: 10
+
+    # Image processor
+    blackroad-image-processor:
+      runtime: python3.12
+      handler: image.main
+      memory: 1024
+      timeout: 60
+      triggers:
+        - type: s3
+          bucket: blackroad-uploads
+          events:
+            - s3:ObjectCreated:*
+          prefix: "images/"
+
+    # Scheduled tasks
+    blackroad-scheduler:
+      runtime: python3.12
+      handler: scheduler.main
+      memory: 256
+      timeout: 900
+      triggers:
+        - type: cloudwatch_events
+          schedule: "rate(1 hour)"
+
+# ============================================
+# ECS (Container Service)
+# ============================================
+
+ecs:
+  clusters:
+    blackroad-overflow:
+      capacity_providers:
+        - FARGATE
+        - FARGATE_SPOT
+
+  services:
+    # Overflow API instances
+    blackroad-api-overflow:
+      cluster: blackroad-overflow
+      launch_type: FARGATE_SPOT
+      desired_count: 0  # Scale up on demand
+      auto_scaling:
+        min: 0
+        max: 20
+        target_cpu: 70
+
+      task_definition:
+        family: blackroad-api
+        cpu: 1024
+        memory: 2048
+        container:
+          image: "${ECR_REPO}/blackroad-os:latest"
+          port: 8080
+          environment:
+            - name: ENVIRONMENT
+              value: production
+
+# ============================================
+# SQS (Message Queues)
+# ============================================
+
+sqs:
+  queues:
+    # Events queue
+    blackroad-events-queue:
+      visibility_timeout: 300
+      message_retention: 1209600  # 14 days
+      dlq:
+        name: blackroad-events-dlq
+        max_receive_count: 3
+
+    # Notifications queue
+    blackroad-notifications-queue:
+      visibility_timeout: 30
+      fifo: false
+
+# ============================================
+# SNS (Pub/Sub)
+# ============================================
+
+sns:
+  topics:
+    # Alert notifications
+    blackroad-alerts:
+      subscriptions:
+        - protocol: email
+          endpoint: alerts@blackroad.io
+        - protocol: https
+          endpoint: https://api.blackroad.io/webhooks/sns
+
+    # Deployment notifications
+    blackroad-deploys:
+      subscriptions:
+        - protocol: lambda
+          endpoint: blackroad-deploy-notifier
+
+# ============================================
+# SECRETS MANAGER
+# ============================================
+
+secrets_manager:
+  secrets:
+    - name: blackroad/database
+      description: "Database credentials"
+      keys:
+        - url
+        - username
+        - password
+
+    - name: blackroad/api-keys
+      description: "Third-party API keys"
+      keys:
+        - anthropic
+        - openai
+        - pinecone
+
+    - name: blackroad/auth
+      description: "Authentication secrets"
+      keys:
+        - jwt_secret
+        - auth0_client_secret
+
+# ============================================
+# CLOUDWATCH
+# ============================================
+
+cloudwatch:
+  log_groups:
+    - name: /aws/lambda/blackroad-webhook-handler
+      retention_days: 30
+
+    - name: /aws/lambda/blackroad-event-processor
+      retention_days: 30
+
+    - name: /ecs/blackroad-api
+      retention_days: 14
+
+  alarms:
+    - name: lambda-errors
+      metric: Errors
+      namespace: AWS/Lambda
+      statistic: Sum
+      period: 300
+      threshold: 10
+      comparison: GreaterThanThreshold
+      actions:
+        - blackroad-alerts
+
+    - name: api-latency
+      metric: Latency
+      namespace: AWS/ApiGateway
+      statistic: p95
+      period: 300
+      threshold: 5000
+      comparison: GreaterThanThreshold
+
+  dashboards:
+    - name: blackroad-overview
+      widgets:
+        - type: metric
+          title: Lambda Invocations
+          metrics:
+            - AWS/Lambda Invocations
+
+        - type: metric
+          title: S3 Requests
+          metrics:
+            - AWS/S3 AllRequests
+
+# ============================================
+# VPC (Networking)
+# ============================================
+
+vpc:
+  blackroad-vpc:
+    cidr: 10.0.0.0/16
+    enable_dns_hostnames: true
+    enable_dns_support: true
+
+    subnets:
+      public:
+        - cidr: 10.0.1.0/24
+          az: us-west-2a
+        - cidr: 10.0.2.0/24
+          az: us-west-2b
+
+      private:
+        - cidr: 10.0.10.0/24
+          az: us-west-2a
+        - cidr: 10.0.11.0/24
+          az: us-west-2b
+
+    nat_gateways: 2  # One per AZ
+
+    security_groups:
+      lambda-sg:
+        ingress: []
+        egress:
+          - protocol: -1
+            cidr: 0.0.0.0/0
+
+      ecs-sg:
+        ingress:
+          - protocol: tcp
+            port: 8080
+            source: alb-sg
+        egress:
+          - protocol: -1
+            cidr: 0.0.0.0/0
+
+# ============================================
+# COST MANAGEMENT
+# ============================================
+
+cost:
+  budget:
+    monthly_limit: 500
+    alerts:
+      - threshold: 50
+        notify: finance@blackroad.io
+      - threshold: 80
+        notify: finance@blackroad.io
+      - threshold: 100
+        notify:
+          - finance@blackroad.io
+          - alexa@blackroad.io
+
+  tags:
+    required:
+      - Environment
+      - Project
+      - Owner
+
+  reserved_instances:
+    enabled: false  # Evaluate after usage patterns established

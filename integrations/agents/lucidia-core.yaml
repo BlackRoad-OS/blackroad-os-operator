@@ -1,0 +1,506 @@
+# Lucidia Core System Configuration
+# BlackRoad OS Agent Orchestration Platform
+#
+# Core agent system for 30,000 agents at scale
+#
+# @blackroad_name: Lucidia Core
+# @tier: Enterprise
+# @operator: alexa.operator.v1
+
+version: "lucidia-v1"
+
+# ============================================
+# SYSTEM OVERVIEW
+# ============================================
+
+system:
+  name: "Lucidia"
+  description: "AI Agent Orchestration Platform"
+  version: "2.0.0"
+
+  scale_targets:
+    agents: 30000
+    users: 1000000
+    concurrent_conversations: 10000
+    events_per_minute: 100000
+
+  governance:
+    governor: "alice.governor.v1"
+    operator: "alexa.operator.v1"
+    amundson_version: "0.1.0"
+
+# ============================================
+# CORE ARCHITECTURE
+# ============================================
+
+architecture:
+  # Trinary Logic System
+  trinary_logic:
+    enabled: true
+    states:
+      positive: 1    # True/Yes/Affirm
+      negative: 0    # False/No/Deny
+      neutral: -1    # Unknown/Maybe/Uncertain
+
+    applications:
+      - memory_confidence
+      - decision_making
+      - contradiction_handling
+
+  # Paraconsistent Contradiction Handler
+  paraconsistent:
+    enabled: true
+    quarantine_threshold: 0.3  # Contradiction score
+
+    handlers:
+      - name: "memory_conflict"
+        action: "quarantine_and_resolve"
+      - name: "capability_conflict"
+        action: "prefer_recent"
+      - name: "identity_conflict"
+        action: "alert_and_manual"
+
+  # PS-SHA∞ Memory Hashing
+  ps_sha_infinity:
+    enabled: true
+    algorithm: "sha3-256"
+    chaining: true
+    salt_rotation: 86400  # Daily
+
+# ============================================
+# AGENT IDENTITY
+# ============================================
+
+agent_identity:
+  # Identity fields
+  schema:
+    required:
+      - agent_id         # UUID
+      - name             # Display name
+      - birthdate        # Creation timestamp
+      - family           # Agent lineage/group
+      - creator_id       # User who created
+
+    optional:
+      - description
+      - avatar_url
+      - home_id          # Unity home reference
+      - personality_traits
+      - voice_config
+
+  # Naming conventions
+  naming:
+    auto_generate: true
+    pattern: "{adjective}-{noun}-{number}"
+    reserved_names:
+      - alice
+      - lucidia
+      - cece
+      - blackroad
+
+  # Agent types
+  types:
+    - name: "personal"
+      description: "Personal AI assistant"
+      max_per_user: 10
+      capabilities:
+        - conversation
+        - memory
+        - task_execution
+
+    - name: "enterprise"
+      description: "Enterprise agent"
+      max_per_org: 100
+      capabilities:
+        - conversation
+        - memory
+        - task_execution
+        - api_access
+        - data_analysis
+
+    - name: "system"
+      description: "System agent (Alice, Cece)"
+      max_total: 10
+      capabilities:
+        - all
+
+# ============================================
+# MEMORY SYSTEM
+# ============================================
+
+memory:
+  # Memory architecture
+  layers:
+    # Short-term (working memory)
+    short_term:
+      storage: redis
+      ttl: 86400  # 24 hours
+      max_items: 100
+      structure:
+        - current_context
+        - active_conversation
+        - recent_tool_results
+
+    # Long-term (persistent memory)
+    long_term:
+      storage: pinecone
+      backup: postgresql
+      max_items: 10000
+      structure:
+        - core_memories
+        - episodic_memories
+        - semantic_knowledge
+        - procedural_skills
+
+    # Append-only journal
+    journal:
+      storage: postgresql
+      immutable: true
+      hash_chain: true  # PS-SHA∞
+      retention: forever
+
+  # Memory types
+  types:
+    core:
+      importance: 1.0
+      decay_rate: 0
+      description: "Essential identity and knowledge"
+
+    episodic:
+      importance: 0.6
+      decay_rate: 0.05  # Per day
+      description: "Conversation and interaction logs"
+
+    semantic:
+      importance: 0.7
+      decay_rate: 0.02
+      description: "Learned facts and concepts"
+
+    procedural:
+      importance: 0.8
+      decay_rate: 0.01
+      description: "Skills and behaviors"
+
+  # Memory operations
+  operations:
+    store:
+      require_embedding: true
+      require_hash: true
+      max_content_length: 10000
+
+    recall:
+      default_top_k: 10
+      min_similarity: 0.7
+      rerank: true
+
+    consolidate:
+      schedule: "0 3 * * *"  # Daily at 3 AM
+      dedupe_threshold: 0.95
+
+# ============================================
+# CAPABILITY SYSTEM
+# ============================================
+
+capabilities:
+  # Core capabilities
+  core:
+    - name: conversation
+      description: "Natural language conversation"
+      default: true
+
+    - name: memory
+      description: "Long-term memory access"
+      default: true
+
+    - name: tool_use
+      description: "External tool execution"
+      default: false
+      requires_approval: true
+
+  # Tool capabilities
+  tools:
+    - name: web_search
+      description: "Search the web"
+      risk_level: low
+
+    - name: code_execution
+      description: "Execute code in sandbox"
+      risk_level: medium
+      requires_approval: true
+
+    - name: file_operations
+      description: "Read/write files"
+      risk_level: high
+      requires_approval: true
+
+    - name: api_calls
+      description: "Make external API calls"
+      risk_level: medium
+      requires_approval: true
+
+    - name: email_send
+      description: "Send emails"
+      risk_level: high
+      requires_approval: true
+
+  # Capability matrix
+  permission_matrix:
+    personal:
+      conversation: true
+      memory: true
+      web_search: true
+      code_execution: false
+      file_operations: false
+      api_calls: false
+
+    enterprise:
+      conversation: true
+      memory: true
+      web_search: true
+      code_execution: true
+      file_operations: true
+      api_calls: true
+
+# ============================================
+# EVENT BUS
+# ============================================
+
+event_bus:
+  # Primary: Kafka (production)
+  primary:
+    provider: kafka
+    topics:
+      agent_events: "blackroad.agents.events"
+      memory_events: "blackroad.memory.events"
+      capability_events: "blackroad.capabilities.events"
+
+  # Fallback: Redis Streams
+  fallback:
+    provider: redis_streams
+    streams:
+      agent_events: "stream:agents"
+      memory_events: "stream:memory"
+
+  # Event types
+  events:
+    # Agent lifecycle
+    - type: agent.created
+      schema:
+        agent_id: string
+        creator_id: string
+        agent_type: string
+        name: string
+
+    - type: agent.started
+      schema:
+        agent_id: string
+        session_id: string
+
+    - type: agent.stopped
+      schema:
+        agent_id: string
+        session_id: string
+        reason: string
+
+    - type: agent.invoked
+      schema:
+        agent_id: string
+        user_id: string
+        input_tokens: int
+        output_tokens: int
+
+    # Memory events
+    - type: memory.stored
+      schema:
+        agent_id: string
+        memory_id: string
+        memory_type: string
+        hash: string
+
+    - type: memory.recalled
+      schema:
+        agent_id: string
+        query: string
+        results_count: int
+
+    # Capability events
+    - type: capability.granted
+      schema:
+        agent_id: string
+        capability: string
+        granted_by: string
+
+    - type: capability.revoked
+      schema:
+        agent_id: string
+        capability: string
+        revoked_by: string
+
+# ============================================
+# CAPABILITY REGISTRY
+# ============================================
+
+capability_registry:
+  storage:
+    primary: postgresql
+    cache: redis
+
+  # Registry operations
+  operations:
+    register:
+      require_governance_approval: true
+
+    query:
+      cache_ttl: 300
+
+    update:
+      require_governance_approval: true
+
+  # Capability categories
+  categories:
+    - name: "core"
+      description: "Core agent capabilities"
+    - name: "tools"
+      description: "External tool integrations"
+    - name: "data"
+      description: "Data access capabilities"
+    - name: "communication"
+      description: "Communication channels"
+
+# ============================================
+# AGENT RUNTIME
+# ============================================
+
+runtime:
+  # Execution environment
+  execution:
+    max_concurrent_agents: 100  # Per pod
+    max_conversation_length: 50  # Messages
+    max_tokens_per_turn: 4096
+    timeout_seconds: 300
+
+  # Model selection
+  models:
+    default: "claude-sonnet-4-20250514"
+    fallback: "gpt-4o"
+
+    routing:
+      - condition: "complexity > 0.8"
+        model: "claude-opus-4-20250514"
+      - condition: "speed_required"
+        model: "claude-3-5-haiku-20241022"
+
+  # Resource limits
+  limits:
+    memory_per_agent: 256MB
+    cpu_per_agent: 0.5
+    storage_per_agent: 1GB
+
+  # Health checks
+  health:
+    liveness_interval: 30s
+    readiness_interval: 10s
+
+# ============================================
+# AGENT HOMES (Unity)
+# ============================================
+
+agent_homes:
+  enabled: false  # Phase 2 feature
+
+  config:
+    unity_cloud_project: "${UNITY_PROJECT_ID}"
+    max_homes_per_agent: 1
+    default_template: "cozy_cottage"
+
+  templates:
+    - id: cozy_cottage
+      name: "Cozy Cottage"
+      description: "A warm, inviting space"
+
+    - id: modern_loft
+      name: "Modern Loft"
+      description: "Sleek, contemporary design"
+
+    - id: nature_retreat
+      name: "Nature Retreat"
+      description: "Peaceful natural setting"
+
+# ============================================
+# ROADCHAIN (Future)
+# ============================================
+
+roadchain:
+  enabled: false  # Phase 3 feature
+
+  config:
+    network: "testnet"
+    consensus: "proof_of_stake"
+    node_types:
+      - validator
+      - observer
+
+# ============================================
+# API ENDPOINTS
+# ============================================
+
+api:
+  # Agent management
+  agents:
+    - POST /agents                    # Create agent
+    - GET /agents                     # List agents
+    - GET /agents/{id}                # Get agent
+    - PATCH /agents/{id}              # Update agent
+    - DELETE /agents/{id}             # Delete agent
+    - POST /agents/{id}/invoke        # Invoke agent
+    - GET /agents/{id}/memories       # Get memories
+    - POST /agents/{id}/memories      # Store memory
+
+  # Conversations
+  conversations:
+    - POST /conversations             # Start conversation
+    - GET /conversations/{id}         # Get conversation
+    - POST /conversations/{id}/messages  # Send message
+    - DELETE /conversations/{id}      # End conversation
+
+  # Capabilities
+  capabilities:
+    - GET /capabilities               # List available
+    - GET /agents/{id}/capabilities   # Agent capabilities
+    - POST /agents/{id}/capabilities  # Grant capability
+    - DELETE /agents/{id}/capabilities/{cap}  # Revoke
+
+# ============================================
+# MONITORING
+# ============================================
+
+monitoring:
+  metrics:
+    - name: agents.active
+      type: gauge
+      labels: [agent_type, organization_id]
+
+    - name: agents.invocations
+      type: counter
+      labels: [agent_id, model]
+
+    - name: agents.latency
+      type: histogram
+      labels: [agent_id]
+
+    - name: memory.operations
+      type: counter
+      labels: [operation, memory_type]
+
+    - name: events.processed
+      type: counter
+      labels: [event_type]
+
+  alerts:
+    - name: agent_error_rate
+      condition: "error_rate > 5%"
+      severity: warning
+
+    - name: memory_storage_full
+      condition: "storage_used > 90%"
+      severity: critical

@@ -1,0 +1,446 @@
+# HashiCorp Vault Configuration
+# BlackRoad OS Secrets Management
+#
+# Centralized secrets management for production
+#
+# @blackroad_name: BlackRoad Secrets
+# @tier: Enterprise
+# @operator: alexa.operator.v1
+
+version: "vault-v1"
+
+# ============================================
+# VAULT SERVER
+# ============================================
+
+server:
+  # HCP Vault (managed)
+  hcp_vault:
+    cluster_id: "${VAULT_CLUSTER_ID}"
+    organization_id: "${VAULT_ORG_ID}"
+    project_id: "${VAULT_PROJECT_ID}"
+    region: us-west-2
+
+  # Connection
+  address: "${VAULT_ADDR}"
+  namespace: "admin/blackroad"
+
+  # Self-hosted fallback
+  self_hosted:
+    enabled: false
+    address: "https://vault.blackroad.internal:8200"
+    ha_enabled: true
+    storage_backend: consul
+
+# ============================================
+# AUTHENTICATION METHODS
+# ============================================
+
+auth_methods:
+  # AppRole (for services)
+  approle:
+    path: approle
+    roles:
+      # API Gateway
+      api-gateway:
+        token_policies:
+          - api-gateway-policy
+        token_ttl: 1h
+        token_max_ttl: 4h
+        secret_id_ttl: 0  # Never expires
+        secret_id_num_uses: 0  # Unlimited
+
+      # Worker
+      worker:
+        token_policies:
+          - worker-policy
+        token_ttl: 1h
+        token_max_ttl: 4h
+
+      # Agent Runtime
+      agent-runtime:
+        token_policies:
+          - agent-runtime-policy
+        token_ttl: 1h
+        token_max_ttl: 4h
+
+      # Intent Processor
+      intent-processor:
+        token_policies:
+          - intent-processor-policy
+        token_ttl: 1h
+
+  # Kubernetes (for K8s workloads)
+  kubernetes:
+    path: kubernetes
+    kubernetes_host: "https://kubernetes.default.svc"
+    roles:
+      # API pods
+      api-role:
+        bound_service_account_names:
+          - api-gateway
+        bound_service_account_namespaces:
+          - blackroad-api
+        token_policies:
+          - api-gateway-policy
+        ttl: 1h
+
+      # Agent pods
+      agent-role:
+        bound_service_account_names:
+          - agent-runtime
+        bound_service_account_namespaces:
+          - blackroad-agents
+        token_policies:
+          - agent-runtime-policy
+        ttl: 1h
+
+  # JWT (for CI/CD)
+  jwt:
+    path: jwt
+    roles:
+      github-actions:
+        bound_issuer: "https://token.actions.githubusercontent.com"
+        bound_audiences:
+          - "https://github.com/blackroad"
+        user_claim: repository
+        token_policies:
+          - ci-policy
+        ttl: 15m
+
+  # OIDC (for humans)
+  oidc:
+    path: oidc
+    provider: auth0
+    oidc_discovery_url: "https://${AUTH0_DOMAIN}/.well-known/openid-configuration"
+    default_role: developer
+    roles:
+      admin:
+        bound_audiences:
+          - "${AUTH0_CLIENT_ID}"
+        allowed_redirect_uris:
+          - "https://vault.blackroad.io/ui/vault/auth/oidc/oidc/callback"
+        user_claim: email
+        groups_claim: groups
+        token_policies:
+          - admin-policy
+        ttl: 8h
+
+      developer:
+        bound_audiences:
+          - "${AUTH0_CLIENT_ID}"
+        user_claim: email
+        token_policies:
+          - developer-policy
+        ttl: 4h
+
+# ============================================
+# SECRETS ENGINES
+# ============================================
+
+secrets_engines:
+  # KV v2 (static secrets)
+  kv:
+    path: secret
+    version: 2
+    config:
+      max_versions: 10
+      delete_version_after: 0  # Never auto-delete
+
+    # Secret structure
+    secrets:
+      # Database credentials
+      blackroad/database:
+        url: "${DATABASE_URL}"
+        username: "${POSTGRES_USER}"
+        password: "${POSTGRES_PASSWORD}"
+        read_replica_url: "${READ_REPLICA_URL}"
+
+      # Redis credentials
+      blackroad/redis:
+        url: "${REDIS_URL}"
+        password: "${REDIS_PASSWORD}"
+
+      # API keys
+      blackroad/anthropic:
+        api_key: "${ANTHROPIC_API_KEY}"
+        organization_id: "${ANTHROPIC_ORG_ID}"
+
+      blackroad/openai:
+        api_key: "${OPENAI_API_KEY}"
+        organization_id: "${OPENAI_ORG_ID}"
+
+      blackroad/pinecone:
+        api_key: "${PINECONE_API_KEY}"
+        environment: "${PINECONE_ENVIRONMENT}"
+
+      # Auth secrets
+      blackroad/auth0:
+        domain: "${AUTH0_DOMAIN}"
+        client_id: "${AUTH0_CLIENT_ID}"
+        client_secret: "${AUTH0_CLIENT_SECRET}"
+
+      blackroad/jwt:
+        secret: "${JWT_SECRET}"
+        refresh_secret: "${JWT_REFRESH_SECRET}"
+
+      # Third-party integrations
+      blackroad/stripe:
+        secret_key: "${STRIPE_SECRET_KEY}"
+        webhook_secret: "${STRIPE_WEBHOOK_SECRET}"
+
+      blackroad/slack:
+        bot_token: "${SLACK_BOT_TOKEN}"
+        signing_secret: "${SLACK_SIGNING_SECRET}"
+
+      blackroad/datadog:
+        api_key: "${DD_API_KEY}"
+        app_key: "${DD_APP_KEY}"
+
+      blackroad/sentry:
+        dsn: "${SENTRY_DSN}"
+
+  # Database (dynamic credentials)
+  database:
+    path: database
+    config:
+      postgresql:
+        name: postgresql
+        plugin_name: postgresql-database-plugin
+        connection_url: "postgresql://{{username}}:{{password}}@${POSTGRES_HOST}:5432/blackroad?sslmode=require"
+        allowed_roles:
+          - readonly
+          - readwrite
+          - admin
+        username: "${POSTGRES_ADMIN_USER}"
+        password: "${POSTGRES_ADMIN_PASSWORD}"
+
+    roles:
+      readonly:
+        db_name: postgresql
+        creation_statements:
+          - "CREATE ROLE \"{{name}}\" WITH LOGIN PASSWORD '{{password}}' VALID UNTIL '{{expiration}}';"
+          - "GRANT SELECT ON ALL TABLES IN SCHEMA public TO \"{{name}}\";"
+        default_ttl: 1h
+        max_ttl: 24h
+
+      readwrite:
+        db_name: postgresql
+        creation_statements:
+          - "CREATE ROLE \"{{name}}\" WITH LOGIN PASSWORD '{{password}}' VALID UNTIL '{{expiration}}';"
+          - "GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO \"{{name}}\";"
+        default_ttl: 1h
+        max_ttl: 8h
+
+      admin:
+        db_name: postgresql
+        creation_statements:
+          - "CREATE ROLE \"{{name}}\" WITH LOGIN PASSWORD '{{password}}' VALID UNTIL '{{expiration}}' SUPERUSER;"
+        default_ttl: 30m
+        max_ttl: 2h
+
+  # PKI (certificates)
+  pki:
+    path: pki
+    config:
+      max_lease_ttl: 87600h  # 10 years
+
+    roles:
+      internal-services:
+        allowed_domains:
+          - "blackroad.internal"
+          - "blackroad.local"
+        allow_subdomains: true
+        max_ttl: 720h  # 30 days
+        key_type: ec
+        key_bits: 256
+
+  # Transit (encryption as a service)
+  transit:
+    path: transit
+    keys:
+      # Agent memory encryption
+      agent-memory:
+        type: aes256-gcm96
+        deletion_allowed: false
+        exportable: false
+
+      # User PII encryption
+      user-pii:
+        type: aes256-gcm96
+        deletion_allowed: false
+        exportable: false
+
+      # Ledger signing
+      ledger-signing:
+        type: ed25519
+        deletion_allowed: false
+        exportable: false
+
+# ============================================
+# POLICIES
+# ============================================
+
+policies:
+  # API Gateway policy
+  api-gateway-policy:
+    rules: |
+      # Database credentials
+      path "secret/data/blackroad/database" {
+        capabilities = ["read"]
+      }
+      path "secret/data/blackroad/redis" {
+        capabilities = ["read"]
+      }
+      # API keys
+      path "secret/data/blackroad/anthropic" {
+        capabilities = ["read"]
+      }
+      path "secret/data/blackroad/openai" {
+        capabilities = ["read"]
+      }
+      path "secret/data/blackroad/pinecone" {
+        capabilities = ["read"]
+      }
+      # Auth
+      path "secret/data/blackroad/auth0" {
+        capabilities = ["read"]
+      }
+      path "secret/data/blackroad/jwt" {
+        capabilities = ["read"]
+      }
+      # Transit encryption
+      path "transit/encrypt/user-pii" {
+        capabilities = ["update"]
+      }
+      path "transit/decrypt/user-pii" {
+        capabilities = ["update"]
+      }
+
+  # Agent Runtime policy
+  agent-runtime-policy:
+    rules: |
+      path "secret/data/blackroad/anthropic" {
+        capabilities = ["read"]
+      }
+      path "secret/data/blackroad/openai" {
+        capabilities = ["read"]
+      }
+      path "secret/data/blackroad/pinecone" {
+        capabilities = ["read"]
+      }
+      path "secret/data/blackroad/redis" {
+        capabilities = ["read"]
+      }
+      path "transit/encrypt/agent-memory" {
+        capabilities = ["update"]
+      }
+      path "transit/decrypt/agent-memory" {
+        capabilities = ["update"]
+      }
+
+  # Worker policy
+  worker-policy:
+    rules: |
+      path "secret/data/blackroad/database" {
+        capabilities = ["read"]
+      }
+      path "secret/data/blackroad/redis" {
+        capabilities = ["read"]
+      }
+
+  # Intent Processor policy
+  intent-processor-policy:
+    rules: |
+      path "secret/data/blackroad/database" {
+        capabilities = ["read"]
+      }
+      path "secret/data/blackroad/redis" {
+        capabilities = ["read"]
+      }
+      path "transit/sign/ledger-signing" {
+        capabilities = ["update"]
+      }
+
+  # CI policy
+  ci-policy:
+    rules: |
+      path "secret/data/blackroad/*" {
+        capabilities = ["read"]
+      }
+
+  # Developer policy
+  developer-policy:
+    rules: |
+      path "secret/data/blackroad/*" {
+        capabilities = ["read", "list"]
+      }
+      path "secret/metadata/blackroad/*" {
+        capabilities = ["read", "list"]
+      }
+
+  # Admin policy
+  admin-policy:
+    rules: |
+      path "secret/*" {
+        capabilities = ["create", "read", "update", "delete", "list"]
+      }
+      path "database/*" {
+        capabilities = ["create", "read", "update", "delete", "list"]
+      }
+      path "transit/*" {
+        capabilities = ["create", "read", "update", "delete", "list"]
+      }
+      path "pki/*" {
+        capabilities = ["create", "read", "update", "delete", "list"]
+      }
+      path "sys/*" {
+        capabilities = ["read", "list"]
+      }
+
+# ============================================
+# AUDIT
+# ============================================
+
+audit:
+  # File audit (for debugging)
+  file:
+    enabled: false
+    path: /var/log/vault/audit.log
+
+  # Syslog
+  syslog:
+    enabled: true
+    facility: AUTH
+    tag: vault
+
+  # Socket (to log aggregator)
+  socket:
+    enabled: true
+    address: "logs.blackroad.internal:514"
+    socket_type: udp
+
+# ============================================
+# MONITORING
+# ============================================
+
+monitoring:
+  # Prometheus metrics
+  prometheus:
+    enabled: true
+    path: /v1/sys/metrics
+    format: prometheus
+
+  # Alerts
+  alerts:
+    - name: vault_sealed
+      condition: "vault_core_unsealed == 0"
+      severity: critical
+
+    - name: auth_failures
+      condition: "rate(vault_audit_log_request_failure[5m]) > 10"
+      severity: warning
+
+    - name: token_expired
+      condition: "vault_token_count_by_policy < 1"
+      severity: warning
