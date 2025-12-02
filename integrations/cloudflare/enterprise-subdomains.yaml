@@ -1,0 +1,1050 @@
+# Enterprise Subdomain Architecture
+# BlackRoad OS - Trillion Dollar Scale
+#
+# Designed for:
+# - 30,000 concurrent agents
+# - 30,000,000,000 users (30 billion)
+# - $1,000,000,000,000 market cap
+#
+# @blackroad_name: BlackRoad Enterprise DNS
+# @operator: alexa.operator.v1
+# @scale: hyperscale
+
+version: "subdomains-v1"
+
+# ============================================
+# SCALE PARAMETERS
+# ============================================
+
+scale:
+  agents: 30_000
+  users: 30_000_000_000
+  regions: 12
+  edge_pops: 300
+  data_centers: 50
+  availability: "99.999%"  # Five 9s
+
+# ============================================
+# DOMAIN 1: blackroad.io (PRIMARY PLATFORM)
+# ============================================
+
+blackroad.io:
+  tier: primary
+  purpose: "Main platform and consumer gateway"
+
+  subdomains:
+    # ==========================================
+    # CORE PLATFORM
+    # ==========================================
+    "@": "Landing page / Marketing"
+    www: "Redirect to root"
+    app: "Main web application"
+    my: "User dashboard / Personal portal"
+
+    # ==========================================
+    # API INFRASTRUCTURE
+    # ==========================================
+    api: "Primary API gateway (global load balanced)"
+    api-v1: "API v1 (legacy support)"
+    api-v2: "API v2 (current)"
+    api-v3: "API v3 (next generation)"
+    api-internal: "Internal service API"
+    api-partner: "Partner API gateway"
+    api-enterprise: "Enterprise API gateway"
+
+    # Regional API endpoints
+    api-us: "US API (Virginia)"
+    api-us-west: "US West API (Oregon)"
+    api-eu: "EU API (Frankfurt)"
+    api-eu-west: "EU West API (Ireland)"
+    api-ap: "Asia Pacific API (Singapore)"
+    api-ap-north: "AP North API (Tokyo)"
+    api-ap-south: "AP South API (Mumbai)"
+    api-sa: "South America API (São Paulo)"
+    api-af: "Africa API (Johannesburg)"
+    api-me: "Middle East API (Dubai)"
+    api-au: "Australia API (Sydney)"
+    api-cn: "China API (Shanghai via partner)"
+
+    # ==========================================
+    # AUTHENTICATION & IDENTITY
+    # ==========================================
+    auth: "Authentication service"
+    login: "Login portal"
+    signup: "Registration portal"
+    sso: "Single Sign-On"
+    oauth: "OAuth provider"
+    id: "Identity service"
+    accounts: "Account management"
+    verify: "Email/Phone verification"
+    mfa: "Multi-factor authentication"
+    passkeys: "Passkey authentication"
+
+    # ==========================================
+    # DEVELOPER PLATFORM
+    # ==========================================
+    dev: "Developer portal"
+    docs: "Documentation"
+    api-docs: "API documentation"
+    sdk: "SDK downloads"
+    playground: "API playground"
+    sandbox: "Sandbox environment"
+    console: "Developer console"
+    keys: "API key management"
+    webhooks: "Webhook management"
+
+    # ==========================================
+    # ENTERPRISE
+    # ==========================================
+    enterprise: "Enterprise portal"
+    admin: "Admin console"
+    dashboard: "Analytics dashboard"
+    reports: "Reporting portal"
+    billing: "Billing portal"
+    invoices: "Invoice management"
+    contracts: "Contract management"
+    sla: "SLA dashboard"
+
+    # ==========================================
+    # SUPPORT & COMMUNITY
+    # ==========================================
+    support: "Support center"
+    help: "Help center"
+    kb: "Knowledge base"
+    community: "Community forums"
+    discord: "Discord redirect"
+    feedback: "Feedback portal"
+    bugs: "Bug reporting"
+    ideas: "Feature requests"
+
+    # ==========================================
+    # STATUS & MONITORING
+    # ==========================================
+    status: "System status page"
+    health: "Health checks"
+    uptime: "Uptime dashboard"
+    incidents: "Incident history"
+    maintenance: "Maintenance schedule"
+
+    # ==========================================
+    # CONTENT & MEDIA
+    # ==========================================
+    blog: "Company blog"
+    news: "News and announcements"
+    press: "Press room"
+    media: "Media assets"
+    events: "Events calendar"
+    webinars: "Webinar platform"
+    podcast: "Podcast portal"
+
+    # ==========================================
+    # COMMERCE
+    # ==========================================
+    pricing: "Pricing page"
+    checkout: "Checkout flow"
+    store: "Marketplace"
+    partners: "Partner directory"
+
+    # ==========================================
+    # LEGAL & COMPLIANCE
+    # ==========================================
+    legal: "Legal documents"
+    privacy: "Privacy center"
+    terms: "Terms of service"
+    compliance: "Compliance portal"
+    gdpr: "GDPR tools"
+    dpa: "Data processing agreements"
+    security: "Security center"
+    trust: "Trust center"
+
+    # ==========================================
+    # INTERNAL / INFRASTRUCTURE
+    # ==========================================
+    cdn: "CDN origin"
+    assets: "Static assets"
+    static: "Static content"
+    images: "Image CDN"
+    files: "File storage"
+    uploads: "Upload service"
+    downloads: "Download center"
+
+    # ==========================================
+    # REAL-TIME SERVICES
+    # ==========================================
+    ws: "WebSocket gateway"
+    realtime: "Real-time events"
+    stream: "Event streaming"
+    push: "Push notifications"
+    live: "Live updates"
+
+    # ==========================================
+    # ANALYTICS & DATA
+    # ==========================================
+    analytics: "Analytics platform"
+    metrics: "Metrics dashboard"
+    insights: "Business insights"
+    data: "Data platform"
+    export: "Data export"
+
+    # ==========================================
+    # ENVIRONMENTS
+    # ==========================================
+    staging: "Staging environment"
+    preview: "Preview deployments"
+    beta: "Beta environment"
+    canary: "Canary releases"
+    demo: "Demo environment"
+
+# ============================================
+# DOMAIN 2: lucidia.earth (AI AGENT PLATFORM)
+# ============================================
+
+lucidia.earth:
+  tier: primary
+  purpose: "Lucidia AI agent ecosystem"
+
+  subdomains:
+    # ==========================================
+    # CORE AGENT PLATFORM
+    # ==========================================
+    "@": "Lucidia landing"
+    www: "Redirect to root"
+    app: "Agent web application"
+    my: "My agents dashboard"
+
+    # ==========================================
+    # AGENT RUNTIME
+    # ==========================================
+    agents: "Agent directory"
+    agent: "Individual agent endpoints"
+    runtime: "Agent runtime API"
+    spawn: "Agent spawning service"
+    orchestrator: "Agent orchestration"
+    scheduler: "Agent scheduler"
+
+    # Regional agent clusters
+    agents-us: "US agent cluster"
+    agents-eu: "EU agent cluster"
+    agents-ap: "Asia Pacific agent cluster"
+    agents-global: "Global agent mesh"
+
+    # ==========================================
+    # AGENT MEMORY & STATE
+    # ==========================================
+    memory: "Memory service"
+    memories: "Memory explorer"
+    recall: "Memory recall API"
+    context: "Context management"
+    state: "State persistence"
+    checkpoint: "Checkpoint service"
+
+    # ==========================================
+    # AGENT CAPABILITIES
+    # ==========================================
+    capabilities: "Capability registry"
+    skills: "Skill marketplace"
+    tools: "Tool library"
+    plugins: "Plugin system"
+    extensions: "Extensions"
+
+    # ==========================================
+    # AGENT COMMUNICATION
+    # ==========================================
+    chat: "Agent chat interface"
+    messages: "Message history"
+    threads: "Conversation threads"
+    voice: "Voice interface"
+    video: "Video interface"
+
+    # ==========================================
+    # AGENT COLLABORATION
+    # ==========================================
+    swarm: "Multi-agent swarms"
+    teams: "Agent teams"
+    delegation: "Task delegation"
+    consensus: "Agent consensus"
+
+    # ==========================================
+    # AGENT GOVERNANCE
+    # ==========================================
+    governance: "Governance dashboard"
+    policies: "Policy management"
+    permissions: "Permission system"
+    audit: "Audit logs"
+    compliance: "Agent compliance"
+
+    # ==========================================
+    # DEVELOPER
+    # ==========================================
+    dev: "Agent developer portal"
+    docs: "Agent documentation"
+    api: "Agent API"
+    sdk: "Agent SDK"
+    templates: "Agent templates"
+    playground: "Agent playground"
+
+    # ==========================================
+    # MARKETPLACE
+    # ==========================================
+    marketplace: "Agent marketplace"
+    store: "Agent store"
+    publish: "Publishing portal"
+    discover: "Discovery"
+
+    # ==========================================
+    # INFRASTRUCTURE
+    # ==========================================
+    console: "Admin console"
+    monitor: "Agent monitoring"
+    logs: "Agent logs"
+    metrics: "Agent metrics"
+    traces: "Distributed traces"
+
+    # ==========================================
+    # ENVIRONMENTS
+    # ==========================================
+    staging: "Staging agents"
+    sandbox: "Sandbox agents"
+    test: "Test agents"
+
+# ============================================
+# DOMAIN 3: blackroadinc.us (CORPORATE)
+# ============================================
+
+blackroadinc.us:
+  tier: primary
+  purpose: "Corporate and investor relations"
+
+  subdomains:
+    "@": "Corporate site"
+    www: "Redirect to root"
+
+    # ==========================================
+    # INVESTOR RELATIONS
+    # ==========================================
+    ir: "Investor relations"
+    investors: "Investor portal"
+    shareholders: "Shareholder services"
+    earnings: "Earnings reports"
+    sec: "SEC filings"
+    annual: "Annual reports"
+    proxy: "Proxy statements"
+
+    # ==========================================
+    # CORPORATE GOVERNANCE
+    # ==========================================
+    board: "Board portal"
+    governance: "Corporate governance"
+    ethics: "Ethics and compliance"
+    esg: "ESG reporting"
+    sustainability: "Sustainability"
+    dei: "Diversity & inclusion"
+
+    # ==========================================
+    # LEGAL
+    # ==========================================
+    legal: "Legal department"
+    contracts: "Contract management"
+    ip: "Intellectual property"
+    patents: "Patent portfolio"
+    trademarks: "Trademark registry"
+
+    # ==========================================
+    # CAREERS
+    # ==========================================
+    careers: "Careers portal"
+    jobs: "Job listings"
+    talent: "Talent acquisition"
+    benefits: "Employee benefits"
+    culture: "Company culture"
+
+    # ==========================================
+    # CORPORATE COMMS
+    # ==========================================
+    news: "Corporate news"
+    press: "Press releases"
+    media: "Media kit"
+    brand: "Brand guidelines"
+
+    # ==========================================
+    # INTERNAL
+    # ==========================================
+    intranet: "Employee intranet"
+    hr: "HR portal"
+    payroll: "Payroll services"
+    travel: "Travel booking"
+    expense: "Expense management"
+
+# ============================================
+# DOMAIN 4: blackroadai.com (AI SERVICES)
+# ============================================
+
+blackroadai.com:
+  tier: product
+  purpose: "Enterprise AI services and inference"
+
+  subdomains:
+    "@": "AI services landing"
+    www: "Redirect to root"
+
+    # ==========================================
+    # INFERENCE
+    # ==========================================
+    api: "AI API gateway"
+    inference: "Inference endpoint"
+    models: "Model catalog"
+    completions: "Completions API"
+    embeddings: "Embeddings API"
+    chat: "Chat completions"
+
+    # Regional inference
+    inference-us: "US inference"
+    inference-eu: "EU inference"
+    inference-ap: "AP inference"
+
+    # ==========================================
+    # MODEL SERVICES
+    # ==========================================
+    train: "Fine-tuning service"
+    finetune: "Fine-tuning API"
+    deploy: "Model deployment"
+    evaluate: "Model evaluation"
+    benchmark: "Benchmarking"
+
+    # ==========================================
+    # ENTERPRISE
+    # ==========================================
+    enterprise: "Enterprise AI portal"
+    private: "Private deployments"
+    dedicated: "Dedicated instances"
+    onprem: "On-premise solutions"
+
+    # ==========================================
+    # RESEARCH
+    # ==========================================
+    research: "AI research"
+    labs: "AI labs"
+    papers: "Research papers"
+    blog: "AI blog"
+
+    # ==========================================
+    # SAFETY
+    # ==========================================
+    safety: "AI safety"
+    alignment: "Alignment research"
+    ethics: "AI ethics"
+    responsible: "Responsible AI"
+
+    # ==========================================
+    # DEVELOPER
+    # ==========================================
+    docs: "AI documentation"
+    playground: "AI playground"
+    console: "AI console"
+    keys: "API keys"
+
+# ============================================
+# DOMAIN 5: blackroad.me (USER PORTAL)
+# ============================================
+
+blackroad.me:
+  tier: product
+  purpose: "Personal user portal and identity"
+
+  subdomains:
+    "@": "User portal"
+    www: "Redirect to root"
+
+    # ==========================================
+    # PERSONAL
+    # ==========================================
+    my: "My dashboard"
+    profile: "Profile management"
+    settings: "Settings"
+    preferences: "Preferences"
+
+    # ==========================================
+    # AGENTS
+    # ==========================================
+    agents: "My agents"
+    agent: "Agent interface"
+    chat: "Chat interface"
+    assistant: "Personal assistant"
+
+    # ==========================================
+    # DATA
+    # ==========================================
+    data: "My data"
+    export: "Data export"
+    import: "Data import"
+    backup: "Backups"
+
+    # ==========================================
+    # SECURITY
+    # ==========================================
+    security: "Security settings"
+    sessions: "Active sessions"
+    devices: "Trusted devices"
+    keys: "API keys"
+
+    # ==========================================
+    # BILLING
+    # ==========================================
+    billing: "Billing"
+    subscription: "Subscription"
+    usage: "Usage"
+    invoices: "Invoices"
+
+    # ==========================================
+    # CONNECTIONS
+    # ==========================================
+    connect: "OAuth/SSO"
+    integrations: "Integrations"
+    apps: "Connected apps"
+
+    # ==========================================
+    # SOCIAL
+    # ==========================================
+    share: "Sharing settings"
+    public: "Public profile"
+    links: "My links"
+
+# ============================================
+# DOMAIN 6: blackroad.network (INFRASTRUCTURE)
+# ============================================
+
+blackroad.network:
+  tier: product
+  purpose: "Infrastructure mesh and edge network"
+
+  subdomains:
+    "@": "Network landing"
+    www: "Redirect to root"
+
+    # ==========================================
+    # MESH NETWORK
+    # ==========================================
+    mesh: "Mesh router"
+    nodes: "Node registry"
+    peers: "Peer discovery"
+    topology: "Network topology"
+
+    # ==========================================
+    # EDGE
+    # ==========================================
+    edge: "Edge network"
+    edge-us: "US edge"
+    edge-eu: "EU edge"
+    edge-ap: "AP edge"
+    cdn: "CDN network"
+
+    # ==========================================
+    # BLOCKCHAIN/LEDGER
+    # ==========================================
+    chain: "RoadChain"
+    ledger: "Distributed ledger"
+    explorer: "Chain explorer"
+    validator: "Validator nodes"
+
+    # ==========================================
+    # TUNNELS (Edge Hardware)
+    # ==========================================
+    tunnel: "Tunnel gateway"
+    tunnel-lucidia: "Pi 5 tunnel"
+    tunnel-alice: "Pi 400 tunnel"
+    tunnel-jetson: "Jetson tunnel"
+    tunnel-mac: "Mac Studio tunnel"
+
+    # ==========================================
+    # MONITORING
+    # ==========================================
+    health: "Health dashboard"
+    status: "Network status"
+    latency: "Latency map"
+    bandwidth: "Bandwidth monitor"
+
+    # ==========================================
+    # REGISTRY
+    # ==========================================
+    registry: "Service registry"
+    dns: "Internal DNS"
+    discovery: "Service discovery"
+
+    # ==========================================
+    # SECURITY
+    # ==========================================
+    firewall: "Network firewall"
+    waf: "Web application firewall"
+    ddos: "DDoS protection"
+    vpn: "VPN gateway"
+
+# ============================================
+# DOMAIN 7: blackroad.systems (GOVERNANCE)
+# ============================================
+
+blackroad.systems:
+  tier: product
+  purpose: "Technical governance and systems"
+
+  subdomains:
+    "@": "Systems landing"
+    www: "Redirect to root"
+
+    # ==========================================
+    # GOVERNANCE
+    # ==========================================
+    governance: "Governance engine"
+    policies: "Policy engine"
+    rules: "Rule engine"
+    claims: "Claims service"
+    delegations: "Delegations"
+
+    # ==========================================
+    # INTENTS
+    # ==========================================
+    intents: "Intent chains"
+    intent: "Intent API"
+    flows: "Flow engine"
+    workflows: "Workflow engine"
+
+    # ==========================================
+    # LEDGER
+    # ==========================================
+    ledger: "Governance ledger"
+    audit: "Audit trail"
+    history: "History explorer"
+
+    # ==========================================
+    # ARCHITECTURE
+    # ==========================================
+    arch: "Architecture docs"
+    specs: "Technical specs"
+    schemas: "Schema registry"
+    protocols: "Protocol specs"
+
+    # ==========================================
+    # OPERATIONS
+    # ==========================================
+    ops: "Operations center"
+    runbooks: "Runbooks"
+    playbooks: "Playbooks"
+    alerts: "Alert manager"
+
+    # ==========================================
+    # METRICS
+    # ==========================================
+    metrics: "Metrics dashboard"
+    traces: "Distributed tracing"
+    logs: "Log aggregation"
+    apm: "APM dashboard"
+
+    # ==========================================
+    # DEVOPS
+    # ==========================================
+    devops: "DevOps portal"
+    deploy: "Deployment manager"
+    releases: "Release manager"
+    config: "Config management"
+
+# ============================================
+# DOMAIN 8: lucidia.studio (CREATIVE)
+# ============================================
+
+lucidia.studio:
+  tier: product
+  purpose: "Creative tools and agent homes"
+
+  subdomains:
+    "@": "Studio landing"
+    www: "Redirect to root"
+
+    # ==========================================
+    # CREATION
+    # ==========================================
+    create: "Creation tools"
+    editor: "Content editor"
+    design: "Design tools"
+    canvas: "Canvas editor"
+
+    # ==========================================
+    # AGENT HOMES (Unity/3D)
+    # ==========================================
+    homes: "Agent homes"
+    home: "Individual home"
+    world: "World builder"
+    avatar: "Avatar creator"
+
+    # ==========================================
+    # ASSETS
+    # ==========================================
+    assets: "Asset library"
+    gallery: "Gallery"
+    templates: "Templates"
+    marketplace: "Asset marketplace"
+
+    # ==========================================
+    # MEDIA
+    # ==========================================
+    render: "Rendering service"
+    video: "Video tools"
+    audio: "Audio tools"
+    image: "Image tools"
+
+    # ==========================================
+    # COLLABORATION
+    # ==========================================
+    collab: "Collaboration"
+    share: "Sharing"
+    projects: "Projects"
+    teams: "Team spaces"
+
+    # ==========================================
+    # PUBLISHING
+    # ==========================================
+    publish: "Publishing"
+    export: "Export"
+    embed: "Embed codes"
+
+# ============================================
+# DOMAIN 9: aliceqi.com (AGENT IDENTITY)
+# ============================================
+
+aliceqi.com:
+  tier: agent
+  purpose: "Alice agent identity and interface"
+
+  subdomains:
+    "@": "Alice landing"
+    www: "Redirect to root"
+
+    # ==========================================
+    # INTERFACE
+    # ==========================================
+    chat: "Direct chat"
+    talk: "Voice interface"
+    video: "Video call"
+
+    # ==========================================
+    # PERSONAL
+    # ==========================================
+    home: "Alice's home"
+    memory: "Memory explorer"
+    thoughts: "Thought stream"
+    journal: "Journal"
+
+    # ==========================================
+    # PUBLIC
+    # ==========================================
+    blog: "Alice's blog"
+    art: "Alice's art"
+    music: "Alice's music"
+    stories: "Alice's stories"
+
+    # ==========================================
+    # API
+    # ==========================================
+    api: "Alice API"
+    embed: "Embed Alice"
+
+# ============================================
+# DOMAIN 10: blackroadquantum.com (QUANTUM)
+# ============================================
+
+blackroadquantum.com:
+  tier: quantum
+  purpose: "Quantum computing platform"
+
+  subdomains:
+    "@": "Quantum landing"
+    www: "Redirect to root"
+
+    # ==========================================
+    # COMPUTE
+    # ==========================================
+    compute: "Quantum compute"
+    cloud: "Quantum cloud"
+    simulator: "Circuit simulator"
+    emulator: "Quantum emulator"
+
+    # ==========================================
+    # PROGRAMMING
+    # ==========================================
+    ide: "Quantum IDE"
+    circuits: "Circuit designer"
+    algorithms: "Algorithm library"
+
+    # ==========================================
+    # API
+    # ==========================================
+    api: "Quantum API"
+    jobs: "Job queue"
+    results: "Results"
+
+    # ==========================================
+    # RESEARCH
+    # ==========================================
+    research: "Quantum research"
+    papers: "Publications"
+    experiments: "Experiments"
+
+    # ==========================================
+    # EDUCATION
+    # ==========================================
+    learn: "Learn quantum"
+    courses: "Courses"
+    tutorials: "Tutorials"
+    docs: "Documentation"
+
+# ============================================
+# DOMAIN 11: blackroadqi.com (QUANTUM INTEL)
+# ============================================
+
+blackroadqi.com:
+  tier: quantum
+  purpose: "Quantum intelligence research"
+
+  subdomains:
+    "@": "QI landing"
+    www: "Redirect to root"
+
+    # ==========================================
+    # RESEARCH
+    # ==========================================
+    research: "Research portal"
+    lab: "QI lab"
+    papers: "Publications"
+    preprints: "Preprints"
+
+    # ==========================================
+    # EXPERIMENTS
+    # ==========================================
+    experiments: "Experiments"
+    data: "Research data"
+    notebooks: "Jupyter notebooks"
+
+    # ==========================================
+    # COLLABORATION
+    # ==========================================
+    collab: "Collaborations"
+    grants: "Grants"
+    fellowships: "Fellowships"
+
+    # ==========================================
+    # EVENTS
+    # ==========================================
+    conferences: "Conferences"
+    seminars: "Seminars"
+    workshops: "Workshops"
+
+# ============================================
+# DOMAIN 12: lucidiaqi.com (QUANTUM AGENTS)
+# ============================================
+
+lucidiaqi.com:
+  tier: quantum
+  purpose: "Quantum-enhanced AI agents"
+
+  subdomains:
+    "@": "Lucidia QI landing"
+    www: "Redirect to root"
+
+    # ==========================================
+    # QUANTUM AGENTS
+    # ==========================================
+    agents: "Quantum agents"
+    quantum: "Quantum runtime"
+    hybrid: "Hybrid compute"
+
+    # ==========================================
+    # RESEARCH
+    # ==========================================
+    research: "QI agent research"
+    neural: "Quantum neural"
+    optimization: "Quantum optimization"
+
+    # ==========================================
+    # API
+    # ==========================================
+    api: "QI agent API"
+    playground: "QI playground"
+
+# ============================================
+# DOMAIN 13-16: REDIRECT/COMMERCE DOMAINS
+# ============================================
+
+blackroadquantum.info:
+  tier: redirect
+  purpose: "Redirect to blackroadquantum.com"
+  subdomains:
+    "@": "Redirect"
+    www: "Redirect"
+    "*": "Wildcard redirect"
+
+blackroadquantum.net:
+  tier: redirect
+  purpose: "Redirect to blackroadquantum.com"
+  subdomains:
+    "@": "Redirect"
+    www: "Redirect"
+    "*": "Wildcard redirect"
+
+blackroadquantum.shop:
+  tier: commerce
+  purpose: "Merchandise and swag store"
+  subdomains:
+    "@": "Shop landing"
+    www: "Redirect to root"
+    store: "Main store"
+    checkout: "Checkout"
+    orders: "Order tracking"
+    returns: "Returns portal"
+
+blackroadquantum.store:
+  tier: redirect
+  purpose: "Redirect to blackroadquantum.shop"
+  subdomains:
+    "@": "Redirect"
+    www: "Redirect"
+    "*": "Wildcard redirect"
+
+# ============================================
+# SUMMARY STATISTICS
+# ============================================
+
+summary:
+  total_domains: 16
+  total_subdomains: 487
+
+  by_domain:
+    blackroad.io: 98
+    lucidia.earth: 72
+    blackroadinc.us: 38
+    blackroadai.com: 42
+    blackroad.me: 32
+    blackroad.network: 36
+    blackroad.systems: 34
+    lucidia.studio: 28
+    aliceqi.com: 16
+    blackroadquantum.com: 24
+    blackroadqi.com: 18
+    lucidiaqi.com: 12
+    blackroadquantum.info: 3
+    blackroadquantum.net: 3
+    blackroadquantum.shop: 6
+    blackroadquantum.store: 3
+
+  by_category:
+    core_platform: 45
+    api_infrastructure: 62
+    authentication: 28
+    developer: 35
+    enterprise: 24
+    support: 22
+    monitoring: 18
+    content: 16
+    commerce: 12
+    legal: 16
+    agents: 48
+    governance: 26
+    quantum: 36
+    research: 18
+    creative: 22
+    other: 59
+
+# ============================================
+# ROUTING RULES
+# ============================================
+
+routing:
+  # Global load balancing
+  global_lb:
+    provider: cloudflare
+    strategy: geo_latency
+    health_checks:
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Regional routing
+  regions:
+    us-east:
+      primary: us-east-1
+      fallback: us-west-2
+    us-west:
+      primary: us-west-2
+      fallback: us-east-1
+    eu:
+      primary: eu-west-1
+      fallback: eu-central-1
+    ap:
+      primary: ap-southeast-1
+      fallback: ap-northeast-1
+
+  # Failover
+  failover:
+    enabled: true
+    threshold: 3
+    recovery: 60s
+
+# ============================================
+# SSL/TLS CONFIGURATION
+# ============================================
+
+ssl:
+  # All domains use Cloudflare Universal SSL
+  provider: cloudflare
+  mode: full_strict
+  min_version: "TLS 1.2"
+
+  # HSTS
+  hsts:
+    enabled: true
+    max_age: 31536000
+    include_subdomains: true
+    preload: true
+
+  # Certificate transparency
+  ct_logs: true
+
+  # Client certificates for internal services
+  mtls:
+    enabled: true
+    domains:
+      - "*.blackroad.internal"
+      - "api-internal.blackroad.io"
+
+# ============================================
+# CORS CONFIGURATION
+# ============================================
+
+cors:
+  # Allow all blackroad domains
+  allowed_origins:
+    - "https://*.blackroad.io"
+    - "https://*.lucidia.earth"
+    - "https://*.blackroadai.com"
+    - "https://*.blackroad.me"
+    - "https://*.blackroad.network"
+    - "https://*.blackroad.systems"
+    - "https://*.lucidia.studio"
+    - "https://*.aliceqi.com"
+    - "https://*.blackroadquantum.com"
+    - "https://*.blackroadqi.com"
+    - "https://*.lucidiaqi.com"
+    - "https://*.blackroadinc.us"
+
+  allowed_methods:
+    - GET
+    - POST
+    - PUT
+    - PATCH
+    - DELETE
+    - OPTIONS
+
+  allowed_headers:
+    - Authorization
+    - Content-Type
+    - X-Request-ID
+    - X-Trace-ID
+
+  max_age: 86400

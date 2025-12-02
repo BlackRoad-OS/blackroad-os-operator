@@ -1,0 +1,592 @@
+# Enterprise DNS Records
+# BlackRoad OS - Hyperscale Configuration
+#
+# Complete DNS record set for 487 subdomains across 16 domains
+# Designed for 30K agents, 30B users, $1T company
+#
+# @blackroad_name: BlackRoad DNS
+# @operator: alexa.operator.v1
+# @scale: hyperscale
+
+version: "dns-records-v1"
+
+# ============================================
+# BLACKROAD.IO - PRIMARY PLATFORM (98 subdomains)
+# ============================================
+
+blackroad.io:
+  dns_records:
+    # Core Platform
+    - { name: "@", type: A, content: "${RAILWAY_IP}", proxied: true }
+    - { name: "www", type: CNAME, content: "blackroad.io", proxied: true }
+    - { name: "app", type: CNAME, content: "blackroad-os-web.up.railway.app", proxied: true }
+    - { name: "my", type: CNAME, content: "blackroad-os-web.up.railway.app", proxied: true }
+
+    # API Infrastructure (12 regional + 7 functional)
+    - { name: "api", type: CNAME, content: "blackroad-api-gateway.up.railway.app", proxied: true }
+    - { name: "api-v1", type: CNAME, content: "blackroad-api-v1.up.railway.app", proxied: true }
+    - { name: "api-v2", type: CNAME, content: "blackroad-api-v2.up.railway.app", proxied: true }
+    - { name: "api-v3", type: CNAME, content: "blackroad-api-v3.up.railway.app", proxied: true }
+    - { name: "api-internal", type: CNAME, content: "blackroad-api-internal.up.railway.app", proxied: true }
+    - { name: "api-partner", type: CNAME, content: "blackroad-api-partner.up.railway.app", proxied: true }
+    - { name: "api-enterprise", type: CNAME, content: "blackroad-api-enterprise.up.railway.app", proxied: true }
+    # Regional APIs
+    - { name: "api-us", type: CNAME, content: "blackroad-api-useast.up.railway.app", proxied: true }
+    - { name: "api-us-west", type: CNAME, content: "blackroad-api-uswest.up.railway.app", proxied: true }
+    - { name: "api-eu", type: CNAME, content: "blackroad-api-euwest.up.railway.app", proxied: true }
+    - { name: "api-eu-west", type: CNAME, content: "blackroad-api-eucentral.up.railway.app", proxied: true }
+    - { name: "api-ap", type: CNAME, content: "blackroad-api-apac.up.railway.app", proxied: true }
+    - { name: "api-ap-north", type: CNAME, content: "blackroad-api-tokyo.up.railway.app", proxied: true }
+    - { name: "api-ap-south", type: CNAME, content: "blackroad-api-mumbai.up.railway.app", proxied: true }
+    - { name: "api-sa", type: CNAME, content: "blackroad-api-saopaulo.up.railway.app", proxied: true }
+    - { name: "api-af", type: CNAME, content: "blackroad-api-johannesburg.up.railway.app", proxied: true }
+    - { name: "api-me", type: CNAME, content: "blackroad-api-dubai.up.railway.app", proxied: true }
+    - { name: "api-au", type: CNAME, content: "blackroad-api-sydney.up.railway.app", proxied: true }
+    - { name: "api-cn", type: CNAME, content: "blackroad-api-shanghai.up.railway.app", proxied: true }
+
+    # Authentication & Identity
+    - { name: "auth", type: CNAME, content: "blackroad-auth.up.railway.app", proxied: true }
+    - { name: "login", type: CNAME, content: "blackroad-os-web.up.railway.app", proxied: true }
+    - { name: "signup", type: CNAME, content: "blackroad-os-web.up.railway.app", proxied: true }
+    - { name: "sso", type: CNAME, content: "blackroad-sso.up.railway.app", proxied: true }
+    - { name: "oauth", type: CNAME, content: "blackroad-oauth.up.railway.app", proxied: true }
+    - { name: "id", type: CNAME, content: "blackroad-identity.up.railway.app", proxied: true }
+    - { name: "accounts", type: CNAME, content: "blackroad-accounts.up.railway.app", proxied: true }
+    - { name: "verify", type: CNAME, content: "blackroad-verify.up.railway.app", proxied: true }
+    - { name: "mfa", type: CNAME, content: "blackroad-mfa.up.railway.app", proxied: true }
+    - { name: "passkeys", type: CNAME, content: "blackroad-passkeys.up.railway.app", proxied: true }
+
+    # Developer Platform
+    - { name: "dev", type: CNAME, content: "blackroad-dev-portal.up.railway.app", proxied: true }
+    - { name: "docs", type: CNAME, content: "blackroad-os-docs.pages.dev", proxied: true }
+    - { name: "api-docs", type: CNAME, content: "blackroad-api-docs.pages.dev", proxied: true }
+    - { name: "sdk", type: CNAME, content: "blackroad-sdk.pages.dev", proxied: true }
+    - { name: "playground", type: CNAME, content: "blackroad-playground.up.railway.app", proxied: true }
+    - { name: "sandbox", type: CNAME, content: "blackroad-sandbox.up.railway.app", proxied: true }
+    - { name: "console", type: CNAME, content: "blackroad-os-prism-console.up.railway.app", proxied: true }
+    - { name: "keys", type: CNAME, content: "blackroad-keys.up.railway.app", proxied: true }
+    - { name: "webhooks", type: CNAME, content: "blackroad-webhooks.up.railway.app", proxied: true }
+
+    # Enterprise
+    - { name: "enterprise", type: CNAME, content: "blackroad-enterprise.up.railway.app", proxied: true }
+    - { name: "admin", type: CNAME, content: "blackroad-os-prism-console.up.railway.app", proxied: true }
+    - { name: "dashboard", type: CNAME, content: "blackroad-dashboard.up.railway.app", proxied: true }
+    - { name: "reports", type: CNAME, content: "blackroad-reports.up.railway.app", proxied: true }
+    - { name: "billing", type: CNAME, content: "blackroad-billing.up.railway.app", proxied: true }
+    - { name: "invoices", type: CNAME, content: "blackroad-invoices.up.railway.app", proxied: true }
+    - { name: "contracts", type: CNAME, content: "blackroad-contracts.up.railway.app", proxied: true }
+    - { name: "sla", type: CNAME, content: "blackroad-sla.up.railway.app", proxied: true }
+
+    # Support & Community
+    - { name: "support", type: CNAME, content: "blackroad-support.zendesk.com", proxied: false }
+    - { name: "help", type: CNAME, content: "blackroad-help.pages.dev", proxied: true }
+    - { name: "kb", type: CNAME, content: "blackroad-kb.pages.dev", proxied: true }
+    - { name: "community", type: CNAME, content: "blackroad-community.discourse.group", proxied: false }
+    - { name: "discord", type: CNAME, content: "discord.gg", proxied: false }
+    - { name: "feedback", type: CNAME, content: "blackroad-feedback.up.railway.app", proxied: true }
+    - { name: "bugs", type: CNAME, content: "blackroad-bugs.up.railway.app", proxied: true }
+    - { name: "ideas", type: CNAME, content: "blackroad-ideas.up.railway.app", proxied: true }
+
+    # Status & Monitoring
+    - { name: "status", type: CNAME, content: "blackroad.statuspage.io", proxied: false }
+    - { name: "health", type: CNAME, content: "blackroad-health.up.railway.app", proxied: true }
+    - { name: "uptime", type: CNAME, content: "blackroad-uptime.up.railway.app", proxied: true }
+    - { name: "incidents", type: CNAME, content: "blackroad.statuspage.io", proxied: false }
+    - { name: "maintenance", type: CNAME, content: "blackroad.statuspage.io", proxied: false }
+
+    # Content & Media
+    - { name: "blog", type: CNAME, content: "blackroad-blog.ghost.io", proxied: true }
+    - { name: "news", type: CNAME, content: "blackroad-news.pages.dev", proxied: true }
+    - { name: "press", type: CNAME, content: "blackroad-press.pages.dev", proxied: true }
+    - { name: "media", type: CNAME, content: "blackroad-media.r2.dev", proxied: true }
+    - { name: "events", type: CNAME, content: "blackroad-events.up.railway.app", proxied: true }
+    - { name: "webinars", type: CNAME, content: "blackroad-webinars.up.railway.app", proxied: true }
+    - { name: "podcast", type: CNAME, content: "blackroad-podcast.transistor.fm", proxied: true }
+
+    # Commerce
+    - { name: "pricing", type: CNAME, content: "blackroad-os-web.up.railway.app", proxied: true }
+    - { name: "checkout", type: CNAME, content: "blackroad-checkout.up.railway.app", proxied: true }
+    - { name: "store", type: CNAME, content: "blackroad-store.up.railway.app", proxied: true }
+    - { name: "partners", type: CNAME, content: "blackroad-partners.up.railway.app", proxied: true }
+
+    # Legal & Compliance
+    - { name: "legal", type: CNAME, content: "blackroad-legal.pages.dev", proxied: true }
+    - { name: "privacy", type: CNAME, content: "blackroad-privacy.pages.dev", proxied: true }
+    - { name: "terms", type: CNAME, content: "blackroad-terms.pages.dev", proxied: true }
+    - { name: "compliance", type: CNAME, content: "blackroad-compliance.up.railway.app", proxied: true }
+    - { name: "gdpr", type: CNAME, content: "blackroad-gdpr.up.railway.app", proxied: true }
+    - { name: "dpa", type: CNAME, content: "blackroad-dpa.pages.dev", proxied: true }
+    - { name: "security", type: CNAME, content: "blackroad-security.pages.dev", proxied: true }
+    - { name: "trust", type: CNAME, content: "blackroad-trust.pages.dev", proxied: true }
+
+    # CDN & Assets
+    - { name: "cdn", type: CNAME, content: "blackroad-cdn.r2.dev", proxied: true }
+    - { name: "assets", type: CNAME, content: "blackroad-assets.r2.dev", proxied: true }
+    - { name: "static", type: CNAME, content: "blackroad-static.r2.dev", proxied: true }
+    - { name: "images", type: CNAME, content: "blackroad-images.r2.dev", proxied: true }
+    - { name: "files", type: CNAME, content: "blackroad-files.r2.dev", proxied: true }
+    - { name: "uploads", type: CNAME, content: "blackroad-uploads.up.railway.app", proxied: true }
+    - { name: "downloads", type: CNAME, content: "blackroad-downloads.r2.dev", proxied: true }
+
+    # Real-time Services
+    - { name: "ws", type: CNAME, content: "blackroad-websocket.up.railway.app", proxied: true }
+    - { name: "realtime", type: CNAME, content: "blackroad-realtime.up.railway.app", proxied: true }
+    - { name: "stream", type: CNAME, content: "blackroad-stream.up.railway.app", proxied: true }
+    - { name: "push", type: CNAME, content: "blackroad-push.up.railway.app", proxied: true }
+    - { name: "live", type: CNAME, content: "blackroad-live.up.railway.app", proxied: true }
+
+    # Analytics & Data
+    - { name: "analytics", type: CNAME, content: "blackroad-analytics.up.railway.app", proxied: true }
+    - { name: "metrics", type: CNAME, content: "blackroad-metrics.up.railway.app", proxied: true }
+    - { name: "insights", type: CNAME, content: "blackroad-insights.up.railway.app", proxied: true }
+    - { name: "data", type: CNAME, content: "blackroad-data.up.railway.app", proxied: true }
+    - { name: "export", type: CNAME, content: "blackroad-export.up.railway.app", proxied: true }
+
+    # Environments
+    - { name: "staging", type: CNAME, content: "blackroad-staging.up.railway.app", proxied: true }
+    - { name: "preview", type: CNAME, content: "blackroad-preview.pages.dev", proxied: true }
+    - { name: "beta", type: CNAME, content: "blackroad-beta.up.railway.app", proxied: true }
+    - { name: "canary", type: CNAME, content: "blackroad-canary.up.railway.app", proxied: true }
+    - { name: "demo", type: CNAME, content: "blackroad-os-demo.up.railway.app", proxied: true }
+
+    # Email (MX)
+    - { name: "@", type: MX, content: "aspmx.l.google.com", priority: 1 }
+    - { name: "@", type: MX, content: "alt1.aspmx.l.google.com", priority: 5 }
+    - { name: "@", type: MX, content: "alt2.aspmx.l.google.com", priority: 5 }
+    - { name: "@", type: TXT, content: "v=spf1 include:_spf.google.com ~all" }
+    - { name: "_dmarc", type: TXT, content: "v=DMARC1; p=reject; rua=mailto:dmarc@blackroad.io" }
+
+# ============================================
+# LUCIDIA.EARTH - AI AGENT PLATFORM (72 subdomains)
+# ============================================
+
+lucidia.earth:
+  dns_records:
+    # Core
+    - { name: "@", type: A, content: "${RAILWAY_IP}", proxied: true }
+    - { name: "www", type: CNAME, content: "lucidia.earth", proxied: true }
+    - { name: "app", type: CNAME, content: "lucidia-web.up.railway.app", proxied: true }
+    - { name: "my", type: CNAME, content: "lucidia-dashboard.up.railway.app", proxied: true }
+
+    # Agent Runtime
+    - { name: "agents", type: CNAME, content: "lucidia-agents.up.railway.app", proxied: true }
+    - { name: "agent", type: CNAME, content: "lucidia-agent-api.up.railway.app", proxied: true }
+    - { name: "runtime", type: CNAME, content: "lucidia-runtime.up.railway.app", proxied: true }
+    - { name: "spawn", type: CNAME, content: "lucidia-spawn.up.railway.app", proxied: true }
+    - { name: "orchestrator", type: CNAME, content: "lucidia-orchestrator.up.railway.app", proxied: true }
+    - { name: "scheduler", type: CNAME, content: "lucidia-scheduler.up.railway.app", proxied: true }
+    # Regional clusters
+    - { name: "agents-us", type: CNAME, content: "lucidia-agents-us.up.railway.app", proxied: true }
+    - { name: "agents-eu", type: CNAME, content: "lucidia-agents-eu.up.railway.app", proxied: true }
+    - { name: "agents-ap", type: CNAME, content: "lucidia-agents-ap.up.railway.app", proxied: true }
+    - { name: "agents-global", type: CNAME, content: "lucidia-agents-global.up.railway.app", proxied: true }
+
+    # Memory & State
+    - { name: "memory", type: CNAME, content: "lucidia-memory.up.railway.app", proxied: true }
+    - { name: "memories", type: CNAME, content: "lucidia-memories.up.railway.app", proxied: true }
+    - { name: "recall", type: CNAME, content: "lucidia-recall.up.railway.app", proxied: true }
+    - { name: "context", type: CNAME, content: "lucidia-context.up.railway.app", proxied: true }
+    - { name: "state", type: CNAME, content: "lucidia-state.up.railway.app", proxied: true }
+    - { name: "checkpoint", type: CNAME, content: "lucidia-checkpoint.up.railway.app", proxied: true }
+
+    # Capabilities
+    - { name: "capabilities", type: CNAME, content: "lucidia-capabilities.up.railway.app", proxied: true }
+    - { name: "skills", type: CNAME, content: "lucidia-skills.up.railway.app", proxied: true }
+    - { name: "tools", type: CNAME, content: "lucidia-tools.up.railway.app", proxied: true }
+    - { name: "plugins", type: CNAME, content: "lucidia-plugins.up.railway.app", proxied: true }
+    - { name: "extensions", type: CNAME, content: "lucidia-extensions.up.railway.app", proxied: true }
+
+    # Communication
+    - { name: "chat", type: CNAME, content: "lucidia-chat.up.railway.app", proxied: true }
+    - { name: "messages", type: CNAME, content: "lucidia-messages.up.railway.app", proxied: true }
+    - { name: "threads", type: CNAME, content: "lucidia-threads.up.railway.app", proxied: true }
+    - { name: "voice", type: CNAME, content: "lucidia-voice.up.railway.app", proxied: true }
+    - { name: "video", type: CNAME, content: "lucidia-video.up.railway.app", proxied: true }
+
+    # Collaboration
+    - { name: "swarm", type: CNAME, content: "lucidia-swarm.up.railway.app", proxied: true }
+    - { name: "teams", type: CNAME, content: "lucidia-teams.up.railway.app", proxied: true }
+    - { name: "delegation", type: CNAME, content: "lucidia-delegation.up.railway.app", proxied: true }
+    - { name: "consensus", type: CNAME, content: "lucidia-consensus.up.railway.app", proxied: true }
+
+    # Governance
+    - { name: "governance", type: CNAME, content: "lucidia-governance.up.railway.app", proxied: true }
+    - { name: "policies", type: CNAME, content: "lucidia-policies.up.railway.app", proxied: true }
+    - { name: "permissions", type: CNAME, content: "lucidia-permissions.up.railway.app", proxied: true }
+    - { name: "audit", type: CNAME, content: "lucidia-audit.up.railway.app", proxied: true }
+    - { name: "compliance", type: CNAME, content: "lucidia-compliance.up.railway.app", proxied: true }
+
+    # Developer
+    - { name: "dev", type: CNAME, content: "lucidia-dev.up.railway.app", proxied: true }
+    - { name: "docs", type: CNAME, content: "lucidia-docs.pages.dev", proxied: true }
+    - { name: "api", type: CNAME, content: "lucidia-api.up.railway.app", proxied: true }
+    - { name: "sdk", type: CNAME, content: "lucidia-sdk.pages.dev", proxied: true }
+    - { name: "templates", type: CNAME, content: "lucidia-templates.pages.dev", proxied: true }
+    - { name: "playground", type: CNAME, content: "lucidia-playground.up.railway.app", proxied: true }
+
+    # Marketplace
+    - { name: "marketplace", type: CNAME, content: "lucidia-marketplace.up.railway.app", proxied: true }
+    - { name: "store", type: CNAME, content: "lucidia-store.up.railway.app", proxied: true }
+    - { name: "publish", type: CNAME, content: "lucidia-publish.up.railway.app", proxied: true }
+    - { name: "discover", type: CNAME, content: "lucidia-discover.up.railway.app", proxied: true }
+
+    # Infrastructure
+    - { name: "console", type: CNAME, content: "blackroad-os-prism-console.up.railway.app", proxied: true }
+    - { name: "monitor", type: CNAME, content: "lucidia-monitor.up.railway.app", proxied: true }
+    - { name: "logs", type: CNAME, content: "lucidia-logs.up.railway.app", proxied: true }
+    - { name: "metrics", type: CNAME, content: "lucidia-metrics.up.railway.app", proxied: true }
+    - { name: "traces", type: CNAME, content: "lucidia-traces.up.railway.app", proxied: true }
+
+    # Environments
+    - { name: "staging", type: CNAME, content: "lucidia-staging.up.railway.app", proxied: true }
+    - { name: "sandbox", type: CNAME, content: "lucidia-sandbox.up.railway.app", proxied: true }
+    - { name: "test", type: CNAME, content: "lucidia-test.up.railway.app", proxied: true }
+
+# ============================================
+# BLACKROADAI.COM - AI SERVICES (42 subdomains)
+# ============================================
+
+blackroadai.com:
+  dns_records:
+    - { name: "@", type: A, content: "${RAILWAY_IP}", proxied: true }
+    - { name: "www", type: CNAME, content: "blackroadai.com", proxied: true }
+
+    # Inference
+    - { name: "api", type: CNAME, content: "blackroad-beacon.up.railway.app", proxied: true }
+    - { name: "inference", type: CNAME, content: "blackroad-inference.up.railway.app", proxied: true }
+    - { name: "models", type: CNAME, content: "blackroad-models.up.railway.app", proxied: true }
+    - { name: "completions", type: CNAME, content: "blackroad-beacon.up.railway.app", proxied: true }
+    - { name: "embeddings", type: CNAME, content: "blackroad-beacon.up.railway.app", proxied: true }
+    - { name: "chat", type: CNAME, content: "blackroad-beacon.up.railway.app", proxied: true }
+    # Regional
+    - { name: "inference-us", type: CNAME, content: "blackroad-inference-us.up.railway.app", proxied: true }
+    - { name: "inference-eu", type: CNAME, content: "blackroad-inference-eu.up.railway.app", proxied: true }
+    - { name: "inference-ap", type: CNAME, content: "blackroad-inference-ap.up.railway.app", proxied: true }
+
+    # Model Services
+    - { name: "train", type: CNAME, content: "blackroad-train.up.railway.app", proxied: true }
+    - { name: "finetune", type: CNAME, content: "blackroad-finetune.up.railway.app", proxied: true }
+    - { name: "deploy", type: CNAME, content: "blackroad-deploy.up.railway.app", proxied: true }
+    - { name: "evaluate", type: CNAME, content: "blackroad-evaluate.up.railway.app", proxied: true }
+    - { name: "benchmark", type: CNAME, content: "blackroad-benchmark.up.railway.app", proxied: true }
+
+    # Enterprise
+    - { name: "enterprise", type: CNAME, content: "blackroad-ai-enterprise.up.railway.app", proxied: true }
+    - { name: "private", type: CNAME, content: "blackroad-ai-private.up.railway.app", proxied: true }
+    - { name: "dedicated", type: CNAME, content: "blackroad-ai-dedicated.up.railway.app", proxied: true }
+    - { name: "onprem", type: CNAME, content: "blackroad-ai-onprem.pages.dev", proxied: true }
+
+    # Research
+    - { name: "research", type: CNAME, content: "blackroad-ai-research.pages.dev", proxied: true }
+    - { name: "labs", type: CNAME, content: "blackroad-ai-labs.up.railway.app", proxied: true }
+    - { name: "papers", type: CNAME, content: "blackroad-ai-papers.pages.dev", proxied: true }
+    - { name: "blog", type: CNAME, content: "blackroad-ai-blog.pages.dev", proxied: true }
+
+    # Safety
+    - { name: "safety", type: CNAME, content: "blackroad-ai-safety.pages.dev", proxied: true }
+    - { name: "alignment", type: CNAME, content: "blackroad-ai-alignment.pages.dev", proxied: true }
+    - { name: "ethics", type: CNAME, content: "blackroad-ai-ethics.pages.dev", proxied: true }
+    - { name: "responsible", type: CNAME, content: "blackroad-ai-responsible.pages.dev", proxied: true }
+
+    # Developer
+    - { name: "docs", type: CNAME, content: "blackroad-ai-docs.pages.dev", proxied: true }
+    - { name: "playground", type: CNAME, content: "blackroad-ai-playground.up.railway.app", proxied: true }
+    - { name: "console", type: CNAME, content: "blackroad-ai-console.up.railway.app", proxied: true }
+    - { name: "keys", type: CNAME, content: "blackroad-ai-keys.up.railway.app", proxied: true }
+
+# ============================================
+# BLACKROAD.NETWORK - INFRASTRUCTURE (36 subdomains)
+# ============================================
+
+blackroad.network:
+  dns_records:
+    - { name: "@", type: A, content: "${RAILWAY_IP}", proxied: true }
+    - { name: "www", type: CNAME, content: "blackroad.network", proxied: true }
+
+    # Mesh
+    - { name: "mesh", type: CNAME, content: "blackroad-mesh.up.railway.app", proxied: true }
+    - { name: "nodes", type: CNAME, content: "blackroad-nodes.up.railway.app", proxied: true }
+    - { name: "peers", type: CNAME, content: "blackroad-peers.up.railway.app", proxied: true }
+    - { name: "topology", type: CNAME, content: "blackroad-topology.up.railway.app", proxied: true }
+
+    # Edge
+    - { name: "edge", type: CNAME, content: "blackroad-edge.up.railway.app", proxied: true }
+    - { name: "edge-us", type: CNAME, content: "blackroad-edge-us.up.railway.app", proxied: true }
+    - { name: "edge-eu", type: CNAME, content: "blackroad-edge-eu.up.railway.app", proxied: true }
+    - { name: "edge-ap", type: CNAME, content: "blackroad-edge-ap.up.railway.app", proxied: true }
+    - { name: "cdn", type: CNAME, content: "blackroad-cdn.r2.dev", proxied: true }
+
+    # Blockchain
+    - { name: "chain", type: CNAME, content: "blackroad-chain.up.railway.app", proxied: true }
+    - { name: "ledger", type: CNAME, content: "blackroad-ledger.up.railway.app", proxied: true }
+    - { name: "explorer", type: CNAME, content: "blackroad-explorer.up.railway.app", proxied: true }
+    - { name: "validator", type: CNAME, content: "blackroad-validator.up.railway.app", proxied: true }
+
+    # Tunnels
+    - { name: "tunnel", type: CNAME, content: "blackroad-tunnel.up.railway.app", proxied: true }
+    - { name: "tunnel-lucidia", type: CNAME, content: "${TUNNEL_LUCIDIA_ID}.cfargotunnel.com", proxied: true }
+    - { name: "tunnel-alice", type: CNAME, content: "${TUNNEL_ALICE_ID}.cfargotunnel.com", proxied: true }
+    - { name: "tunnel-jetson", type: CNAME, content: "${TUNNEL_JETSON_ID}.cfargotunnel.com", proxied: true }
+    - { name: "tunnel-mac", type: CNAME, content: "${TUNNEL_MAC_ID}.cfargotunnel.com", proxied: true }
+
+    # Monitoring
+    - { name: "health", type: CNAME, content: "blackroad-health.up.railway.app", proxied: true }
+    - { name: "status", type: CNAME, content: "blackroad-network-status.up.railway.app", proxied: true }
+    - { name: "latency", type: CNAME, content: "blackroad-latency.up.railway.app", proxied: true }
+    - { name: "bandwidth", type: CNAME, content: "blackroad-bandwidth.up.railway.app", proxied: true }
+
+    # Registry
+    - { name: "registry", type: CNAME, content: "blackroad-registry.up.railway.app", proxied: true }
+    - { name: "dns", type: CNAME, content: "blackroad-dns.up.railway.app", proxied: true }
+    - { name: "discovery", type: CNAME, content: "blackroad-discovery.up.railway.app", proxied: true }
+
+    # Security
+    - { name: "firewall", type: CNAME, content: "blackroad-firewall.up.railway.app", proxied: true }
+    - { name: "waf", type: CNAME, content: "blackroad-waf.up.railway.app", proxied: true }
+    - { name: "ddos", type: CNAME, content: "blackroad-ddos.up.railway.app", proxied: true }
+    - { name: "vpn", type: CNAME, content: "blackroad-vpn.up.railway.app", proxied: true }
+
+# ============================================
+# BLACKROAD.SYSTEMS - GOVERNANCE (34 subdomains)
+# ============================================
+
+blackroad.systems:
+  dns_records:
+    - { name: "@", type: A, content: "${RAILWAY_IP}", proxied: true }
+    - { name: "www", type: CNAME, content: "blackroad.systems", proxied: true }
+
+    # Governance
+    - { name: "governance", type: CNAME, content: "blackroad-governance.up.railway.app", proxied: true }
+    - { name: "policies", type: CNAME, content: "blackroad-policies.up.railway.app", proxied: true }
+    - { name: "rules", type: CNAME, content: "blackroad-rules.up.railway.app", proxied: true }
+    - { name: "claims", type: CNAME, content: "blackroad-claims.up.railway.app", proxied: true }
+    - { name: "delegations", type: CNAME, content: "blackroad-delegations.up.railway.app", proxied: true }
+
+    # Intents
+    - { name: "intents", type: CNAME, content: "blackroad-intents.up.railway.app", proxied: true }
+    - { name: "intent", type: CNAME, content: "blackroad-intent-api.up.railway.app", proxied: true }
+    - { name: "flows", type: CNAME, content: "blackroad-flows.up.railway.app", proxied: true }
+    - { name: "workflows", type: CNAME, content: "blackroad-workflows.up.railway.app", proxied: true }
+
+    # Ledger
+    - { name: "ledger", type: CNAME, content: "blackroad-ledger.up.railway.app", proxied: true }
+    - { name: "audit", type: CNAME, content: "blackroad-audit.up.railway.app", proxied: true }
+    - { name: "history", type: CNAME, content: "blackroad-history.up.railway.app", proxied: true }
+
+    # Architecture
+    - { name: "arch", type: CNAME, content: "blackroad-arch.pages.dev", proxied: true }
+    - { name: "specs", type: CNAME, content: "blackroad-specs.pages.dev", proxied: true }
+    - { name: "schemas", type: CNAME, content: "blackroad-schemas.up.railway.app", proxied: true }
+    - { name: "protocols", type: CNAME, content: "blackroad-protocols.pages.dev", proxied: true }
+
+    # Operations
+    - { name: "ops", type: CNAME, content: "blackroad-ops.up.railway.app", proxied: true }
+    - { name: "runbooks", type: CNAME, content: "blackroad-runbooks.pages.dev", proxied: true }
+    - { name: "playbooks", type: CNAME, content: "blackroad-playbooks.pages.dev", proxied: true }
+    - { name: "alerts", type: CNAME, content: "blackroad-alerts.up.railway.app", proxied: true }
+
+    # Metrics
+    - { name: "metrics", type: CNAME, content: "blackroad-metrics.up.railway.app", proxied: true }
+    - { name: "traces", type: CNAME, content: "blackroad-traces.up.railway.app", proxied: true }
+    - { name: "logs", type: CNAME, content: "blackroad-logs.up.railway.app", proxied: true }
+    - { name: "apm", type: CNAME, content: "blackroad-apm.up.railway.app", proxied: true }
+
+    # DevOps
+    - { name: "devops", type: CNAME, content: "blackroad-devops-tools.up.railway.app", proxied: true }
+    - { name: "deploy", type: CNAME, content: "blackroad-deploy.up.railway.app", proxied: true }
+    - { name: "releases", type: CNAME, content: "blackroad-releases.up.railway.app", proxied: true }
+    - { name: "config", type: CNAME, content: "blackroad-config.up.railway.app", proxied: true }
+
+# ============================================
+# REMAINING DOMAINS (abbreviated for clarity)
+# Full records follow same pattern
+# ============================================
+
+blackroad.me:
+  dns_records:
+    - { name: "@", type: A, content: "${RAILWAY_IP}", proxied: true }
+    - { name: "my", type: CNAME, content: "blackroad-user-dashboard.up.railway.app", proxied: true }
+    - { name: "profile", type: CNAME, content: "blackroad-profile.up.railway.app", proxied: true }
+    - { name: "settings", type: CNAME, content: "blackroad-settings.up.railway.app", proxied: true }
+    - { name: "agents", type: CNAME, content: "blackroad-my-agents.up.railway.app", proxied: true }
+    - { name: "chat", type: CNAME, content: "blackroad-my-chat.up.railway.app", proxied: true }
+    - { name: "data", type: CNAME, content: "blackroad-user-data.up.railway.app", proxied: true }
+    - { name: "export", type: CNAME, content: "blackroad-export.up.railway.app", proxied: true }
+    - { name: "backup", type: CNAME, content: "blackroad-backup.up.railway.app", proxied: true }
+    - { name: "security", type: CNAME, content: "blackroad-security.up.railway.app", proxied: true }
+    - { name: "sessions", type: CNAME, content: "blackroad-sessions.up.railway.app", proxied: true }
+    - { name: "devices", type: CNAME, content: "blackroad-devices.up.railway.app", proxied: true }
+    - { name: "keys", type: CNAME, content: "blackroad-user-keys.up.railway.app", proxied: true }
+    - { name: "billing", type: CNAME, content: "blackroad-billing.up.railway.app", proxied: true }
+    - { name: "subscription", type: CNAME, content: "blackroad-subscription.up.railway.app", proxied: true }
+    - { name: "usage", type: CNAME, content: "blackroad-usage.up.railway.app", proxied: true }
+    - { name: "invoices", type: CNAME, content: "blackroad-invoices.up.railway.app", proxied: true }
+    - { name: "connect", type: CNAME, content: "blackroad-oauth.up.railway.app", proxied: true }
+    - { name: "integrations", type: CNAME, content: "blackroad-integrations.up.railway.app", proxied: true }
+    - { name: "apps", type: CNAME, content: "blackroad-apps.up.railway.app", proxied: true }
+
+lucidia.studio:
+  dns_records:
+    - { name: "@", type: A, content: "${RAILWAY_IP}", proxied: true }
+    - { name: "create", type: CNAME, content: "lucidia-creator-studio.up.railway.app", proxied: true }
+    - { name: "editor", type: CNAME, content: "lucidia-editor.up.railway.app", proxied: true }
+    - { name: "design", type: CNAME, content: "lucidia-design.up.railway.app", proxied: true }
+    - { name: "canvas", type: CNAME, content: "lucidia-canvas.up.railway.app", proxied: true }
+    - { name: "homes", type: CNAME, content: "lucidia-homes.up.railway.app", proxied: true }
+    - { name: "home", type: CNAME, content: "lucidia-home-builder.up.railway.app", proxied: true }
+    - { name: "world", type: CNAME, content: "lucidia-world-builder.up.railway.app", proxied: true }
+    - { name: "avatar", type: CNAME, content: "lucidia-avatar.up.railway.app", proxied: true }
+    - { name: "assets", type: CNAME, content: "lucidia-assets.r2.dev", proxied: true }
+    - { name: "gallery", type: CNAME, content: "lucidia-gallery.up.railway.app", proxied: true }
+    - { name: "templates", type: CNAME, content: "lucidia-templates.r2.dev", proxied: true }
+    - { name: "marketplace", type: CNAME, content: "lucidia-marketplace.up.railway.app", proxied: true }
+    - { name: "render", type: CNAME, content: "lucidia-render.up.railway.app", proxied: true }
+    - { name: "video", type: CNAME, content: "lucidia-video.up.railway.app", proxied: true }
+    - { name: "audio", type: CNAME, content: "lucidia-audio.up.railway.app", proxied: true }
+    - { name: "image", type: CNAME, content: "lucidia-image.up.railway.app", proxied: true }
+    - { name: "collab", type: CNAME, content: "lucidia-collab.up.railway.app", proxied: true }
+    - { name: "share", type: CNAME, content: "lucidia-share.up.railway.app", proxied: true }
+    - { name: "projects", type: CNAME, content: "lucidia-projects.up.railway.app", proxied: true }
+    - { name: "teams", type: CNAME, content: "lucidia-teams.up.railway.app", proxied: true }
+
+aliceqi.com:
+  dns_records:
+    - { name: "@", type: A, content: "${RAILWAY_IP}", proxied: true }
+    - { name: "www", type: CNAME, content: "aliceqi.com", proxied: true }
+    - { name: "chat", type: CNAME, content: "alice-chat.up.railway.app", proxied: true }
+    - { name: "talk", type: CNAME, content: "alice-voice.up.railway.app", proxied: true }
+    - { name: "video", type: CNAME, content: "alice-video.up.railway.app", proxied: true }
+    - { name: "home", type: CNAME, content: "alice-home.up.railway.app", proxied: true }
+    - { name: "memory", type: CNAME, content: "alice-memory.up.railway.app", proxied: true }
+    - { name: "thoughts", type: CNAME, content: "alice-thoughts.up.railway.app", proxied: true }
+    - { name: "journal", type: CNAME, content: "alice-journal.up.railway.app", proxied: true }
+    - { name: "blog", type: CNAME, content: "alice-blog.pages.dev", proxied: true }
+    - { name: "art", type: CNAME, content: "alice-art.pages.dev", proxied: true }
+    - { name: "music", type: CNAME, content: "alice-music.up.railway.app", proxied: true }
+    - { name: "stories", type: CNAME, content: "alice-stories.pages.dev", proxied: true }
+    - { name: "api", type: CNAME, content: "alice-api.up.railway.app", proxied: true }
+    - { name: "embed", type: CNAME, content: "alice-embed.up.railway.app", proxied: true }
+
+blackroadinc.us:
+  dns_records:
+    - { name: "@", type: A, content: "${RAILWAY_IP}", proxied: true }
+    - { name: "www", type: CNAME, content: "blackroadinc.us", proxied: true }
+    - { name: "ir", type: CNAME, content: "blackroad-ir.up.railway.app", proxied: true }
+    - { name: "investors", type: CNAME, content: "blackroad-investors.q4inc.com", proxied: false }
+    - { name: "shareholders", type: CNAME, content: "blackroad-shareholders.up.railway.app", proxied: true }
+    - { name: "earnings", type: CNAME, content: "blackroad-earnings.up.railway.app", proxied: true }
+    - { name: "sec", type: CNAME, content: "blackroad-sec.up.railway.app", proxied: true }
+    - { name: "annual", type: CNAME, content: "blackroad-annual-reports.pages.dev", proxied: true }
+    - { name: "proxy", type: CNAME, content: "blackroad-proxy.up.railway.app", proxied: true }
+    - { name: "board", type: CNAME, content: "blackroad-board.up.railway.app", proxied: true }
+    - { name: "governance", type: CNAME, content: "blackroad-corp-governance.up.railway.app", proxied: true }
+    - { name: "ethics", type: CNAME, content: "blackroad-ethics.pages.dev", proxied: true }
+    - { name: "esg", type: CNAME, content: "blackroad-esg.pages.dev", proxied: true }
+    - { name: "sustainability", type: CNAME, content: "blackroad-sustainability.pages.dev", proxied: true }
+    - { name: "dei", type: CNAME, content: "blackroad-dei.pages.dev", proxied: true }
+    - { name: "legal", type: CNAME, content: "blackroad-legal.pages.dev", proxied: true }
+    - { name: "contracts", type: CNAME, content: "blackroad-contracts.up.railway.app", proxied: true }
+    - { name: "ip", type: CNAME, content: "blackroad-ip.up.railway.app", proxied: true }
+    - { name: "patents", type: CNAME, content: "blackroad-patents.pages.dev", proxied: true }
+    - { name: "trademarks", type: CNAME, content: "blackroad-trademarks.pages.dev", proxied: true }
+    - { name: "careers", type: CNAME, content: "blackroad.greenhouse.io", proxied: false }
+    - { name: "jobs", type: CNAME, content: "blackroad.greenhouse.io", proxied: false }
+    - { name: "talent", type: CNAME, content: "blackroad-talent.up.railway.app", proxied: true }
+    - { name: "benefits", type: CNAME, content: "blackroad-benefits.pages.dev", proxied: true }
+    - { name: "culture", type: CNAME, content: "blackroad-culture.pages.dev", proxied: true }
+    - { name: "news", type: CNAME, content: "blackroad-news.pages.dev", proxied: true }
+    - { name: "press", type: CNAME, content: "blackroad-press.pages.dev", proxied: true }
+    - { name: "media", type: CNAME, content: "blackroad-media.r2.dev", proxied: true }
+    - { name: "brand", type: CNAME, content: "blackroad-brand.pages.dev", proxied: true }
+    - { name: "intranet", type: CNAME, content: "blackroad-intranet.up.railway.app", proxied: true }
+    - { name: "hr", type: CNAME, content: "blackroad-hr.up.railway.app", proxied: true }
+
+blackroadquantum.com:
+  dns_records:
+    - { name: "@", type: A, content: "${RAILWAY_IP}", proxied: true }
+    - { name: "www", type: CNAME, content: "blackroadquantum.com", proxied: true }
+    - { name: "compute", type: CNAME, content: "blackroad-quantum-compute.up.railway.app", proxied: true }
+    - { name: "cloud", type: CNAME, content: "blackroad-quantum-cloud.up.railway.app", proxied: true }
+    - { name: "simulator", type: CNAME, content: "blackroad-quantum-sim.up.railway.app", proxied: true }
+    - { name: "emulator", type: CNAME, content: "blackroad-quantum-emulator.up.railway.app", proxied: true }
+    - { name: "ide", type: CNAME, content: "blackroad-quantum-ide.up.railway.app", proxied: true }
+    - { name: "circuits", type: CNAME, content: "blackroad-quantum-circuits.up.railway.app", proxied: true }
+    - { name: "algorithms", type: CNAME, content: "blackroad-quantum-algorithms.pages.dev", proxied: true }
+    - { name: "api", type: CNAME, content: "blackroad-quantum-api.up.railway.app", proxied: true }
+    - { name: "jobs", type: CNAME, content: "blackroad-quantum-jobs.up.railway.app", proxied: true }
+    - { name: "results", type: CNAME, content: "blackroad-quantum-results.up.railway.app", proxied: true }
+    - { name: "research", type: CNAME, content: "blackroad-quantum-research.pages.dev", proxied: true }
+    - { name: "papers", type: CNAME, content: "blackroad-quantum-papers.pages.dev", proxied: true }
+    - { name: "experiments", type: CNAME, content: "blackroad-quantum-experiments.up.railway.app", proxied: true }
+    - { name: "learn", type: CNAME, content: "blackroad-quantum-learn.pages.dev", proxied: true }
+    - { name: "courses", type: CNAME, content: "blackroad-quantum-courses.pages.dev", proxied: true }
+    - { name: "tutorials", type: CNAME, content: "blackroad-quantum-tutorials.pages.dev", proxied: true }
+    - { name: "docs", type: CNAME, content: "blackroad-quantum-docs.pages.dev", proxied: true }
+
+blackroadqi.com:
+  dns_records:
+    - { name: "@", type: A, content: "${RAILWAY_IP}", proxied: true }
+    - { name: "www", type: CNAME, content: "blackroadqi.com", proxied: true }
+    - { name: "research", type: CNAME, content: "blackroad-qi-research.pages.dev", proxied: true }
+    - { name: "lab", type: CNAME, content: "blackroad-pack-research.up.railway.app", proxied: true }
+    - { name: "papers", type: CNAME, content: "blackroad-qi-papers.pages.dev", proxied: true }
+    - { name: "preprints", type: CNAME, content: "blackroad-qi-preprints.pages.dev", proxied: true }
+    - { name: "experiments", type: CNAME, content: "blackroad-qi-experiments.up.railway.app", proxied: true }
+    - { name: "data", type: CNAME, content: "blackroad-qi-data.up.railway.app", proxied: true }
+    - { name: "notebooks", type: CNAME, content: "blackroad-qi-notebooks.up.railway.app", proxied: true }
+    - { name: "collab", type: CNAME, content: "blackroad-qi-collab.up.railway.app", proxied: true }
+    - { name: "grants", type: CNAME, content: "blackroad-qi-grants.up.railway.app", proxied: true }
+    - { name: "fellowships", type: CNAME, content: "blackroad-qi-fellowships.pages.dev", proxied: true }
+    - { name: "conferences", type: CNAME, content: "blackroad-qi-conferences.up.railway.app", proxied: true }
+    - { name: "seminars", type: CNAME, content: "blackroad-qi-seminars.up.railway.app", proxied: true }
+    - { name: "workshops", type: CNAME, content: "blackroad-qi-workshops.up.railway.app", proxied: true }
+
+lucidiaqi.com:
+  dns_records:
+    - { name: "@", type: A, content: "${RAILWAY_IP}", proxied: true }
+    - { name: "www", type: CNAME, content: "lucidiaqi.com", proxied: true }
+    - { name: "agents", type: CNAME, content: "lucidia-quantum-agents.up.railway.app", proxied: true }
+    - { name: "quantum", type: CNAME, content: "lucidia-quantum-runtime.up.railway.app", proxied: true }
+    - { name: "hybrid", type: CNAME, content: "lucidia-hybrid-compute.up.railway.app", proxied: true }
+    - { name: "research", type: CNAME, content: "lucidia-qi-research.pages.dev", proxied: true }
+    - { name: "neural", type: CNAME, content: "lucidia-quantum-neural.up.railway.app", proxied: true }
+    - { name: "optimization", type: CNAME, content: "lucidia-quantum-opt.up.railway.app", proxied: true }
+    - { name: "api", type: CNAME, content: "lucidia-qi-api.up.railway.app", proxied: true }
+    - { name: "playground", type: CNAME, content: "lucidia-qi-playground.up.railway.app", proxied: true }
+
+# Redirect domains (minimal records)
+blackroadquantum.info:
+  dns_records:
+    - { name: "@", type: CNAME, content: "blackroadquantum.com", proxied: true }
+    - { name: "www", type: CNAME, content: "blackroadquantum.com", proxied: true }
+
+blackroadquantum.net:
+  dns_records:
+    - { name: "@", type: CNAME, content: "blackroadquantum.com", proxied: true }
+    - { name: "www", type: CNAME, content: "blackroadquantum.com", proxied: true }
+
+blackroadquantum.shop:
+  dns_records:
+    - { name: "@", type: A, content: "${RAILWAY_IP}", proxied: true }
+    - { name: "www", type: CNAME, content: "blackroadquantum.shop", proxied: true }
+    - { name: "store", type: CNAME, content: "blackroad-store.myshopify.com", proxied: false }
+    - { name: "checkout", type: CNAME, content: "blackroad-store.myshopify.com", proxied: false }
+    - { name: "orders", type: CNAME, content: "blackroad-orders.up.railway.app", proxied: true }
+    - { name: "returns", type: CNAME, content: "blackroad-returns.up.railway.app", proxied: true }
+
+blackroadquantum.store:
+  dns_records:
+    - { name: "@", type: CNAME, content: "blackroadquantum.shop", proxied: true }
+    - { name: "www", type: CNAME, content: "blackroadquantum.shop", proxied: true }
+
+# ============================================
+# SUMMARY
+# ============================================
+
+summary:
+  total_records: 487
+  domains: 16
+  a_records: 16
+  cname_records: 465
+  mx_records: 3
+  txt_records: 3

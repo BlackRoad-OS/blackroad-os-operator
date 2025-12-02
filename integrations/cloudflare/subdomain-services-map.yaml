@@ -1,0 +1,1051 @@
+# Subdomain to Service Mapping
+# BlackRoad OS - Complete Routing Configuration
+#
+# Maps each subdomain to its backend service, deployment, and configuration
+#
+# @blackroad_name: BlackRoad Service Map
+# @operator: alexa.operator.v1
+# @scale: hyperscale
+
+version: "services-map-v1"
+
+# ============================================
+# DEPLOYMENT TARGETS
+# ============================================
+
+targets:
+  railway:
+    services:
+      - blackroad-os-api-gateway
+      - blackroad-os-web
+      - blackroad-os-prism-console
+      - lucidia-agents
+      - blackroad-beacon
+      - blackroad-os-demo
+      - blackroad-pack-research
+      - lucidia-creator-studio
+      - blackroad-devops-tools
+
+  cloudflare_pages:
+    projects:
+      - blackroad-os-docs
+      - blackroad-os-home
+      - blackroad-research
+      - blackroad-api-docs
+      - blackroad-brand
+
+  cloudflare_workers:
+    workers:
+      - api-router
+      - auth-edge
+      - cdn-origin
+      - websocket-gateway
+      - rate-limiter
+
+  kubernetes:
+    clusters:
+      - production-useast
+      - production-euwest
+      - production-apac
+
+# ============================================
+# BLACKROAD.IO SUBDOMAIN SERVICES
+# ============================================
+
+blackroad.io:
+  # Core platform
+  "@":
+    target: cloudflare_pages
+    project: blackroad-os-home
+    cache: aggressive
+
+  www:
+    target: redirect
+    destination: "https://blackroad.io"
+
+  app:
+    target: railway
+    service: blackroad-os-web
+    health: /health
+    cache: none
+
+  my:
+    target: railway
+    service: blackroad-os-web
+    path_prefix: /dashboard
+    auth_required: true
+
+  # API Infrastructure
+  api:
+    target: cloudflare_workers
+    worker: api-router
+    backends:
+      - railway: blackroad-os-api-gateway
+      - kubernetes: api-gateway
+    load_balance: geo_latency
+    rate_limit:
+      requests: 10000
+      window: 60s
+
+  api-v1:
+    target: railway
+    service: blackroad-os-api-gateway
+    path_prefix: /v1
+    deprecated: true
+
+  api-v2:
+    target: railway
+    service: blackroad-os-api-gateway
+    path_prefix: /v2
+
+  api-v3:
+    target: kubernetes
+    service: api-gateway-v3
+    namespace: api
+
+  api-internal:
+    target: kubernetes
+    service: api-internal
+    namespace: internal
+    access: private
+    mtls: true
+
+  api-partner:
+    target: kubernetes
+    service: api-partner
+    namespace: partner
+    rate_limit:
+      requests: 100000
+      window: 60s
+
+  api-enterprise:
+    target: kubernetes
+    service: api-enterprise
+    namespace: enterprise
+    sla: "99.99%"
+
+  # Regional APIs
+  api-us:
+    target: kubernetes
+    cluster: production-useast
+    service: api-gateway
+
+  api-eu:
+    target: kubernetes
+    cluster: production-euwest
+    service: api-gateway
+    gdpr: true
+
+  api-ap:
+    target: kubernetes
+    cluster: production-apac
+    service: api-gateway
+
+  # Authentication
+  auth:
+    target: cloudflare_workers
+    worker: auth-edge
+    backend:
+      railway: blackroad-os-api-gateway
+    path_prefix: /auth
+
+  login:
+    target: railway
+    service: blackroad-os-web
+    path_prefix: /login
+
+  signup:
+    target: railway
+    service: blackroad-os-web
+    path_prefix: /signup
+
+  sso:
+    target: cloudflare_workers
+    worker: auth-edge
+    path_prefix: /sso
+
+  oauth:
+    target: railway
+    service: blackroad-os-api-gateway
+    path_prefix: /oauth
+
+  id:
+    target: railway
+    service: blackroad-os-api-gateway
+    path_prefix: /identity
+
+  # Developer
+  dev:
+    target: railway
+    service: blackroad-os-web
+    path_prefix: /developers
+
+  docs:
+    target: cloudflare_pages
+    project: blackroad-os-docs
+
+  api-docs:
+    target: cloudflare_pages
+    project: blackroad-api-docs
+
+  playground:
+    target: railway
+    service: blackroad-os-demo
+    path_prefix: /playground
+
+  sandbox:
+    target: railway
+    service: blackroad-os-api-gateway
+    environment: sandbox
+
+  console:
+    target: railway
+    service: blackroad-os-prism-console
+
+  # Enterprise
+  enterprise:
+    target: railway
+    service: blackroad-os-web
+    path_prefix: /enterprise
+
+  admin:
+    target: railway
+    service: blackroad-os-prism-console
+    auth_required: true
+    roles: [admin, operator]
+
+  dashboard:
+    target: railway
+    service: blackroad-os-prism-console
+    path_prefix: /dashboard
+
+  billing:
+    target: railway
+    service: blackroad-os-api-gateway
+    path_prefix: /billing
+    pci_compliant: true
+
+  # Support
+  support:
+    target: external
+    destination: "https://support.zendesk.com/hc/blackroad"
+
+  help:
+    target: cloudflare_pages
+    project: blackroad-os-docs
+    path_prefix: /help
+
+  community:
+    target: external
+    destination: "https://community.blackroad.io"
+    platform: discourse
+
+  # Status
+  status:
+    target: external
+    destination: "https://status.blackroad.io"
+    platform: statuspage
+
+  health:
+    target: cloudflare_workers
+    worker: health-aggregator
+    cache: none
+
+  # Content
+  blog:
+    target: cloudflare_pages
+    project: blackroad-os-home
+    path_prefix: /blog
+
+  # Real-time
+  ws:
+    target: cloudflare_workers
+    worker: websocket-gateway
+    protocol: websocket
+
+  realtime:
+    target: kubernetes
+    service: realtime-gateway
+    protocol: sse
+
+  stream:
+    target: kafka
+    cluster: production
+    topics: ["events.*"]
+
+  # Analytics
+  analytics:
+    target: external
+    destination: "https://analytics.posthog.com"
+    proxy: true
+
+  # CDN/Assets
+  cdn:
+    target: cloudflare_r2
+    bucket: blackroad-cdn
+    cache: aggressive
+
+  assets:
+    target: cloudflare_r2
+    bucket: blackroad-assets
+
+  images:
+    target: cloudflare_images
+    transformations: true
+
+  # Environments
+  staging:
+    target: railway
+    service: blackroad-os-web
+    environment: staging
+
+  preview:
+    target: cloudflare_pages
+    project: blackroad-os-web
+    branch: "*"
+
+  beta:
+    target: railway
+    service: blackroad-os-web
+    environment: beta
+    feature_flags: true
+
+  demo:
+    target: railway
+    service: blackroad-os-demo
+
+# ============================================
+# LUCIDIA.EARTH SUBDOMAIN SERVICES
+# ============================================
+
+lucidia.earth:
+  "@":
+    target: cloudflare_pages
+    project: blackroad-os-home
+    path_prefix: /lucidia
+
+  app:
+    target: railway
+    service: blackroad-os-web
+    path_prefix: /agents
+
+  # Agent Runtime
+  agents:
+    target: railway
+    service: lucidia-agents
+    replicas: 5
+    autoscale:
+      min: 5
+      max: 100
+      metric: cpu
+      threshold: 70
+
+  agents-us:
+    target: kubernetes
+    cluster: production-useast
+    service: lucidia-agents
+    namespace: agents
+
+  agents-eu:
+    target: kubernetes
+    cluster: production-euwest
+    service: lucidia-agents
+    namespace: agents
+    gdpr: true
+
+  agents-ap:
+    target: kubernetes
+    cluster: production-apac
+    service: lucidia-agents
+    namespace: agents
+
+  runtime:
+    target: kubernetes
+    service: agent-runtime
+    namespace: agents
+
+  spawn:
+    target: kubernetes
+    service: agent-spawner
+    namespace: agents
+
+  orchestrator:
+    target: kubernetes
+    service: agent-orchestrator
+    namespace: agents
+
+  # Memory
+  memory:
+    target: kubernetes
+    service: memory-service
+    namespace: agents
+    backends:
+      - pinecone
+      - redis
+
+  memories:
+    target: railway
+    service: blackroad-os-web
+    path_prefix: /memories
+
+  recall:
+    target: kubernetes
+    service: memory-service
+    namespace: agents
+    path_prefix: /recall
+
+  # Chat
+  chat:
+    target: railway
+    service: lucidia-agents
+    path_prefix: /chat
+    websocket: true
+
+  voice:
+    target: kubernetes
+    service: voice-gateway
+    namespace: agents
+    realtime: true
+
+  # Governance
+  governance:
+    target: railway
+    service: blackroad-os-api-gateway
+    path_prefix: /governance
+
+  policies:
+    target: railway
+    service: blackroad-os-api-gateway
+    path_prefix: /policies
+
+  # Developer
+  docs:
+    target: cloudflare_pages
+    project: blackroad-os-docs
+    path_prefix: /agents
+
+  api:
+    target: railway
+    service: lucidia-agents
+    path_prefix: /api
+
+  playground:
+    target: railway
+    service: blackroad-os-demo
+    path_prefix: /agent-playground
+
+  # Console
+  console:
+    target: railway
+    service: blackroad-os-prism-console
+
+  # Marketplace
+  marketplace:
+    target: railway
+    service: blackroad-os-web
+    path_prefix: /marketplace
+
+# ============================================
+# BLACKROADAI.COM SUBDOMAIN SERVICES
+# ============================================
+
+blackroadai.com:
+  "@":
+    target: cloudflare_pages
+    project: blackroad-os-home
+    path_prefix: /ai
+
+  # Inference
+  api:
+    target: railway
+    service: blackroad-beacon
+    replicas: 3
+    gpu: true
+
+  inference:
+    target: kubernetes
+    service: inference-gateway
+    namespace: ai
+    gpu: true
+
+  inference-us:
+    target: kubernetes
+    cluster: production-useast
+    service: inference-gateway
+    namespace: ai
+
+  inference-eu:
+    target: kubernetes
+    cluster: production-euwest
+    service: inference-gateway
+    namespace: ai
+
+  inference-ap:
+    target: kubernetes
+    cluster: production-apac
+    service: inference-gateway
+    namespace: ai
+
+  models:
+    target: railway
+    service: blackroad-beacon
+    path_prefix: /models
+
+  completions:
+    target: railway
+    service: blackroad-beacon
+    path_prefix: /v1/completions
+
+  embeddings:
+    target: railway
+    service: blackroad-beacon
+    path_prefix: /v1/embeddings
+
+  chat:
+    target: railway
+    service: blackroad-beacon
+    path_prefix: /v1/chat
+
+  # Fine-tuning
+  train:
+    target: kubernetes
+    service: training-service
+    namespace: ai
+    gpu: true
+
+  finetune:
+    target: kubernetes
+    service: finetune-service
+    namespace: ai
+
+  # Enterprise
+  enterprise:
+    target: railway
+    service: blackroad-os-web
+    path_prefix: /ai-enterprise
+
+  private:
+    target: kubernetes
+    service: private-inference
+    namespace: enterprise
+    dedicated: true
+
+  # Developer
+  docs:
+    target: cloudflare_pages
+    project: blackroad-os-docs
+    path_prefix: /ai
+
+  playground:
+    target: railway
+    service: blackroad-os-demo
+    path_prefix: /ai-playground
+
+# ============================================
+# BLACKROAD.NETWORK SUBDOMAIN SERVICES
+# ============================================
+
+blackroad.network:
+  "@":
+    target: cloudflare_pages
+    project: blackroad-os-home
+    path_prefix: /network
+
+  # Mesh
+  mesh:
+    target: tailscale
+    network: blackroad-mesh
+
+  nodes:
+    target: kubernetes
+    service: node-registry
+    namespace: network
+
+  # Edge
+  edge:
+    target: cloudflare_workers
+    worker: edge-router
+
+  cdn:
+    target: cloudflare
+    service: cdn
+
+  # Tunnels
+  tunnel:
+    target: cloudflare_tunnel
+    service: tunnel-gateway
+
+  tunnel-lucidia:
+    target: cloudflare_tunnel
+    connector: pi5-lucidia
+
+  tunnel-alice:
+    target: cloudflare_tunnel
+    connector: pi400-alice
+
+  tunnel-jetson:
+    target: cloudflare_tunnel
+    connector: jetson-orin
+
+  tunnel-mac:
+    target: cloudflare_tunnel
+    connector: mac-studio
+
+  # Chain
+  chain:
+    target: kubernetes
+    service: roadchain
+    namespace: blockchain
+
+  ledger:
+    target: kubernetes
+    service: ledger-service
+    namespace: blockchain
+
+  explorer:
+    target: railway
+    service: chain-explorer
+
+  # Monitoring
+  health:
+    target: kubernetes
+    service: network-health
+    namespace: monitoring
+
+  status:
+    target: external
+    destination: "https://status.blackroad.io/network"
+
+# ============================================
+# BLACKROAD.SYSTEMS SUBDOMAIN SERVICES
+# ============================================
+
+blackroad.systems:
+  "@":
+    target: cloudflare_pages
+    project: blackroad-os-home
+    path_prefix: /systems
+
+  # Governance
+  governance:
+    target: railway
+    service: blackroad-os-api-gateway
+    path_prefix: /governance
+
+  policies:
+    target: railway
+    service: blackroad-os-api-gateway
+    path_prefix: /policies
+
+  claims:
+    target: railway
+    service: blackroad-os-api-gateway
+    path_prefix: /claims
+
+  delegations:
+    target: railway
+    service: blackroad-os-api-gateway
+    path_prefix: /delegations
+
+  # Intents
+  intents:
+    target: railway
+    service: blackroad-os-api-gateway
+    path_prefix: /intents
+
+  intent:
+    target: railway
+    service: blackroad-os-api-gateway
+    path_prefix: /intent
+
+  flows:
+    target: railway
+    service: blackroad-os-api-gateway
+    path_prefix: /flows
+
+  # Ledger
+  ledger:
+    target: railway
+    service: blackroad-os-api-gateway
+    path_prefix: /ledger
+
+  audit:
+    target: railway
+    service: blackroad-os-api-gateway
+    path_prefix: /audit
+
+  # Architecture
+  arch:
+    target: cloudflare_pages
+    project: blackroad-os-docs
+    path_prefix: /architecture
+
+  specs:
+    target: cloudflare_pages
+    project: blackroad-os-docs
+    path_prefix: /specs
+
+  schemas:
+    target: railway
+    service: blackroad-os-api-gateway
+    path_prefix: /schemas
+
+  # Operations
+  ops:
+    target: railway
+    service: blackroad-os-prism-console
+    path_prefix: /ops
+
+  metrics:
+    target: external
+    destination: "https://grafana.blackroad.io"
+    proxy: true
+
+  traces:
+    target: external
+    destination: "https://tempo.blackroad.io"
+    proxy: true
+
+  logs:
+    target: external
+    destination: "https://loki.blackroad.io"
+    proxy: true
+
+  # DevOps
+  devops:
+    target: railway
+    service: blackroad-devops-tools
+
+  deploy:
+    target: railway
+    service: blackroad-devops-tools
+    path_prefix: /deploy
+
+  releases:
+    target: railway
+    service: blackroad-devops-tools
+    path_prefix: /releases
+
+# ============================================
+# LUCIDIA.STUDIO SUBDOMAIN SERVICES
+# ============================================
+
+lucidia.studio:
+  "@":
+    target: cloudflare_pages
+    project: blackroad-os-home
+    path_prefix: /studio
+
+  create:
+    target: railway
+    service: lucidia-creator-studio
+
+  editor:
+    target: railway
+    service: lucidia-creator-studio
+    path_prefix: /editor
+
+  homes:
+    target: railway
+    service: lucidia-creator-studio
+    path_prefix: /homes
+    unity: true
+
+  assets:
+    target: cloudflare_r2
+    bucket: lucidia-assets
+
+  gallery:
+    target: railway
+    service: lucidia-creator-studio
+    path_prefix: /gallery
+
+  templates:
+    target: cloudflare_r2
+    bucket: lucidia-templates
+
+  render:
+    target: kubernetes
+    service: render-service
+    namespace: studio
+    gpu: true
+
+  marketplace:
+    target: railway
+    service: lucidia-creator-studio
+    path_prefix: /marketplace
+
+# ============================================
+# ALICEQI.COM SUBDOMAIN SERVICES
+# ============================================
+
+aliceqi.com:
+  "@":
+    target: cloudflare_pages
+    project: blackroad-os-home
+    path_prefix: /alice
+
+  chat:
+    target: railway
+    service: lucidia-agents
+    path_prefix: /alice/chat
+    agent_id: alice-prime
+
+  talk:
+    target: kubernetes
+    service: voice-gateway
+    namespace: agents
+    agent_id: alice-prime
+
+  home:
+    target: railway
+    service: lucidia-creator-studio
+    path_prefix: /alice/home
+
+  memory:
+    target: railway
+    service: lucidia-agents
+    path_prefix: /alice/memory
+
+  blog:
+    target: cloudflare_pages
+    project: blackroad-os-home
+    path_prefix: /alice/blog
+
+  api:
+    target: railway
+    service: lucidia-agents
+    path_prefix: /alice/api
+
+# ============================================
+# QUANTUM DOMAIN SERVICES
+# ============================================
+
+blackroadquantum.com:
+  "@":
+    target: cloudflare_pages
+    project: blackroad-os-home
+    path_prefix: /quantum
+
+  compute:
+    target: kubernetes
+    service: quantum-compute
+    namespace: quantum
+    qpu: true
+
+  cloud:
+    target: kubernetes
+    service: quantum-cloud
+    namespace: quantum
+
+  simulator:
+    target: railway
+    service: blackroad-pack-research
+    path_prefix: /quantum-sim
+
+  api:
+    target: kubernetes
+    service: quantum-api
+    namespace: quantum
+
+  docs:
+    target: cloudflare_pages
+    project: blackroad-os-docs
+    path_prefix: /quantum
+
+  learn:
+    target: cloudflare_pages
+    project: blackroad-os-docs
+    path_prefix: /quantum/learn
+
+blackroadqi.com:
+  "@":
+    target: cloudflare_pages
+    project: blackroad-research
+
+  research:
+    target: cloudflare_pages
+    project: blackroad-research
+
+  lab:
+    target: railway
+    service: blackroad-pack-research
+
+  papers:
+    target: cloudflare_pages
+    project: blackroad-research
+    path_prefix: /papers
+
+lucidiaqi.com:
+  "@":
+    target: cloudflare_pages
+    project: blackroad-os-home
+    path_prefix: /quantum-agents
+
+  agents:
+    target: kubernetes
+    service: quantum-agents
+    namespace: quantum
+
+  api:
+    target: kubernetes
+    service: quantum-agents-api
+    namespace: quantum
+
+# ============================================
+# COMMERCE/REDIRECT DOMAINS
+# ============================================
+
+blackroadquantum.shop:
+  "@":
+    target: external
+    destination: "https://shop.blackroad.io"
+    platform: shopify
+
+  store:
+    target: external
+    destination: "https://shop.blackroad.io"
+    platform: shopify
+
+  checkout:
+    target: external
+    destination: "https://shop.blackroad.io/checkout"
+    pci_compliant: true
+
+blackroadquantum.info:
+  "@":
+    target: redirect
+    destination: "https://blackroadquantum.com"
+    code: 301
+
+  "*":
+    target: redirect
+    destination: "https://blackroadquantum.com"
+    code: 301
+
+blackroadquantum.net:
+  "@":
+    target: redirect
+    destination: "https://blackroadquantum.com"
+    code: 301
+
+  "*":
+    target: redirect
+    destination: "https://blackroadquantum.com"
+    code: 301
+
+blackroadquantum.store:
+  "@":
+    target: redirect
+    destination: "https://blackroadquantum.shop"
+    code: 301
+
+  "*":
+    target: redirect
+    destination: "https://blackroadquantum.shop"
+    code: 301
+
+# ============================================
+# CORPORATE DOMAIN
+# ============================================
+
+blackroadinc.us:
+  "@":
+    target: cloudflare_pages
+    project: blackroad-os-home
+    path_prefix: /corporate
+
+  ir:
+    target: cloudflare_pages
+    project: blackroad-os-home
+    path_prefix: /investors
+
+  investors:
+    target: external
+    destination: "https://investor.blackroadinc.us"
+    platform: q4
+
+  careers:
+    target: external
+    destination: "https://careers.blackroad.io"
+    platform: greenhouse
+
+  press:
+    target: cloudflare_pages
+    project: blackroad-os-home
+    path_prefix: /press
+
+  legal:
+    target: cloudflare_pages
+    project: blackroad-os-docs
+    path_prefix: /legal
+
+  board:
+    target: external
+    destination: "https://board.blackroadinc.us"
+    access: private
+    sso: true
+
+  intranet:
+    target: external
+    destination: "https://intranet.blackroad.io"
+    access: private
+    sso: true
+
+# ============================================
+# BLACKROAD.ME (USER PORTAL)
+# ============================================
+
+blackroad.me:
+  "@":
+    target: railway
+    service: blackroad-os-web
+    path_prefix: /my
+
+  my:
+    target: railway
+    service: blackroad-os-web
+    path_prefix: /dashboard
+    auth_required: true
+
+  profile:
+    target: railway
+    service: blackroad-os-web
+    path_prefix: /profile
+
+  settings:
+    target: railway
+    service: blackroad-os-web
+    path_prefix: /settings
+
+  agents:
+    target: railway
+    service: blackroad-os-web
+    path_prefix: /my-agents
+
+  chat:
+    target: railway
+    service: lucidia-agents
+    path_prefix: /user-chat
+
+  data:
+    target: railway
+    service: blackroad-os-api-gateway
+    path_prefix: /user-data
+    gdpr: true
+
+  export:
+    target: railway
+    service: blackroad-os-api-gateway
+    path_prefix: /export
+
+  billing:
+    target: railway
+    service: blackroad-os-api-gateway
+    path_prefix: /user-billing
+    pci_compliant: true
+
+  connect:
+    target: railway
+    service: blackroad-os-api-gateway
+    path_prefix: /connect
