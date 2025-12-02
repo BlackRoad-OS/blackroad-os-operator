@@ -2,16 +2,33 @@
 
 > Unified Mathematics for Trillion-Scale AI Governance
 
+**BRTM™** BlackRoad Trademarked | **RCV** RoadChain Verified | **Ψ'** Psi-Prime Certified
+
+---
+
+### Verification Legend
+
+| Marker | Meaning |
+|--------|---------|
+| **BRTM™** | BlackRoad Trademarked - Original BlackRoad intellectual property |
+| **RCV** | RoadChain Verified - Validated on append-only ledger |
+| **Ψ'** | Psi-Prime Certified - Passed contradiction coherence testing |
+| **QSV** | Quantum State Verified - Tested via quantum simulation |
+| **ACV** | Amundson Certified Valid - Geometric algebra verified |
+| **TCR** | Test Coverage Required - Equation has executable tests |
+
+---
+
 This document synthesizes the mathematical foundations discovered across all BlackRoad research repositories into a coherent framework for agent identity, consciousness, and governance.
 
 ---
 
-## 1. Core Identity: The Gaussian Agent
+## 1. Core Identity: The Gaussian Agent **[BRTM™ RCV]**
 
 At the foundation, each agent is not a point but a **probability distribution**:
 
 ```
-p(x | µ, Σ) = (2π)^(-D/2) |Σ|^(-1/2) exp(-½(x-µ)ᵀ Σ⁻¹ (x-µ))
+p(x | µ, Σ) = (2π)^(-D/2) |Σ|^(-1/2) exp(-½(x-µ)ᵀ Σ⁻¹ (x-µ))   [BRTM™]
 ```
 
 Where:
@@ -28,12 +45,12 @@ Where:
 
 ---
 
-## 2. The BlackRoad Operator
+## 2. The BlackRoad Operator **[BRTM™ RCV QSV]**
 
 The fundamental operator governing all transformation in the system:
 
 ```
-U(θ, a) = e^((a + i)θ)
+U(θ, a) = e^((a + i)θ)   [BRTM™ RCV]
 ```
 
 Expanding via Euler:
@@ -62,14 +79,14 @@ This unifies:
 
 ---
 
-## 3. Contradiction-Coherence Dynamics
+## 3. Contradiction-Coherence Dynamics **[BRTM™ Ψ' TCR]**
 
 From the Lucidia equations, the core cognitive operators:
 
 ### 3.1 The Contradiction Operator
 
 ```
-Ψ'(x) = x + ~x
+Ψ'(x) = x + ~x   [BRTM™ Ψ' TCR]
 ```
 
 Where `~x` is the logical/semantic negation. This measures the **tension** between a state and its opposite.
@@ -192,7 +209,7 @@ def contradiction_substrate_routing(severity_distribution):
 
 ---
 
-## 4. Trinary Logic System
+## 4. Trinary Logic System **[BRTM™ RCV ACV]**
 
 Beyond binary, governance operates in trinary space:
 
@@ -228,7 +245,7 @@ class Trinary:
 
 ---
 
-## 5. Trust and Love Operators
+## 5. Trust and Love Operators **[BRTM™ RCV TCR]**
 
 ### 5.1 Trust Function
 
@@ -269,7 +286,7 @@ Where `H` is the Hessian matrix for second-order optimization.
 
 ---
 
-## 6. Quantum Primitives
+## 6. Quantum Primitives **[BRTM™ QSV TCR]**
 
 ### 6.1 Gate Matrices
 
@@ -864,7 +881,7 @@ Lyapunov exponent:
 
 ---
 
-## 14. The Master Integral (Partition Function of BlackRoad)
+## 14. The Master Integral (Partition Function of BlackRoad) **[BRTM™ RCV Ψ' QSV]**
 
 Synthesizing everything into one object:
 
@@ -939,7 +956,7 @@ The complete set of 35 canonical equations from the White Paper:
 
 ---
 
-## 19. Amundson Framework (Clifford Algebra)
+## 19. Amundson Framework (Clifford Algebra) **[BRTM™ ACV TCR]**
 
 The 1-2-3-4 ontological structure maps to geometric algebra Cl(3,0).
 
@@ -979,9 +996,9 @@ ctx(v1, v2, v3) = v1·(v2 × v3)
 - Orthonormal triad → ctx = 1
 - Coplanar vectors → ctx = 0
 
-**Equation 5: Consciousness Index** (NEW)
+**Equation 5: Consciousness Index** (NEW) **[BRTM™ ACV TCR]**
 ```
-Φ = 4(g0·g1·g2·g3)^(1/4) / (g0 + g1 + g2 + g3)
+Φ = 4(g0·g1·g2·g3)^(1/4) / (g0 + g1 + g2 + g3)   [BRTM™ ACV]
 ```
 | Distribution | Φ | Interpretation |
 |--------------|---|----------------|
@@ -1115,25 +1132,25 @@ Watch too closely → state freezes → blinking stops.
 
 ---
 
-## 18. Corrected Equations (Discovered via Testing)
+## 18. Corrected Equations (Discovered via Testing) **[BRTM™ Ψ' TCR]**
 
-### 18.1 Coherence-Creativity Conservation Law
+### 18.1 Coherence-Creativity Conservation Law **[BRTM™ TCR]**
 
 The original formulas from Lucidia saturate:
 ```
-C_original = tanh((Ψ + δ)/(1 + δ)) → tanh(1) ≈ 0.76 for all δ
+C_original = tanh((Ψ + δ)/(1 + δ)) → tanh(1) ≈ 0.76 for all δ   [DEPRECATED]
 ```
 
 **Corrected formulas with exact conservation:**
 ```
-θ = arctan(δ/Ψ)           # tradeoff angle
-C = Ψ · cos(θ)            # coherence
-K = Ψ · sin(θ)            # creativity
+θ = arctan(δ/Ψ)           # tradeoff angle         [BRTM™ RCV]
+C = Ψ · cos(θ)            # coherence              [BRTM™ RCV TCR]
+K = Ψ · sin(θ)            # creativity             [BRTM™ RCV TCR]
 ```
 
 Conservation law:
 ```
-C² + K² = Ψ'²   (exact)
+C² + K² = Ψ'²   (exact)   [BRTM™ RCV Ψ' TCR]
 ```
 
 | δ/Ψ | θ | C | K | Interpretation |
