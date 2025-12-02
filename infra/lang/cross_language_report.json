@@ -1,0 +1,486 @@
+{
+  "timestamp": "2025-12-02T05:42:11.544328",
+  "framework": "Amundson",
+  "version": "1.0.0",
+  "errors": {
+    "100": {
+      "code": 100,
+      "name": "UNDEFINED",
+      "category": "TYPE",
+      "amundson": {
+        "math": "\u2204x : x is not in scope",
+        "code": "variable not declared before use",
+        "physics": "particle not yet created",
+        "language": "The name does not exist in this context"
+      },
+      "tests": {
+        "python": {
+          "code": "print(undefined_variable)",
+          "expected": "NameError",
+          "actual": "NameError",
+          "message": "name 'undefined_variable' is not defined",
+          "verified": true
+        },
+        "javascript": {
+          "code": "console.log(undefinedVariable);",
+          "expected": "ReferenceError",
+          "actual": "ReferenceError",
+          "message": "undefinedVariable is not defined",
+          "verified": true
+        }
+      },
+      "verified": true,
+      "ps_sha_anchor": "68f0ef67361fcfd6"
+    },
+    "101": {
+      "code": 101,
+      "name": "NULL",
+      "category": "TYPE",
+      "amundson": {
+        "math": "x = \u2205 (empty set, no value)",
+        "code": "pointer/reference to nothing",
+        "physics": "vacuum state - no particle",
+        "language": "Nothing is here"
+      },
+      "tests": {
+        "python": {
+          "code": "x = None; x.some_method()",
+          "expected": "AttributeError",
+          "actual": "AttributeError",
+          "message": "'NoneType' object has no attribute 'some_method'",
+          "verified": true
+        },
+        "javascript": {
+          "code": "let x = null; x.property;",
+          "expected": "TypeError",
+          "actual": "TypeError",
+          "message": "Cannot read properties of null (reading 'property')",
+          "verified": true
+        }
+      },
+      "verified": true,
+      "ps_sha_anchor": "7fa8cfdbcd0b27ad"
+    },
+    "102": {
+      "code": 102,
+      "name": "NAN",
+      "category": "TYPE",
+      "amundson": {
+        "math": "x \u2209 \u211d \u222a {\u00b1\u221e}",
+        "code": "result of undefined operation",
+        "physics": "superposition collapse to undefined state",
+        "language": "This is not a number"
+      },
+      "tests": {
+        "python": {
+          "code": "import math; result = math.nan; assert math.isnan(result)",
+          "expected": "NaN produced",
+          "actual": null,
+          "message": null,
+          "verified": true
+        },
+        "javascript": {
+          "code": "console.log(isNaN(0/0));",
+          "expected": "NaN produced",
+          "actual": null,
+          "message": null,
+          "verified": false
+        }
+      },
+      "verified": true,
+      "ps_sha_anchor": "e46b9ab8ee0ad819"
+    },
+    "200": {
+      "code": 200,
+      "name": "MISSING",
+      "category": "VALUE",
+      "amundson": {
+        "math": "f(x) undefined at x",
+        "code": "required parameter not provided",
+        "physics": "missing input energy",
+        "language": "Something required is not here"
+      },
+      "tests": {
+        "python": {
+          "code": "def f(x): return x; f()",
+          "expected": "TypeError",
+          "actual": null,
+          "message": null,
+          "verified": false
+        },
+        "javascript": {
+          "code": "function f(x) { if (x === undefined) throw new Error('missing'); } f();",
+          "expected": "Error",
+          "actual": "Error",
+          "message": "missing",
+          "verified": true
+        }
+      },
+      "verified": true,
+      "ps_sha_anchor": "d2dec540b5cd5b99"
+    },
+    "201": {
+      "code": 201,
+      "name": "EMPTY",
+      "category": "VALUE",
+      "amundson": {
+        "math": "|S| = 0, no elements",
+        "code": "collection has zero elements",
+        "physics": "zero particles in box",
+        "language": "The container is empty"
+      },
+      "tests": {
+        "python": {
+          "code": "arr = []; arr[0]",
+          "expected": "IndexError",
+          "actual": "IndexError",
+          "message": "list index out of range",
+          "verified": true
+        },
+        "javascript": {
+          "code": "let arr = []; if (arr[0] === undefined) throw new Error('empty');",
+          "expected": "Error",
+          "actual": "Error",
+          "message": "empty",
+          "verified": true
+        }
+      },
+      "verified": true,
+      "ps_sha_anchor": "d14f67fadab51cd2"
+    },
+    "300": {
+      "code": 300,
+      "name": "NULL_POINTER",
+      "category": "REFERENCE",
+      "amundson": {
+        "math": "f(\u2205) undefined",
+        "code": "dereference null pointer",
+        "physics": "measure nothing \u2192 undefined",
+        "language": "Cannot access nothing"
+      },
+      "tests": {
+        "python": {
+          "code": "x = None; x.append(1)",
+          "expected": "AttributeError",
+          "actual": "AttributeError",
+          "message": "'NoneType' object has no attribute 'append'",
+          "verified": true
+        },
+        "javascript": {
+          "code": "let x = null; x.push(1);",
+          "expected": "TypeError",
+          "actual": "TypeError",
+          "message": "Cannot read properties of null (reading 'push')",
+          "verified": true
+        }
+      },
+      "verified": true,
+      "ps_sha_anchor": "eaaaf632b59f7a8c"
+    },
+    "312": {
+      "code": 312,
+      "name": "STACK_OVERFLOW",
+      "category": "REFERENCE",
+      "amundson": {
+        "math": "recursion depth > limit",
+        "code": "call stack exceeded",
+        "physics": "infinite recursion in time",
+        "language": "Too many nested calls"
+      },
+      "tests": {
+        "python": {
+          "code": "import sys; sys.setrecursionlimit(50); f = lambda: f(); f()",
+          "expected": "RecursionError",
+          "actual": "NameError",
+          "message": "name 'f' is not defined",
+          "verified": false
+        },
+        "javascript": {
+          "code": "function f() { f(); } try { f(); } catch(e) { console.log(e.name); }",
+          "expected": "RangeError",
+          "actual": null,
+          "message": null,
+          "verified": false
+        }
+      },
+      "verified": false
+    },
+    "400": {
+      "code": 400,
+      "name": "INDEX_OUT_OF_BOUNDS",
+      "category": "RANGE",
+      "amundson": {
+        "math": "i \u2209 [0, n-1]",
+        "code": "array[i] where i >= len",
+        "physics": "address outside array boundary",
+        "language": "The position does not exist"
+      },
+      "tests": {
+        "python": {
+          "code": "arr = [1, 2, 3]; arr[100]",
+          "expected": "IndexError",
+          "actual": "IndexError",
+          "message": "list index out of range",
+          "verified": true
+        },
+        "javascript": {
+          "code": "let arr = [1, 2, 3]; if (arr[100] === undefined) throw new Error('out of bounds');",
+          "expected": "Error",
+          "actual": "Error",
+          "message": "out of bounds",
+          "verified": true
+        }
+      },
+      "verified": true,
+      "ps_sha_anchor": "6000f2945d4499a1"
+    },
+    "406": {
+      "code": 406,
+      "name": "KEY_NOT_FOUND",
+      "category": "RANGE",
+      "amundson": {
+        "math": "k \u2209 dom(f)",
+        "code": "map[key] where key not in map",
+        "physics": "quantum state not in basis",
+        "language": "This key does not exist"
+      },
+      "tests": {
+        "python": {
+          "code": "d = {'a': 1}; d['nonexistent']",
+          "expected": "KeyError",
+          "actual": "KeyError",
+          "message": "'nonexistent'",
+          "verified": true
+        },
+        "javascript": {
+          "code": "let d = {a: 1}; if (d.nonexistent === undefined) throw new Error('key not found');",
+          "expected": "Error",
+          "actual": "Error",
+          "message": "key not found",
+          "verified": true
+        }
+      },
+      "verified": true,
+      "ps_sha_anchor": "1c7d4628d270c18c"
+    },
+    "600": {
+      "code": 600,
+      "name": "DIVISION_BY_ZERO",
+      "category": "MATH",
+      "amundson": {
+        "math": "lim(1/x) as x\u21920 = \u00b1\u221e",
+        "code": "x / 0",
+        "physics": "singularity at r = 0",
+        "language": "Cannot divide by nothing"
+      },
+      "tests": {
+        "python": {
+          "code": "1 / 0",
+          "expected": "ZeroDivisionError",
+          "actual": "ZeroDivisionError",
+          "message": "division by zero",
+          "verified": true
+        },
+        "javascript": {
+          "code": "if (1/0 === Infinity) console.log('Infinity');",
+          "expected": "Infinity",
+          "actual": null,
+          "message": null,
+          "verified": true
+        }
+      },
+      "verified": true,
+      "ps_sha_anchor": "ff10987d07eb0ca4"
+    },
+    "620": {
+      "code": 620,
+      "name": "SQRT_NEGATIVE",
+      "category": "MATH",
+      "amundson": {
+        "math": "\u221a(-1) = i \u2208 \u2102, \u2209 \u211d",
+        "code": "sqrt(negative) in real domain",
+        "physics": "imaginary component required",
+        "language": "Square root of negative needs imaginary numbers"
+      },
+      "tests": {
+        "python": {
+          "code": "import math; math.sqrt(-1)",
+          "expected": "ValueError",
+          "actual": "ValueError",
+          "message": "math domain error",
+          "verified": true
+        },
+        "javascript": {
+          "code": "if (isNaN(Math.sqrt(-1))) console.log('NaN');",
+          "expected": "NaN",
+          "actual": null,
+          "message": null,
+          "verified": true
+        }
+      },
+      "verified": true,
+      "ps_sha_anchor": "93246e4dbac037fd"
+    },
+    "621": {
+      "code": 621,
+      "name": "LOG_NEGATIVE",
+      "category": "MATH",
+      "amundson": {
+        "math": "log(-x) = log(x) + i\u03c0",
+        "code": "log(negative) in real domain",
+        "physics": "requires complex phase",
+        "language": "Logarithm of negative requires imaginary numbers"
+      },
+      "tests": {
+        "python": {
+          "code": "import math; math.log(-1)",
+          "expected": "ValueError",
+          "actual": "ValueError",
+          "message": "math domain error",
+          "verified": true
+        },
+        "javascript": {
+          "code": "if (isNaN(Math.log(-1))) console.log('NaN');",
+          "expected": "NaN",
+          "actual": null,
+          "message": null,
+          "verified": true
+        }
+      },
+      "verified": true,
+      "ps_sha_anchor": "fe2a878975f75ee6"
+    },
+    "622": {
+      "code": 622,
+      "name": "LOG_ZERO",
+      "category": "MATH",
+      "amundson": {
+        "math": "lim(log x) as x\u21920\u207a = -\u221e",
+        "code": "log(0)",
+        "physics": "entropy at absolute zero",
+        "language": "Logarithm of zero is negative infinity"
+      },
+      "tests": {
+        "python": {
+          "code": "import math; math.log(0)",
+          "expected": "ValueError",
+          "actual": "ValueError",
+          "message": "math domain error",
+          "verified": true
+        },
+        "javascript": {
+          "code": "if (Math.log(0) === -Infinity) console.log('-Infinity');",
+          "expected": "-Infinity",
+          "actual": null,
+          "message": null,
+          "verified": true
+        }
+      },
+      "verified": true,
+      "ps_sha_anchor": "526f6cd7eac91c75"
+    },
+    "670": {
+      "code": 670,
+      "name": "SINGULAR_MATRIX",
+      "category": "MATH",
+      "amundson": {
+        "math": "det(A) = 0 \u2192 A\u207b\u00b9 does not exist",
+        "code": "matrix inversion fails",
+        "physics": "degenerate system",
+        "language": "Matrix has no inverse"
+      },
+      "tests": {
+        "python": {
+          "code": "import numpy as np; np.linalg.inv(np.array([[1, 0], [0, 0]]))",
+          "expected": "LinAlgError",
+          "actual": "RecursionError",
+          "message": "maximum recursion depth exceeded",
+          "verified": false
+        }
+      },
+      "verified": false
+    },
+    "821": {
+      "code": 821,
+      "name": "FILE_NOT_FOUND",
+      "category": "SYSTEM",
+      "amundson": {
+        "math": "path \u2209 filesystem",
+        "code": "file does not exist",
+        "physics": "resource not at location",
+        "language": "No such file or directory"
+      },
+      "tests": {
+        "python": {
+          "code": "open('/nonexistent/file/path/xyz123.txt')",
+          "expected": "FileNotFoundError",
+          "actual": "FileNotFoundError",
+          "message": "[Errno 2] No such file or directory: '/nonexistent/file/path/xyz123.txt'",
+          "verified": true
+        },
+        "javascript": {
+          "code": "const fs = require('fs'); fs.readFileSync('/nonexistent/xyz.txt');",
+          "expected": "Error",
+          "actual": "Error",
+          "message": "ENOENT: no such file or directory, open '/nonexistent/xyz.txt'",
+          "verified": true
+        }
+      },
+      "verified": true,
+      "ps_sha_anchor": "85bcd42b83a7bf1a"
+    },
+    "822": {
+      "code": 822,
+      "name": "PERMISSION_DENIED",
+      "category": "SYSTEM",
+      "amundson": {
+        "math": "user \u2209 allowed_set",
+        "code": "insufficient permissions",
+        "physics": "energy barrier not crossed",
+        "language": "Permission denied"
+      },
+      "tests": {
+        "python": {
+          "code": "open('/etc/shadow')",
+          "expected": "PermissionError",
+          "actual": "FileNotFoundError",
+          "message": "[Errno 2] No such file or directory: '/etc/shadow'",
+          "verified": false
+        }
+      },
+      "verified": false
+    }
+  },
+  "summary": {
+    "total_codes": 16,
+    "python_verified": 12,
+    "javascript_verified": 12,
+    "total_verified": 13,
+    "categories": {
+      "TYPE": {
+        "total": 3,
+        "verified": 3
+      },
+      "VALUE": {
+        "total": 2,
+        "verified": 2
+      },
+      "REFERENCE": {
+        "total": 2,
+        "verified": 1
+      },
+      "RANGE": {
+        "total": 2,
+        "verified": 2
+      },
+      "MATH": {
+        "total": 5,
+        "verified": 4
+      },
+      "SYSTEM": {
+        "total": 2,
+        "verified": 1
+      }
+    }
+  }
+}
