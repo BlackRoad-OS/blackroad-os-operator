@@ -1,0 +1,441 @@
+# policies.intents.yaml
+# Intent Chain Policy Pack - v1
+#
+# Governance semantics for multi-step workflows.
+# Intents coordinate sequences of governed actions.
+#
+# CRITICAL INVARIANTS:
+#   - Intent creation requires appropriate role for template type
+#   - Steps must complete in order (previous step completed)
+#   - Rollback steps have elevated logging
+#   - All intent state changes logged at full fidelity
+#
+# @amundson 0.1.0
+# @governor alice.governor.v1
+# @operator alexa.operator.v1
+
+amundson: "0.1.0"
+governor: alice.governor.v1
+operator: alexa.operator.v1
+policy_pack: intent-policies
+policy_pack_version: "1.0.0"
+
+# Pack metadata
+version: "intent-v1"
+scope: "intents.*"
+default_stance: deny
+default_ledger_level: full
+
+policies:
+  # ============================================
+  # INTENT CREATION
+  # ============================================
+
+  - id: intent.create.operator
+    description: "Operators may create any intent type."
+    effect: allow
+    priority: 200
+    subject:
+      role: operator
+    action: "intent:create"
+    resource: "intent"
+    condition: {}
+    ledger_level: full
+
+  - id: intent.create.template-role
+    description: "Users may create intents if they have the template's required role."
+    effect: allow
+    priority: 100
+    subject:
+      role: "*"
+    action: "intent:create"
+    resource: "intent"
+    condition:
+      caller_asserts:
+        - "has_template_role"
+    ledger_level: full
+
+  # ============================================
+  # INTENT STATE TRANSITIONS
+  # ============================================
+
+  - id: intent.start.creator
+    description: "Intent creator may start the intent."
+    effect: allow
+    priority: 100
+    subject:
+      role: "*"
+    action: "intent:start"
+    resource: "intent"
+    condition:
+      caller_asserts:
+        - "is_intent_creator"
+        - "intent_is_pending"
+    ledger_level: full
+
+  - id: intent.cancel.creator-or-operator
+    description: "Intent creator or operator may cancel."
+    effect: allow
+    priority: 100
+    subject:
+      role: "*"
+    action: "intent:cancel"
+    resource: "intent"
+    condition:
+      caller_asserts:
+        - "is_intent_creator_or_operator"
+        - "intent_is_active"
+    ledger_level: full
+
+  # ============================================
+  # STEP EXECUTION
+  # ============================================
+
+  - id: intent.step.operator-any
+    description: "Operators may execute any step."
+    effect: allow
+    priority: 200
+    subject:
+      role: operator
+    action: "intent:step"
+    resource: "intent_step"
+    condition:
+      caller_asserts:
+        - "previous_step_completed"
+    ledger_level: full
+
+  - id: intent.step.role-match
+    description: "Users may execute steps that match their role."
+    effect: allow
+    priority: 100
+    subject:
+      role: "*"
+    action: "intent:step"
+    resource: "intent_step"
+    condition:
+      caller_asserts:
+        - "previous_step_completed"
+        - "has_step_role"
+    ledger_level: full
+
+  - id: intent.step.deny-out-of-order
+    description: "Deny steps executed out of order."
+    effect: deny
+    priority: 50
+    subject:
+      role: "*"
+    action: "intent:step"
+    resource: "intent_step"
+    condition:
+      caller_asserts:
+        - "previous_step_not_completed"
+    ledger_level: full
+
+  # ============================================
+  # ROLLBACK
+  # ============================================
+
+  - id: intent.rollback.operator-only
+    description: "Only operators may trigger rollback."
+    effect: allow
+    priority: 100
+    subject:
+      role: operator
+    action: "intent:rollback"
+    resource: "intent"
+    condition:
+      caller_asserts:
+        - "intent_has_failure"
+    ledger_level: full
+
+  - id: intent.rollback.auto
+    description: "System may auto-rollback on critical failures."
+    effect: allow
+    priority: 150
+    subject:
+      role: system
+    action: "intent:rollback"
+    resource: "intent"
+    condition:
+      caller_asserts:
+        - "step_is_rollback_trigger"
+    ledger_level: full
+
+  # ============================================
+  # DEPLOYMENT INTENTS
+  # ============================================
+
+  - id: intent.deployment.request.any
+    description: "Any authenticated user may request deployment."
+    effect: allow
+    priority: 100
+    subject:
+      role: "*"
+    action: "deployment:request"
+    resource: "intent_step"
+    condition:
+      caller_asserts:
+        - "is_authenticated"
+    ledger_level: full
+
+  - id: intent.deployment.approve.operator
+    description: "Only operators may approve deployment."
+    effect: allow
+    priority: 100
+    subject:
+      role: operator
+    action: "deployment:approve"
+    resource: "intent_step"
+    condition:
+      caller_asserts:
+        - "previous_step_completed"
+    ledger_level: full
+
+  - id: intent.deployment.execute.operator
+    description: "Only operators may execute deployment."
+    effect: allow
+    priority: 100
+    subject:
+      role: operator
+    action: "deployment:execute"
+    resource: "intent_step"
+    condition:
+      caller_asserts:
+        - "previous_step_completed"
+        - "pre_check_passed"
+    ledger_level: full
+
+  # ============================================
+  # MIGRATION INTENTS
+  # ============================================
+
+  - id: intent.migration.backup.system
+    description: "System may perform backup before migration."
+    effect: allow
+    priority: 100
+    subject:
+      role: "*"
+    action: "migration:backup"
+    resource: "intent_step"
+    condition:
+      caller_asserts:
+        - "is_intent_participant"
+    ledger_level: full
+
+  - id: intent.migration.execute.operator
+    description: "Only operators may execute migration."
+    effect: warn
+    priority: 100
+    subject:
+      role: operator
+    action: "migration:execute"
+    resource: "intent_step"
+    condition:
+      caller_asserts:
+        - "backup_completed"
+        - "approval_granted"
+    ledger_level: full
+
+  # ============================================
+  # AGENT REGISTRATION INTENTS
+  # ============================================
+
+  - id: intent.agent.request.any
+    description: "Any agent may request registration."
+    effect: allow
+    priority: 100
+    subject:
+      role: "*"
+    action: "agent:request-registration"
+    resource: "intent_step"
+    condition:
+      caller_asserts:
+        - "has_agent_id"
+    ledger_level: full
+
+  - id: intent.agent.approve.operator
+    description: "Only operators may approve agent registration."
+    effect: allow
+    priority: 100
+    subject:
+      role: operator
+    action: "agent:approve-registration"
+    resource: "intent_step"
+    condition:
+      caller_asserts:
+        - "capabilities_verified"
+    ledger_level: full
+
+  - id: intent.agent.activate.operator
+    description: "Only operators may activate agents."
+    effect: allow
+    priority: 100
+    subject:
+      role: operator
+    action: "agent:activate"
+    resource: "intent_step"
+    condition:
+      caller_asserts:
+        - "registration_approved"
+    ledger_level: full
+
+  # ============================================
+  # SECRET ROTATION INTENTS
+  # ============================================
+
+  - id: intent.secret.request.operator
+    description: "Only operators may request secret rotation."
+    effect: allow
+    priority: 100
+    subject:
+      role: operator
+    action: "secret:request-rotation"
+    resource: "intent_step"
+    condition: {}
+    ledger_level: full
+
+  - id: intent.secret.activate.operator
+    description: "Only operators may activate new secrets."
+    effect: warn
+    priority: 100
+    subject:
+      role: operator
+    action: "secret:activate"
+    resource: "intent_step"
+    condition:
+      caller_asserts:
+        - "new_secret_validated"
+        - "rotation_confirmed"
+    ledger_level: full
+
+  # ============================================
+  # ASSIGNMENT INTENTS (Education)
+  # ============================================
+
+  - id: intent.assignment.create.teacher
+    description: "Teachers may create assignments."
+    effect: allow
+    priority: 100
+    subject:
+      role: teacher
+    action: "assignment:create"
+    resource: "intent_step"
+    condition: {}
+    ledger_level: action
+
+  - id: intent.assignment.submit.student
+    description: "Students may submit to published assignments."
+    effect: allow
+    priority: 100
+    subject:
+      role: student
+    action: "assignment:submit"
+    resource: "intent_step"
+    condition:
+      caller_asserts:
+        - "assignment_published"
+        - "is_enrolled"
+    ledger_level: action
+
+  - id: intent.assignment.grade.teacher
+    description: "Teachers may grade submissions."
+    effect: allow
+    priority: 100
+    subject:
+      role: teacher
+    action: "assignment:grade"
+    resource: "intent_step"
+    condition:
+      caller_asserts:
+        - "submission_exists"
+    ledger_level: action
+
+  # ============================================
+  # INFRASTRUCTURE SCALE INTENTS
+  # ============================================
+
+  - id: intent.infra.scale.operator
+    description: "Only operators may scale infrastructure."
+    effect: allow
+    priority: 100
+    subject:
+      role: operator
+    action: "infra:execute-scale"
+    resource: "intent_step"
+    condition:
+      caller_asserts:
+        - "scale_approved"
+        - "pre_check_passed"
+    ledger_level: full
+
+  # ============================================
+  # MESH CONNECTION INTENTS
+  # ============================================
+
+  - id: intent.mesh.establish.delegated
+    description: "Delegated actors may establish mesh connections."
+    effect: allow
+    priority: 100
+    subject:
+      role: "*"
+    action: "mesh:establish"
+    resource: "intent_step"
+    condition:
+      claim_check: "delegation"
+      caller_asserts:
+        - "delegation_verified"
+    ledger_level: full
+
+  # ============================================
+  # INTENT QUERY & AUDIT
+  # ============================================
+
+  - id: intent.view.participant
+    description: "Intent participants may view intent details."
+    effect: allow
+    priority: 100
+    subject:
+      role: "*"
+    action: "intent:view"
+    resource: "intent"
+    condition:
+      caller_asserts:
+        - "is_intent_participant"
+    ledger_level: decision
+
+  - id: intent.view.operator
+    description: "Operators may view any intent."
+    effect: allow
+    priority: 200
+    subject:
+      role: operator
+    action: "intent:view"
+    resource: "intent"
+    condition: {}
+    ledger_level: decision
+
+  - id: intent.audit.operator
+    description: "Only operators may audit intent history."
+    effect: allow
+    priority: 100
+    subject:
+      role: operator
+    action: "intent:audit"
+    resource: "intent"
+    condition: {}
+    ledger_level: action
+
+  # ============================================
+  # DEFAULT DENY (catch-all)
+  # ============================================
+
+  - id: intent.default-deny
+    description: "Deny any intent action not explicitly allowed above."
+    effect: deny
+    priority: 0
+    subject:
+      role: "*"
+    action: "intent:*"
+    resource: "*"
+    condition: {}
+    ledger_level: full

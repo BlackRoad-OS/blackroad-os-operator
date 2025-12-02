@@ -1,0 +1,512 @@
+{
+  "description": "Stage 3: Intent Chains - Multi-Step Governance Examples",
+  "amundson_version": "0.1.0",
+  "governor": "alice.governor.v1",
+  "operator": "alexa.operator.v1",
+
+  "intent_templates": {
+    "deployment": {
+      "name": "deployment",
+      "version": "1.0.0",
+      "description": "Deploy a service to production",
+      "steps": [
+        {"sequence": 1, "action": "deployment:request", "name": "Request Deployment"},
+        {"sequence": 2, "action": "deployment:approve", "name": "Approve Deployment", "requires_role": "operator"},
+        {"sequence": 3, "action": "deployment:pre-check", "name": "Pre-flight Checks"},
+        {"sequence": 4, "action": "deployment:execute", "name": "Execute Deployment"},
+        {"sequence": 5, "action": "deployment:validate", "name": "Validate Deployment"}
+      ],
+      "policy_scope": "intents.deployment.*",
+      "rollback_on_failure": ["deployment:execute", "deployment:validate"]
+    },
+
+    "agent-register": {
+      "name": "agent-register",
+      "version": "1.0.0",
+      "description": "Register a new agent in the mesh",
+      "steps": [
+        {"sequence": 1, "action": "agent:request-registration", "name": "Request Registration"},
+        {"sequence": 2, "action": "agent:verify-capabilities", "name": "Verify Capabilities"},
+        {"sequence": 3, "action": "agent:approve-registration", "name": "Approve Registration", "requires_role": "operator"},
+        {"sequence": 4, "action": "agent:activate", "name": "Activate Agent"}
+      ],
+      "policy_scope": "intents.agent.*",
+      "rollback_on_failure": ["agent:activate"]
+    },
+
+    "secret-rotation": {
+      "name": "secret-rotation",
+      "version": "1.0.0",
+      "description": "Rotate a secret or credential",
+      "steps": [
+        {"sequence": 1, "action": "secret:request-rotation", "name": "Request Rotation"},
+        {"sequence": 2, "action": "secret:backup-current", "name": "Backup Current Secret"},
+        {"sequence": 3, "action": "secret:generate-new", "name": "Generate New Secret"},
+        {"sequence": 4, "action": "secret:validate-new", "name": "Validate New Secret"},
+        {"sequence": 5, "action": "secret:activate", "name": "Activate New Secret", "requires_role": "operator"},
+        {"sequence": 6, "action": "secret:cleanup-old", "name": "Cleanup Old Secret", "required": false}
+      ],
+      "policy_scope": "intents.secret.*",
+      "rollback_on_failure": ["secret:activate"]
+    }
+  },
+
+  "example_flows": {
+    "deployment_flow": {
+      "description": "Complete deployment intent chain from request to validation",
+
+      "1_create_intent": {
+        "request": {
+          "method": "POST",
+          "path": "/intents",
+          "body": {
+            "template_name": "deployment",
+            "user_id": "cece.assistant.v1",
+            "agent_id": null,
+            "role": "operator",
+            "context": {
+              "service": "mesh-router",
+              "version": "2.1.0",
+              "environment": "production",
+              "reason": "Scale improvements and bug fixes"
+            },
+            "metadata": {
+              "jira_ticket": "BR-1234",
+              "initiated_by": "cece.assistant.v1"
+            }
+          }
+        },
+        "response": {
+          "id": "intent-abc123",
+          "template_name": "deployment",
+          "state": "pending",
+          "current_step": 0,
+          "total_steps": 5,
+          "correlation_id": "corr-def456",
+          "created_by_role": "operator",
+          "policy_scope": "intents.deployment.*",
+          "steps": [
+            {"sequence_num": 1, "action": "deployment:request", "status": "pending"},
+            {"sequence_num": 2, "action": "deployment:approve", "status": "pending"},
+            {"sequence_num": 3, "action": "deployment:pre-check", "status": "pending"},
+            {"sequence_num": 4, "action": "deployment:execute", "status": "pending"},
+            {"sequence_num": 5, "action": "deployment:validate", "status": "pending"}
+          ],
+          "next_step": {"sequence": 1, "action": "deployment:request", "name": "Request Deployment"}
+        }
+      },
+
+      "2_execute_step_1": {
+        "request": {
+          "method": "POST",
+          "path": "/intents/intent-abc123/steps/1",
+          "body": {
+            "user_id": "cece.assistant.v1",
+            "role": "agent",
+            "input": {
+              "service": "mesh-router",
+              "version": "2.1.0",
+              "commit_sha": "abc123def456"
+            }
+          }
+        },
+        "response": {
+          "step_id": "step-001",
+          "intent_id": "intent-abc123",
+          "sequence_num": 1,
+          "action": "deployment:request",
+          "status": "completed",
+          "policy_decision": "allow",
+          "policy_id": "intent.deployment.request.any",
+          "output": {"executed_at": "2025-12-01T12:00:00Z"},
+          "next_step": {"sequence": 2, "action": "deployment:approve", "name": "Approve Deployment"}
+        }
+      },
+
+      "3_execute_step_2_approval": {
+        "request": {
+          "method": "POST",
+          "path": "/intents/intent-abc123/steps/2",
+          "body": {
+            "user_id": "alexa.operator.v1",
+            "role": "operator",
+            "input": {
+              "approved": true,
+              "notes": "LGTM - verified in staging"
+            }
+          }
+        },
+        "response": {
+          "step_id": "step-002",
+          "intent_id": "intent-abc123",
+          "sequence_num": 2,
+          "action": "deployment:approve",
+          "status": "completed",
+          "policy_decision": "allow",
+          "policy_id": "intent.deployment.approve.operator",
+          "output": {"approved_by": "alexa.operator.v1", "approved_at": "2025-12-01T12:05:00Z"},
+          "next_step": {"sequence": 3, "action": "deployment:pre-check", "name": "Pre-flight Checks"}
+        }
+      },
+
+      "4_execute_step_3_precheck": {
+        "request": {
+          "method": "POST",
+          "path": "/intents/intent-abc123/steps/3",
+          "body": {
+            "user_id": null,
+            "agent_id": "system.checks.v1",
+            "role": "system",
+            "input": {}
+          }
+        },
+        "response": {
+          "step_id": "step-003",
+          "intent_id": "intent-abc123",
+          "sequence_num": 3,
+          "action": "deployment:pre-check",
+          "status": "completed",
+          "policy_decision": "allow",
+          "output": {
+            "checks_passed": true,
+            "checks": [
+              {"name": "health_check", "status": "pass"},
+              {"name": "dependency_check", "status": "pass"},
+              {"name": "resource_check", "status": "pass"}
+            ]
+          },
+          "next_step": {"sequence": 4, "action": "deployment:execute", "name": "Execute Deployment"}
+        }
+      },
+
+      "5_execute_step_4_deploy": {
+        "request": {
+          "method": "POST",
+          "path": "/intents/intent-abc123/steps/4",
+          "body": {
+            "user_id": "alexa.operator.v1",
+            "role": "operator",
+            "input": {
+              "strategy": "rolling",
+              "max_unavailable": 1
+            }
+          }
+        },
+        "response": {
+          "step_id": "step-004",
+          "intent_id": "intent-abc123",
+          "sequence_num": 4,
+          "action": "deployment:execute",
+          "status": "completed",
+          "policy_decision": "allow",
+          "policy_id": "intent.deployment.execute.operator",
+          "output": {
+            "deployment_id": "deploy-789",
+            "replicas_updated": 3,
+            "duration_seconds": 45
+          },
+          "next_step": {"sequence": 5, "action": "deployment:validate", "name": "Validate Deployment"}
+        }
+      },
+
+      "6_execute_step_5_validate": {
+        "request": {
+          "method": "POST",
+          "path": "/intents/intent-abc123/steps/5",
+          "body": {
+            "user_id": null,
+            "agent_id": "system.validator.v1",
+            "role": "system",
+            "input": {}
+          }
+        },
+        "response": {
+          "step_id": "step-005",
+          "intent_id": "intent-abc123",
+          "sequence_num": 5,
+          "action": "deployment:validate",
+          "status": "completed",
+          "policy_decision": "allow",
+          "output": {
+            "validation_passed": true,
+            "health_status": "healthy",
+            "response_time_p95_ms": 45
+          },
+          "next_step": null
+        },
+        "intent_final_state": {
+          "id": "intent-abc123",
+          "state": "completed",
+          "current_step": 5,
+          "completed_at": "2025-12-01T12:10:00Z"
+        }
+      },
+
+      "ledger_events_generated": [
+        {
+          "correlation_id": "corr-def456",
+          "intent_id": "intent-abc123",
+          "sequence_num": 0,
+          "action": "intent:create",
+          "decision": "allow",
+          "ledger_level": "full"
+        },
+        {
+          "correlation_id": "corr-def456",
+          "intent_id": "intent-abc123",
+          "sequence_num": 1,
+          "action": "deployment:request",
+          "decision": "allow",
+          "ledger_level": "full"
+        },
+        {
+          "correlation_id": "corr-def456",
+          "intent_id": "intent-abc123",
+          "sequence_num": 2,
+          "action": "deployment:approve",
+          "decision": "allow",
+          "ledger_level": "full"
+        },
+        {
+          "correlation_id": "corr-def456",
+          "intent_id": "intent-abc123",
+          "sequence_num": 3,
+          "action": "deployment:pre-check",
+          "decision": "allow",
+          "ledger_level": "full"
+        },
+        {
+          "correlation_id": "corr-def456",
+          "intent_id": "intent-abc123",
+          "sequence_num": 4,
+          "action": "deployment:execute",
+          "decision": "allow",
+          "ledger_level": "full"
+        },
+        {
+          "correlation_id": "corr-def456",
+          "intent_id": "intent-abc123",
+          "sequence_num": 5,
+          "action": "deployment:validate",
+          "decision": "allow",
+          "ledger_level": "full"
+        }
+      ]
+    },
+
+    "agent_registration_flow": {
+      "description": "Register a new agent in the mesh with capability verification",
+
+      "1_create_intent": {
+        "request": {
+          "method": "POST",
+          "path": "/intents",
+          "body": {
+            "template_name": "agent-register",
+            "agent_id": "new-agent.prototype.v1",
+            "role": "agent",
+            "context": {
+              "agent_name": "Aria",
+              "agent_type": "assistant",
+              "capabilities": ["chat", "code-review", "documentation"],
+              "owner": "alexa.operator.v1"
+            }
+          }
+        },
+        "response": {
+          "id": "intent-agent-001",
+          "template_name": "agent-register",
+          "state": "pending",
+          "current_step": 0,
+          "total_steps": 4,
+          "correlation_id": "corr-agent-001"
+        }
+      },
+
+      "steps": [
+        {
+          "sequence": 1,
+          "action": "agent:request-registration",
+          "actor": "new-agent.prototype.v1",
+          "role": "agent",
+          "result": "completed"
+        },
+        {
+          "sequence": 2,
+          "action": "agent:verify-capabilities",
+          "actor": "system.capability-verifier.v1",
+          "role": "system",
+          "result": "completed",
+          "output": {
+            "verified_capabilities": ["chat", "code-review"],
+            "denied_capabilities": ["documentation"],
+            "reason": "documentation requires operator approval"
+          }
+        },
+        {
+          "sequence": 3,
+          "action": "agent:approve-registration",
+          "actor": "alexa.operator.v1",
+          "role": "operator",
+          "result": "completed",
+          "input": {
+            "approved_capabilities": ["chat", "code-review", "documentation"],
+            "notes": "Approved full capabilities for Aria"
+          }
+        },
+        {
+          "sequence": 4,
+          "action": "agent:activate",
+          "actor": "alexa.operator.v1",
+          "role": "operator",
+          "result": "completed",
+          "output": {
+            "agent_id": "aria.assistant.v1",
+            "mesh_connected": true,
+            "capabilities_active": ["chat", "code-review", "documentation"]
+          }
+        }
+      ],
+
+      "final_state": {
+        "id": "intent-agent-001",
+        "state": "completed",
+        "result": {
+          "agent_id": "aria.assistant.v1",
+          "registered": true,
+          "capabilities": ["chat", "code-review", "documentation"]
+        }
+      }
+    },
+
+    "failed_deployment_with_rollback": {
+      "description": "Deployment fails at validation step, triggering automatic rollback",
+
+      "steps": [
+        {"sequence": 1, "action": "deployment:request", "status": "completed"},
+        {"sequence": 2, "action": "deployment:approve", "status": "completed"},
+        {"sequence": 3, "action": "deployment:pre-check", "status": "completed"},
+        {"sequence": 4, "action": "deployment:execute", "status": "completed"},
+        {
+          "sequence": 5,
+          "action": "deployment:validate",
+          "status": "failed",
+          "error": "Health check failed: 5xx errors detected"
+        }
+      ],
+
+      "rollback_triggered": {
+        "reason": "deployment:validate is in rollback_on_failure list",
+        "rollback_steps": [
+          {"action": "deployment:execute", "rollback_action": "revert to previous version"},
+          {"action": "deployment:pre-check", "rollback_action": "verify reverted state"}
+        ]
+      },
+
+      "final_state": {
+        "state": "rolled_back",
+        "error_message": "Step 5 (deployment:validate) failed: Health check failed: 5xx errors detected",
+        "rollback_completed_at": "2025-12-01T12:15:00Z"
+      },
+
+      "ledger_events": [
+        {"event_type": "step_failed", "sequence_num": 5, "action": "deployment:validate"},
+        {"event_type": "rollback_started", "triggered_by": "system"},
+        {"event_type": "rollback_completed", "rolled_back_steps": [4, 3]}
+      ]
+    }
+  },
+
+  "api_endpoints": {
+    "intent_management": [
+      {
+        "method": "POST",
+        "path": "/intents",
+        "description": "Create a new intent from a template",
+        "request_body": "IntentCreate",
+        "response": "IntentResponse"
+      },
+      {
+        "method": "GET",
+        "path": "/intents",
+        "description": "List intents with filters",
+        "query_params": ["state", "template_name", "created_by_user_id", "correlation_id"],
+        "response": "IntentList"
+      },
+      {
+        "method": "GET",
+        "path": "/intents/{intent_id}",
+        "description": "Get intent details with all steps",
+        "response": "Intent"
+      },
+      {
+        "method": "POST",
+        "path": "/intents/{intent_id}/steps/{sequence_num}",
+        "description": "Execute a step in an intent",
+        "request_body": "StepExecuteRequest",
+        "response": "StepExecuteResponse"
+      },
+      {
+        "method": "POST",
+        "path": "/intents/{intent_id}/rollback",
+        "description": "Trigger rollback of a failed intent",
+        "response": "Intent"
+      },
+      {
+        "method": "POST",
+        "path": "/intents/{intent_id}/cancel",
+        "description": "Cancel an active intent",
+        "response": "Intent"
+      },
+      {
+        "method": "GET",
+        "path": "/intents/{intent_id}/audit",
+        "description": "Get complete audit trail for an intent",
+        "response": "IntentEvent[]"
+      }
+    ],
+
+    "template_management": [
+      {
+        "method": "GET",
+        "path": "/intent-templates",
+        "description": "List all available intent templates",
+        "response": "IntentTemplate[]"
+      },
+      {
+        "method": "GET",
+        "path": "/intent-templates/{name}",
+        "description": "Get a specific intent template",
+        "response": "IntentTemplate"
+      }
+    ]
+  },
+
+  "governance_invariants": {
+    "intent_creation": {
+      "rule": "Intent creation requires appropriate role matching template.required_role OR role=operator",
+      "enforcement": "policy_evaluation",
+      "ledger_level": "full"
+    },
+    "step_ordering": {
+      "rule": "Steps must complete in sequence - cannot execute step N until step N-1 is completed",
+      "enforcement": "intent_service",
+      "ledger_level": "full"
+    },
+    "role_requirements": {
+      "rule": "Steps with requires_role can only be executed by matching role or operator",
+      "enforcement": "policy_evaluation",
+      "ledger_level": "full"
+    },
+    "rollback_triggers": {
+      "rule": "Steps in rollback_on_failure trigger automatic rollback when they fail",
+      "enforcement": "intent_service",
+      "ledger_level": "full"
+    },
+    "timeout": {
+      "rule": "Intents exceeding timeout_seconds are automatically marked as timed_out",
+      "enforcement": "reconciler",
+      "ledger_level": "full"
+    }
+  }
+}

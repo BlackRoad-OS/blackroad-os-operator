@@ -31,6 +31,24 @@ from br_operator.models.ledger import (
     Layer,
 )
 
+# Intent models (Stage 3)
+from br_operator.models.intent import (
+    Intent,
+    IntentCreate,
+    IntentResponse,
+    IntentState,
+    IntentStep,
+    IntentTemplate,
+    IntentEvent,
+    IntentEventType,
+    IntentQuery,
+    IntentList,
+    StepStatus,
+    StepDefinition,
+    StepExecuteRequest,
+    StepExecuteResponse,
+)
+
 __all__ = [
     # Chat models
     "ChatRequest",
@@ -54,4 +72,19 @@ __all__ = [
     "LedgerActor",
     "LedgerDecision",
     "Layer",
+    # Intent models
+    "Intent",
+    "IntentCreate",
+    "IntentResponse",
+    "IntentState",
+    "IntentStep",
+    "IntentTemplate",
+    "IntentEvent",
+    "IntentEventType",
+    "IntentQuery",
+    "IntentList",
+    "StepStatus",
+    "StepDefinition",
+    "StepExecuteRequest",
+    "StepExecuteResponse",
 ]

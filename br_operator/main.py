@@ -645,6 +645,169 @@ def create_app(catalog_path: Path | None = None, enable_watch: bool = True) -> F
             "status": "executed" if response.decision != PolicyEffect.DENY else "denied",
         }
 
+    # ============================================
+    # STAGE 3: INTENT CHAINS
+    # ============================================
+    # Multi-step governed workflows.
+    # All intent actions are logged at full fidelity.
+
+    from br_operator.intent_service import IntentService, get_intent_service
+    from br_operator.models.intent import (
+        IntentCreate,
+        IntentQuery,
+        IntentState,
+        StepExecuteRequest,
+    )
+
+    intent_service: Optional[IntentService] = None
+
+    @app.on_event("startup")
+    async def init_intent_service():
+        nonlocal intent_service
+        intent_service = await get_intent_service(policy_engine, ledger_service)
+
+    # --- Intent Templates ---
+
+    @app.get("/intent-templates")
+    async def list_intent_templates():
+        """List all available intent templates."""
+        if intent_service is None:
+            raise HTTPException(status_code=503, detail="Intent service not initialized")
+        templates = await intent_service.list_templates()
+        return {"templates": [t.model_dump() for t in templates]}
+
+    @app.get("/intent-templates/{name}")
+    async def get_intent_template(name: str):
+        """Get a specific intent template."""
+        if intent_service is None:
+            raise HTTPException(status_code=503, detail="Intent service not initialized")
+        template = await intent_service.get_template(name)
+        if not template:
+            raise HTTPException(status_code=404, detail=f"Template not found: {name}")
+        return template.model_dump()
+
+    # --- Intent CRUD ---
+
+    @app.post("/intents")
+    async def create_intent(request: IntentCreate):
+        """Create a new intent from a template."""
+        if intent_service is None:
+            raise HTTPException(status_code=503, detail="Intent service not initialized")
+        try:
+            response = await intent_service.create_intent(request)
+            return response.model_dump()
+        except ValueError as e:
+            raise HTTPException(status_code=400, detail=str(e))
+        except PermissionError as e:
+            raise HTTPException(status_code=403, detail=str(e))
+
+    @app.get("/intents")
+    async def list_intents(
+        state: Optional[IntentState] = None,
+        template_name: Optional[str] = None,
+        created_by_user_id: Optional[str] = None,
+        created_by_agent_id: Optional[str] = None,
+        correlation_id: Optional[UUID] = None,
+        limit: int = 100,
+        offset: int = 0,
+    ):
+        """List intents with filters."""
+        if intent_service is None:
+            raise HTTPException(status_code=503, detail="Intent service not initialized")
+        query = IntentQuery(
+            state=state,
+            template_name=template_name,
+            created_by_user_id=created_by_user_id,
+            created_by_agent_id=created_by_agent_id,
+            correlation_id=correlation_id,
+            limit=limit,
+            offset=offset,
+        )
+        result = await intent_service.list_intents(query)
+        return result.model_dump()
+
+    @app.get("/intents/{intent_id}")
+    async def get_intent(intent_id: UUID):
+        """Get intent details with all steps."""
+        if intent_service is None:
+            raise HTTPException(status_code=503, detail="Intent service not initialized")
+        intent = await intent_service.get_intent(intent_id)
+        if not intent:
+            raise HTTPException(status_code=404, detail=f"Intent not found: {intent_id}")
+        return intent.model_dump()
+
+    # --- Step Execution ---
+
+    @app.post("/intents/{intent_id}/steps/{sequence_num}")
+    async def execute_intent_step(
+        intent_id: UUID,
+        sequence_num: int,
+        request: StepExecuteRequest,
+    ):
+        """Execute a step in an intent."""
+        if intent_service is None:
+            raise HTTPException(status_code=503, detail="Intent service not initialized")
+        try:
+            response = await intent_service.execute_step(intent_id, sequence_num, request)
+            return response.model_dump()
+        except ValueError as e:
+            raise HTTPException(status_code=400, detail=str(e))
+        except PermissionError as e:
+            raise HTTPException(status_code=403, detail=str(e))
+
+    # --- Rollback & Cancel ---
+
+    @app.post("/intents/{intent_id}/rollback")
+    async def rollback_intent(
+        intent_id: UUID,
+        user_id: Optional[str] = None,
+        agent_id: Optional[str] = None,
+        role: str = "operator",
+    ):
+        """Trigger rollback of a failed intent."""
+        if intent_service is None:
+            raise HTTPException(status_code=503, detail="Intent service not initialized")
+        try:
+            intent = await intent_service.rollback_intent(intent_id, user_id, agent_id, role)
+            return intent.model_dump()
+        except ValueError as e:
+            raise HTTPException(status_code=400, detail=str(e))
+
+    @app.post("/intents/{intent_id}/cancel")
+    async def cancel_intent(
+        intent_id: UUID,
+        user_id: Optional[str] = None,
+        agent_id: Optional[str] = None,
+        role: str = "operator",
+    ):
+        """Cancel an active intent."""
+        if intent_service is None:
+            raise HTTPException(status_code=503, detail="Intent service not initialized")
+        try:
+            intent = await intent_service.cancel_intent(intent_id, user_id, agent_id, role)
+            return intent.model_dump()
+        except ValueError as e:
+            raise HTTPException(status_code=400, detail=str(e))
+
+    # --- Audit ---
+
+    @app.get("/intents/{intent_id}/audit")
+    async def get_intent_audit(intent_id: UUID):
+        """Get complete audit trail for an intent."""
+        if intent_service is None:
+            raise HTTPException(status_code=503, detail="Intent service not initialized")
+        events = await intent_service.get_audit_trail(intent_id)
+        return {"events": [e.model_dump() for e in events]}
+
+    # --- Stats ---
+
+    @app.get("/intents/stats")
+    async def get_intent_stats():
+        """Get intent statistics."""
+        if intent_service is None:
+            raise HTTPException(status_code=503, detail="Intent service not initialized")
+        return await intent_service.get_stats()
+
     return app
 
 

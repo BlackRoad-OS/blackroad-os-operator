@@ -1,0 +1,706 @@
+# infrastructure.yaml
+# BlackRoad Canonical Infrastructure Stack Configuration
+#
+# Scale Target: 30,000 Agents | 1,000,000+ Users
+#
+# This file defines the infrastructure components that the operator
+# can manage, monitor, and govern through Amundson policies.
+#
+# @amundson 0.1.0
+# @governor alice.governor.v1
+# @operator alexa.operator.v1
+
+version: "infra-v1"
+scale_target:
+  agents: 30000
+  users: 1000000
+
+# ============================================
+# TIER 1: ACTIVE CORE (Daily Mission-Critical)
+# ============================================
+
+tier1_active:
+  # Source Control & CI/CD
+  source_control:
+    github:
+      blackroad_name: "BlackRoad Code"
+      role: "Primary repos, Actions CI/CD"
+      tier: "Enterprise"
+      repo_count: 100
+      governance:
+        policy_scope: "infra.github.*"
+        ledger_level: "action"
+
+    github_copilot:
+      blackroad_name: "BlackRoad Pilot"
+      role: "AI-assisted development"
+      tier: "Business"
+
+  # Edge & DNS
+  edge:
+    cloudflare:
+      blackroad_name: "BlackRoad Edge"
+      role: "DNS, CDN, WAF, Workers"
+      tier: "Enterprise"
+      services:
+        - dns
+        - cdn
+        - waf
+        - workers
+        - r2
+        - d1
+        - tunnels
+      governance:
+        policy_scope: "infra.edge.*"
+        ledger_level: "full"
+
+    cloudflare_r2:
+      blackroad_name: "BlackRoad Objects"
+      role: "Object storage (S3-compatible)"
+      capacity: "unlimited"
+
+    cloudflare_d1:
+      blackroad_name: "BlackRoad EdgeDB"
+      role: "Edge SQLite"
+      deployment: "per-region"
+
+    cloudflare_tunnels:
+      blackroad_name: "BlackRoad Mesh"
+      role: "Zero-trust access to Pis/Jetson"
+      deployment: "per-device"
+
+  # Primary Compute
+  compute:
+    railway:
+      blackroad_name: "BlackRoad Deploy"
+      role: "App hosting, quick deploys"
+      tier: "Pro"
+      services:
+        - operator-ws
+        - gov-api
+        - mesh-router
+        - web-app
+      governance:
+        policy_scope: "infra.railway.*"
+        ledger_level: "full"
+
+    digitalocean:
+      blackroad_name: "BlackRoad Droplets"
+      role: "VPS (codex-infinity)"
+      tier: "Premium AMD"
+      min_ram_gb: 8
+      instances:
+        - name: "codex-infinity"
+          role: "Primary dev/staging"
+
+    kubernetes:
+      blackroad_name: "BlackRoad Orchestrate"
+      role: "Container orchestration"
+      providers:
+        - doks  # DigitalOcean
+        - eks   # AWS
+      deployment: "multi-region"
+      governance:
+        policy_scope: "infra.k8s.*"
+        ledger_level: "full"
+
+  # Edge Hardware (Pi Mesh)
+  edge_hardware:
+    raspberry_pi_5:
+      blackroad_name: "Lucidia"
+      role: "Primary edge node"
+      network: "tailscale"
+      specs:
+        cpu: "BCM2712 Quad-core Cortex-A76 @ 2.4GHz"
+        ram_gb: 8
+        storage: "256GB+ NVMe"
+      governance:
+        policy_scope: "mesh.pi.*"
+        ledger_level: "full"
+
+    raspberry_pi_400:
+      blackroad_name: "Alice"
+      role: "Secondary node"
+      network: "tailscale"
+      specs:
+        cpu: "BCM2711 Quad-core Cortex-A72 @ 1.8GHz"
+        ram_gb: 4
+        storage: "128GB+ microSD"
+
+    raspberry_pi_zero:
+      blackroad_name: "unnamed"
+      role: "IoT/sensor node"
+      network: "tailscale"
+      specs:
+        cpu: "BCM2835 Single-core @ 1GHz"
+        ram_mb: 512
+        storage: "32GB microSD"
+
+    jetson_orin:
+      blackroad_name: "BlackRoad AICore"
+      role: "GPU inference at edge"
+      network: "tailscale"
+      specs:
+        gpu: "Ampere, 1024 CUDA cores"
+        cpu: "6-core Arm Cortex-A78AE"
+        ram_gb: 8
+        storage: "NVMe SSD"
+      governance:
+        policy_scope: "mesh.jetson.*"
+        ledger_level: "full"
+
+  # Primary Databases
+  databases:
+    postgresql:
+      blackroad_name: "BlackRoad DB"
+      role: "Primary relational"
+      providers:
+        - supabase
+        - neon
+      features:
+        - read_replicas
+        - pgvector
+      governance:
+        policy_scope: "data.db.*"
+        ledger_level: "full"
+
+    redis:
+      blackroad_name: "BlackRoad Cache"
+      role: "Cache, pub/sub, queues"
+      providers:
+        - upstash
+        - redis_cloud
+      mode: "cluster"
+      capacity_gb: 100
+      governance:
+        policy_scope: "data.cache.*"
+        ledger_level: "action"
+
+    pinecone:
+      blackroad_name: "BlackRoad Vectors"
+      role: "Vector DB for agent memory"
+      pod_type: "p2"
+      vector_capacity: 10000000  # 10M+
+      governance:
+        policy_scope: "data.vectors.*"
+        ledger_level: "action"
+
+  # AI/ML Infrastructure
+  ai_ml:
+    anthropic:
+      blackroad_name: "BlackRoad Claude"
+      role: "Primary LLM"
+      models:
+        - claude-opus-4-5-20251101
+        - claude-sonnet-4-5-20250929
+      governance:
+        policy_scope: "ai.claude.*"
+        ledger_level: "action"
+
+    openai:
+      blackroad_name: "BlackRoad GPT"
+      role: "Secondary LLM"
+      models:
+        - gpt-4-turbo
+        - gpt-4o
+      governance:
+        policy_scope: "ai.openai.*"
+        ledger_level: "action"
+
+    huggingface:
+      blackroad_name: "BlackRoad Models"
+      role: "Model hub, Inference API"
+      tier: "Pro"
+
+    ollama:
+      blackroad_name: "BlackRoad Local"
+      role: "Local LLM serving"
+      models:
+        - phi-3
+        - llama
+        - mistral
+
+    replicate:
+      blackroad_name: "BlackRoad Replicate"
+      role: "Serverless model inference"
+      billing: "pay-per-use"
+
+  # Communication
+  communication:
+    slack:
+      blackroad_name: "BlackRoad Chat"
+      role: "Internal comms, bot integrations"
+      tier: "Business+"
+
+    discord:
+      blackroad_name: "BlackRoad Voice"
+      role: "Community, voice, webhooks"
+      tier: "Server boost"
+
+  # Payments
+  payments:
+    stripe:
+      blackroad_name: "BlackRoad Pay"
+      role: "Primary payments, subscriptions"
+      features:
+        - connect
+        - billing
+      governance:
+        policy_scope: "finance.stripe.*"
+        ledger_level: "full"
+
+    wise:
+      blackroad_name: "BlackRoad Global"
+      role: "International payments"
+      tier: "Business"
+
+  # Project Management
+  project_management:
+    linear:
+      blackroad_name: "BlackRoad Roadmap"
+      role: "Product/engineering roadmap"
+      tier: "Standard"
+
+    notion:
+      blackroad_name: "BlackRoad Notes"
+      role: "Docs, wikis, databases"
+      tier: "Team"
+
+# ============================================
+# TIER 2: CONFIGURED (Active, Periodic Use)
+# ============================================
+
+tier2_configured:
+  secondary_compute:
+    aws:
+      blackroad_name: "BlackRoad Cloud"
+      role: "Overflow compute, S3, Lambda"
+      activation: "scale_bursts"
+
+    gcp:
+      blackroad_name: "BlackRoad Platform"
+      role: "BigQuery, Vertex AI"
+      activation: "ml_pipelines"
+
+    azure:
+      blackroad_name: "BlackRoad Azure"
+      role: "Enterprise integrations"
+      activation: "b2b_connectors"
+
+  event_streaming:
+    kafka:
+      blackroad_name: "BlackRoad Stream"
+      provider: "confluent"
+      role: "Event streaming"
+      activation: "agent_events_at_scale"
+
+    rabbitmq:
+      blackroad_name: "BlackRoad Queue"
+      role: "Task queues"
+      activation: "job_processing"
+
+    temporal:
+      blackroad_name: "BlackRoad Workflows"
+      role: "Durable workflows"
+      activation: "long_running_agent_tasks"
+
+  observability:
+    datadog:
+      blackroad_name: "BlackRoad Monitor"
+      role: "APM, logs, metrics"
+      activation: "production_monitoring"
+
+    sentry:
+      blackroad_name: "BlackRoad Errors"
+      role: "Error tracking"
+      activation: "all_environments"
+
+    grafana:
+      blackroad_name: "BlackRoad Dash"
+      role: "Dashboards, alerts"
+      activation: "ops_visibility"
+
+    posthog:
+      blackroad_name: "BlackRoad Product"
+      role: "Product analytics"
+      activation: "user_behavior"
+
+  security:
+    auth0:
+      blackroad_name: "BlackRoad Auth"
+      role: "User authentication"
+      activation: "consumer_apps"
+
+    okta:
+      blackroad_name: "BlackRoad Identity"
+      role: "SSO, workforce identity"
+      activation: "enterprise_internal"
+
+    onepassword:
+      blackroad_name: "BlackRoad Vault"
+      role: "Secrets management"
+      activation: "team_credentials"
+
+    hashicorp_vault:
+      blackroad_name: "BlackRoad Secrets"
+      role: "Runtime secrets"
+      activation: "production_secrets"
+
+# ============================================
+# NETWORKING & SECURITY
+# ============================================
+
+networking:
+  tailscale:
+    blackroad_name: "BlackRoad Tailnet"
+    role: "Zero-trust mesh network"
+    nodes:
+      - lucidia      # Pi 5
+      - alice        # Pi 400
+      - pi_zero      # Pi Zero
+      - jetson_orin  # Jetson
+      - codex_infinity  # DO Droplet
+      - railway_apps    # Railway services
+      - dev_machines    # Developer laptops
+
+  cloudflare_tunnels:
+    role: "Zero-trust edge access"
+    features:
+      - no_inbound_ports
+      - automatic_tls
+      - ddos_protection
+
+security_layers:
+  - layer: "edge_waf"
+    tool: "cloudflare"
+    purpose: "DDoS, bot protection"
+
+  - layer: "api_auth"
+    tool: "auth0_jwt"
+    purpose: "User authentication"
+
+  - layer: "service_auth"
+    tool: "mtls_api_keys"
+    purpose: "Service-to-service"
+
+  - layer: "secrets"
+    tool: "vault_1password"
+    purpose: "Runtime secrets"
+
+  - layer: "network"
+    tool: "tailscale_cf_tunnels"
+    purpose: "Zero-trust access"
+
+  - layer: "monitoring"
+    tool: "datadog_sentry"
+    purpose: "Security events"
+
+# ============================================
+# AGENT ORCHESTRATION (30K Agents)
+# ============================================
+
+agent_orchestration:
+  lucidia_core:
+    components:
+      trinary_logic:
+        description: "1/0/-1 decision logic"
+
+      paraconsistent_handler:
+        description: "Contradiction resolution"
+
+      ps_sha_infinity:
+        description: "Memory hash system"
+
+    event_bus:
+      backend: "redis_streams"  # or kafka at scale
+      events:
+        - agent_creation
+        - state_transitions
+        - memory_persistence
+        - contradiction_quarantine
+
+    registries:
+      capability_registry:
+        storage: "postgresql_redis"
+        capacity: "30K agents × 50 capabilities"
+
+      memory_journal:
+        storage: "postgresql"
+        mode: "append_only"
+
+      agent_identity:
+        storage: "postgresql_auth0"
+        capacity: "30K agent identities"
+
+  scale_requirements:
+    agent_state_store:
+      tool: "redis_cluster"
+      capacity: "30K keys, sub-ms reads"
+
+    agent_memory:
+      tool: "pinecone_postgresql"
+      capacity: "30M vectors (30K × 1000 avg)"
+
+    event_bus:
+      tool: "kafka_redis_streams"
+      throughput: "100K events/min peak"
+
+    capability_registry:
+      tool: "postgresql_redis"
+      capacity: "1.5M records (30K × 50)"
+
+    contradiction_quarantine:
+      tool: "postgresql_async_workers"
+      mode: "queue_based"
+
+    agent_homes:
+      tool: "unity_cloud_cdn"
+      capacity: "30K virtual spaces"
+
+  memory_architecture:
+    identity:
+      storage: "postgresql"
+      fields:
+        - agent_id
+        - name
+        - birthdate
+        - family
+        - home_id
+
+    short_term:
+      storage: "redis"
+      ttl_hours: 24
+      content:
+        - current_context
+        - conversation_state
+
+    long_term:
+      storage: "pinecone_postgresql"
+      content:
+        - vector_embeddings
+        - append_only_journal
+        - ps_sha_hashed_entries
+
+    capability_state:
+      storage: "redis_postgresql"
+      content:
+        - active_capabilities
+        - permission_matrix
+        - tool_access
+
+# ============================================
+# USER INFRASTRUCTURE (1M+ Users)
+# ============================================
+
+user_infrastructure:
+  layers:
+    cdn:
+      tool: "cloudflare"
+      capacity: "1M+ requests/day"
+
+    load_balancer:
+      tool: "cloudflare_aws_alb"
+      mode: "auto_scaling"
+
+    api_gateway:
+      tool: "kong_aws_api_gateway"
+      features:
+        - rate_limiting
+        - auth
+
+    app_servers:
+      tool: "kubernetes"
+      min_pods: 20
+      scaling: "horizontal_auto"
+
+    database:
+      tool: "postgresql"
+      replicas: 3
+      mode: "1_primary_3_replicas"
+
+    cache:
+      tool: "redis_cluster"
+      capacity_gb: 50
+      nodes: 6
+
+    search:
+      tool: "elasticsearch_meilisearch"
+      use_cases:
+        - user_search
+        - content
+
+    sessions:
+      tool: "redis"
+      mode: "distributed"
+
+    file_storage:
+      tool: "cloudflare_r2_s3"
+      use_cases:
+        - user_uploads
+        - assets
+
+  multi_region:
+    regions:
+      - name: "us-west"
+        components:
+          - k8s_cluster
+          - db_replica
+          - redis_node
+          - vector_db
+
+      - name: "us-east"
+        primary: true
+        components:
+          - k8s_cluster
+          - db_primary
+          - redis_node
+          - vector_db
+
+      - name: "eu-west"
+        components:
+          - k8s_cluster
+          - db_replica
+          - redis_node
+          - vector_db
+
+# ============================================
+# MCP INTEGRATIONS
+# ============================================
+
+mcp_connections:
+  active:
+    - integration: "zapier"
+      purpose: "Gmail, multi-app automation"
+      direction: "bidirectional"
+
+    - integration: "notion"
+      purpose: "Docs, databases"
+      direction: "read_write"
+
+    - integration: "linear"
+      purpose: "Issue tracking"
+      direction: "read_write"
+
+    - integration: "stripe"
+      purpose: "Payments"
+      direction: "read_write"
+
+    - integration: "github"
+      purpose: "Code, repos"
+      direction: "read_write"
+
+    - integration: "slack"
+      purpose: "Messaging"
+      direction: "read_write"
+
+    - integration: "google_drive"
+      purpose: "Documents"
+      direction: "read_write"
+
+    - integration: "huggingface"
+      purpose: "Models, datasets"
+      direction: "read"
+
+    - integration: "cloudflare"
+      purpose: "Infrastructure"
+      direction: "read_write"
+
+  planned:
+    - integration: "discord"
+      purpose: "Community bots"
+      priority: "high"
+
+    - integration: "figma"
+      purpose: "Design automation"
+      priority: "medium"
+
+    - integration: "datadog"
+      purpose: "Observability"
+      priority: "high"
+
+# ============================================
+# COST ESTIMATION
+# ============================================
+
+cost_estimates:
+  tier1_monthly:
+    cloudflare: "$200-500"
+    railway: "$20-100"
+    digitalocean: "$50-100"
+    postgresql: "$25-100"
+    redis: "$50-200"
+    pinecone: "$70-500"
+    anthropic: "$100-1000+"
+    openai: "$50-500"
+    huggingface: "$9"
+    slack: "$15/user"
+    linear: "$8/user"
+    notion: "$10/user"
+    github: "$4/user"
+    onepassword: "$8/user"
+    total_range: "$600-3500"
+
+  at_scale_monthly:
+    kubernetes: "$2000-10000"
+    database_cluster: "$1000-5000"
+    redis_cluster: "$500-2000"
+    vector_db: "$1000-5000"
+    llm_api: "$10000-50000+"
+    cdn_edge: "$1000-5000"
+    observability: "$500-2000"
+    security: "$500-2000"
+    total_range: "$20000-100000+"
+
+# ============================================
+# IMPLEMENTATION ROADMAP
+# ============================================
+
+roadmap:
+  phase1_foundation:
+    timeline: "Current → Q1 2025"
+    tasks:
+      - "Solidify Tier 1 stack"
+      - "Establish Tailscale mesh for all edge devices"
+      - "Deploy Lucidia core on codex-infinity"
+      - "Set up Pinecone for agent memory"
+      - "Implement event bus (Redis Streams)"
+      - "Configure observability (Datadog/Sentry)"
+
+  phase2_agent_scale:
+    timeline: "Q1-Q2 2025"
+    target_agents: 1000
+    tasks:
+      - "Deploy Kubernetes cluster"
+      - "Migrate from Railway to K8s for core services"
+      - "Implement agent identity service"
+      - "Deploy capability registry"
+      - "Set up memory journal persistence"
+
+  phase3_user_scale:
+    timeline: "Q2-Q3 2025"
+    target_users: 10000
+    tasks:
+      - "Multi-region deployment"
+      - "Database read replicas"
+      - "CDN optimization"
+      - "User onboarding flow"
+      - "Billing integration (Stripe subscriptions)"
+
+  phase4_enterprise:
+    timeline: "Q3-Q4 2025"
+    target_users: 100000
+    target_agents: 10000
+    tasks:
+      - "SOC 2 compliance preparation"
+      - "Enterprise SSO (Okta)"
+      - "Advanced security tooling"
+      - "SLA monitoring"
+
+  phase5_hyperscale:
+    timeline: "2026"
+    target_users: 1000000
+    target_agents: 30000
+    tasks:
+      - "Global edge deployment"
+      - "Self-hosted LLM infrastructure"
+      - "RoadChain mainnet launch"
