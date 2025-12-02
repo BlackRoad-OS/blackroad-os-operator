@@ -1,0 +1,1506 @@
+# GitHub Enterprise Organization Architecture
+# BlackRoad - Trillion Dollar Scale
+#
+# 15 Organizations for complete enterprise governance
+#
+# @blackroad_name: BlackRoad GitHub Enterprise
+# @operator: alexa.operator.v1
+# @scale: hyperscale
+
+version: "github-enterprise-v1"
+
+# ============================================
+# ENTERPRISE OVERVIEW
+# ============================================
+
+enterprise:
+  name: "BlackRoad"
+  slug: "blackroad"
+  billing_email: "billing@blackroad.io"
+
+  # Enterprise Cloud features
+  features:
+    enterprise_managed_users: true
+    github_connect: true
+    advanced_security: true
+    secret_scanning: true
+    dependabot_security: true
+    code_scanning: true
+    copilot_business: true
+    actions_larger_runners: true
+    packages_storage: unlimited
+
+  # SSO/SAML
+  identity:
+    provider: "Auth0"
+    saml_enabled: true
+    scim_enabled: true
+
+  # Audit
+  audit:
+    streaming: true
+    destinations:
+      - datadog
+      - splunk
+
+# ============================================
+# ORGANIZATION TIER STRUCTURE
+# ============================================
+
+tiers:
+  core:
+    description: "Core platform and operating system"
+    orgs: [BlackRoad-OS]
+    visibility: private
+
+  product:
+    description: "Product verticals and services"
+    orgs: [BlackRoad-AI, BlackRoad-Cloud, BlackRoad-Security]
+    visibility: private
+
+  research:
+    description: "R&D and innovation"
+    orgs: [BlackRoad-Labs, BlackRoad-Foundation]
+    visibility: mixed
+
+  creative:
+    description: "Creative and media production"
+    orgs: [BlackRoad-Studio, BlackRoad-Media, BlackRoad-Interactive]
+    visibility: private
+
+  education:
+    description: "Learning and documentation"
+    orgs: [BlackRoad-Education]
+    visibility: public
+
+  infrastructure:
+    description: "Hardware and operations"
+    orgs: [BlackRoad-Hardware, BlackRoad-Gov]
+    visibility: private
+
+  business:
+    description: "Business operations and investments"
+    orgs: [Blackbox-Enterprises, BlackRoad-Ventures]
+    visibility: private
+
+  archive:
+    description: "Historical and legacy projects"
+    orgs: [BlackRoad-Archive]
+    visibility: private
+
+# ============================================
+# ORGANIZATION 1: BlackRoad-OS
+# Core Platform (Primary Development)
+# ============================================
+
+organizations:
+  BlackRoad-OS:
+    display_name: "BlackRoad OS"
+    description: "Core operating system, governance engine, and platform infrastructure"
+    email: "platform@blackroad.io"
+    blog: "https://blackroad.io"
+    location: "San Francisco, CA"
+    tier: core
+
+    # Primary development org
+    primary: true
+
+    settings:
+      default_repository_permission: read
+      members_can_create_repositories: false
+      members_can_create_public_repositories: false
+      two_factor_requirement: true
+      web_commit_signoff_required: true
+
+    # Repository inventory (24 repos from original config)
+    repositories:
+      # Core
+      - name: blackroad-os
+        description: "Main platform monorepo"
+        visibility: private
+        topics: [platform, monorepo, governance]
+
+      - name: blackroad-os-core
+        description: "Core libraries and shared utilities"
+        visibility: private
+        topics: [core, libraries, typescript, python]
+        packages:
+          npm: ["@blackroad/core", "@blackroad/utils", "@blackroad/types"]
+          pypi: ["blackroad-core"]
+
+      - name: blackroad-os-master
+        description: "Master configuration and schemas"
+        visibility: private
+        topics: [config, schemas, protocols]
+
+      # API
+      - name: blackroad-os-operator
+        description: "Governance Engine (Python/FastAPI)"
+        visibility: private
+        topics: [api, governance, fastapi]
+        deployment:
+          target: railway
+          service: blackroad-os-api-gateway
+          domains: [api.blackroad.io, api.lucidia.earth]
+
+      - name: blackroad-os-api-gateway
+        description: "API Gateway and routing layer"
+        visibility: private
+        topics: [api-gateway, routing]
+
+      - name: blackroad-os-api
+        description: "Public API SDK and client libraries"
+        visibility: public
+        topics: [sdk, api-client]
+        packages:
+          npm: ["@blackroad/api-client"]
+          pypi: ["blackroad-api"]
+
+      # Web
+      - name: blackroad-os-web
+        description: "Main web application (Next.js)"
+        visibility: private
+        topics: [nextjs, react, web]
+        deployment:
+          target: railway
+          domains: [app.blackroad.io]
+
+      - name: blackroad-os-prism-console
+        description: "Admin console and dashboard"
+        visibility: private
+        topics: [admin, dashboard, console]
+        deployment:
+          target: railway
+          domains: [console.lucidia.earth, admin.blackroad.io]
+
+      - name: blackroad-os-demo
+        description: "Interactive demos"
+        visibility: private
+        topics: [demo, showcase]
+        deployment:
+          target: railway
+          domains: [demo.blackroad.io]
+
+      - name: blackroad-os-home
+        description: "Landing pages and marketing"
+        visibility: private
+        topics: [landing, marketing, nextjs]
+        deployment:
+          target: cloudflare_pages
+          domains: [blackroad.io, blackroadinc.us, blackroadai.com]
+
+      # Agents
+      - name: blackroad-os-agents
+        description: "Lucidia agent runtime"
+        visibility: private
+        topics: [agents, lucidia, ai]
+        deployment:
+          target: railway
+          service: lucidia-agents
+          domains: [agents.lucidia.earth]
+          replicas: 5
+
+      - name: blackroad-os-beacon
+        description: "AI model routing and inference"
+        visibility: private
+        topics: [llm, inference, routing]
+        deployment:
+          target: railway
+          domains: [models.blackroadai.com]
+          replicas: 3
+
+      # Infrastructure
+      - name: blackroad-os-infra
+        description: "Infrastructure as Code"
+        visibility: private
+        topics: [terraform, kubernetes, helm]
+
+      # Docs
+      - name: blackroad-os-docs
+        description: "Developer documentation"
+        visibility: public
+        topics: [documentation, guides]
+        deployment:
+          target: cloudflare_pages
+          domains: [docs.blackroad.io, docs.lucidia.earth]
+
+      - name: blackroad-os-research
+        description: "Research papers and reports"
+        visibility: private
+        topics: [research, papers]
+        deployment:
+          target: cloudflare_pages
+          domains: [papers.blackroadqi.com]
+
+      - name: blackroad-os-ideas
+        description: "RFCs and proposals"
+        visibility: private
+        topics: [ideas, rfcs]
+
+      - name: blackroad-os-archive
+        description: "Archived projects"
+        visibility: private
+        topics: [archive, legacy]
+
+      # Packs
+      - name: blackroad-os-pack-research-lab
+        description: "Research Lab Pack"
+        visibility: private
+        topics: [pack, research]
+        deployment:
+          target: railway
+          domains: [lab.blackroadqi.com]
+
+      - name: blackroad-os-pack-finance
+        description: "Finance Pack"
+        visibility: private
+        topics: [pack, finance]
+
+      - name: blackroad-os-pack-education
+        description: "Education Pack"
+        visibility: private
+        topics: [pack, education]
+
+      - name: blackroad-os-pack-creator-studio
+        description: "Creator Studio Pack"
+        visibility: private
+        topics: [pack, creative]
+        deployment:
+          target: railway
+          domains: [create.lucidia.studio]
+
+      - name: blackroad-os-pack-legal
+        description: "Legal Pack"
+        visibility: private
+        topics: [pack, legal]
+
+      - name: blackroad-os-pack-infra-devops
+        description: "DevOps Pack"
+        visibility: private
+        topics: [pack, devops]
+
+      # Brand
+      - name: blackroad-os-brand
+        description: "Brand assets and design system"
+        visibility: private
+        topics: [brand, design-system]
+        deployment:
+          target: cloudflare_pages
+          domains: [brand.blackroad.io]
+
+    teams:
+      platform-core:
+        description: "Core platform development"
+        privacy: closed
+        permission: maintain
+        repositories:
+          - blackroad-os
+          - blackroad-os-core
+          - blackroad-os-master
+          - blackroad-os-operator
+
+      platform-agents:
+        description: "Agent development"
+        privacy: closed
+        permission: push
+        repositories:
+          - blackroad-os-agents
+          - blackroad-os-beacon
+
+      platform-web:
+        description: "Web and frontend"
+        privacy: closed
+        permission: push
+        repositories:
+          - blackroad-os-web
+          - blackroad-os-prism-console
+          - blackroad-os-demo
+          - blackroad-os-home
+
+  # ============================================
+  # ORGANIZATION 2: BlackRoad-AI
+  # AI/ML Products and Services
+  # ============================================
+
+  BlackRoad-AI:
+    display_name: "BlackRoad AI"
+    description: "Artificial intelligence products, models, and research"
+    email: "ai@blackroad.io"
+    blog: "https://blackroadai.com"
+    tier: product
+
+    settings:
+      default_repository_permission: read
+      two_factor_requirement: true
+
+    repositories:
+      # Core AI
+      - name: lucidia-core
+        description: "Lucidia agent framework core"
+        visibility: private
+        topics: [agents, framework, python]
+
+      - name: lucidia-memory
+        description: "Agent memory and context systems"
+        visibility: private
+        topics: [memory, embeddings, pinecone]
+
+      - name: lucidia-reasoning
+        description: "Reasoning and planning engines"
+        visibility: private
+        topics: [reasoning, planning, chains]
+
+      - name: lucidia-tools
+        description: "Agent tool library"
+        visibility: private
+        topics: [tools, capabilities, plugins]
+
+      - name: lucidia-swarm
+        description: "Multi-agent coordination"
+        visibility: private
+        topics: [swarm, multi-agent, consensus]
+
+      # Models
+      - name: beacon-router
+        description: "LLM routing and load balancing"
+        visibility: private
+        topics: [llm, routing, inference]
+
+      - name: beacon-embeddings
+        description: "Embedding models and pipelines"
+        visibility: private
+        topics: [embeddings, vectors, search]
+
+      - name: beacon-fine-tuning
+        description: "Model fine-tuning infrastructure"
+        visibility: private
+        topics: [fine-tuning, training, mlops]
+
+      - name: beacon-evaluation
+        description: "Model evaluation and benchmarks"
+        visibility: private
+        topics: [evaluation, benchmarks, testing]
+
+      # Research
+      - name: ai-research-papers
+        description: "AI research publications"
+        visibility: public
+        topics: [research, papers, arxiv]
+
+      - name: ai-safety
+        description: "AI safety and alignment research"
+        visibility: public
+        topics: [safety, alignment, ethics]
+
+      - name: ai-benchmarks
+        description: "Open benchmarks and datasets"
+        visibility: public
+        topics: [benchmarks, datasets, evaluation]
+
+      # SDKs
+      - name: lucidia-sdk-python
+        description: "Python SDK for Lucidia"
+        visibility: public
+        topics: [sdk, python]
+        packages:
+          pypi: ["lucidia"]
+
+      - name: lucidia-sdk-typescript
+        description: "TypeScript SDK for Lucidia"
+        visibility: public
+        topics: [sdk, typescript]
+        packages:
+          npm: ["@lucidia/sdk"]
+
+      - name: lucidia-sdk-rust
+        description: "Rust SDK for Lucidia"
+        visibility: public
+        topics: [sdk, rust]
+        packages:
+          crates: ["lucidia"]
+
+    teams:
+      ai-core:
+        description: "Core AI development"
+        privacy: closed
+        permission: maintain
+
+      ai-research:
+        description: "AI research team"
+        privacy: closed
+        permission: push
+
+      ai-safety:
+        description: "AI safety team"
+        privacy: closed
+        permission: push
+
+  # ============================================
+  # ORGANIZATION 3: BlackRoad-Cloud
+  # Cloud Infrastructure and Services
+  # ============================================
+
+  BlackRoad-Cloud:
+    display_name: "BlackRoad Cloud"
+    description: "Cloud infrastructure, Kubernetes, and managed services"
+    email: "cloud@blackroad.io"
+    blog: "https://blackroad.network"
+    tier: product
+
+    repositories:
+      # Kubernetes
+      - name: cloud-k8s-manifests
+        description: "Kubernetes manifests and Helm charts"
+        visibility: private
+        topics: [kubernetes, helm, gitops]
+
+      - name: cloud-k8s-operators
+        description: "Custom Kubernetes operators"
+        visibility: private
+        topics: [operators, controllers]
+
+      - name: cloud-argocd
+        description: "ArgoCD configurations"
+        visibility: private
+        topics: [argocd, gitops, cd]
+
+      # Terraform
+      - name: cloud-terraform-modules
+        description: "Reusable Terraform modules"
+        visibility: private
+        topics: [terraform, iac, modules]
+
+      - name: cloud-terraform-aws
+        description: "AWS infrastructure"
+        visibility: private
+        topics: [aws, terraform]
+
+      - name: cloud-terraform-gcp
+        description: "GCP infrastructure"
+        visibility: private
+        topics: [gcp, terraform]
+
+      - name: cloud-terraform-do
+        description: "DigitalOcean infrastructure"
+        visibility: private
+        topics: [digitalocean, terraform]
+
+      - name: cloud-terraform-cloudflare
+        description: "Cloudflare infrastructure"
+        visibility: private
+        topics: [cloudflare, terraform]
+
+      # Networking
+      - name: cloud-mesh
+        description: "Service mesh configuration"
+        visibility: private
+        topics: [mesh, networking, istio]
+
+      - name: cloud-tailscale
+        description: "Tailscale network configuration"
+        visibility: private
+        topics: [tailscale, vpn, mesh]
+
+      - name: cloud-dns
+        description: "DNS management and automation"
+        visibility: private
+        topics: [dns, automation]
+
+      # Observability
+      - name: cloud-monitoring
+        description: "Monitoring stack (Prometheus, Grafana)"
+        visibility: private
+        topics: [monitoring, prometheus, grafana]
+
+      - name: cloud-logging
+        description: "Logging stack (Loki, Fluentd)"
+        visibility: private
+        topics: [logging, loki, elk]
+
+      - name: cloud-tracing
+        description: "Distributed tracing (Tempo, Jaeger)"
+        visibility: private
+        topics: [tracing, tempo, opentelemetry]
+
+      # Database
+      - name: cloud-databases
+        description: "Database configurations and migrations"
+        visibility: private
+        topics: [postgres, redis, databases]
+
+      # CI/CD
+      - name: cloud-github-actions
+        description: "Shared GitHub Actions workflows"
+        visibility: public
+        topics: [github-actions, ci-cd, workflows]
+
+    teams:
+      cloud-platform:
+        description: "Cloud platform engineering"
+        privacy: closed
+        permission: maintain
+
+      cloud-sre:
+        description: "Site reliability engineering"
+        privacy: closed
+        permission: push
+
+      cloud-security:
+        description: "Cloud security team"
+        privacy: closed
+        permission: push
+
+  # ============================================
+  # ORGANIZATION 4: BlackRoad-Security
+  # Security Products and Infrastructure
+  # ============================================
+
+  BlackRoad-Security:
+    display_name: "BlackRoad Security"
+    description: "Security products, auditing, and compliance"
+    email: "security@blackroad.io"
+    blog: "https://blackroad.io/security"
+    tier: product
+
+    repositories:
+      # Vault
+      - name: security-vault
+        description: "HashiCorp Vault configuration"
+        visibility: private
+        topics: [vault, secrets, pki]
+
+      - name: security-vault-plugins
+        description: "Custom Vault plugins"
+        visibility: private
+        topics: [vault, plugins]
+
+      # Auth
+      - name: security-auth
+        description: "Authentication services"
+        visibility: private
+        topics: [auth, oauth, saml]
+
+      - name: security-rbac
+        description: "Role-based access control"
+        visibility: private
+        topics: [rbac, permissions]
+
+      - name: security-mfa
+        description: "Multi-factor authentication"
+        visibility: private
+        topics: [mfa, 2fa, webauthn]
+
+      # Compliance
+      - name: security-compliance
+        description: "Compliance automation"
+        visibility: private
+        topics: [compliance, soc2, gdpr]
+
+      - name: security-auditing
+        description: "Security auditing tools"
+        visibility: private
+        topics: [audit, logging]
+
+      - name: security-policies
+        description: "Security policies (OPA/Rego)"
+        visibility: private
+        topics: [opa, rego, policies]
+
+      # Scanning
+      - name: security-scanning
+        description: "Security scanning pipelines"
+        visibility: private
+        topics: [scanning, sast, dast]
+
+      - name: security-vulnerability
+        description: "Vulnerability management"
+        visibility: private
+        topics: [vulnerabilities, cve]
+
+      # Incident Response
+      - name: security-incident-response
+        description: "Incident response playbooks"
+        visibility: private
+        topics: [incident, response, playbooks]
+
+      # Public
+      - name: security-advisories
+        description: "Security advisories and disclosures"
+        visibility: public
+        topics: [advisories, cve]
+
+      - name: security-bug-bounty
+        description: "Bug bounty program"
+        visibility: public
+        topics: [bug-bounty, security]
+
+    teams:
+      security-core:
+        description: "Core security team"
+        privacy: secret
+        permission: maintain
+
+      security-compliance:
+        description: "Compliance team"
+        privacy: closed
+        permission: push
+
+      security-incident:
+        description: "Incident response team"
+        privacy: secret
+        permission: admin
+
+  # ============================================
+  # ORGANIZATION 5: BlackRoad-Labs
+  # Research and Development
+  # ============================================
+
+  BlackRoad-Labs:
+    display_name: "BlackRoad Labs"
+    description: "Research, experimentation, and innovation"
+    email: "labs@blackroad.io"
+    blog: "https://blackroadqi.com"
+    tier: research
+
+    repositories:
+      # Quantum
+      - name: labs-quantum-core
+        description: "Quantum computing framework"
+        visibility: private
+        topics: [quantum, qubits, circuits]
+
+      - name: labs-quantum-algorithms
+        description: "Quantum algorithm implementations"
+        visibility: public
+        topics: [quantum, algorithms]
+
+      - name: labs-quantum-simulator
+        description: "Quantum circuit simulator"
+        visibility: public
+        topics: [quantum, simulator]
+
+      - name: labs-quantum-ml
+        description: "Quantum machine learning"
+        visibility: private
+        topics: [quantum, ml, qml]
+
+      # Advanced AI
+      - name: labs-agi-research
+        description: "AGI research and experiments"
+        visibility: private
+        topics: [agi, research]
+
+      - name: labs-consciousness
+        description: "Consciousness and cognition research"
+        visibility: private
+        topics: [consciousness, cognition]
+
+      - name: labs-embodiment
+        description: "Embodied AI research"
+        visibility: private
+        topics: [embodiment, robotics]
+
+      # Experimental
+      - name: labs-experiments
+        description: "Experimental projects"
+        visibility: private
+        topics: [experiments, prototypes]
+
+      - name: labs-hackathon
+        description: "Hackathon projects"
+        visibility: public
+        topics: [hackathon, projects]
+
+      # Publications
+      - name: labs-papers
+        description: "Research papers and preprints"
+        visibility: public
+        topics: [papers, arxiv, research]
+
+      - name: labs-datasets
+        description: "Open research datasets"
+        visibility: public
+        topics: [datasets, ml, research]
+
+    teams:
+      labs-quantum:
+        description: "Quantum research team"
+        privacy: closed
+        permission: push
+
+      labs-agi:
+        description: "AGI research team"
+        privacy: closed
+        permission: push
+
+      labs-experiments:
+        description: "Experimental projects"
+        privacy: closed
+        permission: push
+
+  # ============================================
+  # ORGANIZATION 6: BlackRoad-Foundation
+  # Open Source and Community
+  # ============================================
+
+  BlackRoad-Foundation:
+    display_name: "BlackRoad Foundation"
+    description: "Open source projects and community initiatives"
+    email: "foundation@blackroad.io"
+    blog: "https://foundation.blackroad.io"
+    tier: research
+
+    # All repositories public by default
+    default_visibility: public
+
+    repositories:
+      # Open Source Projects
+      - name: amundson-protocol
+        description: "Open governance protocol specification"
+        visibility: public
+        topics: [governance, protocol, open-source]
+
+      - name: amundson-reference
+        description: "Amundson reference implementation"
+        visibility: public
+        topics: [governance, reference]
+
+      - name: lucidia-open
+        description: "Open source agent framework"
+        visibility: public
+        topics: [agents, framework, open-source]
+
+      - name: beacon-open
+        description: "Open LLM router"
+        visibility: public
+        topics: [llm, router, open-source]
+
+      # Standards
+      - name: standards-agent-protocol
+        description: "Agent communication protocol"
+        visibility: public
+        topics: [protocol, agents, standard]
+
+      - name: standards-memory-format
+        description: "Agent memory format specification"
+        visibility: public
+        topics: [memory, format, standard]
+
+      # Community
+      - name: community
+        description: "Community resources and guidelines"
+        visibility: public
+        topics: [community, contributing]
+
+      - name: awesome-blackroad
+        description: "Curated list of BlackRoad resources"
+        visibility: public
+        topics: [awesome, resources]
+
+      # Grants
+      - name: grants-program
+        description: "Foundation grants program"
+        visibility: public
+        topics: [grants, funding]
+
+    teams:
+      foundation-maintainers:
+        description: "Core maintainers"
+        privacy: closed
+        permission: maintain
+
+      foundation-community:
+        description: "Community managers"
+        privacy: closed
+        permission: triage
+
+  # ============================================
+  # ORGANIZATION 7: BlackRoad-Studio
+  # Creative Tools and Production
+  # ============================================
+
+  BlackRoad-Studio:
+    display_name: "BlackRoad Studio"
+    description: "Creative tools, content production, and digital assets"
+    email: "studio@blackroad.io"
+    blog: "https://lucidia.studio"
+    tier: creative
+
+    repositories:
+      # Unity
+      - name: studio-unity-sdk
+        description: "Unity SDK for agent homes"
+        visibility: private
+        topics: [unity, sdk, 3d]
+
+      - name: studio-unity-assets
+        description: "Unity asset library"
+        visibility: private
+        topics: [unity, assets]
+
+      - name: studio-unity-templates
+        description: "Unity project templates"
+        visibility: private
+        topics: [unity, templates]
+
+      # Unreal
+      - name: studio-unreal-sdk
+        description: "Unreal Engine SDK"
+        visibility: private
+        topics: [unreal, sdk, 3d]
+
+      - name: studio-unreal-assets
+        description: "Unreal asset library"
+        visibility: private
+        topics: [unreal, assets]
+
+      # Web 3D
+      - name: studio-three-sdk
+        description: "Three.js SDK for web 3D"
+        visibility: public
+        topics: [threejs, webgl, 3d]
+        packages:
+          npm: ["@blackroad/studio-three"]
+
+      - name: studio-r3f-components
+        description: "React Three Fiber components"
+        visibility: public
+        topics: [r3f, react, 3d]
+        packages:
+          npm: ["@blackroad/studio-r3f"]
+
+      # Design
+      - name: studio-figma-plugin
+        description: "Figma plugin for design system"
+        visibility: private
+        topics: [figma, plugin, design]
+
+      - name: studio-design-tokens
+        description: "Design tokens and variables"
+        visibility: public
+        topics: [design, tokens, css]
+
+      # Rendering
+      - name: studio-render-pipeline
+        description: "3D rendering pipeline"
+        visibility: private
+        topics: [rendering, 3d, gpu]
+
+      - name: studio-avatar-system
+        description: "Avatar creation and animation"
+        visibility: private
+        topics: [avatar, animation, 3d]
+
+    teams:
+      studio-3d:
+        description: "3D development team"
+        privacy: closed
+        permission: push
+
+      studio-design:
+        description: "Design team"
+        privacy: closed
+        permission: push
+
+  # ============================================
+  # ORGANIZATION 8: BlackRoad-Media
+  # Content and Publishing
+  # ============================================
+
+  BlackRoad-Media:
+    display_name: "BlackRoad Media"
+    description: "Content, publishing, and media production"
+    email: "media@blackroad.io"
+    blog: "https://blackroad.io/blog"
+    tier: creative
+
+    repositories:
+      # Websites
+      - name: media-blog
+        description: "Company blog (Ghost)"
+        visibility: private
+        topics: [blog, ghost, content]
+
+      - name: media-press-kit
+        description: "Press kit and media assets"
+        visibility: public
+        topics: [press, media, assets]
+
+      - name: media-newsletter
+        description: "Newsletter system"
+        visibility: private
+        topics: [newsletter, email]
+
+      # Video
+      - name: media-video-pipeline
+        description: "Video production pipeline"
+        visibility: private
+        topics: [video, production]
+
+      - name: media-streaming
+        description: "Live streaming infrastructure"
+        visibility: private
+        topics: [streaming, live]
+
+      # Podcast
+      - name: media-podcast
+        description: "Podcast production"
+        visibility: private
+        topics: [podcast, audio]
+
+      # Social
+      - name: media-social-automation
+        description: "Social media automation"
+        visibility: private
+        topics: [social, automation]
+
+      # Assets
+      - name: media-asset-library
+        description: "Media asset management"
+        visibility: private
+        topics: [assets, dam]
+
+      - name: media-brand-guidelines
+        description: "Brand guidelines and assets"
+        visibility: public
+        topics: [brand, guidelines]
+
+    teams:
+      media-content:
+        description: "Content team"
+        privacy: closed
+        permission: push
+
+      media-production:
+        description: "Production team"
+        privacy: closed
+        permission: push
+
+  # ============================================
+  # ORGANIZATION 9: BlackRoad-Interactive
+  # Gaming and Interactive Experiences
+  # ============================================
+
+  BlackRoad-Interactive:
+    display_name: "BlackRoad Interactive"
+    description: "Gaming, interactive experiences, and simulations"
+    email: "interactive@blackroad.io"
+    blog: "https://interactive.blackroad.io"
+    tier: creative
+
+    repositories:
+      # Games
+      - name: interactive-game-engine
+        description: "Custom game engine components"
+        visibility: private
+        topics: [gaming, engine]
+
+      - name: interactive-agent-worlds
+        description: "Agent world simulations"
+        visibility: private
+        topics: [simulation, worlds, agents]
+
+      - name: interactive-multiplayer
+        description: "Multiplayer infrastructure"
+        visibility: private
+        topics: [multiplayer, networking]
+
+      # VR/AR
+      - name: interactive-xr-sdk
+        description: "XR (VR/AR) SDK"
+        visibility: private
+        topics: [vr, ar, xr]
+
+      - name: interactive-spatial
+        description: "Spatial computing"
+        visibility: private
+        topics: [spatial, 3d]
+
+      # Simulations
+      - name: interactive-physics
+        description: "Physics simulations"
+        visibility: private
+        topics: [physics, simulation]
+
+      - name: interactive-procedural
+        description: "Procedural generation"
+        visibility: private
+        topics: [procedural, generation]
+
+    teams:
+      interactive-gaming:
+        description: "Gaming team"
+        privacy: closed
+        permission: push
+
+      interactive-xr:
+        description: "XR team"
+        privacy: closed
+        permission: push
+
+  # ============================================
+  # ORGANIZATION 10: BlackRoad-Education
+  # Learning and Documentation
+  # ============================================
+
+  BlackRoad-Education:
+    display_name: "BlackRoad Education"
+    description: "Learning resources, tutorials, and courses"
+    email: "education@blackroad.io"
+    blog: "https://learn.blackroad.io"
+    tier: education
+
+    # Most repositories public for education
+    default_visibility: public
+
+    repositories:
+      # Courses
+      - name: education-courses
+        description: "Course curriculum and materials"
+        visibility: public
+        topics: [courses, learning]
+
+      - name: education-ai-fundamentals
+        description: "AI Fundamentals course"
+        visibility: public
+        topics: [ai, course, beginner]
+
+      - name: education-agent-development
+        description: "Agent Development course"
+        visibility: public
+        topics: [agents, course, intermediate]
+
+      - name: education-quantum-computing
+        description: "Quantum Computing course"
+        visibility: public
+        topics: [quantum, course]
+
+      # Tutorials
+      - name: education-tutorials
+        description: "Step-by-step tutorials"
+        visibility: public
+        topics: [tutorials, guides]
+
+      - name: education-examples
+        description: "Code examples and samples"
+        visibility: public
+        topics: [examples, samples]
+
+      - name: education-workshops
+        description: "Workshop materials"
+        visibility: public
+        topics: [workshops, hands-on]
+
+      # Certifications
+      - name: education-certifications
+        description: "Certification programs"
+        visibility: private
+        topics: [certifications, exams]
+
+      # Platform
+      - name: education-platform
+        description: "Learning platform (LMS)"
+        visibility: private
+        topics: [lms, platform]
+
+    teams:
+      education-curriculum:
+        description: "Curriculum development"
+        privacy: closed
+        permission: push
+
+      education-instructors:
+        description: "Course instructors"
+        privacy: closed
+        permission: push
+
+  # ============================================
+  # ORGANIZATION 11: BlackRoad-Hardware
+  # Hardware and Edge Computing
+  # ============================================
+
+  BlackRoad-Hardware:
+    display_name: "BlackRoad Hardware"
+    description: "Hardware designs, edge computing, and IoT"
+    email: "hardware@blackroad.io"
+    blog: "https://hardware.blackroad.io"
+    tier: infrastructure
+
+    repositories:
+      # Edge Devices
+      - name: hardware-edge-os
+        description: "Edge device operating system"
+        visibility: private
+        topics: [edge, os, embedded]
+
+      - name: hardware-pi-images
+        description: "Raspberry Pi images"
+        visibility: private
+        topics: [raspberry-pi, images]
+
+      - name: hardware-jetson-images
+        description: "Jetson device images"
+        visibility: private
+        topics: [jetson, nvidia, images]
+
+      # Firmware
+      - name: hardware-firmware
+        description: "Device firmware"
+        visibility: private
+        topics: [firmware, embedded]
+
+      - name: hardware-bootloader
+        description: "Custom bootloader"
+        visibility: private
+        topics: [bootloader, embedded]
+
+      # PCB
+      - name: hardware-pcb-designs
+        description: "PCB designs and schematics"
+        visibility: private
+        topics: [pcb, hardware, kicad]
+
+      - name: hardware-enclosures
+        description: "Enclosure designs (CAD)"
+        visibility: private
+        topics: [cad, enclosures, 3d-printing]
+
+      # Drivers
+      - name: hardware-drivers
+        description: "Hardware drivers"
+        visibility: private
+        topics: [drivers, kernel]
+
+      # Testing
+      - name: hardware-testing
+        description: "Hardware testing tools"
+        visibility: private
+        topics: [testing, qa]
+
+    teams:
+      hardware-engineering:
+        description: "Hardware engineering"
+        privacy: closed
+        permission: push
+
+      hardware-firmware:
+        description: "Firmware development"
+        privacy: closed
+        permission: push
+
+  # ============================================
+  # ORGANIZATION 12: BlackRoad-Gov
+  # Government and Compliance
+  # ============================================
+
+  BlackRoad-Gov:
+    display_name: "BlackRoad Gov"
+    description: "Government compliance, FedRAMP, and public sector"
+    email: "gov@blackroad.io"
+    blog: "https://gov.blackroad.io"
+    tier: infrastructure
+
+    # Highly restricted access
+    settings:
+      default_repository_permission: none
+      members_can_create_repositories: false
+
+    repositories:
+      # FedRAMP
+      - name: gov-fedramp
+        description: "FedRAMP compliance documentation"
+        visibility: private
+        topics: [fedramp, compliance, government]
+
+      - name: gov-fedramp-controls
+        description: "FedRAMP control implementations"
+        visibility: private
+        topics: [fedramp, controls]
+
+      # IL4/IL5
+      - name: gov-il4-environment
+        description: "IL4 environment configuration"
+        visibility: private
+        topics: [il4, dod, government]
+
+      - name: gov-il5-environment
+        description: "IL5 environment configuration"
+        visibility: private
+        topics: [il5, dod, government]
+
+      # CMMC
+      - name: gov-cmmc
+        description: "CMMC compliance"
+        visibility: private
+        topics: [cmmc, dod, compliance]
+
+      # Policies
+      - name: gov-policies
+        description: "Government-specific policies"
+        visibility: private
+        topics: [policies, government]
+
+      # Boundary
+      - name: gov-boundary
+        description: "Authorization boundary documentation"
+        visibility: private
+        topics: [boundary, ato]
+
+    teams:
+      gov-compliance:
+        description: "Government compliance team"
+        privacy: secret
+        permission: maintain
+
+      gov-security:
+        description: "Government security team"
+        privacy: secret
+        permission: maintain
+
+  # ============================================
+  # ORGANIZATION 13: Blackbox-Enterprises
+  # Business Operations
+  # ============================================
+
+  Blackbox-Enterprises:
+    display_name: "Blackbox Enterprises"
+    description: "Business operations, internal tools, and corporate systems"
+    email: "ops@blackroad.io"
+    tier: business
+
+    repositories:
+      # Internal Tools
+      - name: enterprise-internal-tools
+        description: "Internal productivity tools"
+        visibility: private
+        topics: [internal, tools]
+
+      - name: enterprise-crm
+        description: "CRM integrations"
+        visibility: private
+        topics: [crm, salesforce]
+
+      - name: enterprise-erp
+        description: "ERP integrations"
+        visibility: private
+        topics: [erp, finance]
+
+      # HR
+      - name: enterprise-hr-systems
+        description: "HR system integrations"
+        visibility: private
+        topics: [hr, workday]
+
+      - name: enterprise-onboarding
+        description: "Employee onboarding"
+        visibility: private
+        topics: [onboarding, hr]
+
+      # Finance
+      - name: enterprise-finance
+        description: "Finance systems"
+        visibility: private
+        topics: [finance, accounting]
+
+      - name: enterprise-billing
+        description: "Billing and invoicing"
+        visibility: private
+        topics: [billing, stripe]
+
+      # Legal
+      - name: enterprise-contracts
+        description: "Contract management"
+        visibility: private
+        topics: [contracts, legal]
+
+      - name: enterprise-ip
+        description: "IP management"
+        visibility: private
+        topics: [ip, patents]
+
+    teams:
+      enterprise-ops:
+        description: "Operations team"
+        privacy: closed
+        permission: push
+
+      enterprise-it:
+        description: "IT team"
+        privacy: closed
+        permission: push
+
+  # ============================================
+  # ORGANIZATION 14: BlackRoad-Ventures
+  # Investments and Portfolio
+  # ============================================
+
+  BlackRoad-Ventures:
+    display_name: "BlackRoad Ventures"
+    description: "Investment portfolio, acquisitions, and partnerships"
+    email: "ventures@blackroad.io"
+    blog: "https://ventures.blackroad.io"
+    tier: business
+
+    repositories:
+      # Portfolio
+      - name: ventures-portfolio
+        description: "Portfolio company tracking"
+        visibility: private
+        topics: [portfolio, investments]
+
+      - name: ventures-due-diligence
+        description: "Due diligence templates"
+        visibility: private
+        topics: [due-diligence, investments]
+
+      # Acquisitions
+      - name: ventures-acquisitions
+        description: "Acquisition playbooks"
+        visibility: private
+        topics: [acquisitions, m-and-a]
+
+      - name: ventures-integration
+        description: "Post-acquisition integration"
+        visibility: private
+        topics: [integration, acquisitions]
+
+      # Partnerships
+      - name: ventures-partnerships
+        description: "Strategic partnerships"
+        visibility: private
+        topics: [partnerships, alliances]
+
+      # Analysis
+      - name: ventures-market-analysis
+        description: "Market analysis tools"
+        visibility: private
+        topics: [analysis, market]
+
+    teams:
+      ventures-team:
+        description: "Ventures team"
+        privacy: secret
+        permission: maintain
+
+  # ============================================
+  # ORGANIZATION 15: BlackRoad-Archive
+  # Historical and Legacy
+  # ============================================
+
+  BlackRoad-Archive:
+    display_name: "BlackRoad Archive"
+    description: "Archived projects, legacy code, and historical data"
+    email: "archive@blackroad.io"
+    tier: archive
+
+    settings:
+      default_repository_permission: read
+      members_can_create_repositories: false
+
+    repositories:
+      # Legacy
+      - name: archive-legacy-v1
+        description: "Legacy v1 platform"
+        visibility: private
+        archived: true
+        topics: [legacy, archived]
+
+      - name: archive-legacy-v2
+        description: "Legacy v2 platform"
+        visibility: private
+        archived: true
+        topics: [legacy, archived]
+
+      # Deprecated
+      - name: archive-deprecated-apis
+        description: "Deprecated API versions"
+        visibility: private
+        archived: true
+        topics: [deprecated, api]
+
+      - name: archive-deprecated-sdks
+        description: "Deprecated SDKs"
+        visibility: private
+        archived: true
+        topics: [deprecated, sdk]
+
+      # Historical
+      - name: archive-historical-data
+        description: "Historical data snapshots"
+        visibility: private
+        archived: true
+        topics: [historical, data]
+
+      # Experiments
+      - name: archive-failed-experiments
+        description: "Failed experiment documentation"
+        visibility: private
+        archived: true
+        topics: [experiments, archived]
+
+    teams:
+      archive-maintainers:
+        description: "Archive maintainers"
+        privacy: closed
+        permission: read
+
+# ============================================
+# CROSS-ORGANIZATION STRUCTURE
+# ============================================
+
+cross_org:
+  # Shared team members
+  executive_team:
+    members:
+      - role: CEO
+        orgs: all
+        permission: admin
+      - role: CTO
+        orgs: [BlackRoad-OS, BlackRoad-AI, BlackRoad-Cloud, BlackRoad-Labs]
+        permission: admin
+      - role: CISO
+        orgs: [BlackRoad-Security, BlackRoad-Gov]
+        permission: admin
+      - role: CFO
+        orgs: [Blackbox-Enterprises, BlackRoad-Ventures]
+        permission: admin
+
+  # Shared secrets at enterprise level
+  shared_secrets:
+    - ANTHROPIC_API_KEY
+    - OPENAI_API_KEY
+    - RAILWAY_TOKEN
+    - CLOUDFLARE_API_TOKEN
+    - NPM_TOKEN
+    - PYPI_TOKEN
+    - DATADOG_API_KEY
+    - SENTRY_AUTH_TOKEN
+
+  # Shared workflows repository
+  shared_workflows:
+    org: BlackRoad-Cloud
+    repo: cloud-github-actions
+
+# ============================================
+# SUMMARY
+# ============================================
+
+summary:
+  total_organizations: 15
+  total_repositories: 180
+
+  by_tier:
+    core: 24
+    product: 45
+    research: 22
+    creative: 33
+    education: 9
+    infrastructure: 18
+    business: 16
+    archive: 6
+
+  by_visibility:
+    public: 35
+    private: 145
+
+  teams_total: 42
