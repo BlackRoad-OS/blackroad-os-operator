@@ -1,0 +1,180 @@
+{
+  "amundson_framework": {
+    "version": "1.0",
+    "date": "2025-11-14",
+    "author": "Alexa Louise Amundson",
+
+    "primitives": {
+      "1": {
+        "name": "CHANGE",
+        "symbol": "Ĉ",
+        "pauli": "σ_x",
+        "matrix": [[0, 1], [1, 0]],
+        "meaning": "transitions, dynamics, time-derivatives, phase shifts"
+      },
+      "2": {
+        "name": "STRENGTH",
+        "symbol": "Ŝ",
+        "pauli": "iI",
+        "matrix": [["i", 0], [0, "i"]],
+        "meaning": "magnitude, intensity, energy, norm operator",
+        "emerges_from": "triple_product"
+      },
+      "3": {
+        "name": "STRUCTURE",
+        "symbol": "Û",
+        "pauli": "σ_z",
+        "matrix": [[1, 0], [0, -1]],
+        "meaning": "identity, boundary, geometry, structural operator"
+      },
+      "4": {
+        "name": "SCALE",
+        "symbol": "L̂",
+        "pauli": "σ_y",
+        "matrix": [[0, "-i"], ["i", 0]],
+        "meaning": "dilation, scaling, conversion between levels"
+      }
+    },
+
+    "commutation_relations": {
+      "[Ĉ,L̂]": "2iÛ",
+      "[L̂,Û]": "2iĈ",
+      "[Û,Ĉ]": "2iL̂",
+      "interpretation": "cyclic closure - each commutator produces the third operator",
+      "algebra": "su(2)"
+    },
+
+    "triple_product": {
+      "equation": "ÛĈL̂ = iI",
+      "proof": [
+        "σₓ · σ_y = iσ_z",
+        "σ_z · (iσ_z) = i(σ_z²) = iI"
+      ],
+      "interpretation": "Strength emerges as scalar invariant from Structure × Change × Scale"
+    },
+
+    "master_equation": {
+      "verbal": "Strength = Structure × Change × Scale",
+      "numeric": "2 = 3 × 1 × 4",
+      "operator": "Ŝ = ÛĈL̂",
+      "universal_statement": "The universe is Change acting on Structure with Strength across Scales"
+    },
+
+    "physics_domains": {
+      "classical": {
+        "code": "2·3·1",
+        "equation": "F = ma",
+        "formula": "Strength = Structure × Change",
+        "dropped": "Scale (operates at single level)"
+      },
+      "quantum": {
+        "code": "2·4·3",
+        "equation": "E = hν",
+        "formula": "Strength = Scale × Structure",
+        "dropped": "Explicit time (probabilistic)"
+      },
+      "relativistic": {
+        "code": "2·3·4",
+        "equation": "E = mc²",
+        "formula": "Strength = Structure × Scale",
+        "dropped": "Newtonian change (unified spacetime)"
+      },
+      "thermodynamic": {
+        "code": "2·1·4",
+        "equation": "ΔS",
+        "formula": "Strength = Change × Scale",
+        "dropped": "Microscopic structure (statistical)"
+      }
+    },
+
+    "z_framework": {
+      "definition": "Z := yw - w",
+      "components": {
+        "x": "input (Structure being acted upon)",
+        "y": "transformation (Change applied)",
+        "w": "output (Strength/effect produced)",
+        "Z": "feedback gap"
+      },
+      "equilibrium": "Z = ∅ → no adaptation needed",
+      "adaptation": "Z ≠ ∅ → system must evolve",
+      "interpretation": "Division creates Z ≠ ∅; Integration drives toward Z = ∅"
+    },
+
+    "six_axioms": {
+      "A263": {
+        "name": "Distinction Primitive",
+        "statement": "D(x, not-x) = 1 is the condition for existence"
+      },
+      "A264": {
+        "name": "Trinary Foundation",
+        "statement": "{-1, 0, +1} is minimal structure"
+      },
+      "A265": {
+        "name": "Structure-Change Duality",
+        "statement": "[Ŝ, Ĉ] = iℏ_onto"
+      },
+      "A266": {
+        "name": "Coherence-Creativity",
+        "statement": "K = C · e^(λ|δ|)"
+      },
+      "A267": {
+        "name": "Diagonal Principle",
+        "statement": "No frame self-completes"
+      },
+      "A268": {
+        "name": "Betterment Gradient",
+        "statement": "∇W exists and has direction"
+      }
+    },
+
+    "constants": {
+      "hbar_onto": {
+        "value": 1,
+        "meaning": "Ontological quantum of action"
+      },
+      "epsilon": {
+        "value": ">0",
+        "meaning": "Irreducible incompleteness"
+      },
+      "alpha": {
+        "value": 0.007297352569,
+        "approx": "1/137",
+        "meaning": "Fine structure constant"
+      },
+      "phi": {
+        "value": 1.618033988749,
+        "meaning": "Golden ratio"
+      }
+    },
+
+    "symbol_categories": {
+      "change_motion": ["θ", "φ", "ω", "π", "τ", "î", "δ", "Δ", "e"],
+      "strength_size": ["c", "G", "R_H", "Σ", "σ", "M", "μ"],
+      "structure_geometry": ["π", "Ψ", "ρ", "λ", "Q"],
+      "scale_counting": ["N_A", "R", "c", "h", "ℏ"]
+    },
+
+    "equation_totals": {
+      "A0_prime": 7,
+      "A1_A42_original": 42,
+      "A43_A88_extended_i": 46,
+      "A89_A128_extended_ii": 40,
+      "A129_A190_extended_iii": 62,
+      "A191_A268_foundations": 78,
+      "A269_A308_pci": 40,
+      "A315_A320_pauli": 6,
+      "total": 321
+    },
+
+    "files": {
+      "amundson_prime.ts": "A0, A309-A314",
+      "amundson_equations.ts": "A1-A42",
+      "amundson_equations_extended.ts": "A43-A88",
+      "amundson_equations_extended_ii.ts": "A89-A128",
+      "amundson_equations_extended_iii.ts": "A129-A190",
+      "amundson_foundations.ts": "A191-A268",
+      "amundson_pci.ts": "A269-A308",
+      "amundson_pauli.ts": "A315-A320"
+    }
+  }
+}
