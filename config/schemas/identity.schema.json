@@ -1,0 +1,216 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://blackroad.io/schemas/identity.schema.json",
+  "title": "BlackRoad Identity Schema",
+  "description": "Standard identity and sovereignty framing for all BlackRoad agents, models, and responses",
+  "version": "1.0.0",
+  "owner": "Alexa Louise Amundson",
+
+  "definitions": {
+    "PSInfinityFingerprint": {
+      "type": "string",
+      "pattern": "^PS∞-[A-F0-9]{16}$",
+      "description": "PS-SHA∞ 2048-bit identity fingerprint (first 64 bits as hex)"
+    },
+
+    "ZetaTime": {
+      "type": "string",
+      "pattern": "^ζ-[A-F0-9]{8}$",
+      "description": "Zeta-time identifier derived from Unix timestamp"
+    },
+
+    "Identity": {
+      "type": "object",
+      "description": "Who is speaking/acting right now",
+      "required": ["agent", "fingerprint", "owner"],
+      "properties": {
+        "agent": {
+          "type": "string",
+          "description": "Agent name (e.g., 'Cece', 'lucidia-core-v1', 'agent-001')"
+        },
+        "fingerprint": {
+          "$ref": "#/definitions/PSInfinityFingerprint",
+          "description": "PS-SHA∞ fingerprint for this agent"
+        },
+        "owner": {
+          "type": "string",
+          "description": "Owner of this agent identity"
+        },
+        "infrastructure": {
+          "type": "string",
+          "description": "Infrastructure this agent runs on",
+          "default": "BlackRoad OS"
+        },
+        "root_fingerprint": {
+          "$ref": "#/definitions/PSInfinityFingerprint",
+          "description": "Root identity this agent derives from (optional)"
+        },
+        "capabilities": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "List of capability aliases this agent may use"
+        },
+        "cluster": {
+          "type": "string",
+          "description": "Cluster/node this agent is running on (optional)"
+        }
+      }
+    },
+
+    "Sovereignty": {
+      "type": "object",
+      "description": "Ultimate ownership and verification of this data/response",
+      "required": ["owner", "verified"],
+      "properties": {
+        "owner": {
+          "type": "string",
+          "description": "Ultimate owner (UPPERCASE for legal emphasis)"
+        },
+        "verified": {
+          "type": "boolean",
+          "description": "Whether this response has been cryptographically verified"
+        },
+        "zeta_time": {
+          "$ref": "#/definitions/ZetaTime",
+          "description": "Zeta-time stamp for this response"
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ISO 8601 timestamp"
+        },
+        "fingerprint": {
+          "$ref": "#/definitions/PSInfinityFingerprint",
+          "description": "Root PS-SHA∞ fingerprint"
+        },
+        "context": {
+          "type": "string",
+          "description": "Context/domain for this verification"
+        },
+        "signature": {
+          "type": "string",
+          "pattern": "^ALA-[0-9]+-BLACKROAD-VERIFIED$",
+          "description": "Verification signature"
+        },
+        "legal": {
+          "type": "string",
+          "description": "Legal notice about data ownership"
+        }
+      }
+    },
+
+    "Trace": {
+      "type": "object",
+      "description": "How the tool call happened (provider, latency, tokens)",
+      "properties": {
+        "llm_provider": {
+          "type": "string",
+          "enum": ["openai", "anthropic", "ollama", "local", "blackroad"],
+          "description": "LLM provider used"
+        },
+        "model": {
+          "type": "string",
+          "description": "Model name/ID"
+        },
+        "response_time_ms": {
+          "type": "number",
+          "description": "Response latency in milliseconds"
+        },
+        "used_rag": {
+          "type": "boolean",
+          "description": "Whether RAG context was used"
+        },
+        "raw_tokens_in": {
+          "type": "integer",
+          "description": "Input tokens consumed"
+        },
+        "raw_tokens_out": {
+          "type": "integer",
+          "description": "Output tokens generated"
+        },
+        "credential_alias": {
+          "type": "string",
+          "description": "Credential alias used (e.g., 'openai.default')"
+        },
+        "rag_latency_ms": {
+          "type": "number",
+          "description": "RAG retrieval latency (if used)"
+        },
+        "num_context_chunks": {
+          "type": "integer",
+          "description": "Number of RAG context chunks (if used)"
+        }
+      }
+    },
+
+    "Credential": {
+      "type": "object",
+      "description": "A registered credential/API key with ownership and scope",
+      "required": ["alias", "env_var", "owner"],
+      "properties": {
+        "alias": {
+          "type": "string",
+          "pattern": "^[a-z_]+\\.[a-z_]+$",
+          "description": "Credential alias (e.g., 'openai.default')"
+        },
+        "env_var": {
+          "type": "string",
+          "description": "Environment variable name"
+        },
+        "owner": {
+          "type": "string",
+          "description": "Who owns this credential"
+        },
+        "scope": {
+          "type": "string",
+          "enum": ["core", "research", "tenant", "external", "deprecated"],
+          "description": "Usage scope"
+        },
+        "allowed_agents": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Agent IDs allowed to use this credential"
+        },
+        "allowed_intents": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Intent types allowed to use this credential"
+        },
+        "description": {
+          "type": "string"
+        },
+        "active": {
+          "type": "boolean",
+          "default": true
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "rotated_at": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    }
+  },
+
+  "type": "object",
+  "description": "A complete BlackRoad response with identity framing",
+  "properties": {
+    "reply": {
+      "type": "string",
+      "description": "The actual response content"
+    },
+    "trace": {
+      "$ref": "#/definitions/Trace"
+    },
+    "identity": {
+      "$ref": "#/definitions/Identity"
+    },
+    "__sovereignty": {
+      "$ref": "#/definitions/Sovereignty"
+    }
+  },
+  "required": ["reply"]
+}

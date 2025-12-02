@@ -1,12 +1,34 @@
-"""BlackRoad OS Operator models package."""
+"""BlackRoad OS Operator models package.
+
+Every governed response carries:
+- trace: what tools + models were used (capability layer)
+- identity: which agent is speaking (identity layer)
+- sovereignty: which human/entity owns it (ownership layer)
+
+@owner Alexa Louise Amundson
+@system BlackRoad OS
+"""
 
 # Chat models (Hero Flow #1)
 from br_operator.models.chat import (
     ChatRequest,
     ChatResponse,
     ChatTrace,
+    ChatIdentity,
+    ChatSovereignty,
     LLMHealthResponse,
     RAGHealthResponse,
+)
+
+# Identity models (PS-SHA∞ core)
+from br_operator.models.identity import (
+    AgentIdentity,
+    SovereigntyStamp,
+    Trace,
+    CredentialInfo,
+    GovernedResponse,
+    create_minimal_identity,
+    create_minimal_sovereignty,
 )
 
 # Policy models (Governance)
@@ -54,8 +76,18 @@ __all__ = [
     "ChatRequest",
     "ChatResponse",
     "ChatTrace",
+    "ChatIdentity",
+    "ChatSovereignty",
     "LLMHealthResponse",
     "RAGHealthResponse",
+    # Identity models (PS-SHA∞ core)
+    "AgentIdentity",
+    "SovereigntyStamp",
+    "Trace",
+    "CredentialInfo",
+    "GovernedResponse",
+    "create_minimal_identity",
+    "create_minimal_sovereignty",
     # Policy models
     "Subject",
     "Resource",
