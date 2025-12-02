@@ -1,0 +1,682 @@
+# CI/CD Workflow Matrix
+# BlackRoad OS Repository Automation
+#
+# Defines workflows for all 24 repositories
+#
+# @blackroad_name: BlackRoad CI/CD
+# @operator: alexa.operator.v1
+
+version: "cicd-v1"
+
+# ============================================
+# SHARED WORKFLOW COMPONENTS
+# ============================================
+
+shared:
+  # Reusable workflow repository
+  workflow_repo: blackroad-os-infra
+  workflow_path: .github/workflows
+
+  # Common environment variables
+  env:
+    NODE_VERSION: "20"
+    PYTHON_VERSION: "3.11"
+    PNPM_VERSION: "8"
+
+  # Common secrets (org-level)
+  secrets:
+    - ANTHROPIC_API_KEY
+    - RAILWAY_TOKEN
+    - CLOUDFLARE_API_TOKEN
+    - CLOUDFLARE_ACCOUNT_ID
+    - NPM_TOKEN
+    - PYPI_TOKEN
+    - SENTRY_AUTH_TOKEN
+    - DATADOG_API_KEY
+
+# ============================================
+# WORKFLOW TEMPLATES
+# ============================================
+
+templates:
+  # ==========================================
+  # PYTHON SERVICE TEMPLATE
+  # ==========================================
+  python-service:
+    triggers:
+      push:
+        branches: [main, develop]
+      pull_request:
+        branches: [main]
+
+    jobs:
+      lint:
+        runs-on: ubuntu-latest
+        steps:
+          - uses: actions/checkout@v4
+          - uses: actions/setup-python@v5
+            with:
+              python-version: "3.11"
+          - run: pip install ruff mypy
+          - run: ruff check .
+          - run: mypy . --ignore-missing-imports
+
+      test:
+        runs-on: ubuntu-latest
+        services:
+          postgres:
+            image: postgres:15
+            env:
+              POSTGRES_PASSWORD: test
+            ports:
+              - 5432:5432
+          redis:
+            image: redis:7
+            ports:
+              - 6379:6379
+        steps:
+          - uses: actions/checkout@v4
+          - uses: actions/setup-python@v5
+            with:
+              python-version: "3.11"
+          - run: pip install -e ".[dev]"
+          - run: pytest --cov --cov-report=xml
+          - uses: codecov/codecov-action@v4
+
+      build:
+        runs-on: ubuntu-latest
+        needs: [lint, test]
+        steps:
+          - uses: actions/checkout@v4
+          - uses: docker/setup-buildx-action@v3
+          - uses: docker/build-push-action@v5
+            with:
+              context: .
+              push: false
+              tags: ${{ github.repository }}:${{ github.sha }}
+              cache-from: type=gha
+              cache-to: type=gha,mode=max
+
+      deploy:
+        runs-on: ubuntu-latest
+        needs: [build]
+        if: github.ref == 'refs/heads/main'
+        environment: production
+        steps:
+          - uses: actions/checkout@v4
+          - name: Deploy to Railway
+            env:
+              RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+            run: |
+              npm install -g @railway/cli
+              railway up --detach
+
+  # ==========================================
+  # NEXTJS WEB APP TEMPLATE
+  # ==========================================
+  nextjs-app:
+    triggers:
+      push:
+        branches: [main, develop]
+      pull_request:
+        branches: [main]
+
+    jobs:
+      lint:
+        runs-on: ubuntu-latest
+        steps:
+          - uses: actions/checkout@v4
+          - uses: pnpm/action-setup@v2
+            with:
+              version: 8
+          - uses: actions/setup-node@v4
+            with:
+              node-version: "20"
+              cache: "pnpm"
+          - run: pnpm install --frozen-lockfile
+          - run: pnpm lint
+          - run: pnpm typecheck
+
+      test:
+        runs-on: ubuntu-latest
+        steps:
+          - uses: actions/checkout@v4
+          - uses: pnpm/action-setup@v2
+            with:
+              version: 8
+          - uses: actions/setup-node@v4
+            with:
+              node-version: "20"
+              cache: "pnpm"
+          - run: pnpm install --frozen-lockfile
+          - run: pnpm test:ci
+
+      build:
+        runs-on: ubuntu-latest
+        needs: [lint, test]
+        steps:
+          - uses: actions/checkout@v4
+          - uses: pnpm/action-setup@v2
+            with:
+              version: 8
+          - uses: actions/setup-node@v4
+            with:
+              node-version: "20"
+              cache: "pnpm"
+          - run: pnpm install --frozen-lockfile
+          - run: pnpm build
+          - uses: actions/upload-artifact@v4
+            with:
+              name: build
+              path: .next
+
+      deploy-railway:
+        runs-on: ubuntu-latest
+        needs: [build]
+        if: github.ref == 'refs/heads/main'
+        environment: production
+        steps:
+          - uses: actions/checkout@v4
+          - name: Deploy to Railway
+            env:
+              RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+            run: |
+              npm install -g @railway/cli
+              railway up --detach
+
+  # ==========================================
+  # CLOUDFLARE PAGES TEMPLATE
+  # ==========================================
+  cloudflare-pages:
+    triggers:
+      push:
+        branches: [main]
+      pull_request:
+        branches: [main]
+
+    jobs:
+      build-deploy:
+        runs-on: ubuntu-latest
+        steps:
+          - uses: actions/checkout@v4
+          - uses: pnpm/action-setup@v2
+            with:
+              version: 8
+          - uses: actions/setup-node@v4
+            with:
+              node-version: "20"
+              cache: "pnpm"
+          - run: pnpm install --frozen-lockfile
+          - run: pnpm build
+          - name: Deploy to Cloudflare Pages
+            uses: cloudflare/pages-action@v1
+            with:
+              apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+              accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+              projectName: ${{ github.event.repository.name }}
+              directory: out
+              gitHubToken: ${{ secrets.GITHUB_TOKEN }}
+
+  # ==========================================
+  # NPM PACKAGE TEMPLATE
+  # ==========================================
+  npm-package:
+    triggers:
+      push:
+        branches: [main]
+        tags: ["v*"]
+      pull_request:
+        branches: [main]
+
+    jobs:
+      test:
+        runs-on: ubuntu-latest
+        steps:
+          - uses: actions/checkout@v4
+          - uses: pnpm/action-setup@v2
+            with:
+              version: 8
+          - uses: actions/setup-node@v4
+            with:
+              node-version: "20"
+              cache: "pnpm"
+          - run: pnpm install --frozen-lockfile
+          - run: pnpm test
+
+      publish:
+        runs-on: ubuntu-latest
+        needs: [test]
+        if: startsWith(github.ref, 'refs/tags/v')
+        steps:
+          - uses: actions/checkout@v4
+          - uses: pnpm/action-setup@v2
+            with:
+              version: 8
+          - uses: actions/setup-node@v4
+            with:
+              node-version: "20"
+              registry-url: "https://registry.npmjs.org"
+          - run: pnpm install --frozen-lockfile
+          - run: pnpm build
+          - run: pnpm publish --access public
+            env:
+              NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+  # ==========================================
+  # PYPI PACKAGE TEMPLATE
+  # ==========================================
+  pypi-package:
+    triggers:
+      push:
+        branches: [main]
+        tags: ["v*"]
+      pull_request:
+        branches: [main]
+
+    jobs:
+      test:
+        runs-on: ubuntu-latest
+        steps:
+          - uses: actions/checkout@v4
+          - uses: actions/setup-python@v5
+            with:
+              python-version: "3.11"
+          - run: pip install -e ".[dev]"
+          - run: pytest
+
+      publish:
+        runs-on: ubuntu-latest
+        needs: [test]
+        if: startsWith(github.ref, 'refs/tags/v')
+        steps:
+          - uses: actions/checkout@v4
+          - uses: actions/setup-python@v5
+            with:
+              python-version: "3.11"
+          - run: pip install build twine
+          - run: python -m build
+          - run: twine upload dist/*
+            env:
+              TWINE_USERNAME: __token__
+              TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}
+
+# ============================================
+# REPOSITORY WORKFLOW ASSIGNMENTS
+# ============================================
+
+repositories:
+  # ==========================================
+  # TIER 1: CORE PLATFORM
+  # ==========================================
+
+  blackroad-os:
+    template: null  # Monorepo - custom workflows
+    custom_workflows:
+      - ci.yaml
+      - release.yaml
+      - sync-packages.yaml
+    notes: "Monorepo with custom Turborepo-based CI"
+
+  blackroad-os-core:
+    templates:
+      - npm-package
+      - pypi-package
+    custom_workflows:
+      - publish-all.yaml
+    packages:
+      npm:
+        - "@blackroad/core"
+        - "@blackroad/utils"
+        - "@blackroad/types"
+      pypi:
+        - blackroad-core
+
+  blackroad-os-master:
+    template: null
+    custom_workflows:
+      - validate-schemas.yaml
+      - sync-configs.yaml
+    notes: "Configuration repo - no deployments"
+
+  # ==========================================
+  # TIER 2: API & SERVICES
+  # ==========================================
+
+  blackroad-os-operator:
+    template: python-service
+    custom_workflows:
+      - governance-tests.yaml
+      - migration-check.yaml
+    deploy_to:
+      - railway: blackroad-os-api-gateway
+    domains:
+      - api.blackroad.io
+      - api.lucidia.earth
+
+  blackroad-os-api-gateway:
+    template: python-service
+    deploy_to:
+      - railway: blackroad-os-gateway
+    domains:
+      - gateway.blackroad.io
+
+  blackroad-os-api:
+    templates:
+      - npm-package
+      - pypi-package
+      - cloudflare-pages
+    packages:
+      npm:
+        - "@blackroad/api-client"
+      pypi:
+        - blackroad-api
+    domains:
+      - api-docs.blackroad.io
+
+  # ==========================================
+  # TIER 3: WEB & FRONTEND
+  # ==========================================
+
+  blackroad-os-web:
+    template: nextjs-app
+    deploy_to:
+      - railway: blackroad-os-web
+    domains:
+      - app.blackroad.io
+    custom_workflows:
+      - e2e-tests.yaml
+      - lighthouse.yaml
+
+  blackroad-os-prism-console:
+    template: nextjs-app
+    deploy_to:
+      - railway: blackroad-os-prism-console
+    domains:
+      - console.lucidia.earth
+      - admin.blackroad.io
+    custom_workflows:
+      - e2e-tests.yaml
+
+  blackroad-os-demo:
+    template: nextjs-app
+    deploy_to:
+      - railway: blackroad-os-demo
+    domains:
+      - demo.blackroad.io
+
+  blackroad-os-home:
+    template: cloudflare-pages
+    domains:
+      - blackroad.io
+      - blackroadinc.us
+      - blackroadai.com
+      - blackroadquantum.com
+    custom_workflows:
+      - lighthouse.yaml
+      - preview-deploy.yaml
+
+  # ==========================================
+  # TIER 4: AGENTS & AI
+  # ==========================================
+
+  blackroad-os-agents:
+    template: python-service
+    deploy_to:
+      - railway: lucidia-agents
+    domains:
+      - agents.lucidia.earth
+    replicas: 5
+    custom_workflows:
+      - agent-benchmarks.yaml
+      - memory-tests.yaml
+      - capability-tests.yaml
+
+  blackroad-os-beacon:
+    template: python-service
+    deploy_to:
+      - railway: blackroad-beacon
+    domains:
+      - models.blackroadai.com
+      - inference.blackroadai.com
+    replicas: 3
+    custom_workflows:
+      - llm-routing-tests.yaml
+      - latency-benchmarks.yaml
+
+  # ==========================================
+  # TIER 5: INFRASTRUCTURE
+  # ==========================================
+
+  blackroad-os-infra:
+    template: null
+    custom_workflows:
+      - terraform-plan.yaml
+      - terraform-apply.yaml
+      - helm-lint.yaml
+      - k8s-validate.yaml
+    notes: "Infrastructure as Code - manual apply"
+
+  # ==========================================
+  # TIER 6: DOCUMENTATION
+  # ==========================================
+
+  blackroad-os-docs:
+    template: cloudflare-pages
+    framework: vitepress
+    domains:
+      - docs.blackroad.io
+      - docs.lucidia.earth
+    custom_workflows:
+      - broken-links.yaml
+      - algolia-index.yaml
+
+  blackroad-os-research:
+    template: cloudflare-pages
+    framework: astro
+    domains:
+      - papers.blackroadqi.com
+      - research.blackroadqi.com
+
+  blackroad-os-ideas:
+    template: null
+    notes: "RFC repository - no deployments"
+
+  blackroad-os-archive:
+    template: null
+    notes: "Archive repository - no active CI"
+
+  # ==========================================
+  # TIER 7: PACKS (Vertical Solutions)
+  # ==========================================
+
+  blackroad-os-pack-research-lab:
+    template: python-service
+    deploy_to:
+      - railway: blackroad-pack-research
+    domains:
+      - lab.blackroadqi.com
+    custom_workflows:
+      - experiment-runner.yaml
+
+  blackroad-os-pack-finance:
+    template: python-service
+    notes: "Not yet deployed"
+
+  blackroad-os-pack-education:
+    template: python-service
+    notes: "Not yet deployed"
+
+  blackroad-os-pack-creator-studio:
+    template: nextjs-app
+    deploy_to:
+      - railway: lucidia-creator-studio
+    domains:
+      - create.lucidia.studio
+      - studio.lucidia.studio
+    custom_workflows:
+      - asset-tests.yaml
+      - unity-build.yaml
+
+  blackroad-os-pack-legal:
+    template: python-service
+    notes: "Not yet deployed"
+
+  blackroad-os-pack-infra-devops:
+    template: python-service
+    deploy_to:
+      - railway: blackroad-devops-tools
+    domains:
+      - devops.blackroad.systems
+
+  # ==========================================
+  # TIER 8: BRAND & ASSETS
+  # ==========================================
+
+  blackroad-os-brand:
+    template: cloudflare-pages
+    domains:
+      - brand.blackroad.io
+    custom_workflows:
+      - asset-optimization.yaml
+      - figma-sync.yaml
+
+# ============================================
+# COMPOSITE WORKFLOWS
+# ============================================
+
+composite_workflows:
+  # Full release pipeline
+  release-all:
+    name: "Release All Packages"
+    description: "Publish all packages to npm and PyPI"
+    repos:
+      - blackroad-os-core
+      - blackroad-os-api
+    trigger: workflow_dispatch
+    steps:
+      - bump_versions
+      - run_tests
+      - build_packages
+      - publish_npm
+      - publish_pypi
+      - create_github_releases
+
+  # Deploy all services
+  deploy-all:
+    name: "Deploy All Services"
+    description: "Deploy all Railway services"
+    repos:
+      - blackroad-os-operator
+      - blackroad-os-web
+      - blackroad-os-prism-console
+      - blackroad-os-agents
+      - blackroad-os-beacon
+    trigger: workflow_dispatch
+    steps:
+      - verify_health
+      - deploy_staging
+      - run_smoke_tests
+      - deploy_production
+      - notify_slack
+
+  # Sync all documentation
+  sync-docs:
+    name: "Sync Documentation"
+    description: "Rebuild and deploy all documentation sites"
+    repos:
+      - blackroad-os-docs
+      - blackroad-os-api
+      - blackroad-os-research
+    trigger:
+      schedule: "0 0 * * *"  # Daily at midnight
+    steps:
+      - build_all
+      - deploy_pages
+      - update_search_index
+
+# ============================================
+# NOTIFICATIONS
+# ============================================
+
+notifications:
+  slack:
+    channels:
+      deploys: "#deploys"
+      failures: "#alerts"
+      releases: "#releases"
+
+    events:
+      deploy_success:
+        channel: "#deploys"
+        message: ":rocket: Deployed {{repo}} to {{environment}}"
+
+      deploy_failure:
+        channel: "#alerts"
+        message: ":x: Deploy failed for {{repo}}: {{error}}"
+
+      release_published:
+        channel: "#releases"
+        message: ":package: Released {{package}}@{{version}}"
+
+  discord:
+    webhooks:
+      - ${DISCORD_WEBHOOK_URL}
+    events:
+      - deploy_success
+      - release_published
+
+# ============================================
+# CACHING STRATEGY
+# ============================================
+
+caching:
+  npm:
+    key: "npm-${{ hashFiles('**/pnpm-lock.yaml') }}"
+    restore_keys:
+      - "npm-"
+
+  python:
+    key: "pip-${{ hashFiles('**/requirements*.txt', '**/pyproject.toml') }}"
+    restore_keys:
+      - "pip-"
+
+  docker:
+    type: gha
+    mode: max
+
+  nextjs:
+    key: "nextjs-${{ hashFiles('**/*.ts', '**/*.tsx') }}"
+    path: .next/cache
+
+# ============================================
+# SECURITY SCANNING
+# ============================================
+
+security:
+  # CodeQL analysis
+  codeql:
+    enabled: true
+    languages:
+      - python
+      - typescript
+    schedule: "0 2 * * 1"  # Weekly on Monday
+
+  # Dependency scanning
+  dependabot:
+    enabled: true
+    schedule: weekly
+    ecosystems:
+      - npm
+      - pip
+      - docker
+      - github-actions
+
+  # Secret scanning
+  secret_scanning:
+    enabled: true
+    push_protection: true
+
+  # SAST
+  semgrep:
+    enabled: true
+    config: "p/default"
