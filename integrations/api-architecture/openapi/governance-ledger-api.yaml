@@ -1,0 +1,1359 @@
+# BlackRoad OS - Governance Ledger API
+# OpenAPI 3.1 Specification
+#
+# Immutable audit ledger and trinary governance
+# Scale: 100T entities, PS-SHA∞ lineage tracking
+#
+# @blackroad_name: Governance Ledger API
+# @operator: alexa.operator.v1
+# @tier: 1_core
+
+openapi: "3.1.0"
+info:
+  title: BlackRoad Governance Ledger API
+  version: "1.0.0"
+  description: |
+    Governance Ledger API for BlackRoad OS.
+
+    ## Core Concepts
+    - **Trinary Logic**: 1 (allow), 0 (neutral/escalate), -1 (deny)
+    - **PS-SHA∞**: Probabilistic Semantic-aware Secure Hash for lineage
+    - **Immutable Ledger**: Append-only audit trail
+    - **Amundson Protocol**: Governance standard implementation
+
+    ## Scale
+    - 100 trillion entity operations
+    - Sub-millisecond policy evaluation
+    - Petabyte-scale ledger storage
+  contact:
+    name: BlackRoad Governance Team
+    email: governance@blackroad.io
+
+servers:
+  - url: https://governance.blackroad.io/v1
+    description: Production
+  - url: https://ledger.blackroad.io/v1
+    description: Ledger (Read-optimized)
+
+tags:
+  - name: policies
+    description: Policy management
+  - name: evaluation
+    description: Policy evaluation
+  - name: ledger
+    description: Immutable audit ledger
+  - name: lineage
+    description: PS-SHA∞ lineage tracking
+  - name: constraints
+    description: Runtime constraints
+
+paths:
+  # ----------------------------------------
+  # POLICY MANAGEMENT
+  # ----------------------------------------
+  /policies:
+    get:
+      operationId: listPolicies
+      summary: List policies
+      tags: [policies]
+      parameters:
+        - $ref: '#/components/parameters/PageLimit'
+        - $ref: '#/components/parameters/PageCursor'
+        - name: scope
+          in: query
+          schema:
+            $ref: '#/components/schemas/PolicyScope'
+        - name: active
+          in: query
+          schema:
+            type: boolean
+      responses:
+        '200':
+          description: Policy list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PolicyList'
+      security:
+        - bearerAuth: []
+
+    post:
+      operationId: createPolicy
+      summary: Create policy
+      tags: [policies]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PolicyCreate'
+      responses:
+        '201':
+          description: Policy created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Policy'
+      security:
+        - bearerAuth: []
+
+  /policies/{policy_id}:
+    parameters:
+      - $ref: '#/components/parameters/PolicyId'
+
+    get:
+      operationId: getPolicy
+      summary: Get policy
+      tags: [policies]
+      responses:
+        '200':
+          description: Policy details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Policy'
+      security:
+        - bearerAuth: []
+
+    patch:
+      operationId: updatePolicy
+      summary: Update policy
+      tags: [policies]
+      description: |
+        Update policy. Creates a new version; old version is preserved
+        in the ledger for audit purposes.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PolicyUpdate'
+      responses:
+        '200':
+          description: Policy updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Policy'
+      security:
+        - bearerAuth: []
+
+    delete:
+      operationId: deactivatePolicy
+      summary: Deactivate policy
+      tags: [policies]
+      description: |
+        Deactivate policy. Does not delete; marks as inactive in ledger.
+      responses:
+        '204':
+          description: Policy deactivated
+      security:
+        - bearerAuth: []
+
+  /policies/{policy_id}/versions:
+    parameters:
+      - $ref: '#/components/parameters/PolicyId'
+
+    get:
+      operationId: listPolicyVersions
+      summary: List policy versions
+      tags: [policies]
+      responses:
+        '200':
+          description: Policy versions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PolicyVersionList'
+      security:
+        - bearerAuth: []
+
+  # ----------------------------------------
+  # POLICY EVALUATION
+  # ----------------------------------------
+  /evaluate:
+    post:
+      operationId: evaluateAction
+      summary: Evaluate action against policies
+      tags: [evaluation]
+      description: |
+        Evaluate an action using trinary logic:
+        - 1: Allow
+        - 0: Neutral/Escalate
+        - -1: Deny
+
+        Evaluation considers all matching policies and returns
+        the aggregate decision with full audit trail.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EvaluationRequest'
+      responses:
+        '200':
+          description: Evaluation result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EvaluationResult'
+      security:
+        - bearerAuth: []
+
+  /evaluate/batch:
+    post:
+      operationId: evaluateBatch
+      summary: Batch evaluate actions
+      tags: [evaluation]
+      description: |
+        Evaluate multiple actions in a single request.
+        Optimized for high-throughput scenarios.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BatchEvaluationRequest'
+      responses:
+        '200':
+          description: Batch results
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BatchEvaluationResult'
+      security:
+        - bearerAuth: []
+
+  /evaluate/explain:
+    post:
+      operationId: explainEvaluation
+      summary: Explain evaluation
+      tags: [evaluation]
+      description: |
+        Evaluate and explain the decision-making process.
+        Returns detailed trace of policy matching and trinary logic.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EvaluationRequest'
+      responses:
+        '200':
+          description: Explained result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExplainedResult'
+      security:
+        - bearerAuth: []
+
+  /evaluate/simulate:
+    post:
+      operationId: simulateEvaluation
+      summary: Simulate evaluation
+      tags: [evaluation]
+      description: |
+        Simulate policy evaluation without recording to ledger.
+        Useful for testing policy changes.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SimulationRequest'
+      responses:
+        '200':
+          description: Simulation result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SimulationResult'
+      security:
+        - bearerAuth: []
+
+  # ----------------------------------------
+  # IMMUTABLE LEDGER
+  # ----------------------------------------
+  /ledger/entries:
+    get:
+      operationId: queryLedger
+      summary: Query ledger entries
+      tags: [ledger]
+      parameters:
+        - $ref: '#/components/parameters/PageLimit'
+        - $ref: '#/components/parameters/PageCursor'
+        - name: entity_id
+          in: query
+          schema:
+            type: string
+        - name: action_type
+          in: query
+          schema:
+            type: string
+        - name: decision
+          in: query
+          schema:
+            $ref: '#/components/schemas/TrinaryValue'
+        - name: start_time
+          in: query
+          schema:
+            type: string
+            format: date-time
+        - name: end_time
+          in: query
+          schema:
+            type: string
+            format: date-time
+      responses:
+        '200':
+          description: Ledger entries
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LedgerEntryList'
+      security:
+        - bearerAuth: []
+
+  /ledger/entries/{entry_id}:
+    parameters:
+      - $ref: '#/components/parameters/EntryId'
+
+    get:
+      operationId: getLedgerEntry
+      summary: Get ledger entry
+      tags: [ledger]
+      responses:
+        '200':
+          description: Ledger entry
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LedgerEntry'
+      security:
+        - bearerAuth: []
+
+  /ledger/verify:
+    post:
+      operationId: verifyLedger
+      summary: Verify ledger integrity
+      tags: [ledger]
+      description: |
+        Verify the integrity of ledger entries using PS-SHA∞ chain.
+        Returns verification status and any detected anomalies.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VerificationRequest'
+      responses:
+        '200':
+          description: Verification result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VerificationResult'
+      security:
+        - bearerAuth: []
+
+  /ledger/aggregate:
+    post:
+      operationId: aggregateLedger
+      summary: Aggregate ledger statistics
+      tags: [ledger]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AggregationRequest'
+      responses:
+        '200':
+          description: Aggregation result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AggregationResult'
+      security:
+        - bearerAuth: []
+
+  # ----------------------------------------
+  # PS-SHA∞ LINEAGE
+  # ----------------------------------------
+  /lineage/hash:
+    post:
+      operationId: computeHash
+      summary: Compute PS-SHA∞ hash
+      tags: [lineage]
+      description: |
+        Compute PS-SHA∞ (Probabilistic Semantic-aware Secure Hash)
+        for content with optional parent hash for lineage chain.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/HashRequest'
+      responses:
+        '200':
+          description: Hash result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HashResult'
+      security:
+        - bearerAuth: []
+
+  /lineage/trace:
+    get:
+      operationId: traceLineage
+      summary: Trace lineage
+      tags: [lineage]
+      parameters:
+        - name: hash
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: direction
+          in: query
+          schema:
+            type: string
+            enum: [ancestors, descendants, both]
+            default: ancestors
+        - name: depth
+          in: query
+          schema:
+            type: integer
+            default: 100
+            maximum: 1000
+      responses:
+        '200':
+          description: Lineage trace
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LineageTrace'
+      security:
+        - bearerAuth: []
+
+  /lineage/compare:
+    post:
+      operationId: compareLineage
+      summary: Compare lineages
+      tags: [lineage]
+      description: |
+        Compare two lineage chains to find common ancestors
+        and detect contradictions.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LineageCompareRequest'
+      responses:
+        '200':
+          description: Comparison result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LineageCompareResult'
+      security:
+        - bearerAuth: []
+
+  /lineage/contradictions:
+    get:
+      operationId: listContradictions
+      summary: List detected contradictions
+      tags: [lineage]
+      parameters:
+        - $ref: '#/components/parameters/PageLimit'
+        - $ref: '#/components/parameters/PageCursor'
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [unresolved, resolved, escalated]
+      responses:
+        '200':
+          description: Contradiction list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContradictionList'
+      security:
+        - bearerAuth: []
+
+  /lineage/contradictions/{contradiction_id}/resolve:
+    parameters:
+      - $ref: '#/components/parameters/ContradictionId'
+
+    post:
+      operationId: resolveContradiction
+      summary: Resolve contradiction
+      tags: [lineage]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ContradictionResolution'
+      responses:
+        '200':
+          description: Resolution result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Contradiction'
+      security:
+        - bearerAuth: []
+
+  # ----------------------------------------
+  # CONSTRAINTS
+  # ----------------------------------------
+  /constraints:
+    get:
+      operationId: listConstraints
+      summary: List constraints
+      tags: [constraints]
+      parameters:
+        - $ref: '#/components/parameters/PageLimit'
+        - name: type
+          in: query
+          schema:
+            $ref: '#/components/schemas/ConstraintType'
+        - name: active
+          in: query
+          schema:
+            type: boolean
+      responses:
+        '200':
+          description: Constraint list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConstraintList'
+      security:
+        - bearerAuth: []
+
+    post:
+      operationId: createConstraint
+      summary: Create constraint
+      tags: [constraints]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConstraintCreate'
+      responses:
+        '201':
+          description: Constraint created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Constraint'
+      security:
+        - bearerAuth: []
+
+  /constraints/{constraint_id}:
+    parameters:
+      - $ref: '#/components/parameters/ConstraintId'
+
+    get:
+      operationId: getConstraint
+      summary: Get constraint
+      tags: [constraints]
+      responses:
+        '200':
+          description: Constraint details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Constraint'
+      security:
+        - bearerAuth: []
+
+    patch:
+      operationId: updateConstraint
+      summary: Update constraint
+      tags: [constraints]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConstraintUpdate'
+      responses:
+        '200':
+          description: Constraint updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Constraint'
+      security:
+        - bearerAuth: []
+
+    delete:
+      operationId: deleteConstraint
+      summary: Delete constraint
+      tags: [constraints]
+      responses:
+        '204':
+          description: Constraint deleted
+      security:
+        - bearerAuth: []
+
+# ============================================
+# COMPONENTS
+# ============================================
+
+components:
+  parameters:
+    PolicyId:
+      name: policy_id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+    EntryId:
+      name: entry_id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+    ConstraintId:
+      name: constraint_id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+    ContradictionId:
+      name: contradiction_id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+    PageLimit:
+      name: limit
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 1000
+        default: 100
+
+    PageCursor:
+      name: cursor
+      in: query
+      schema:
+        type: string
+
+  schemas:
+    # Trinary
+    TrinaryValue:
+      type: integer
+      enum: [-1, 0, 1]
+      description: |
+        Trinary logic value:
+        - 1: Allow/True/Positive
+        - 0: Neutral/Uncertain/Escalate
+        - -1: Deny/False/Negative
+
+    # Policy schemas
+    Policy:
+      type: object
+      required: [id, name, scope, rules, version, active, created_at]
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        description:
+          type: string
+        scope:
+          $ref: '#/components/schemas/PolicyScope'
+        rules:
+          type: array
+          items:
+            $ref: '#/components/schemas/PolicyRule'
+        priority:
+          type: integer
+          default: 0
+        version:
+          type: integer
+        active:
+          type: boolean
+        metadata:
+          type: object
+        ps_sha:
+          type: string
+          description: PS-SHA∞ hash of policy
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    PolicyScope:
+      type: string
+      enum:
+        - global
+        - organization
+        - team
+        - agent
+        - user
+        - resource
+
+    PolicyRule:
+      type: object
+      required: [condition, decision]
+      properties:
+        id:
+          type: string
+        condition:
+          $ref: '#/components/schemas/Condition'
+        decision:
+          $ref: '#/components/schemas/TrinaryValue'
+        constraints:
+          type: array
+          items:
+            type: string
+            format: uuid
+        reason:
+          type: string
+
+    Condition:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: [match, contains, regex, expression, composite]
+        field:
+          type: string
+        operator:
+          type: string
+          enum: [eq, neq, gt, gte, lt, lte, in, not_in, matches, exists]
+        value:
+          oneOf:
+            - type: string
+            - type: number
+            - type: boolean
+            - type: array
+        and:
+          type: array
+          items:
+            $ref: '#/components/schemas/Condition'
+        or:
+          type: array
+          items:
+            $ref: '#/components/schemas/Condition'
+        not:
+          $ref: '#/components/schemas/Condition'
+
+    PolicyCreate:
+      type: object
+      required: [name, scope, rules]
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        scope:
+          $ref: '#/components/schemas/PolicyScope'
+        rules:
+          type: array
+          items:
+            $ref: '#/components/schemas/PolicyRule'
+        priority:
+          type: integer
+          default: 0
+        metadata:
+          type: object
+
+    PolicyUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        rules:
+          type: array
+          items:
+            $ref: '#/components/schemas/PolicyRule'
+        priority:
+          type: integer
+        active:
+          type: boolean
+        metadata:
+          type: object
+
+    PolicyList:
+      type: object
+      required: [data, has_more]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Policy'
+        has_more:
+          type: boolean
+        cursor:
+          type: string
+
+    PolicyVersionList:
+      type: object
+      required: [versions]
+      properties:
+        versions:
+          type: array
+          items:
+            $ref: '#/components/schemas/Policy'
+
+    # Evaluation schemas
+    EvaluationRequest:
+      type: object
+      required: [action, context]
+      properties:
+        action:
+          type: string
+          description: Action being evaluated
+        entity_id:
+          type: string
+          description: Acting entity (agent/user ID)
+        entity_type:
+          type: string
+          enum: [agent, user, system]
+        target_id:
+          type: string
+          description: Target resource ID
+        target_type:
+          type: string
+        context:
+          type: object
+          additionalProperties: true
+          description: Additional context for evaluation
+
+    EvaluationResult:
+      type: object
+      required: [decision, trinary_value, evaluation_id]
+      properties:
+        decision:
+          type: string
+          enum: [allow, deny, escalate]
+        trinary_value:
+          $ref: '#/components/schemas/TrinaryValue'
+        evaluation_id:
+          type: string
+          format: uuid
+        matched_policies:
+          type: array
+          items:
+            type: string
+            format: uuid
+        applied_constraints:
+          type: array
+          items:
+            type: string
+            format: uuid
+        ledger_entry_id:
+          type: string
+          format: uuid
+        latency_ms:
+          type: number
+        cached:
+          type: boolean
+
+    BatchEvaluationRequest:
+      type: object
+      required: [evaluations]
+      properties:
+        evaluations:
+          type: array
+          items:
+            $ref: '#/components/schemas/EvaluationRequest'
+          maxItems: 1000
+
+    BatchEvaluationResult:
+      type: object
+      required: [results]
+      properties:
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/EvaluationResult'
+        total_latency_ms:
+          type: number
+
+    ExplainedResult:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/EvaluationResult'
+        - type: object
+          properties:
+            explanation:
+              $ref: '#/components/schemas/Explanation'
+
+    Explanation:
+      type: object
+      properties:
+        policy_evaluations:
+          type: array
+          items:
+            type: object
+            properties:
+              policy_id:
+                type: string
+                format: uuid
+              policy_name:
+                type: string
+              rules_evaluated:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    rule_id:
+                      type: string
+                    matched:
+                      type: boolean
+                    trinary_value:
+                      $ref: '#/components/schemas/TrinaryValue'
+                    reason:
+                      type: string
+        trinary_aggregation:
+          type: object
+          properties:
+            allow_count:
+              type: integer
+            deny_count:
+              type: integer
+            neutral_count:
+              type: integer
+            final_value:
+              $ref: '#/components/schemas/TrinaryValue'
+            aggregation_method:
+              type: string
+              enum: [unanimous, majority, weighted, priority]
+
+    SimulationRequest:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/EvaluationRequest'
+        - type: object
+          properties:
+            policy_overrides:
+              type: array
+              items:
+                $ref: '#/components/schemas/Policy'
+            constraint_overrides:
+              type: array
+              items:
+                $ref: '#/components/schemas/Constraint'
+
+    SimulationResult:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/ExplainedResult'
+        - type: object
+          properties:
+            simulated:
+              type: boolean
+              default: true
+            diff_from_current:
+              type: object
+              properties:
+                decision_changed:
+                  type: boolean
+                original_decision:
+                  type: string
+
+    # Ledger schemas
+    LedgerEntry:
+      type: object
+      required: [id, type, entity_id, action, decision, ps_sha, timestamp]
+      properties:
+        id:
+          type: string
+          format: uuid
+        type:
+          type: string
+          enum: [evaluation, policy_change, constraint_change, escalation, resolution]
+        entity_id:
+          type: string
+        entity_type:
+          type: string
+        action:
+          type: string
+        target_id:
+          type: string
+        target_type:
+          type: string
+        decision:
+          $ref: '#/components/schemas/TrinaryValue'
+        context:
+          type: object
+        matched_policies:
+          type: array
+          items:
+            type: string
+            format: uuid
+        ps_sha:
+          type: string
+          description: PS-SHA∞ hash
+        parent_ps_sha:
+          type: string
+          description: Parent hash for lineage
+        timestamp:
+          type: string
+          format: date-time
+        immutable:
+          type: boolean
+          default: true
+
+    LedgerEntryList:
+      type: object
+      required: [data, has_more]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/LedgerEntry'
+        has_more:
+          type: boolean
+        cursor:
+          type: string
+        total_count:
+          type: integer
+
+    VerificationRequest:
+      type: object
+      properties:
+        start_hash:
+          type: string
+        end_hash:
+          type: string
+        start_time:
+          type: string
+          format: date-time
+        end_time:
+          type: string
+          format: date-time
+        sample_rate:
+          type: number
+          default: 1.0
+          description: Fraction of entries to verify
+
+    VerificationResult:
+      type: object
+      required: [valid, entries_verified]
+      properties:
+        valid:
+          type: boolean
+        entries_verified:
+          type: integer
+        anomalies:
+          type: array
+          items:
+            type: object
+            properties:
+              entry_id:
+                type: string
+                format: uuid
+              type:
+                type: string
+                enum: [hash_mismatch, missing_parent, duplicate, timestamp_anomaly]
+              description:
+                type: string
+
+    AggregationRequest:
+      type: object
+      required: [aggregations]
+      properties:
+        filters:
+          type: object
+          properties:
+            entity_id:
+              type: string
+            action_type:
+              type: string
+            start_time:
+              type: string
+              format: date-time
+            end_time:
+              type: string
+              format: date-time
+        aggregations:
+          type: array
+          items:
+            type: object
+            properties:
+              name:
+                type: string
+              type:
+                type: string
+                enum: [count, sum, avg, min, max, histogram]
+              field:
+                type: string
+              group_by:
+                type: array
+                items:
+                  type: string
+
+    AggregationResult:
+      type: object
+      properties:
+        results:
+          type: object
+          additionalProperties: true
+        query_time_ms:
+          type: number
+
+    # Lineage schemas
+    HashRequest:
+      type: object
+      required: [content]
+      properties:
+        content:
+          type: object
+          description: Content to hash
+        parent_hash:
+          type: string
+          description: Parent PS-SHA∞ for lineage chain
+        semantic_embedding:
+          type: array
+          items:
+            type: number
+          description: Optional semantic embedding for PS-SHA∞
+
+    HashResult:
+      type: object
+      required: [hash]
+      properties:
+        hash:
+          type: string
+          description: PS-SHA∞ hash
+        parent_hash:
+          type: string
+        semantic_similarity:
+          type: number
+          description: Similarity to parent if applicable
+
+    LineageTrace:
+      type: object
+      required: [root_hash, entries]
+      properties:
+        root_hash:
+          type: string
+        entries:
+          type: array
+          items:
+            type: object
+            properties:
+              hash:
+                type: string
+              parent_hash:
+                type: string
+              depth:
+                type: integer
+              timestamp:
+                type: string
+                format: date-time
+              entity_id:
+                type: string
+              action:
+                type: string
+        total_depth:
+          type: integer
+        branches:
+          type: integer
+
+    LineageCompareRequest:
+      type: object
+      required: [hash_a, hash_b]
+      properties:
+        hash_a:
+          type: string
+        hash_b:
+          type: string
+        max_depth:
+          type: integer
+          default: 100
+
+    LineageCompareResult:
+      type: object
+      required: [common_ancestor]
+      properties:
+        common_ancestor:
+          type: string
+          description: Common ancestor hash if exists
+        divergence_point:
+          type: string
+        distance_a:
+          type: integer
+          description: Steps from hash_a to common ancestor
+        distance_b:
+          type: integer
+        contradictions:
+          type: array
+          items:
+            $ref: '#/components/schemas/Contradiction'
+
+    Contradiction:
+      type: object
+      required: [id, type, status]
+      properties:
+        id:
+          type: string
+          format: uuid
+        type:
+          type: string
+          enum: [semantic, temporal, causal, logical]
+        hash_a:
+          type: string
+        hash_b:
+          type: string
+        description:
+          type: string
+        trinary_resolution:
+          $ref: '#/components/schemas/TrinaryValue'
+        status:
+          type: string
+          enum: [unresolved, resolved, escalated]
+        resolved_by:
+          type: string
+        resolved_at:
+          type: string
+          format: date-time
+        created_at:
+          type: string
+          format: date-time
+
+    ContradictionList:
+      type: object
+      required: [data, has_more]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Contradiction'
+        has_more:
+          type: boolean
+        cursor:
+          type: string
+
+    ContradictionResolution:
+      type: object
+      required: [resolution_type]
+      properties:
+        resolution_type:
+          type: string
+          enum: [accept_a, accept_b, merge, escalate, custom]
+        trinary_value:
+          $ref: '#/components/schemas/TrinaryValue'
+        reason:
+          type: string
+        custom_resolution:
+          type: object
+
+    # Constraint schemas
+    Constraint:
+      type: object
+      required: [id, type, expression, active]
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        type:
+          $ref: '#/components/schemas/ConstraintType'
+        expression:
+          type: string
+          description: Constraint expression in CEL/Rego
+        parameters:
+          type: object
+        priority:
+          type: integer
+          default: 0
+        active:
+          type: boolean
+        scope:
+          $ref: '#/components/schemas/PolicyScope'
+        created_at:
+          type: string
+          format: date-time
+
+    ConstraintType:
+      type: string
+      enum:
+        - rate_limit
+        - resource_limit
+        - capability
+        - temporal
+        - spatial
+        - budget
+        - quota
+        - dependency
+
+    ConstraintCreate:
+      type: object
+      required: [type, expression]
+      properties:
+        name:
+          type: string
+        type:
+          $ref: '#/components/schemas/ConstraintType'
+        expression:
+          type: string
+        parameters:
+          type: object
+        priority:
+          type: integer
+          default: 0
+        scope:
+          $ref: '#/components/schemas/PolicyScope'
+
+    ConstraintUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        expression:
+          type: string
+        parameters:
+          type: object
+        priority:
+          type: integer
+        active:
+          type: boolean
+
+    ConstraintList:
+      type: object
+      required: [data, has_more]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Constraint'
+        has_more:
+          type: boolean
+        cursor:
+          type: string
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

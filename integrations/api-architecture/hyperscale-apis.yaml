@@ -1,0 +1,921 @@
+# Hyperscale API Architecture
+# BlackRoad OS, Inc. - Trillion Dollar Infrastructure
+#
+# Designed for:
+# - $1,000,000,000,000 company scale
+# - 100,000,000,000,000 entity instances (100 trillion)
+# - 30,000 concurrent collaborators per agent
+#
+# @blackroad_name: BlackRoad API Infrastructure
+# @operator: alexa.operator.v1
+# @scale: hyperscale
+
+version: "api-architecture-v1"
+
+# ============================================
+# SCALE PARAMETERS
+# ============================================
+
+scale:
+  company_valuation: "$1,000,000,000,000"
+  entity_instances: 100_000_000_000_000  # 100 trillion
+  concurrent_collaborators: 30_000
+  api_services: 65
+  total_endpoints: 1600
+  regions: 12
+  availability: "99.999%"
+
+# ============================================
+# TIER 1: CORE AGENT INFRASTRUCTURE
+# 15 APIs | ~400 Endpoints
+# ============================================
+
+tier_1_core_agent:
+  name: "Core Agent Infrastructure"
+  description: "Foundational agent runtime and orchestration"
+  apis: 15
+  endpoints_estimate: 400
+
+  services:
+    # ==========================================
+    # 1.1 Agent Identity Service
+    # ==========================================
+    agent-identity:
+      name: "Agent Identity Service"
+      description: "PS-SHA∞ IDs, certificates, cryptographic lineage"
+      repository: BlackRoad-OS/blackroad-os-agents
+      base_path: /api/v1/identity
+      endpoints: 28
+
+      operations:
+        # Identity Core
+        - POST   /agents                      # Create agent identity
+        - GET    /agents/{id}                 # Get agent by ID
+        - GET    /agents/{id}/certificate     # Get agent certificate
+        - POST   /agents/{id}/rotate-keys     # Rotate cryptographic keys
+        - DELETE /agents/{id}                 # Revoke agent identity
+
+        # PS-SHA∞ Operations
+        - GET    /agents/{id}/lineage         # Get full lineage chain
+        - POST   /agents/{id}/derive          # Derive child identity
+        - GET    /agents/{id}/ancestors       # Get ancestor chain
+        - GET    /agents/{id}/descendants     # Get descendant tree
+        - POST   /agents/{id}/verify          # Verify identity proof
+
+        # Certificates
+        - GET    /certificates/{hash}         # Get certificate by hash
+        - POST   /certificates/validate       # Validate certificate chain
+        - GET    /certificates/root           # Get root CA certificates
+
+        # Federation
+        - POST   /federation/register         # Register with federation
+        - GET    /federation/peers            # List federated peers
+        - POST   /federation/verify           # Cross-federation verify
+
+    # ==========================================
+    # 1.2 Agent Lifecycle Service
+    # ==========================================
+    agent-lifecycle:
+      name: "Agent Lifecycle Service"
+      description: "Create, spawn, hibernate, terminate, resurrect"
+      repository: BlackRoad-OS/blackroad-os-agents
+      base_path: /api/v1/lifecycle
+      endpoints: 24
+
+      operations:
+        # Lifecycle Core
+        - POST   /spawn                       # Spawn new agent
+        - POST   /clone/{id}                  # Clone existing agent
+        - POST   /fork/{id}                   # Fork with divergent state
+        - PUT    /agents/{id}/state           # Update agent state
+        - DELETE /agents/{id}                 # Terminate agent
+
+        # Hibernation
+        - POST   /agents/{id}/hibernate       # Hibernate agent
+        - POST   /agents/{id}/wake            # Wake from hibernation
+        - GET    /agents/{id}/hibernate-state # Get hibernation status
+
+        # Resurrection
+        - POST   /agents/{id}/checkpoint      # Create checkpoint
+        - GET    /agents/{id}/checkpoints     # List checkpoints
+        - POST   /agents/{id}/restore         # Restore from checkpoint
+        - DELETE /agents/{id}/checkpoints/{cp}# Delete checkpoint
+
+        # Migration
+        - POST   /agents/{id}/migrate         # Migrate to new host
+        - GET    /agents/{id}/location        # Get current location
+
+    # ==========================================
+    # 1.3 Agent Registry Service
+    # ==========================================
+    agent-registry:
+      name: "Agent Registry Service"
+      description: "Capability discovery, health, metadata catalog"
+      repository: BlackRoad-OS/blackroad-os-agents
+      base_path: /api/v1/registry
+      endpoints: 45
+
+      operations:
+        # Discovery
+        - GET    /agents                      # List all agents
+        - GET    /agents/search               # Search agents
+        - GET    /agents/by-capability        # Find by capability
+        - GET    /agents/by-tag               # Find by tag
+        - GET    /agents/by-owner             # Find by owner
+
+        # Capabilities
+        - GET    /capabilities                # List all capabilities
+        - GET    /capabilities/{id}           # Get capability details
+        - POST   /agents/{id}/capabilities    # Register capability
+        - DELETE /agents/{id}/capabilities/{c}# Unregister capability
+        - GET    /agents/{id}/capabilities    # List agent capabilities
+
+        # Metadata
+        - GET    /agents/{id}/metadata        # Get metadata
+        - PUT    /agents/{id}/metadata        # Update metadata
+        - PATCH  /agents/{id}/metadata        # Partial update
+
+        # Health
+        - GET    /agents/{id}/health          # Get health status
+        - GET    /health/summary              # Cluster health summary
+        - GET    /health/degraded             # List degraded agents
+
+        # Versioning
+        - GET    /agents/{id}/versions        # Version history
+        - GET    /schemas                     # Capability schemas
+
+    # ==========================================
+    # 1.4 Memory Journal Service (PS-SHA∞)
+    # ==========================================
+    memory-journal:
+      name: "Memory Journal Service"
+      description: "Append-only writes, semantic reads, anchoring"
+      repository: BlackRoad-OS/blackroad-os-agents
+      base_path: /api/v1/memory
+      endpoints: 55
+
+      operations:
+        # Write Operations (Append-Only)
+        - POST   /agents/{id}/memories        # Append memory
+        - POST   /agents/{id}/memories/batch  # Batch append
+        - POST   /agents/{id}/anchor          # Anchor to blockchain
+
+        # Read Operations
+        - GET    /agents/{id}/memories        # List memories
+        - GET    /agents/{id}/memories/{hash} # Get by hash
+        - GET    /agents/{id}/memories/latest # Get latest N
+        - GET    /agents/{id}/memories/range  # Get time range
+        - GET    /agents/{id}/memories/search # Semantic search
+
+        # Semantic Operations
+        - POST   /agents/{id}/recall          # Semantic recall
+        - POST   /agents/{id}/associate       # Find associations
+        - GET    /agents/{id}/context         # Get active context
+        - POST   /agents/{id}/consolidate     # Memory consolidation
+
+        # Verification
+        - GET    /agents/{id}/proofs/{hash}   # Get Merkle proof
+        - POST   /verify                      # Verify memory integrity
+        - GET    /agents/{id}/anchors         # List blockchain anchors
+
+        # Layers (Episodic, Semantic, Procedural)
+        - GET    /agents/{id}/episodic        # Episodic memories
+        - GET    /agents/{id}/semantic        # Semantic knowledge
+        - GET    /agents/{id}/procedural      # Procedural skills
+
+    # ==========================================
+    # 1.5 Event Bus Service
+    # ==========================================
+    event-bus:
+      name: "Event Bus Service"
+      description: "Pub/sub, routing, delivery guarantees"
+      repository: BlackRoad-OS/blackroad-os-operator
+      base_path: /api/v1/events
+      endpoints: 38
+
+      operations:
+        # Publishing
+        - POST   /publish                     # Publish event
+        - POST   /publish/batch               # Batch publish
+        - POST   /publish/delayed             # Delayed publish
+
+        # Subscriptions
+        - POST   /subscriptions               # Create subscription
+        - GET    /subscriptions               # List subscriptions
+        - GET    /subscriptions/{id}          # Get subscription
+        - DELETE /subscriptions/{id}          # Delete subscription
+        - PUT    /subscriptions/{id}/pause    # Pause subscription
+        - PUT    /subscriptions/{id}/resume   # Resume subscription
+
+        # Topics
+        - GET    /topics                      # List topics
+        - POST   /topics                      # Create topic
+        - DELETE /topics/{name}               # Delete topic
+        - GET    /topics/{name}/stats         # Topic statistics
+
+        # Consumption
+        - GET    /subscriptions/{id}/pull     # Pull messages
+        - POST   /subscriptions/{id}/ack      # Acknowledge
+        - POST   /subscriptions/{id}/nack     # Negative ack
+
+        # Dead Letter
+        - GET    /dlq                         # Dead letter queue
+        - POST   /dlq/{id}/retry              # Retry from DLQ
+
+    # ==========================================
+    # 1.6 Contradiction Engine (Trinary Logic)
+    # ==========================================
+    contradiction-engine:
+      name: "Contradiction Engine"
+      description: "Quarantine, bridge rules, resolution (1/0/-1)"
+      repository: BlackRoad-OS/blackroad-os-operator
+      base_path: /api/v1/contradictions
+      endpoints: 32
+
+      operations:
+        # Detection
+        - POST   /detect                      # Detect contradictions
+        - GET    /agents/{id}/contradictions  # List contradictions
+        - GET    /contradictions/{id}         # Get contradiction details
+
+        # Quarantine
+        - POST   /quarantine                  # Quarantine conflicting data
+        - GET    /quarantine                  # List quarantined items
+        - DELETE /quarantine/{id}             # Release from quarantine
+
+        # Resolution
+        - POST   /contradictions/{id}/resolve # Resolve contradiction
+        - POST   /contradictions/{id}/merge   # Merge conflicting states
+        - POST   /contradictions/{id}/choose  # Choose winning state
+        - POST   /contradictions/{id}/defer   # Defer to authority
+
+        # Bridge Rules
+        - GET    /rules                       # List bridge rules
+        - POST   /rules                       # Create bridge rule
+        - PUT    /rules/{id}                  # Update rule
+        - DELETE /rules/{id}                  # Delete rule
+        - POST   /rules/evaluate              # Evaluate rules
+
+        # Trinary State
+        - GET    /agents/{id}/trinary-state   # Get trinary state
+        - POST   /agents/{id}/affirm          # Affirm (1)
+        - POST   /agents/{id}/deny            # Deny (0)
+        - POST   /agents/{id}/neutral         # Neutral (-1)
+
+    # ==========================================
+    # 1.7 Consensus Service
+    # ==========================================
+    consensus:
+      name: "Consensus Service"
+      description: "Multi-agent agreement, quorum, voting"
+      repository: BlackRoad-OS/blackroad-os-agents
+      base_path: /api/v1/consensus
+      endpoints: 28
+
+      operations:
+        # Proposals
+        - POST   /proposals                   # Create proposal
+        - GET    /proposals                   # List proposals
+        - GET    /proposals/{id}              # Get proposal
+        - DELETE /proposals/{id}              # Cancel proposal
+
+        # Voting
+        - POST   /proposals/{id}/vote         # Cast vote
+        - GET    /proposals/{id}/votes        # Get votes
+        - GET    /proposals/{id}/tally        # Get tally
+        - POST   /proposals/{id}/finalize     # Finalize voting
+
+        # Quorum
+        - GET    /quorums                     # List quorum configs
+        - POST   /quorums                     # Create quorum config
+        - GET    /quorums/{id}/status         # Check quorum status
+
+        # Agreement
+        - POST   /agreements                  # Propose agreement
+        - GET    /agreements/{id}             # Get agreement
+        - POST   /agreements/{id}/sign        # Sign agreement
+
+    # ==========================================
+    # 1.8 Task Orchestration Service
+    # ==========================================
+    task-orchestration:
+      name: "Task Orchestration Service"
+      description: "Assignment, delegation, completion tracking"
+      repository: BlackRoad-OS/blackroad-os-operator
+      base_path: /api/v1/tasks
+      endpoints: 48
+
+      operations:
+        # Task Management
+        - POST   /tasks                       # Create task
+        - GET    /tasks                       # List tasks
+        - GET    /tasks/{id}                  # Get task
+        - PUT    /tasks/{id}                  # Update task
+        - DELETE /tasks/{id}                  # Delete task
+
+        # Assignment
+        - POST   /tasks/{id}/assign           # Assign to agent
+        - POST   /tasks/{id}/delegate         # Delegate to sub-agent
+        - POST   /tasks/{id}/reassign         # Reassign task
+        - GET    /agents/{id}/tasks           # Get agent's tasks
+
+        # Execution
+        - POST   /tasks/{id}/start            # Start execution
+        - POST   /tasks/{id}/pause            # Pause execution
+        - POST   /tasks/{id}/resume           # Resume execution
+        - POST   /tasks/{id}/complete         # Mark complete
+        - POST   /tasks/{id}/fail             # Mark failed
+
+        # Dependencies
+        - GET    /tasks/{id}/dependencies     # Get dependencies
+        - POST   /tasks/{id}/dependencies     # Add dependency
+        - GET    /tasks/{id}/dependents       # Get dependent tasks
+
+        # Workflows
+        - POST   /workflows                   # Create workflow
+        - GET    /workflows/{id}              # Get workflow
+        - POST   /workflows/{id}/execute      # Execute workflow
+        - GET    /workflows/{id}/status       # Workflow status
+
+    # ==========================================
+    # 1.9 Resource Governor Service
+    # ==========================================
+    resource-governor:
+      name: "Resource Governor Service"
+      description: "Quotas, rate limits, compute allocation"
+      repository: BlackRoad-OS/blackroad-os-operator
+      base_path: /api/v1/resources
+      endpoints: 32
+
+      operations:
+        # Quotas
+        - GET    /quotas                      # List quota configs
+        - POST   /quotas                      # Create quota
+        - GET    /quotas/{id}                 # Get quota
+        - PUT    /quotas/{id}                 # Update quota
+        - GET    /agents/{id}/quota           # Get agent quota
+        - GET    /agents/{id}/usage           # Get usage
+
+        # Rate Limits
+        - GET    /rate-limits                 # List rate limits
+        - POST   /rate-limits                 # Create rate limit
+        - GET    /rate-limits/{id}/status     # Check limit status
+
+        # Allocation
+        - POST   /allocate                    # Allocate resources
+        - POST   /release                     # Release resources
+        - GET    /allocations                 # List allocations
+
+        # Compute
+        - GET    /compute/available           # Available compute
+        - POST   /compute/reserve             # Reserve compute
+        - GET    /compute/pools               # Compute pools
+
+    # ==========================================
+    # 1.10 Heartbeat/Health Service
+    # ==========================================
+    heartbeat:
+      name: "Heartbeat Service"
+      description: "Liveness, readiness, mesh health"
+      repository: BlackRoad-OS/blackroad-os-operator
+      base_path: /api/v1/health
+      endpoints: 22
+
+      operations:
+        # Agent Health
+        - POST   /agents/{id}/heartbeat       # Send heartbeat
+        - GET    /agents/{id}/status          # Get status
+        - GET    /agents/{id}/liveness        # Liveness probe
+        - GET    /agents/{id}/readiness       # Readiness probe
+
+        # Mesh Health
+        - GET    /mesh/status                 # Mesh overview
+        - GET    /mesh/topology               # Mesh topology
+        - GET    /mesh/partitions             # Network partitions
+
+        # Alerts
+        - GET    /alerts                      # Active alerts
+        - POST   /alerts/{id}/acknowledge     # Ack alert
+
+        # SLA
+        - GET    /sla/status                  # SLA status
+        - GET    /sla/breaches                # SLA breaches
+
+    # ==========================================
+    # 1.11 Tracing/Audit Service
+    # ==========================================
+    tracing:
+      name: "Tracing & Audit Service"
+      description: "Decision logs, lineage tracking, audit trail"
+      repository: BlackRoad-OS/blackroad-os-operator
+      base_path: /api/v1/traces
+      endpoints: 35
+
+      operations:
+        # Traces
+        - GET    /traces                      # List traces
+        - GET    /traces/{id}                 # Get trace
+        - GET    /traces/{id}/spans           # Get spans
+
+        # Decision Logs
+        - GET    /agents/{id}/decisions       # Get decisions
+        - GET    /decisions/{id}              # Get decision detail
+        - GET    /decisions/{id}/reasoning    # Get reasoning chain
+
+        # Audit
+        - GET    /audit                       # Audit log
+        - GET    /audit/agents/{id}           # Agent audit log
+        - POST   /audit/query                 # Query audit log
+
+        # Lineage
+        - GET    /agents/{id}/lineage         # Full lineage
+        - GET    /data/{id}/provenance        # Data provenance
+
+        # Export
+        - POST   /export                      # Export traces
+        - GET    /export/{job}/status         # Export status
+
+    # ==========================================
+    # 1.12 Escalation Service (HITL)
+    # ==========================================
+    escalation:
+      name: "Escalation Service"
+      description: "Human-in-the-loop routing, approval queues"
+      repository: BlackRoad-OS/blackroad-os-operator
+      base_path: /api/v1/escalations
+      endpoints: 26
+
+      operations:
+        # Escalations
+        - POST   /escalate                    # Create escalation
+        - GET    /escalations                 # List escalations
+        - GET    /escalations/{id}            # Get escalation
+        - POST   /escalations/{id}/resolve    # Resolve escalation
+        - POST   /escalations/{id}/reject     # Reject escalation
+
+        # Queues
+        - GET    /queues                      # List queues
+        - GET    /queues/{id}/items           # Queue items
+        - POST   /queues/{id}/claim           # Claim item
+
+        # Approvals
+        - GET    /approvals/pending           # Pending approvals
+        - POST   /approvals/{id}/approve      # Approve
+        - POST   /approvals/{id}/deny         # Deny
+
+        # Routing
+        - GET    /routing/rules               # Routing rules
+        - POST   /routing/rules               # Create rule
+
+    # ==========================================
+    # 1.13-1.15 Additional Core Services
+    # ==========================================
+
+    capability-registry:
+      name: "Capability Registry"
+      base_path: /api/v1/capabilities
+      endpoints: 20
+
+    permission-service:
+      name: "Permission Service"
+      base_path: /api/v1/permissions
+      endpoints: 25
+
+    context-manager:
+      name: "Context Manager"
+      base_path: /api/v1/context
+      endpoints: 22
+
+# ============================================
+# TIER 2: DATA LAYER
+# 10 APIs | ~220 Endpoints
+# ============================================
+
+tier_2_data_layer:
+  name: "Data Layer"
+  description: "Storage, indexing, and query infrastructure"
+  apis: 10
+  endpoints_estimate: 220
+
+  services:
+    vector-store:
+      name: "Vector Store Service"
+      description: "Semantic memory, embeddings, similarity"
+      base_path: /api/v1/vectors
+      endpoints: 28
+      backend: pinecone
+
+    state-store:
+      name: "State Store Service"
+      description: "Key-value, ephemeral context"
+      base_path: /api/v1/state
+      endpoints: 22
+      backend: redis
+
+    document-store:
+      name: "Document Store Service"
+      description: "Structured knowledge, schemas"
+      base_path: /api/v1/documents
+      endpoints: 30
+      backend: mongodb
+
+    graph-store:
+      name: "Graph Store Service"
+      description: "Relationships, lineage, knowledge graph"
+      base_path: /api/v1/graph
+      endpoints: 35
+      backend: neo4j
+
+    time-series:
+      name: "Time Series Service"
+      description: "Metrics, events, history"
+      base_path: /api/v1/timeseries
+      endpoints: 25
+      backend: timescaledb
+
+    blob-store:
+      name: "Blob Store Service"
+      description: "Assets, large payloads"
+      base_path: /api/v1/blobs
+      endpoints: 18
+      backend: r2
+
+    cache-layer:
+      name: "Cache Layer Service"
+      description: "Hot data, sessions, TTL"
+      base_path: /api/v1/cache
+      endpoints: 20
+      backend: redis
+
+    search-index:
+      name: "Search Index Service"
+      description: "Full-text, faceted search"
+      base_path: /api/v1/search
+      endpoints: 28
+      backend: elasticsearch
+
+    replication:
+      name: "Replication Service"
+      description: "Cross-region sync, consistency"
+      base_path: /api/v1/replication
+      endpoints: 15
+
+    backup:
+      name: "Backup Service"
+      description: "Snapshots, restore, retention"
+      base_path: /api/v1/backups
+      endpoints: 18
+
+# ============================================
+# TIER 3: EXTERNAL INTEGRATION
+# 20 APIs | ~400 Endpoints
+# ============================================
+
+tier_3_external:
+  name: "External Integration"
+  description: "Third-party services and external systems"
+  apis: 20
+  endpoints_estimate: 400
+
+  services:
+    auth-gateway:
+      name: "Auth Gateway"
+      base_path: /api/v1/auth
+      endpoints: 40
+      integrations: [auth0, okta, google, github]
+
+    payment-gateway:
+      name: "Payment Gateway"
+      base_path: /api/v1/payments
+      endpoints: 35
+      integrations: [stripe]
+
+    communication:
+      name: "Communication Service"
+      base_path: /api/v1/comms
+      endpoints: 30
+      integrations: [sendgrid, twilio, slack, discord]
+
+    project-management:
+      name: "Project Management"
+      base_path: /api/v1/projects
+      endpoints: 45
+      integrations: [linear, asana, notion, jira]
+
+    code-devops:
+      name: "Code & DevOps"
+      base_path: /api/v1/devops
+      endpoints: 50
+      integrations: [github, gitlab, railway, vercel]
+
+    ai-gateway:
+      name: "AI/ML Gateway"
+      base_path: /api/v1/ai
+      endpoints: 45
+      integrations: [anthropic, openai, huggingface, replicate]
+
+    blockchain:
+      name: "Blockchain Service (RoadChain)"
+      base_path: /api/v1/chain
+      endpoints: 40
+
+    analytics:
+      name: "Analytics Service"
+      base_path: /api/v1/analytics
+      endpoints: 30
+      integrations: [posthog, amplitude, mixpanel]
+
+    calendar:
+      name: "Calendar Service"
+      base_path: /api/v1/calendar
+      endpoints: 20
+      integrations: [google, outlook, cal.com]
+
+    storage-external:
+      name: "External Storage"
+      base_path: /api/v1/storage
+      endpoints: 25
+      integrations: [s3, gcs, dropbox, drive]
+
+# ============================================
+# TIER 4: HUMAN INTERFACE
+# 8 APIs | ~400 Endpoints
+# ============================================
+
+tier_4_human_interface:
+  name: "Human Interface"
+  description: "User-facing APIs and real-time communication"
+  apis: 8
+  endpoints_estimate: 400
+
+  services:
+    console-api:
+      name: "Console/Dashboard API"
+      base_path: /api/v1/console
+      endpoints: 60
+      consumers: [prism-console, admin-dashboard]
+
+    user-portal:
+      name: "User Portal API"
+      base_path: /api/v1/portal
+      endpoints: 80
+      consumers: [web-app, mobile-app]
+
+    public-gateway:
+      name: "Public API Gateway"
+      base_path: /api/v1/public
+      endpoints: 150
+      consumers: [external-developers, partners]
+
+    webhook-management:
+      name: "Webhook Management"
+      base_path: /api/v1/webhooks
+      endpoints: 30
+
+    websocket-gateway:
+      name: "WebSocket Gateway"
+      base_path: /ws/v1
+      endpoints: 25
+      protocols: [websocket, sse]
+
+    graphql-gateway:
+      name: "GraphQL Gateway"
+      base_path: /graphql
+      endpoints: 1  # Single endpoint, many operations
+
+    chat-api:
+      name: "Chat API"
+      base_path: /api/v1/chat
+      endpoints: 35
+
+    notification:
+      name: "Notification Service"
+      base_path: /api/v1/notifications
+      endpoints: 25
+
+# ============================================
+# TIER 5: INFRASTRUCTURE META
+# 7 APIs | ~180 Endpoints
+# ============================================
+
+tier_5_infrastructure:
+  name: "Infrastructure Meta"
+  description: "Platform operations and observability"
+  apis: 7
+  endpoints_estimate: 180
+
+  services:
+    mesh-control:
+      name: "Service Mesh Control"
+      base_path: /api/v1/mesh
+      endpoints: 30
+
+    secrets-config:
+      name: "Secrets & Config"
+      base_path: /api/v1/config
+      endpoints: 25
+
+    deployment:
+      name: "Deployment Service"
+      base_path: /api/v1/deploy
+      endpoints: 30
+
+    observability:
+      name: "Observability API"
+      base_path: /api/v1/observe
+      endpoints: 45
+
+    disaster-recovery:
+      name: "Disaster Recovery"
+      base_path: /api/v1/dr
+      endpoints: 25
+
+    feature-flags:
+      name: "Feature Flags"
+      base_path: /api/v1/flags
+      endpoints: 15
+
+    tenant-management:
+      name: "Tenant Management"
+      base_path: /api/v1/tenants
+      endpoints: 20
+
+# ============================================
+# TIER 6: COLLABORATION (30K Concurrent)
+# 5 Specialized APIs | ~100 Endpoints
+# ============================================
+
+tier_6_collaboration:
+  name: "30K Collaboration Engine"
+  description: "Specialized APIs for 30,000 concurrent collaborators"
+  apis: 5
+  endpoints_estimate: 100
+
+  services:
+    # ==========================================
+    # 6.1 Collaboration Session API
+    # ==========================================
+    collab-session:
+      name: "Collaboration Session Service"
+      description: "Join, leave, presence for 30K participants"
+      base_path: /api/v1/collab/sessions
+      endpoints: 25
+
+      operations:
+        # Sessions
+        - POST   /sessions                    # Create session
+        - GET    /sessions/{id}               # Get session
+        - DELETE /sessions/{id}               # End session
+
+        # Participants
+        - POST   /sessions/{id}/join          # Join session
+        - POST   /sessions/{id}/leave         # Leave session
+        - GET    /sessions/{id}/participants  # List participants
+        - GET    /sessions/{id}/presence      # Presence updates
+
+        # Sharding
+        - GET    /sessions/{id}/shards        # List shards
+        - POST   /sessions/{id}/rebalance     # Rebalance participants
+
+      scaling:
+        max_participants: 30000
+        sharding_strategy: consistent_hash
+        shard_size: 1000
+        gossip_protocol: true
+
+    # ==========================================
+    # 6.2 Operation Transform API (CRDT/OT)
+    # ==========================================
+    operation-transform:
+      name: "Operation Transform Service"
+      description: "CRDT/OT for conflict-free concurrent edits"
+      base_path: /api/v1/collab/operations
+      endpoints: 22
+
+      operations:
+        # Operations
+        - POST   /sessions/{id}/ops           # Submit operation
+        - GET    /sessions/{id}/ops           # Get operation log
+        - POST   /sessions/{id}/ops/batch     # Batch operations
+
+        # Transforms
+        - POST   /transform                   # Transform operation
+        - GET    /sessions/{id}/transformed   # Get transformed ops
+
+        # Sync
+        - GET    /sessions/{id}/cursor        # Get cursor position
+        - POST   /sessions/{id}/sync          # Force sync
+
+        # Undo/Redo
+        - POST   /sessions/{id}/undo          # Undo operation
+        - POST   /sessions/{id}/redo          # Redo operation
+
+      algorithms:
+        crdt_type: "RGA"  # Replicated Growable Array
+        ot_enabled: true
+        vector_clocks: true
+
+    # ==========================================
+    # 6.3 Conflict Resolution API
+    # ==========================================
+    conflict-resolution:
+      name: "Conflict Resolution Service"
+      description: "Manual override, voting for unresolvable conflicts"
+      base_path: /api/v1/collab/conflicts
+      endpoints: 20
+
+      operations:
+        # Conflicts
+        - GET    /sessions/{id}/conflicts     # List conflicts
+        - GET    /conflicts/{id}              # Get conflict
+        - POST   /conflicts/{id}/resolve      # Resolve conflict
+
+        # Voting
+        - POST   /conflicts/{id}/vote         # Cast vote
+        - GET    /conflicts/{id}/votes        # Get votes
+        - POST   /conflicts/{id}/finalize     # Finalize resolution
+
+        # Override
+        - POST   /conflicts/{id}/override     # Authority override
+
+    # ==========================================
+    # 6.4 Snapshot API
+    # ==========================================
+    snapshot:
+      name: "Snapshot Service"
+      description: "Point-in-time state for recovery and branching"
+      base_path: /api/v1/collab/snapshots
+      endpoints: 18
+
+      operations:
+        # Snapshots
+        - POST   /sessions/{id}/snapshots     # Create snapshot
+        - GET    /sessions/{id}/snapshots     # List snapshots
+        - GET    /snapshots/{id}              # Get snapshot
+        - DELETE /snapshots/{id}              # Delete snapshot
+
+        # Restore
+        - POST   /snapshots/{id}/restore      # Restore to snapshot
+
+        # Branching
+        - POST   /snapshots/{id}/branch       # Create branch
+        - POST   /branches/merge              # Merge branches
+
+    # ==========================================
+    # 6.5 Replay API
+    # ==========================================
+    replay:
+      name: "Replay Service"
+      description: "Reconstruct state from operation log"
+      base_path: /api/v1/collab/replay
+      endpoints: 15
+
+      operations:
+        # Replay
+        - POST   /sessions/{id}/replay        # Start replay
+        - GET    /replays/{id}/status         # Replay status
+        - POST   /replays/{id}/stop           # Stop replay
+
+        # Seek
+        - POST   /replays/{id}/seek           # Seek to position
+        - GET    /replays/{id}/state          # Get state at position
+
+        # Export
+        - POST   /sessions/{id}/export        # Export session
+        - GET    /exports/{id}                # Get export
+
+# ============================================
+# SUMMARY
+# ============================================
+
+summary:
+  total_apis: 65
+  total_endpoints: 1700
+
+  by_tier:
+    tier_1_core_agent: { apis: 15, endpoints: 400 }
+    tier_2_data_layer: { apis: 10, endpoints: 220 }
+    tier_3_external: { apis: 20, endpoints: 400 }
+    tier_4_human_interface: { apis: 8, endpoints: 400 }
+    tier_5_infrastructure: { apis: 7, endpoints: 180 }
+    tier_6_collaboration: { apis: 5, endpoints: 100 }
+
+  critical_paths:
+    - name: "Agent Invocation"
+      latency_target: "< 50ms p99"
+      apis: [agent-identity, task-orchestration, event-bus]
+
+    - name: "Memory Recall"
+      latency_target: "< 100ms p99"
+      apis: [memory-journal, vector-store, context-manager]
+
+    - name: "30K Collaboration"
+      latency_target: "< 20ms p99"
+      apis: [collab-session, operation-transform, websocket-gateway]
+
+  team_ownership:
+    BlackRoad-OS/blackroad-os-agents: 8
+    BlackRoad-OS/blackroad-os-operator: 6
+    BlackRoad-AI/lucidia-core: 4
+    BlackRoad-Cloud/cloud-mesh: 5
+    BlackRoad-OS/blackroad-os-beacon: 3

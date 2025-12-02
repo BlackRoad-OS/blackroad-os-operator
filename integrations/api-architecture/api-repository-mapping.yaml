@@ -1,0 +1,950 @@
+# BlackRoad OS - API to Repository Mapping
+# Maps 65 APIs across 180 repositories in 15 organizations
+#
+# @blackroad_name: API Repository Mapping
+# @operator: alexa.operator.v1
+# @scale: 65 APIs, 180 repositories, 15 organizations
+
+version: "api-repo-mapping-v1"
+
+# ============================================
+# TIER 1: CORE AGENT APIs (15 APIs)
+# Organization: BlackRoad-OS
+# ============================================
+
+tier_1_core_agent:
+  organization: BlackRoad-OS
+
+  apis:
+    agent-core:
+      name: "Agent Core API"
+      openapi: "openapi/core-agent-api.yaml"
+      repository: blackroad-os-operator
+      path: /br_operator
+      endpoints: ~120
+      services:
+        - agent-lifecycle
+        - agent-invocation
+        - agent-streaming
+      domains:
+        primary: api.blackroad.io
+        regional: api-{region}.blackroad.io
+
+    agent-tasks:
+      name: "Agent Tasks API"
+      repository: blackroad-os-operator
+      path: /br_operator/task_service.py
+      endpoints: ~40
+      services:
+        - task-queue
+        - task-scheduler
+        - task-execution
+      domain: tasks.blackroad.io
+
+    agent-memory:
+      name: "Agent Memory API"
+      repository: blackroad-os-agents
+      path: /memory
+      endpoints: ~60
+      services:
+        - episodic-memory
+        - semantic-memory
+        - procedural-memory
+        - working-memory
+      domain: memory.blackroad.io
+
+    agent-tools:
+      name: "Agent Tools API"
+      repository: blackroad-os-agents
+      path: /tools
+      endpoints: ~80
+      services:
+        - tool-registry
+        - tool-execution
+        - tool-sandbox
+      domain: tools.blackroad.io
+
+    agent-reasoning:
+      name: "Agent Reasoning API"
+      repository: blackroad-os-agents
+      path: /reasoning
+      endpoints: ~45
+      services:
+        - chain-of-thought
+        - reflection
+        - planning
+      domain: reasoning.blackroad.io
+
+    agent-swarm:
+      name: "Agent Swarm API"
+      repository: blackroad-os-agents
+      path: /swarm
+      endpoints: ~55
+      services:
+        - swarm-coordination
+        - consensus
+        - delegation
+      domain: swarm.blackroad.io
+
+    pack-manager:
+      name: "Pack Manager API"
+      repository: blackroad-os-core
+      path: /packs
+      endpoints: ~35
+      pack_repos:
+        - blackroad-os-pack-research-lab
+        - blackroad-os-pack-finance
+        - blackroad-os-pack-education
+        - blackroad-os-pack-creator-studio
+        - blackroad-os-pack-legal
+        - blackroad-os-pack-infra-devops
+      domain: packs.blackroad.io
+
+    governance-core:
+      name: "Governance Core API"
+      openapi: "openapi/governance-ledger-api.yaml"
+      repository: blackroad-os-operator
+      path: /br_operator/policy_engine.py
+      endpoints: ~90
+      services:
+        - policy-evaluation
+        - constraint-engine
+        - trinary-logic
+      domain: governance.blackroad.io
+
+    ledger-core:
+      name: "Ledger Core API"
+      repository: blackroad-os-operator
+      path: /br_operator/ledger_service.py
+      endpoints: ~50
+      services:
+        - immutable-ledger
+        - audit-trail
+        - verification
+      domain: ledger.blackroad.io
+
+    lineage-core:
+      name: "Lineage Core API"
+      repository: blackroad-os-operator
+      path: /br_operator/lineage_service.py
+      endpoints: ~40
+      services:
+        - ps-sha-infinity
+        - lineage-trace
+        - contradiction-detection
+      domain: lineage.blackroad.io
+
+    intent-core:
+      name: "Intent Core API"
+      repository: blackroad-os-operator
+      path: /br_operator/intent_service.py
+      endpoints: ~35
+      services:
+        - intent-parsing
+        - intent-routing
+        - intent-chains
+      domain: intent.blackroad.io
+
+    reconciler:
+      name: "Reconciler API"
+      repository: blackroad-os-operator
+      path: /br_operator/reconciler.py
+      endpoints: ~25
+      services:
+        - state-reconciliation
+        - drift-detection
+        - auto-healing
+      domain: reconcile.blackroad.io
+
+    routing:
+      name: "Agent Routing API"
+      repository: blackroad-os-operator
+      path: /br_operator/agent_routing.py
+      endpoints: ~30
+      services:
+        - request-routing
+        - load-balancing
+        - failover
+      domain: routing.blackroad.io
+
+    health:
+      name: "Health API"
+      repository: blackroad-os-operator
+      path: /br_operator/health.py
+      endpoints: ~15
+      services:
+        - health-checks
+        - readiness
+        - liveness
+      domain: health.blackroad.io
+
+    config:
+      name: "Config API"
+      repository: blackroad-os-master
+      path: /config
+      endpoints: ~25
+      services:
+        - configuration
+        - feature-flags
+        - secrets-reference
+      domain: config.blackroad.io
+
+# ============================================
+# TIER 2: AI/ML APIs (10 APIs)
+# Organization: BlackRoad-AI
+# ============================================
+
+tier_2_ai_ml:
+  organization: BlackRoad-AI
+
+  apis:
+    lucidia-core:
+      name: "Lucidia Core API"
+      repository: lucidia-core
+      endpoints: ~100
+      services:
+        - agent-framework
+        - persona-engine
+        - context-management
+      domain: lucidia.blackroad.io
+
+    lucidia-memory:
+      name: "Lucidia Memory API"
+      repository: lucidia-memory
+      endpoints: ~70
+      services:
+        - memory-systems
+        - vector-store
+        - retrieval
+      domain: memory.lucidia.io
+
+    lucidia-reasoning:
+      name: "Lucidia Reasoning API"
+      repository: lucidia-reasoning
+      endpoints: ~55
+      services:
+        - reasoning-engine
+        - logic-chains
+        - inference
+      domain: reasoning.lucidia.io
+
+    lucidia-tools:
+      name: "Lucidia Tools API"
+      repository: lucidia-tools
+      endpoints: ~60
+      services:
+        - tool-library
+        - mcp-integration
+        - function-calling
+      domain: tools.lucidia.io
+
+    lucidia-swarm:
+      name: "Lucidia Swarm API"
+      repository: lucidia-swarm
+      endpoints: ~45
+      services:
+        - multi-agent
+        - coordination
+        - consensus
+      domain: swarm.lucidia.io
+
+    beacon-router:
+      name: "Beacon Router API"
+      repository: beacon-router
+      endpoints: ~50
+      services:
+        - llm-routing
+        - model-selection
+        - fallback-chains
+      domain: beacon.blackroad.io
+
+    beacon-embeddings:
+      name: "Beacon Embeddings API"
+      repository: beacon-embeddings
+      endpoints: ~35
+      services:
+        - embedding-generation
+        - similarity-search
+        - clustering
+      domain: embeddings.beacon.io
+
+    beacon-fine-tuning:
+      name: "Beacon Fine-Tuning API"
+      repository: beacon-fine-tuning
+      endpoints: ~40
+      services:
+        - fine-tuning-jobs
+        - dataset-management
+        - model-registry
+      domain: finetune.beacon.io
+
+    ai-safety:
+      name: "AI Safety API"
+      repository: ai-safety
+      endpoints: ~30
+      services:
+        - content-filtering
+        - safety-evaluation
+        - alignment-checks
+      domain: safety.ai.blackroad.io
+
+    ai-evaluation:
+      name: "AI Evaluation API"
+      repository: beacon-evaluation
+      endpoints: ~35
+      services:
+        - benchmarking
+        - quality-metrics
+        - regression-testing
+      domain: eval.ai.blackroad.io
+
+# ============================================
+# TIER 3: DATA LAYER APIs (10 APIs)
+# Organization: BlackRoad-Cloud
+# ============================================
+
+tier_3_data_layer:
+  organization: BlackRoad-Cloud
+
+  apis:
+    vector-store:
+      name: "Vector Store API"
+      repository: cloud-databases
+      path: /vector
+      endpoints: ~50
+      services:
+        - vector-indexing
+        - similarity-search
+        - metadata-filtering
+      domain: vectors.blackroad.io
+      technologies:
+        - Pinecone
+        - Weaviate
+        - Qdrant
+
+    graph-store:
+      name: "Graph Store API"
+      repository: cloud-databases
+      path: /graph
+      endpoints: ~45
+      services:
+        - knowledge-graph
+        - relationship-queries
+        - traversal
+      domain: graph.blackroad.io
+      technologies:
+        - Neo4j
+        - Neptune
+
+    document-store:
+      name: "Document Store API"
+      repository: cloud-databases
+      path: /documents
+      endpoints: ~40
+      services:
+        - document-storage
+        - full-text-search
+        - aggregations
+      domain: docs.data.blackroad.io
+      technologies:
+        - MongoDB
+        - Elasticsearch
+
+    time-series:
+      name: "Time Series API"
+      repository: cloud-databases
+      path: /timeseries
+      endpoints: ~35
+      services:
+        - metrics-storage
+        - time-range-queries
+        - aggregations
+      domain: timeseries.blackroad.io
+      technologies:
+        - TimescaleDB
+        - InfluxDB
+
+    cache-layer:
+      name: "Cache Layer API"
+      repository: cloud-databases
+      path: /cache
+      endpoints: ~25
+      services:
+        - distributed-cache
+        - session-storage
+        - rate-limiting
+      domain: cache.blackroad.io
+      technologies:
+        - Redis
+        - Memcached
+
+    object-storage:
+      name: "Object Storage API"
+      repository: cloud-databases
+      path: /objects
+      endpoints: ~30
+      services:
+        - file-storage
+        - presigned-urls
+        - multipart-upload
+      domain: storage.blackroad.io
+      technologies:
+        - Cloudflare R2
+        - S3
+
+    event-bus:
+      name: "Event Bus API"
+      repository: cloud-mesh
+      path: /events
+      endpoints: ~35
+      services:
+        - event-publishing
+        - subscriptions
+        - replay
+      domain: events.blackroad.io
+      technologies:
+        - Kafka
+        - NATS
+
+    stream-processing:
+      name: "Stream Processing API"
+      repository: cloud-mesh
+      path: /streams
+      endpoints: ~30
+      services:
+        - stream-processing
+        - windowing
+        - aggregation
+      domain: streams.blackroad.io
+      technologies:
+        - Flink
+        - Spark Streaming
+
+    data-sync:
+      name: "Data Sync API"
+      repository: cloud-mesh
+      path: /sync
+      endpoints: ~25
+      services:
+        - replication
+        - conflict-resolution
+        - eventual-consistency
+      domain: sync.blackroad.io
+
+    data-catalog:
+      name: "Data Catalog API"
+      repository: cloud-databases
+      path: /catalog
+      endpoints: ~20
+      services:
+        - schema-registry
+        - lineage-tracking
+        - data-discovery
+      domain: catalog.blackroad.io
+
+# ============================================
+# TIER 4: EXTERNAL INTEGRATION APIs (20 APIs)
+# Organizations: BlackRoad-OS, BlackRoad-Cloud
+# ============================================
+
+tier_4_external:
+  apis:
+    # LLM Providers
+    anthropic-connector:
+      organization: BlackRoad-AI
+      repository: beacon-router
+      path: /connectors/anthropic
+      endpoints: ~15
+      domain: anthropic.api.blackroad.io
+
+    openai-connector:
+      organization: BlackRoad-AI
+      repository: beacon-router
+      path: /connectors/openai
+      endpoints: ~15
+      domain: openai.api.blackroad.io
+
+    google-ai-connector:
+      organization: BlackRoad-AI
+      repository: beacon-router
+      path: /connectors/google
+      endpoints: ~15
+      domain: google.api.blackroad.io
+
+    ollama-connector:
+      organization: BlackRoad-AI
+      repository: beacon-router
+      path: /connectors/ollama
+      endpoints: ~10
+      domain: ollama.api.blackroad.io
+
+    # Infrastructure
+    cloudflare-connector:
+      organization: BlackRoad-Cloud
+      repository: cloud-terraform-cloudflare
+      endpoints: ~25
+      domain: cf.api.blackroad.io
+
+    railway-connector:
+      organization: BlackRoad-Cloud
+      repository: cloud-k8s-manifests
+      path: /railway
+      endpoints: ~20
+      domain: railway.api.blackroad.io
+
+    aws-connector:
+      organization: BlackRoad-Cloud
+      repository: cloud-terraform-aws
+      endpoints: ~40
+      domain: aws.api.blackroad.io
+
+    gcp-connector:
+      organization: BlackRoad-Cloud
+      repository: cloud-terraform-gcp
+      endpoints: ~35
+      domain: gcp.api.blackroad.io
+
+    digitalocean-connector:
+      organization: BlackRoad-Cloud
+      repository: cloud-terraform-do
+      endpoints: ~20
+      domain: do.api.blackroad.io
+
+    # GitHub
+    github-connector:
+      organization: BlackRoad-Cloud
+      repository: cloud-github-actions
+      endpoints: ~30
+      domain: github.api.blackroad.io
+
+    # Payments
+    stripe-connector:
+      organization: Blackbox-Enterprises
+      repository: enterprise-billing
+      endpoints: ~25
+      domain: stripe.api.blackroad.io
+
+    # Communications
+    twilio-connector:
+      organization: Blackbox-Enterprises
+      repository: enterprise-communications
+      endpoints: ~20
+      domain: twilio.api.blackroad.io
+
+    sendgrid-connector:
+      organization: Blackbox-Enterprises
+      repository: enterprise-communications
+      path: /email
+      endpoints: ~15
+      domain: sendgrid.api.blackroad.io
+
+    # Observability
+    datadog-connector:
+      organization: BlackRoad-Cloud
+      repository: cloud-monitoring
+      endpoints: ~25
+      domain: datadog.api.blackroad.io
+
+    sentry-connector:
+      organization: BlackRoad-Cloud
+      repository: cloud-logging
+      path: /sentry
+      endpoints: ~15
+      domain: sentry.api.blackroad.io
+
+    # OAuth Providers
+    oauth-connector:
+      organization: BlackRoad-Security
+      repository: security-auth
+      path: /oauth
+      endpoints: ~30
+      domain: oauth.api.blackroad.io
+      providers:
+        - google
+        - github
+        - microsoft
+        - apple
+
+    # Webhooks
+    webhook-ingress:
+      organization: BlackRoad-OS
+      repository: blackroad-os-api-gateway
+      path: /webhooks
+      endpoints: ~20
+      domain: webhooks.blackroad.io
+
+    webhook-egress:
+      organization: BlackRoad-OS
+      repository: blackroad-os-api-gateway
+      path: /outgoing-webhooks
+      endpoints: ~15
+      domain: hooks.blackroad.io
+
+    # MCP
+    mcp-gateway:
+      organization: BlackRoad-AI
+      repository: lucidia-tools
+      path: /mcp
+      endpoints: ~25
+      domain: mcp.blackroad.io
+
+    # A2A Protocol
+    a2a-gateway:
+      organization: BlackRoad-Foundation
+      repository: amundson-protocol
+      path: /a2a
+      endpoints: ~20
+      domain: a2a.blackroad.io
+
+# ============================================
+# TIER 5: HUMAN INTERFACE APIs (8 APIs)
+# Organization: BlackRoad-OS
+# ============================================
+
+tier_5_human_interface:
+  organization: BlackRoad-OS
+
+  apis:
+    web-app:
+      name: "Web App API"
+      repository: blackroad-os-web
+      endpoints: ~80
+      services:
+        - session-management
+        - user-preferences
+        - ui-state
+      domain: app.blackroad.io
+      framework: Next.js
+
+    prism-console:
+      name: "Prism Console API"
+      repository: blackroad-os-prism-console
+      endpoints: ~60
+      services:
+        - admin-dashboard
+        - monitoring
+        - configuration
+      domain: console.blackroad.io
+      framework: Next.js
+
+    chat-api:
+      name: "Chat API"
+      repository: blackroad-os-operator
+      path: /br_operator/chat_service.py
+      endpoints: ~25
+      services:
+        - conversation
+        - streaming
+        - history
+      domain: chat.blackroad.io
+
+    notifications:
+      name: "Notifications API"
+      repository: blackroad-os-web
+      path: /notifications
+      endpoints: ~20
+      services:
+        - push-notifications
+        - in-app-alerts
+        - email-digest
+      domain: notify.blackroad.io
+
+    analytics:
+      name: "Analytics API"
+      repository: blackroad-os-web
+      path: /analytics
+      endpoints: ~30
+      services:
+        - usage-tracking
+        - insights
+        - reports
+      domain: analytics.blackroad.io
+
+    search:
+      name: "Search API"
+      repository: blackroad-os-core
+      path: /search
+      endpoints: ~25
+      services:
+        - unified-search
+        - autocomplete
+        - filters
+      domain: search.blackroad.io
+
+    billing-portal:
+      name: "Billing Portal API"
+      repository: blackroad-os-web
+      path: /billing
+      endpoints: ~35
+      services:
+        - subscription-management
+        - usage-display
+        - invoices
+      domain: billing.blackroad.io
+
+    developer-portal:
+      name: "Developer Portal API"
+      repository: blackroad-os-api
+      endpoints: ~40
+      services:
+        - api-documentation
+        - sdk-downloads
+        - playground
+      domain: developers.blackroad.io
+
+# ============================================
+# TIER 6: COLLABORATION APIs (5 APIs)
+# Organization: BlackRoad-OS
+# ============================================
+
+tier_6_collaboration:
+  organization: BlackRoad-OS
+
+  apis:
+    collab-session:
+      name: "Collaboration Session API"
+      openapi: "openapi/collaboration-engine-api.yaml"
+      repository: blackroad-os-core
+      path: /collaboration
+      endpoints: ~50
+      services:
+        - session-management
+        - participant-tracking
+        - shard-assignment
+      domain: collab.blackroad.io
+      scale:
+        max_participants: 30000
+        shard_size: 1000
+
+    crdt-engine:
+      name: "CRDT Engine API"
+      repository: blackroad-os-core
+      path: /collaboration/crdt
+      endpoints: ~35
+      services:
+        - crdt-operations
+        - state-sync
+        - conflict-resolution
+      domain: crdt.blackroad.io
+      algorithms:
+        - RGA
+        - LWW-Register
+        - OR-Set
+
+    ot-engine:
+      name: "OT Engine API"
+      repository: blackroad-os-core
+      path: /collaboration/ot
+      endpoints: ~25
+      services:
+        - operational-transform
+        - cursor-sync
+        - presence
+      domain: ot.blackroad.io
+
+    vector-clock:
+      name: "Vector Clock API"
+      repository: blackroad-os-core
+      path: /collaboration/clock
+      endpoints: ~15
+      services:
+        - causal-ordering
+        - version-vectors
+        - happens-before
+      domain: clock.blackroad.io
+
+    gossip-protocol:
+      name: "Gossip Protocol API"
+      repository: blackroad-os-core
+      path: /collaboration/gossip
+      endpoints: ~20
+      services:
+        - peer-sync
+        - anti-entropy
+        - membership
+      domain: gossip.blackroad.io
+
+# ============================================
+# TIER 7: INFRASTRUCTURE APIs (7 APIs)
+# Organization: BlackRoad-Cloud
+# ============================================
+
+tier_7_infrastructure:
+  organization: BlackRoad-Cloud
+
+  apis:
+    k8s-operator:
+      name: "K8s Operator API"
+      repository: cloud-k8s-operators
+      endpoints: ~40
+      services:
+        - custom-resources
+        - reconciliation
+        - status-management
+      domain: k8s.blackroad.io
+
+    argocd-sync:
+      name: "ArgoCD Sync API"
+      repository: cloud-argocd
+      endpoints: ~25
+      services:
+        - gitops-sync
+        - deployment-status
+        - rollback
+      domain: argo.blackroad.io
+
+    terraform-backend:
+      name: "Terraform Backend API"
+      repository: cloud-terraform-modules
+      endpoints: ~20
+      services:
+        - state-storage
+        - locking
+        - workspace-management
+      domain: terraform.blackroad.io
+
+    dns-management:
+      name: "DNS Management API"
+      repository: cloud-dns
+      endpoints: ~25
+      services:
+        - zone-management
+        - record-updates
+        - health-checks
+      domain: dns.blackroad.io
+
+    cert-management:
+      name: "Certificate Management API"
+      repository: cloud-mesh
+      path: /certs
+      endpoints: ~20
+      services:
+        - certificate-issuance
+        - renewal
+        - rotation
+      domain: certs.blackroad.io
+
+    service-mesh:
+      name: "Service Mesh API"
+      repository: cloud-mesh
+      endpoints: ~30
+      services:
+        - traffic-management
+        - circuit-breaking
+        - retries
+      domain: mesh.blackroad.io
+
+    tailscale-connector:
+      name: "Tailscale Connector API"
+      repository: cloud-tailscale
+      endpoints: ~15
+      services:
+        - vpn-management
+        - acl-sync
+        - device-management
+      domain: tailscale.blackroad.io
+
+# ============================================
+# SDK MAPPINGS
+# ============================================
+
+sdks:
+  python:
+    organization: BlackRoad-AI
+    repositories:
+      - lucidia-sdk-python
+      - blackroad-os-api  # Python SDK
+    packages:
+      - lucidia
+      - blackroad-core
+      - blackroad-api
+    pypi_scope: blackroad
+
+  typescript:
+    organization: BlackRoad-AI
+    repositories:
+      - lucidia-sdk-typescript
+      - blackroad-os-api  # TypeScript SDK
+    packages:
+      - "@lucidia/sdk"
+      - "@blackroad/core"
+      - "@blackroad/api-client"
+    npm_scope: "@blackroad"
+
+  rust:
+    organization: BlackRoad-AI
+    repositories:
+      - lucidia-sdk-rust
+    packages:
+      - lucidia
+    crates_scope: blackroad
+
+# ============================================
+# DOMAIN TO API ROUTING
+# ============================================
+
+domain_routing:
+  # Primary domains
+  api.blackroad.io:
+    gateway: blackroad-os-api-gateway
+    routes:
+      /v1/agents: agent-core
+      /v1/tasks: agent-tasks
+      /v1/governance: governance-core
+      /v1/ledger: ledger-core
+      /v1/chat: chat-api
+      /v1/collab: collab-session
+
+  # Regional routing
+  api-{region}.blackroad.io:
+    gateway: regional-gateway
+    regions:
+      - us-east
+      - us-west
+      - eu-west
+      - eu-central
+      - ap-northeast
+      - ap-southeast
+
+  # AI domain
+  lucidia.blackroad.io:
+    gateway: lucidia-gateway
+    routes:
+      /v1/agents: lucidia-core
+      /v1/memory: lucidia-memory
+      /v1/reasoning: lucidia-reasoning
+
+  # Beacon domain
+  beacon.blackroad.io:
+    gateway: beacon-gateway
+    routes:
+      /v1/route: beacon-router
+      /v1/embed: beacon-embeddings
+      /v1/finetune: beacon-fine-tuning
+
+# ============================================
+# SUMMARY
+# ============================================
+
+summary:
+  total_apis: 65
+  total_endpoints: ~1700
+  organizations: 15
+  primary_repos: 24  # BlackRoad-OS
+
+  by_tier:
+    tier_1_core: 15
+    tier_2_ai: 10
+    tier_3_data: 10
+    tier_4_external: 20
+    tier_5_human: 8
+    tier_6_collab: 5
+    tier_7_infra: 7
+
+  key_repositories:
+    blackroad-os-operator: 10  # Core operator APIs
+    blackroad-os-core: 8       # Shared libraries
+    blackroad-os-agents: 4     # Agent APIs
+    beacon-router: 5           # LLM routing
+    cloud-databases: 6         # Data layer
+    cloud-mesh: 4              # Infrastructure

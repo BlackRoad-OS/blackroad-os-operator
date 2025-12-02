@@ -1,0 +1,1375 @@
+# BlackRoad OS - Collaboration Engine API
+# OpenAPI 3.1 Specification
+#
+# 30K Concurrent Collaborators - CRDT/OT Engine
+# Scale: 30,000 concurrent participants per session
+#
+# @blackroad_name: Collaboration Engine API
+# @operator: alexa.operator.v1
+# @tier: 6_collaboration
+
+openapi: "3.1.0"
+info:
+  title: BlackRoad Collaboration Engine API
+  version: "1.0.0"
+  description: |
+    Collaboration Engine API for 30,000 concurrent collaborators.
+
+    ## Architecture
+    - **CRDT**: Conflict-free Replicated Data Types (RGA, LWW-Register, OR-Set)
+    - **OT**: Operational Transform for real-time text collaboration
+    - **Vector Clocks**: Causal ordering and conflict detection
+    - **Gossip Protocol**: Eventual consistency across 1,000-participant shards
+    - **Consistent Hashing**: Shard assignment for load distribution
+
+    ## Scale Targets
+    - Max participants per session: 30,000
+    - Shard size: 1,000 participants
+    - Operation latency: <50ms p99
+    - Sync latency: <200ms eventual consistency
+  contact:
+    name: BlackRoad Platform Team
+    email: platform@blackroad.io
+  x-scale:
+    max_participants: 30000
+    shard_size: 1000
+    total_shards: 30
+
+servers:
+  - url: https://collab.blackroad.io/v1
+    description: Production (Global)
+  - url: wss://collab.blackroad.io/v1/ws
+    description: WebSocket (Real-time)
+  - url: https://collab-{shard}.blackroad.io/v1
+    description: Shard-specific
+    variables:
+      shard:
+        default: "000"
+        description: Shard ID (000-029)
+
+tags:
+  - name: sessions
+    description: Collaboration session management
+  - name: participants
+    description: Participant management
+  - name: operations
+    description: CRDT/OT operations
+  - name: state
+    description: State synchronization
+  - name: realtime
+    description: Real-time WebSocket endpoints
+  - name: sharding
+    description: Shard management
+
+paths:
+  # ----------------------------------------
+  # SESSION MANAGEMENT
+  # ----------------------------------------
+  /sessions:
+    get:
+      operationId: listSessions
+      summary: List collaboration sessions
+      tags: [sessions]
+      parameters:
+        - $ref: '#/components/parameters/PageLimit'
+        - $ref: '#/components/parameters/PageCursor'
+        - name: status
+          in: query
+          schema:
+            $ref: '#/components/schemas/SessionStatus'
+      responses:
+        '200':
+          description: List of sessions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionList'
+      security:
+        - bearerAuth: []
+
+    post:
+      operationId: createSession
+      summary: Create collaboration session
+      tags: [sessions]
+      description: |
+        Create a new collaboration session with automatic shard assignment.
+        The session will be assigned to optimal shards using consistent hashing.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SessionCreate'
+      responses:
+        '201':
+          description: Session created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Session'
+          headers:
+            X-Shard-ID:
+              description: Primary shard assignment
+              schema:
+                type: string
+      security:
+        - bearerAuth: []
+
+  /sessions/{session_id}:
+    parameters:
+      - $ref: '#/components/parameters/SessionId'
+
+    get:
+      operationId: getSession
+      summary: Get session details
+      tags: [sessions]
+      responses:
+        '200':
+          description: Session details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Session'
+      security:
+        - bearerAuth: []
+
+    patch:
+      operationId: updateSession
+      summary: Update session settings
+      tags: [sessions]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SessionUpdate'
+      responses:
+        '200':
+          description: Session updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Session'
+      security:
+        - bearerAuth: []
+
+    delete:
+      operationId: closeSession
+      summary: Close session
+      tags: [sessions]
+      responses:
+        '204':
+          description: Session closed
+      security:
+        - bearerAuth: []
+
+  /sessions/{session_id}/snapshot:
+    parameters:
+      - $ref: '#/components/parameters/SessionId'
+
+    get:
+      operationId: getSessionSnapshot
+      summary: Get session snapshot
+      tags: [sessions]
+      description: |
+        Get a point-in-time snapshot of the session state.
+        Useful for late-joining participants or recovery.
+      responses:
+        '200':
+          description: Session snapshot
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionSnapshot'
+      security:
+        - bearerAuth: []
+
+    post:
+      operationId: createSessionSnapshot
+      summary: Create manual snapshot
+      tags: [sessions]
+      responses:
+        '201':
+          description: Snapshot created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionSnapshot'
+      security:
+        - bearerAuth: []
+
+  # ----------------------------------------
+  # PARTICIPANT MANAGEMENT
+  # ----------------------------------------
+  /sessions/{session_id}/participants:
+    parameters:
+      - $ref: '#/components/parameters/SessionId'
+
+    get:
+      operationId: listParticipants
+      summary: List session participants
+      tags: [participants]
+      parameters:
+        - $ref: '#/components/parameters/PageLimit'
+        - $ref: '#/components/parameters/PageCursor'
+        - name: shard_id
+          in: query
+          description: Filter by shard
+          schema:
+            type: string
+        - name: role
+          in: query
+          schema:
+            $ref: '#/components/schemas/ParticipantRole'
+      responses:
+        '200':
+          description: List of participants
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ParticipantList'
+      security:
+        - bearerAuth: []
+
+  /sessions/{session_id}/join:
+    parameters:
+      - $ref: '#/components/parameters/SessionId'
+
+    post:
+      operationId: joinSession
+      summary: Join session
+      tags: [participants]
+      description: |
+        Join a collaboration session. The participant will be assigned
+        to a shard using consistent hashing. Returns WebSocket connection
+        details for real-time communication.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/JoinRequest'
+      responses:
+        '200':
+          description: Joined successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JoinResponse'
+          headers:
+            X-Shard-ID:
+              description: Assigned shard
+              schema:
+                type: string
+            X-WebSocket-URL:
+              description: WebSocket endpoint for this participant
+              schema:
+                type: string
+      security:
+        - bearerAuth: []
+
+  /sessions/{session_id}/leave:
+    parameters:
+      - $ref: '#/components/parameters/SessionId'
+
+    post:
+      operationId: leaveSession
+      summary: Leave session
+      tags: [participants]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LeaveRequest'
+      responses:
+        '204':
+          description: Left session
+      security:
+        - bearerAuth: []
+
+  /sessions/{session_id}/participants/{participant_id}:
+    parameters:
+      - $ref: '#/components/parameters/SessionId'
+      - $ref: '#/components/parameters/ParticipantId'
+
+    get:
+      operationId: getParticipant
+      summary: Get participant details
+      tags: [participants]
+      responses:
+        '200':
+          description: Participant details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Participant'
+      security:
+        - bearerAuth: []
+
+    delete:
+      operationId: removeParticipant
+      summary: Remove participant
+      tags: [participants]
+      responses:
+        '204':
+          description: Participant removed
+      security:
+        - bearerAuth: []
+
+  /sessions/{session_id}/participants/{participant_id}/cursor:
+    parameters:
+      - $ref: '#/components/parameters/SessionId'
+      - $ref: '#/components/parameters/ParticipantId'
+
+    put:
+      operationId: updateCursor
+      summary: Update participant cursor
+      tags: [participants]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CursorPosition'
+      responses:
+        '200':
+          description: Cursor updated
+      security:
+        - bearerAuth: []
+
+  # ----------------------------------------
+  # CRDT/OT OPERATIONS
+  # ----------------------------------------
+  /sessions/{session_id}/operations:
+    parameters:
+      - $ref: '#/components/parameters/SessionId'
+
+    get:
+      operationId: listOperations
+      summary: Get operation log
+      tags: [operations]
+      parameters:
+        - name: since_version
+          in: query
+          description: Get operations since this version
+          schema:
+            type: integer
+        - name: since_clock
+          in: query
+          description: Get operations since this vector clock
+          schema:
+            type: string
+        - $ref: '#/components/parameters/PageLimit'
+      responses:
+        '200':
+          description: Operation log
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OperationLog'
+      security:
+        - bearerAuth: []
+
+    post:
+      operationId: applyOperation
+      summary: Apply operation
+      tags: [operations]
+      description: |
+        Apply a CRDT or OT operation to the session state.
+        Operations are validated for causal ordering using vector clocks.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Operation'
+      responses:
+        '200':
+          description: Operation applied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OperationResult'
+        '409':
+          description: Conflict detected
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConflictError'
+      security:
+        - bearerAuth: []
+
+  /sessions/{session_id}/operations/batch:
+    parameters:
+      - $ref: '#/components/parameters/SessionId'
+
+    post:
+      operationId: applyOperationBatch
+      summary: Apply operation batch
+      tags: [operations]
+      description: |
+        Apply multiple operations atomically. All operations must
+        share the same vector clock base.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OperationBatch'
+      responses:
+        '200':
+          description: Batch applied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BatchResult'
+      security:
+        - bearerAuth: []
+
+  /sessions/{session_id}/operations/transform:
+    parameters:
+      - $ref: '#/components/parameters/SessionId'
+
+    post:
+      operationId: transformOperations
+      summary: Transform concurrent operations
+      tags: [operations]
+      description: |
+        Apply Operational Transform to resolve concurrent operations.
+        Used when vector clocks indicate concurrent modifications.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TransformRequest'
+      responses:
+        '200':
+          description: Transformed operations
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransformResult'
+      security:
+        - bearerAuth: []
+
+  # ----------------------------------------
+  # STATE SYNCHRONIZATION
+  # ----------------------------------------
+  /sessions/{session_id}/state:
+    parameters:
+      - $ref: '#/components/parameters/SessionId'
+
+    get:
+      operationId: getState
+      summary: Get current state
+      tags: [state]
+      parameters:
+        - name: vector_clock
+          in: query
+          description: Client's vector clock for delta sync
+          schema:
+            type: string
+        - name: format
+          in: query
+          schema:
+            type: string
+            enum: [full, delta, compressed]
+            default: delta
+      responses:
+        '200':
+          description: Current state
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StateResponse'
+      security:
+        - bearerAuth: []
+
+  /sessions/{session_id}/state/vector-clock:
+    parameters:
+      - $ref: '#/components/parameters/SessionId'
+
+    get:
+      operationId: getVectorClock
+      summary: Get vector clock
+      tags: [state]
+      description: |
+        Get the current vector clock for the session.
+        Used for causal ordering and conflict detection.
+      responses:
+        '200':
+          description: Vector clock
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VectorClock'
+      security:
+        - bearerAuth: []
+
+  /sessions/{session_id}/state/sync:
+    parameters:
+      - $ref: '#/components/parameters/SessionId'
+
+    post:
+      operationId: syncState
+      summary: Synchronize state
+      tags: [state]
+      description: |
+        Perform bi-directional state sync between client and server.
+        Uses gossip protocol for cross-shard synchronization.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SyncRequest'
+      responses:
+        '200':
+          description: Sync result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SyncResponse'
+      security:
+        - bearerAuth: []
+
+  /sessions/{session_id}/state/conflicts:
+    parameters:
+      - $ref: '#/components/parameters/SessionId'
+
+    get:
+      operationId: listConflicts
+      summary: List unresolved conflicts
+      tags: [state]
+      responses:
+        '200':
+          description: Conflict list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConflictList'
+      security:
+        - bearerAuth: []
+
+  /sessions/{session_id}/state/conflicts/{conflict_id}/resolve:
+    parameters:
+      - $ref: '#/components/parameters/SessionId'
+      - $ref: '#/components/parameters/ConflictId'
+
+    post:
+      operationId: resolveConflict
+      summary: Resolve conflict
+      tags: [state]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConflictResolution'
+      responses:
+        '200':
+          description: Conflict resolved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StateResponse'
+      security:
+        - bearerAuth: []
+
+  # ----------------------------------------
+  # SHARDING
+  # ----------------------------------------
+  /shards:
+    get:
+      operationId: listShards
+      summary: List all shards
+      tags: [sharding]
+      responses:
+        '200':
+          description: Shard list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ShardList'
+      security:
+        - bearerAuth: []
+
+  /shards/{shard_id}:
+    parameters:
+      - $ref: '#/components/parameters/ShardId'
+
+    get:
+      operationId: getShardStatus
+      summary: Get shard status
+      tags: [sharding]
+      responses:
+        '200':
+          description: Shard status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Shard'
+      security:
+        - bearerAuth: []
+
+  /shards/{shard_id}/gossip:
+    parameters:
+      - $ref: '#/components/parameters/ShardId'
+
+    post:
+      operationId: gossipSync
+      summary: Gossip protocol sync
+      tags: [sharding]
+      description: |
+        Exchange state with peer shard using gossip protocol.
+        Used for eventual consistency across shards.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GossipMessage'
+      responses:
+        '200':
+          description: Gossip response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GossipResponse'
+      security:
+        - serviceAuth: []
+
+  /shards/rebalance:
+    post:
+      operationId: rebalanceShards
+      summary: Trigger shard rebalancing
+      tags: [sharding]
+      description: |
+        Trigger rebalancing of participants across shards.
+        Uses consistent hashing to minimize participant movement.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RebalanceRequest'
+      responses:
+        '202':
+          description: Rebalancing started
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RebalanceStatus'
+      security:
+        - bearerAuth: []
+        - adminAuth: []
+
+# ============================================
+# COMPONENTS
+# ============================================
+
+components:
+  parameters:
+    SessionId:
+      name: session_id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+    ParticipantId:
+      name: participant_id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+    ConflictId:
+      name: conflict_id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+    ShardId:
+      name: shard_id
+      in: path
+      required: true
+      schema:
+        type: string
+        pattern: "^[0-9]{3}$"
+
+    PageLimit:
+      name: limit
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 1000
+        default: 100
+
+    PageCursor:
+      name: cursor
+      in: query
+      schema:
+        type: string
+
+  schemas:
+    # Session schemas
+    Session:
+      type: object
+      required: [id, name, status, created_at]
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        status:
+          $ref: '#/components/schemas/SessionStatus'
+        crdt_type:
+          $ref: '#/components/schemas/CRDTType'
+        participant_count:
+          type: integer
+          maximum: 30000
+        max_participants:
+          type: integer
+          default: 30000
+        shards:
+          type: array
+          items:
+            type: string
+        primary_shard:
+          type: string
+        vector_clock:
+          $ref: '#/components/schemas/VectorClock'
+        settings:
+          $ref: '#/components/schemas/SessionSettings'
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    SessionStatus:
+      type: string
+      enum: [active, paused, closing, closed]
+
+    SessionCreate:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+          maxLength: 256
+        crdt_type:
+          $ref: '#/components/schemas/CRDTType'
+        max_participants:
+          type: integer
+          maximum: 30000
+          default: 30000
+        initial_state:
+          type: object
+        settings:
+          $ref: '#/components/schemas/SessionSettings'
+
+    SessionUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        status:
+          $ref: '#/components/schemas/SessionStatus'
+        settings:
+          $ref: '#/components/schemas/SessionSettings'
+
+    SessionSettings:
+      type: object
+      properties:
+        auto_snapshot_interval_ms:
+          type: integer
+          default: 60000
+        max_operation_size_bytes:
+          type: integer
+          default: 1048576
+        gossip_interval_ms:
+          type: integer
+          default: 100
+        conflict_resolution:
+          type: string
+          enum: [lww, manual, consensus]
+          default: lww
+        ot_enabled:
+          type: boolean
+          default: true
+
+    SessionList:
+      type: object
+      required: [data, has_more]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Session'
+        has_more:
+          type: boolean
+        cursor:
+          type: string
+
+    SessionSnapshot:
+      type: object
+      required: [id, session_id, state, vector_clock, created_at]
+      properties:
+        id:
+          type: string
+          format: uuid
+        session_id:
+          type: string
+          format: uuid
+        state:
+          type: object
+        vector_clock:
+          $ref: '#/components/schemas/VectorClock'
+        operation_count:
+          type: integer
+        size_bytes:
+          type: integer
+        created_at:
+          type: string
+          format: date-time
+
+    # Participant schemas
+    Participant:
+      type: object
+      required: [id, session_id, role, status, joined_at]
+      properties:
+        id:
+          type: string
+          format: uuid
+        session_id:
+          type: string
+          format: uuid
+        entity_id:
+          type: string
+          description: Agent or user ID
+        entity_type:
+          type: string
+          enum: [agent, human, system]
+        role:
+          $ref: '#/components/schemas/ParticipantRole'
+        status:
+          type: string
+          enum: [connecting, active, idle, disconnected]
+        shard_id:
+          type: string
+        cursor:
+          $ref: '#/components/schemas/CursorPosition'
+        last_operation_at:
+          type: string
+          format: date-time
+        joined_at:
+          type: string
+          format: date-time
+
+    ParticipantRole:
+      type: string
+      enum: [owner, editor, viewer, observer]
+
+    ParticipantList:
+      type: object
+      required: [data, total, has_more]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Participant'
+        total:
+          type: integer
+          maximum: 30000
+        by_shard:
+          type: object
+          additionalProperties:
+            type: integer
+        has_more:
+          type: boolean
+        cursor:
+          type: string
+
+    JoinRequest:
+      type: object
+      required: [entity_id, entity_type]
+      properties:
+        entity_id:
+          type: string
+        entity_type:
+          type: string
+          enum: [agent, human, system]
+        role:
+          $ref: '#/components/schemas/ParticipantRole'
+        preferred_shard:
+          type: string
+          description: Hint for shard assignment
+
+    JoinResponse:
+      type: object
+      required: [participant, websocket_url, state]
+      properties:
+        participant:
+          $ref: '#/components/schemas/Participant'
+        websocket_url:
+          type: string
+          format: uri
+        websocket_token:
+          type: string
+          description: Short-lived token for WebSocket auth
+        shard_id:
+          type: string
+        state:
+          $ref: '#/components/schemas/StateResponse'
+        other_participants:
+          type: array
+          items:
+            $ref: '#/components/schemas/Participant'
+
+    LeaveRequest:
+      type: object
+      required: [participant_id]
+      properties:
+        participant_id:
+          type: string
+          format: uuid
+        reason:
+          type: string
+
+    CursorPosition:
+      type: object
+      properties:
+        path:
+          type: string
+          description: JSON path or document position
+        offset:
+          type: integer
+        selection_start:
+          type: integer
+        selection_end:
+          type: integer
+        metadata:
+          type: object
+
+    # CRDT/OT schemas
+    CRDTType:
+      type: string
+      enum:
+        - lww-register    # Last-Write-Wins Register
+        - mv-register     # Multi-Value Register
+        - g-counter       # Grow-only Counter
+        - pn-counter      # Positive-Negative Counter
+        - g-set           # Grow-only Set
+        - or-set          # Observed-Remove Set
+        - lww-map         # Last-Write-Wins Map
+        - rga             # Replicated Growable Array
+        - json            # JSON CRDT
+
+    Operation:
+      type: object
+      required: [type, participant_id, payload, vector_clock]
+      properties:
+        id:
+          type: string
+          format: uuid
+        type:
+          $ref: '#/components/schemas/OperationType'
+        participant_id:
+          type: string
+          format: uuid
+        path:
+          type: string
+          description: Target path in document
+        payload:
+          type: object
+        vector_clock:
+          $ref: '#/components/schemas/VectorClock'
+        timestamp:
+          type: string
+          format: date-time
+        causally_stable:
+          type: boolean
+          default: false
+
+    OperationType:
+      type: string
+      enum:
+        # CRDT operations
+        - set
+        - delete
+        - increment
+        - decrement
+        - add_to_set
+        - remove_from_set
+        # RGA/Text operations
+        - insert
+        - delete_range
+        - replace
+        # OT operations
+        - ot_insert
+        - ot_delete
+        - ot_retain
+        # Compound
+        - batch
+
+    OperationResult:
+      type: object
+      required: [success, operation_id, vector_clock]
+      properties:
+        success:
+          type: boolean
+        operation_id:
+          type: string
+          format: uuid
+        vector_clock:
+          $ref: '#/components/schemas/VectorClock'
+        applied_at:
+          type: string
+          format: date-time
+        conflicts:
+          type: array
+          items:
+            $ref: '#/components/schemas/Conflict'
+
+    OperationBatch:
+      type: object
+      required: [operations, vector_clock]
+      properties:
+        operations:
+          type: array
+          items:
+            $ref: '#/components/schemas/Operation'
+          maxItems: 1000
+        vector_clock:
+          $ref: '#/components/schemas/VectorClock'
+        atomic:
+          type: boolean
+          default: true
+
+    BatchResult:
+      type: object
+      required: [success, results, vector_clock]
+      properties:
+        success:
+          type: boolean
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/OperationResult'
+        vector_clock:
+          $ref: '#/components/schemas/VectorClock'
+        partial_failure:
+          type: boolean
+
+    OperationLog:
+      type: object
+      required: [operations, start_version, end_version]
+      properties:
+        operations:
+          type: array
+          items:
+            $ref: '#/components/schemas/Operation'
+        start_version:
+          type: integer
+        end_version:
+          type: integer
+        has_more:
+          type: boolean
+
+    TransformRequest:
+      type: object
+      required: [operations, against]
+      properties:
+        operations:
+          type: array
+          items:
+            $ref: '#/components/schemas/Operation'
+        against:
+          type: array
+          items:
+            $ref: '#/components/schemas/Operation'
+
+    TransformResult:
+      type: object
+      required: [transformed_operations]
+      properties:
+        transformed_operations:
+          type: array
+          items:
+            $ref: '#/components/schemas/Operation'
+        transformation_matrix:
+          type: array
+          items:
+            type: array
+            items:
+              type: number
+
+    # State schemas
+    StateResponse:
+      type: object
+      required: [state, vector_clock, version]
+      properties:
+        state:
+          type: object
+          description: Current CRDT state
+        vector_clock:
+          $ref: '#/components/schemas/VectorClock'
+        version:
+          type: integer
+        delta:
+          type: boolean
+          description: Whether this is a delta update
+        operations_since:
+          type: integer
+          description: Number of operations since client's version
+
+    VectorClock:
+      type: object
+      description: |
+        Vector clock for causal ordering.
+        Keys are participant IDs, values are logical timestamps.
+      additionalProperties:
+        type: integer
+      example:
+        "participant-1": 42
+        "participant-2": 38
+        "participant-3": 45
+
+    SyncRequest:
+      type: object
+      required: [vector_clock]
+      properties:
+        vector_clock:
+          $ref: '#/components/schemas/VectorClock'
+        pending_operations:
+          type: array
+          items:
+            $ref: '#/components/schemas/Operation'
+        state_hash:
+          type: string
+          description: Hash of client state for integrity check
+
+    SyncResponse:
+      type: object
+      required: [vector_clock, in_sync]
+      properties:
+        vector_clock:
+          $ref: '#/components/schemas/VectorClock'
+        in_sync:
+          type: boolean
+        missing_operations:
+          type: array
+          items:
+            $ref: '#/components/schemas/Operation'
+        conflicts:
+          type: array
+          items:
+            $ref: '#/components/schemas/Conflict'
+        state:
+          type: object
+          description: Full state if divergence detected
+
+    # Conflict schemas
+    Conflict:
+      type: object
+      required: [id, type, path, created_at]
+      properties:
+        id:
+          type: string
+          format: uuid
+        type:
+          type: string
+          enum: [concurrent_write, causality, divergence]
+        path:
+          type: string
+        operations:
+          type: array
+          items:
+            $ref: '#/components/schemas/Operation'
+        participants:
+          type: array
+          items:
+            type: string
+            format: uuid
+        resolution_status:
+          type: string
+          enum: [pending, auto_resolved, manual_required, resolved]
+        auto_resolution:
+          type: object
+          description: Auto-resolved value (if applicable)
+        created_at:
+          type: string
+          format: date-time
+
+    ConflictList:
+      type: object
+      required: [conflicts]
+      properties:
+        conflicts:
+          type: array
+          items:
+            $ref: '#/components/schemas/Conflict'
+        pending_count:
+          type: integer
+
+    ConflictResolution:
+      type: object
+      required: [resolution_type]
+      properties:
+        resolution_type:
+          type: string
+          enum: [accept_first, accept_last, merge, custom]
+        custom_value:
+          type: object
+          description: Custom resolution value
+        resolved_by:
+          type: string
+          format: uuid
+
+    ConflictError:
+      type: object
+      required: [error, conflicts]
+      properties:
+        error:
+          type: string
+        conflicts:
+          type: array
+          items:
+            $ref: '#/components/schemas/Conflict'
+
+    # Shard schemas
+    Shard:
+      type: object
+      required: [id, status, participant_count]
+      properties:
+        id:
+          type: string
+        status:
+          type: string
+          enum: [healthy, degraded, overloaded, draining]
+        participant_count:
+          type: integer
+          maximum: 1000
+        capacity:
+          type: integer
+          default: 1000
+        load_percentage:
+          type: number
+        peer_shards:
+          type: array
+          items:
+            type: string
+        last_gossip_at:
+          type: string
+          format: date-time
+        endpoint:
+          type: string
+          format: uri
+
+    ShardList:
+      type: object
+      required: [shards]
+      properties:
+        shards:
+          type: array
+          items:
+            $ref: '#/components/schemas/Shard'
+        total_participants:
+          type: integer
+        healthy_count:
+          type: integer
+
+    GossipMessage:
+      type: object
+      required: [from_shard, vector_clock, digest]
+      properties:
+        from_shard:
+          type: string
+        vector_clock:
+          $ref: '#/components/schemas/VectorClock'
+        digest:
+          type: string
+          description: State digest for comparison
+        operations:
+          type: array
+          items:
+            $ref: '#/components/schemas/Operation'
+        anti_entropy_request:
+          type: boolean
+          default: false
+
+    GossipResponse:
+      type: object
+      required: [from_shard, vector_clock]
+      properties:
+        from_shard:
+          type: string
+        vector_clock:
+          $ref: '#/components/schemas/VectorClock'
+        missing_operations:
+          type: array
+          items:
+            $ref: '#/components/schemas/Operation'
+        in_sync:
+          type: boolean
+
+    RebalanceRequest:
+      type: object
+      properties:
+        target_load:
+          type: number
+          description: Target load percentage per shard
+          default: 0.7
+        drain_shards:
+          type: array
+          items:
+            type: string
+        add_shards:
+          type: integer
+
+    RebalanceStatus:
+      type: object
+      required: [id, status]
+      properties:
+        id:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [pending, in_progress, completed, failed]
+        progress:
+          type: number
+        participants_moved:
+          type: integer
+        estimated_completion:
+          type: string
+          format: date-time
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+    serviceAuth:
+      type: apiKey
+      in: header
+      name: X-Service-Key
+      description: Internal service-to-service auth
+
+    adminAuth:
+      type: apiKey
+      in: header
+      name: X-Admin-Key
+      description: Admin operations

@@ -1,0 +1,1401 @@
+# BlackRoad OS - Core Agent API
+# OpenAPI 3.1 Specification
+#
+# Primary agent lifecycle and coordination APIs
+# Scale: 30,000 agents, 100T entities
+#
+# @blackroad_name: Core Agent API
+# @operator: alexa.operator.v1
+# @tier: 1_core
+
+openapi: "3.1.0"
+info:
+  title: BlackRoad Core Agent API
+  version: "1.0.0"
+  description: |
+    Core Agent API for BlackRoad OS governance platform.
+    Handles agent lifecycle, coordination, and task management
+    at hyperscale (30K concurrent agents, 100T entities).
+  contact:
+    name: BlackRoad Platform Team
+    email: platform@blackroad.io
+    url: https://developers.blackroad.io
+  license:
+    name: Proprietary
+    url: https://blackroad.io/license
+  x-logo:
+    url: https://blackroad.io/logo.png
+
+servers:
+  - url: https://api.blackroad.io/v1
+    description: Production (Global)
+  - url: https://api.blackroad.dev/v1
+    description: Development
+  - url: https://api-{region}.blackroad.io/v1
+    description: Regional
+    variables:
+      region:
+        default: us-east
+        enum:
+          - us-east
+          - us-west
+          - eu-west
+          - eu-central
+          - ap-northeast
+          - ap-southeast
+          - ap-south
+          - sa-east
+          - me-central
+          - af-south
+          - oceania
+          - quantum
+
+tags:
+  - name: agents
+    description: Agent lifecycle management
+  - name: tasks
+    description: Task creation and execution
+  - name: coordination
+    description: Multi-agent coordination
+  - name: memory
+    description: Agent memory operations
+  - name: governance
+    description: Governance policy enforcement
+
+# ============================================
+# PATHS
+# ============================================
+
+paths:
+  # ----------------------------------------
+  # AGENT LIFECYCLE
+  # ----------------------------------------
+  /agents:
+    get:
+      operationId: listAgents
+      summary: List agents
+      tags: [agents]
+      parameters:
+        - $ref: '#/components/parameters/PageLimit'
+        - $ref: '#/components/parameters/PageCursor'
+        - name: status
+          in: query
+          schema:
+            $ref: '#/components/schemas/AgentStatus'
+        - name: type
+          in: query
+          schema:
+            type: string
+            enum: [lucidia, beacon, custom, pack]
+      responses:
+        '200':
+          description: List of agents
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentList'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+      security:
+        - bearerAuth: []
+        - apiKey: []
+
+    post:
+      operationId: createAgent
+      summary: Create a new agent
+      tags: [agents]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AgentCreate'
+      responses:
+        '201':
+          description: Agent created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Agent'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+      security:
+        - bearerAuth: []
+
+  /agents/{agent_id}:
+    parameters:
+      - $ref: '#/components/parameters/AgentId'
+
+    get:
+      operationId: getAgent
+      summary: Get agent by ID
+      tags: [agents]
+      responses:
+        '200':
+          description: Agent details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Agent'
+        '404':
+          $ref: '#/components/responses/NotFound'
+      security:
+        - bearerAuth: []
+
+    patch:
+      operationId: updateAgent
+      summary: Update agent
+      tags: [agents]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AgentUpdate'
+      responses:
+        '200':
+          description: Agent updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Agent'
+        '404':
+          $ref: '#/components/responses/NotFound'
+      security:
+        - bearerAuth: []
+
+    delete:
+      operationId: deleteAgent
+      summary: Delete agent
+      tags: [agents]
+      responses:
+        '204':
+          description: Agent deleted
+        '404':
+          $ref: '#/components/responses/NotFound'
+      security:
+        - bearerAuth: []
+
+  /agents/{agent_id}/invoke:
+    parameters:
+      - $ref: '#/components/parameters/AgentId'
+
+    post:
+      operationId: invokeAgent
+      summary: Invoke agent execution
+      tags: [agents]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AgentInvocation'
+      responses:
+        '200':
+          description: Invocation result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentResponse'
+        '202':
+          description: Invocation accepted (async)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AsyncTask'
+      security:
+        - bearerAuth: []
+
+  /agents/{agent_id}/stream:
+    parameters:
+      - $ref: '#/components/parameters/AgentId'
+
+    post:
+      operationId: streamAgent
+      summary: Stream agent response
+      tags: [agents]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AgentInvocation'
+      responses:
+        '200':
+          description: Streaming response
+          content:
+            text/event-stream:
+              schema:
+                $ref: '#/components/schemas/AgentStreamEvent'
+      security:
+        - bearerAuth: []
+
+  # ----------------------------------------
+  # TASK MANAGEMENT
+  # ----------------------------------------
+  /tasks:
+    get:
+      operationId: listTasks
+      summary: List tasks
+      tags: [tasks]
+      parameters:
+        - $ref: '#/components/parameters/PageLimit'
+        - $ref: '#/components/parameters/PageCursor'
+        - name: status
+          in: query
+          schema:
+            $ref: '#/components/schemas/TaskStatus'
+        - name: agent_id
+          in: query
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: List of tasks
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskList'
+      security:
+        - bearerAuth: []
+
+    post:
+      operationId: createTask
+      summary: Create a new task
+      tags: [tasks]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaskCreate'
+      responses:
+        '201':
+          description: Task created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+      security:
+        - bearerAuth: []
+
+  /tasks/{task_id}:
+    parameters:
+      - $ref: '#/components/parameters/TaskId'
+
+    get:
+      operationId: getTask
+      summary: Get task by ID
+      tags: [tasks]
+      responses:
+        '200':
+          description: Task details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+      security:
+        - bearerAuth: []
+
+    delete:
+      operationId: cancelTask
+      summary: Cancel task
+      tags: [tasks]
+      responses:
+        '204':
+          description: Task cancelled
+      security:
+        - bearerAuth: []
+
+  /tasks/{task_id}/result:
+    parameters:
+      - $ref: '#/components/parameters/TaskId'
+
+    get:
+      operationId: getTaskResult
+      summary: Get task result
+      tags: [tasks]
+      responses:
+        '200':
+          description: Task result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskResult'
+        '202':
+          description: Task still processing
+      security:
+        - bearerAuth: []
+
+  # ----------------------------------------
+  # MULTI-AGENT COORDINATION
+  # ----------------------------------------
+  /coordination/sessions:
+    get:
+      operationId: listCoordinationSessions
+      summary: List coordination sessions
+      tags: [coordination]
+      parameters:
+        - $ref: '#/components/parameters/PageLimit'
+        - $ref: '#/components/parameters/PageCursor'
+      responses:
+        '200':
+          description: List of sessions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CoordinationSessionList'
+      security:
+        - bearerAuth: []
+
+    post:
+      operationId: createCoordinationSession
+      summary: Create coordination session
+      tags: [coordination]
+      description: |
+        Create a multi-agent coordination session.
+        Supports up to 30,000 concurrent participants using
+        CRDT-based state synchronization with gossip protocol.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CoordinationSessionCreate'
+      responses:
+        '201':
+          description: Session created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CoordinationSession'
+      security:
+        - bearerAuth: []
+
+  /coordination/sessions/{session_id}:
+    parameters:
+      - $ref: '#/components/parameters/SessionId'
+
+    get:
+      operationId: getCoordinationSession
+      summary: Get coordination session
+      tags: [coordination]
+      responses:
+        '200':
+          description: Session details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CoordinationSession'
+      security:
+        - bearerAuth: []
+
+    delete:
+      operationId: closeCoordinationSession
+      summary: Close coordination session
+      tags: [coordination]
+      responses:
+        '204':
+          description: Session closed
+      security:
+        - bearerAuth: []
+
+  /coordination/sessions/{session_id}/join:
+    parameters:
+      - $ref: '#/components/parameters/SessionId'
+
+    post:
+      operationId: joinCoordinationSession
+      summary: Join coordination session
+      tags: [coordination]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SessionJoinRequest'
+      responses:
+        '200':
+          description: Joined session
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionParticipant'
+      security:
+        - bearerAuth: []
+
+  /coordination/sessions/{session_id}/state:
+    parameters:
+      - $ref: '#/components/parameters/SessionId'
+
+    get:
+      operationId: getSessionState
+      summary: Get session state (CRDT)
+      tags: [coordination]
+      parameters:
+        - name: vector_clock
+          in: query
+          description: Client's vector clock for delta sync
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Session state
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CRDTState'
+      security:
+        - bearerAuth: []
+
+    patch:
+      operationId: updateSessionState
+      summary: Apply state operation
+      tags: [coordination]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CRDTOperation'
+      responses:
+        '200':
+          description: Operation applied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CRDTState'
+      security:
+        - bearerAuth: []
+
+  # ----------------------------------------
+  # AGENT MEMORY
+  # ----------------------------------------
+  /agents/{agent_id}/memory:
+    parameters:
+      - $ref: '#/components/parameters/AgentId'
+
+    get:
+      operationId: getAgentMemory
+      summary: Get agent memory
+      tags: [memory]
+      parameters:
+        - name: type
+          in: query
+          schema:
+            type: string
+            enum: [episodic, semantic, procedural, working]
+        - name: query
+          in: query
+          description: Semantic search query
+          schema:
+            type: string
+        - name: k
+          in: query
+          description: Number of results for similarity search
+          schema:
+            type: integer
+            default: 10
+      responses:
+        '200':
+          description: Memory contents
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentMemory'
+      security:
+        - bearerAuth: []
+
+    post:
+      operationId: writeAgentMemory
+      summary: Write to agent memory
+      tags: [memory]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MemoryWrite'
+      responses:
+        '201':
+          description: Memory written
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MemoryEntry'
+      security:
+        - bearerAuth: []
+
+  /agents/{agent_id}/memory/lineage:
+    parameters:
+      - $ref: '#/components/parameters/AgentId'
+
+    get:
+      operationId: getMemoryLineage
+      summary: Get memory lineage (PS-SHA∞)
+      tags: [memory]
+      description: |
+        Retrieve the complete memory lineage using PS-SHA∞
+        (Probabilistic Semantic-aware Secure Hash Algorithm)
+        for causal ordering and contradiction detection.
+      parameters:
+        - name: hash
+          in: query
+          description: Starting hash for lineage trace
+          schema:
+            type: string
+        - name: depth
+          in: query
+          description: Maximum lineage depth
+          schema:
+            type: integer
+            default: 100
+      responses:
+        '200':
+          description: Memory lineage
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MemoryLineage'
+      security:
+        - bearerAuth: []
+
+  # ----------------------------------------
+  # GOVERNANCE
+  # ----------------------------------------
+  /governance/evaluate:
+    post:
+      operationId: evaluatePolicy
+      summary: Evaluate governance policy
+      tags: [governance]
+      description: |
+        Evaluate an action against governance policies using
+        trinary logic (1: allow, 0: neutral, -1: deny).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PolicyEvaluation'
+      responses:
+        '200':
+          description: Evaluation result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PolicyResult'
+      security:
+        - bearerAuth: []
+
+  /governance/constraints:
+    get:
+      operationId: listConstraints
+      summary: List active constraints
+      tags: [governance]
+      responses:
+        '200':
+          description: Active constraints
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConstraintList'
+      security:
+        - bearerAuth: []
+
+    post:
+      operationId: createConstraint
+      summary: Create constraint
+      tags: [governance]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConstraintCreate'
+      responses:
+        '201':
+          description: Constraint created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Constraint'
+      security:
+        - bearerAuth: []
+
+# ============================================
+# COMPONENTS
+# ============================================
+
+components:
+  # ----------------------------------------
+  # PARAMETERS
+  # ----------------------------------------
+  parameters:
+    AgentId:
+      name: agent_id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+    TaskId:
+      name: task_id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+    SessionId:
+      name: session_id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+    PageLimit:
+      name: limit
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 1000
+        default: 100
+
+    PageCursor:
+      name: cursor
+      in: query
+      schema:
+        type: string
+        description: Pagination cursor
+
+  # ----------------------------------------
+  # SCHEMAS
+  # ----------------------------------------
+  schemas:
+    # Agent schemas
+    Agent:
+      type: object
+      required: [id, name, type, status, created_at]
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          maxLength: 256
+        type:
+          type: string
+          enum: [lucidia, beacon, custom, pack]
+        status:
+          $ref: '#/components/schemas/AgentStatus'
+        config:
+          type: object
+          additionalProperties: true
+        capabilities:
+          type: array
+          items:
+            type: string
+        constraints:
+          type: array
+          items:
+            $ref: '#/components/schemas/Constraint'
+        memory_config:
+          $ref: '#/components/schemas/MemoryConfig'
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    AgentStatus:
+      type: string
+      enum:
+        - initializing
+        - ready
+        - busy
+        - paused
+        - error
+        - terminated
+
+    AgentCreate:
+      type: object
+      required: [name, type]
+      properties:
+        name:
+          type: string
+          maxLength: 256
+        type:
+          type: string
+          enum: [lucidia, beacon, custom, pack]
+        config:
+          type: object
+        capabilities:
+          type: array
+          items:
+            type: string
+        constraints:
+          type: array
+          items:
+            type: string
+            format: uuid
+
+    AgentUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        config:
+          type: object
+        capabilities:
+          type: array
+          items:
+            type: string
+        status:
+          $ref: '#/components/schemas/AgentStatus'
+
+    AgentList:
+      type: object
+      required: [data, has_more]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Agent'
+        has_more:
+          type: boolean
+        cursor:
+          type: string
+
+    AgentInvocation:
+      type: object
+      required: [input]
+      properties:
+        input:
+          oneOf:
+            - type: string
+            - type: object
+        context:
+          type: object
+          additionalProperties: true
+        tools:
+          type: array
+          items:
+            type: string
+        max_tokens:
+          type: integer
+          minimum: 1
+          maximum: 200000
+        timeout_ms:
+          type: integer
+          default: 60000
+
+    AgentResponse:
+      type: object
+      required: [output, usage]
+      properties:
+        output:
+          oneOf:
+            - type: string
+            - type: object
+        tool_calls:
+          type: array
+          items:
+            $ref: '#/components/schemas/ToolCall'
+        usage:
+          $ref: '#/components/schemas/Usage'
+        governance:
+          $ref: '#/components/schemas/GovernanceTrace'
+
+    AgentStreamEvent:
+      type: object
+      required: [type]
+      properties:
+        type:
+          type: string
+          enum: [text_delta, tool_call, done, error]
+        data:
+          type: object
+
+    # Task schemas
+    Task:
+      type: object
+      required: [id, agent_id, status, created_at]
+      properties:
+        id:
+          type: string
+          format: uuid
+        agent_id:
+          type: string
+          format: uuid
+        status:
+          $ref: '#/components/schemas/TaskStatus'
+        input:
+          type: object
+        progress:
+          type: number
+          minimum: 0
+          maximum: 1
+        created_at:
+          type: string
+          format: date-time
+        started_at:
+          type: string
+          format: date-time
+        completed_at:
+          type: string
+          format: date-time
+
+    TaskStatus:
+      type: string
+      enum:
+        - pending
+        - running
+        - completed
+        - failed
+        - cancelled
+
+    TaskCreate:
+      type: object
+      required: [agent_id, input]
+      properties:
+        agent_id:
+          type: string
+          format: uuid
+        input:
+          type: object
+        priority:
+          type: integer
+          minimum: 0
+          maximum: 10
+          default: 5
+        timeout_ms:
+          type: integer
+
+    TaskList:
+      type: object
+      required: [data, has_more]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Task'
+        has_more:
+          type: boolean
+        cursor:
+          type: string
+
+    TaskResult:
+      type: object
+      required: [task_id, status]
+      properties:
+        task_id:
+          type: string
+          format: uuid
+        status:
+          $ref: '#/components/schemas/TaskStatus'
+        output:
+          type: object
+        error:
+          $ref: '#/components/schemas/Error'
+
+    AsyncTask:
+      type: object
+      required: [task_id, status_url]
+      properties:
+        task_id:
+          type: string
+          format: uuid
+        status_url:
+          type: string
+          format: uri
+        estimated_completion:
+          type: string
+          format: date-time
+
+    # Coordination schemas
+    CoordinationSession:
+      type: object
+      required: [id, name, status, participants_count, created_at]
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        status:
+          type: string
+          enum: [active, paused, closed]
+        participants_count:
+          type: integer
+          maximum: 30000
+        max_participants:
+          type: integer
+          default: 30000
+        shard_id:
+          type: string
+          description: Consistent hash shard assignment
+        vector_clock:
+          type: object
+          additionalProperties:
+            type: integer
+        created_at:
+          type: string
+          format: date-time
+
+    CoordinationSessionCreate:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+        max_participants:
+          type: integer
+          default: 30000
+          maximum: 30000
+        crdt_type:
+          type: string
+          enum: [lww-register, g-counter, pn-counter, or-set, rga]
+          default: rga
+        gossip_enabled:
+          type: boolean
+          default: true
+
+    CoordinationSessionList:
+      type: object
+      required: [data, has_more]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/CoordinationSession'
+        has_more:
+          type: boolean
+        cursor:
+          type: string
+
+    SessionJoinRequest:
+      type: object
+      required: [participant_id]
+      properties:
+        participant_id:
+          type: string
+          format: uuid
+        role:
+          type: string
+          enum: [agent, human, observer]
+          default: agent
+
+    SessionParticipant:
+      type: object
+      required: [id, role, joined_at]
+      properties:
+        id:
+          type: string
+          format: uuid
+        role:
+          type: string
+        shard_id:
+          type: string
+        joined_at:
+          type: string
+          format: date-time
+
+    CRDTState:
+      type: object
+      required: [version, vector_clock, data]
+      properties:
+        version:
+          type: integer
+        vector_clock:
+          type: object
+          additionalProperties:
+            type: integer
+        data:
+          type: object
+          additionalProperties: true
+        conflicts:
+          type: array
+          items:
+            $ref: '#/components/schemas/CRDTConflict'
+
+    CRDTOperation:
+      type: object
+      required: [type, payload]
+      properties:
+        type:
+          type: string
+          enum: [insert, delete, update, merge]
+        payload:
+          type: object
+        vector_clock:
+          type: object
+          additionalProperties:
+            type: integer
+        causally_stable:
+          type: boolean
+          default: false
+
+    CRDTConflict:
+      type: object
+      properties:
+        path:
+          type: string
+        values:
+          type: array
+          items:
+            type: object
+        resolution:
+          type: string
+          enum: [pending, lww, merge, manual]
+
+    # Memory schemas
+    AgentMemory:
+      type: object
+      properties:
+        episodic:
+          type: array
+          items:
+            $ref: '#/components/schemas/MemoryEntry'
+        semantic:
+          type: array
+          items:
+            $ref: '#/components/schemas/MemoryEntry'
+        procedural:
+          type: array
+          items:
+            $ref: '#/components/schemas/MemoryEntry'
+        working:
+          type: object
+          additionalProperties: true
+
+    MemoryEntry:
+      type: object
+      required: [id, type, content, ps_sha]
+      properties:
+        id:
+          type: string
+          format: uuid
+        type:
+          type: string
+          enum: [episodic, semantic, procedural]
+        content:
+          type: object
+        ps_sha:
+          type: string
+          description: PS-SHA∞ hash for lineage tracking
+        parent_hash:
+          type: string
+        embedding:
+          type: array
+          items:
+            type: number
+        similarity_score:
+          type: number
+          minimum: 0
+          maximum: 1
+        created_at:
+          type: string
+          format: date-time
+
+    MemoryWrite:
+      type: object
+      required: [type, content]
+      properties:
+        type:
+          type: string
+          enum: [episodic, semantic, procedural]
+        content:
+          type: object
+        parent_hash:
+          type: string
+          description: Parent PS-SHA∞ for causal ordering
+        metadata:
+          type: object
+
+    MemoryConfig:
+      type: object
+      properties:
+        episodic_capacity:
+          type: integer
+          default: 10000
+        semantic_capacity:
+          type: integer
+          default: 100000
+        procedural_capacity:
+          type: integer
+          default: 1000
+        working_memory_size:
+          type: integer
+          default: 32
+
+    MemoryLineage:
+      type: object
+      required: [root_hash, entries]
+      properties:
+        root_hash:
+          type: string
+        entries:
+          type: array
+          items:
+            $ref: '#/components/schemas/LineageEntry'
+        contradictions:
+          type: array
+          items:
+            $ref: '#/components/schemas/Contradiction'
+
+    LineageEntry:
+      type: object
+      properties:
+        hash:
+          type: string
+        parent_hash:
+          type: string
+        depth:
+          type: integer
+        timestamp:
+          type: string
+          format: date-time
+
+    Contradiction:
+      type: object
+      properties:
+        hash_a:
+          type: string
+        hash_b:
+          type: string
+        type:
+          type: string
+          enum: [semantic, temporal, causal]
+        trinary_value:
+          type: integer
+          enum: [-1, 0, 1]
+          description: "-1: contradiction confirmed, 0: uncertain, 1: resolved"
+
+    # Governance schemas
+    PolicyEvaluation:
+      type: object
+      required: [action, context]
+      properties:
+        action:
+          type: string
+        agent_id:
+          type: string
+          format: uuid
+        context:
+          type: object
+          additionalProperties: true
+        resources:
+          type: array
+          items:
+            type: string
+
+    PolicyResult:
+      type: object
+      required: [decision, trinary_value]
+      properties:
+        decision:
+          type: string
+          enum: [allow, deny, escalate]
+        trinary_value:
+          type: integer
+          enum: [-1, 0, 1]
+          description: "-1: deny, 0: escalate/uncertain, 1: allow"
+        matched_policies:
+          type: array
+          items:
+            type: string
+        constraints:
+          type: array
+          items:
+            $ref: '#/components/schemas/Constraint'
+        audit_trail:
+          $ref: '#/components/schemas/AuditTrail'
+
+    Constraint:
+      type: object
+      required: [id, type, expression]
+      properties:
+        id:
+          type: string
+          format: uuid
+        type:
+          type: string
+          enum: [rate_limit, resource, capability, temporal, spatial]
+        expression:
+          type: string
+        priority:
+          type: integer
+        active:
+          type: boolean
+          default: true
+
+    ConstraintCreate:
+      type: object
+      required: [type, expression]
+      properties:
+        type:
+          type: string
+          enum: [rate_limit, resource, capability, temporal, spatial]
+        expression:
+          type: string
+        priority:
+          type: integer
+          default: 0
+
+    ConstraintList:
+      type: object
+      required: [data]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Constraint'
+
+    GovernanceTrace:
+      type: object
+      properties:
+        policies_evaluated:
+          type: integer
+        decision:
+          type: string
+        latency_ms:
+          type: number
+        audit_id:
+          type: string
+          format: uuid
+
+    AuditTrail:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        timestamp:
+          type: string
+          format: date-time
+        events:
+          type: array
+          items:
+            type: object
+
+    # Common schemas
+    ToolCall:
+      type: object
+      required: [id, name]
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        arguments:
+          type: object
+        result:
+          type: object
+
+    Usage:
+      type: object
+      properties:
+        input_tokens:
+          type: integer
+        output_tokens:
+          type: integer
+        total_tokens:
+          type: integer
+        latency_ms:
+          type: number
+
+    Error:
+      type: object
+      required: [code, message]
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+        details:
+          type: object
+
+  # ----------------------------------------
+  # RESPONSES
+  # ----------------------------------------
+  responses:
+    BadRequest:
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+    Forbidden:
+      description: Forbidden
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+    NotFound:
+      description: Not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+    ValidationError:
+      description: Validation error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+    RateLimited:
+      description: Rate limited
+      headers:
+        X-RateLimit-Limit:
+          schema:
+            type: integer
+        X-RateLimit-Remaining:
+          schema:
+            type: integer
+        X-RateLimit-Reset:
+          schema:
+            type: integer
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+  # ----------------------------------------
+  # SECURITY
+  # ----------------------------------------
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT token from BlackRoad Auth
+
+    apiKey:
+      type: apiKey
+      in: header
+      name: X-API-Key
+      description: API key for service-to-service auth
