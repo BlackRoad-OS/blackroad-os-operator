@@ -1,23 +1,49 @@
 # Stripe Configuration
-# BlackRoad OS Payment Processing
+# BlackRoad OS, Inc. - Payment Processing
 #
 # Subscriptions, usage billing, and payment management
 #
+# IMPORTANT: Never commit actual API keys to git!
+# All keys must be stored in environment variables or secrets manager.
+#
 # @blackroad_name: BlackRoad Payments
-# @tier: Scale
+# @legal_entity: BlackRoad OS, Inc.
 # @operator: alexa.operator.v1
 
 version: "stripe-v1"
+
+# ============================================
+# ACCOUNT
+# ============================================
+
+account:
+  legal_name: "BlackRoad OS, Inc."
+  account_id: "${STRIPE_ACCOUNT_ID}"
+  dashboard: "https://dashboard.stripe.com"
+  atlas_enabled: true
+  incorporation:
+    type: "C-Corporation"
+    state: "Delaware"
+    country: "US"
 
 # ============================================
 # CONNECTION
 # ============================================
 
 connection:
-  api_key: "${STRIPE_SECRET_KEY}"
-  publishable_key: "${STRIPE_PUBLISHABLE_KEY}"
-  webhook_secret: "${STRIPE_WEBHOOK_SECRET}"
-  api_version: "2024-06-20"
+  # Production (use env vars - NEVER hardcode keys!)
+  production:
+    secret_key: "${STRIPE_LIVE_SECRET_KEY}"
+    publishable_key: "${STRIPE_LIVE_PUBLISHABLE_KEY}"
+    webhook_secret: "${STRIPE_LIVE_WEBHOOK_SECRET}"
+
+  # Test/Development
+  test:
+    secret_key: "${STRIPE_TEST_SECRET_KEY}"
+    publishable_key: "${STRIPE_TEST_PUBLISHABLE_KEY}"
+    webhook_secret: "${STRIPE_TEST_WEBHOOK_SECRET}"
+
+  api_version: "2024-11-20.acacia"
 
 # ============================================
 # PRODUCTS
@@ -314,9 +340,9 @@ invoices:
 
   # Footer
   footer: |
-    BlackRoad Inc.
-    123 AI Street, San Francisco, CA 94105
-    support@blackroad.io
+    BlackRoad OS, Inc.
+    Delaware C-Corporation
+    billing@blackroad.io | https://blackroad.io
 
   # Auto-advance
   auto_advance: true

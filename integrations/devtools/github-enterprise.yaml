@@ -14,9 +14,12 @@ version: "github-enterprise-v1"
 # ============================================
 
 enterprise:
-  name: "BlackRoad"
-  slug: "blackroad"
+  name: "BlackRoad OS, Inc."
+  slug: "blackroad-os"
+  url: "https://github.com/enterprises/blackroad-os"
   billing_email: "billing@blackroad.io"
+  legal_entity: "BlackRoad OS, Inc."
+  incorporation: "Delaware, USA"
 
   # Enterprise Cloud features
   features:
