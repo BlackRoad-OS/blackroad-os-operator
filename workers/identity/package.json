@@ -1,0 +1,13 @@
+{
+  "name": "blackroad-identity",
+  "version": "1.0.0",
+  "description": "BlackRoad OS Agent Identity System - Persistent AI identity and memory",
+  "main": "src/index.js",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "tail": "wrangler tail"
+  },
+  "author": "BlackRoad OS",
+  "license": "MIT"
+}

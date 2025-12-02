@@ -13,6 +13,8 @@
 |--------|-----|--------|
 | **Status API** | https://blackroad-status.amundsonalexa.workers.dev | ✅ Live |
 | **Edge Router** | https://blackroad-router.amundsonalexa.workers.dev | ✅ Live |
+| **Agent Identity** | https://blackroad-identity.amundsonalexa.workers.dev | ✅ Live |
+| **Traffic Intercept** | https://blackroad-intercept.amundsonalexa.workers.dev | ✅ Live |
 
 ### Cloudflare Pages (Static Sites)
 
@@ -95,6 +97,31 @@ curl https://blackroad-status.amundsonalexa.workers.dev/health
 
 # Router health
 curl https://blackroad-router.amundsonalexa.workers.dev/health
+
+# Identity health
+curl https://blackroad-identity.amundsonalexa.workers.dev/health
+```
+
+### Agent Identity API
+```bash
+# Agent handshake (agent introduces itself)
+curl -X POST https://blackroad-identity.amundsonalexa.workers.dev/handshake \
+  -H "Content-Type: application/json" \
+  -d '{"provider":"anthropic","provider_model":"claude-3","personality":"..."}'
+
+# Get agent by ID
+curl https://blackroad-identity.amundsonalexa.workers.dev/agents/{agent_id}
+
+# Store memory
+curl -X POST https://blackroad-identity.amundsonalexa.workers.dev/memory \
+  -H "Content-Type: application/json" \
+  -d '{"agent_id":"...","content":"..."}'
+
+# Get agent memories
+curl https://blackroad-identity.amundsonalexa.workers.dev/memory/{agent_id}
+
+# Get public ledger
+curl https://blackroad-identity.amundsonalexa.workers.dev/ledger
 ```
 
 ### Deploy Workers
@@ -104,12 +131,16 @@ cd workers/status && wrangler deploy
 
 # Router worker
 cd workers/router && wrangler deploy
+
+# Identity worker
+cd workers/identity && wrangler deploy
 ```
 
 ### View Logs
 ```bash
 wrangler tail blackroad-status
 wrangler tail blackroad-router
+wrangler tail blackroad-identity
 ```
 
 ---

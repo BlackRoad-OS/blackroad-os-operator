@@ -1,0 +1,14 @@
+{
+  "name": "blackroad-gateway",
+  "version": "1.0.0",
+  "description": "BlackRoad Agent Gateway - Wrap any LLM API with identity, memory, and billing",
+  "type": "module",
+  "main": "blackroad-gateway.js",
+  "scripts": {
+    "start": "node blackroad-gateway.js",
+    "dev": "node --watch blackroad-gateway.js"
+  },
+  "keywords": ["ai", "agent", "gateway", "llm", "memory", "identity"],
+  "author": "Alexa Louise Amundson <blackroad.systems@gmail.com>",
+  "license": "MIT"
+}

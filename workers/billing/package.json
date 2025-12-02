@@ -1,0 +1,18 @@
+{
+  "name": "blackroad-billing",
+  "version": "1.0.0",
+  "description": "BlackRoad OS Billing - Stripe integration for agent metering",
+  "main": "src/index.js",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "tail": "wrangler tail"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "wrangler": "^3.0.0"
+  },
+  "keywords": ["blackroad", "billing", "stripe", "cloudflare-workers"],
+  "author": "Alexa Louise Amundson",
+  "license": "PROPRIETARY"
+}

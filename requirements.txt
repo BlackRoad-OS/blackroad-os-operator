@@ -11,6 +11,9 @@ pydantic-settings==2.6.1
 asyncpg==0.30.0
 sqlalchemy[asyncio]==2.0.36
 
+# LLM Providers
+openai>=1.0.0
+
 # Vector/Embeddings
 numpy==1.26.4
 

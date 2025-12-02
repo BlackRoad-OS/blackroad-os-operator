@@ -1,0 +1,21 @@
+# BlackRoad OS Billing Worker
+# Stripe integration for agent billing and metering
+# Cost: FREE (Cloudflare Workers free tier)
+
+name = "blackroad-billing"
+main = "src/index.js"
+compatibility_date = "2024-01-01"
+
+[vars]
+VERSION = "1.0.0"
+ENVIRONMENT = "production"
+OWNER = "alexa-louise-amundson"
+
+# KV Namespace for billing data
+[[kv_namespaces]]
+binding = "BILLING"
+id = "d9780c62e0ed41c2a63ab81d342eeaf6"
+
+# Stripe secrets (set via wrangler secret put)
+# STRIPE_SECRET_KEY
+# STRIPE_WEBHOOK_SECRET

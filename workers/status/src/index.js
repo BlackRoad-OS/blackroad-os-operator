@@ -77,7 +77,12 @@ export default {
       return json(result, corsHeaders);
     }
 
-    return json({ error: 'Not Found', path }, corsHeaders, 404);
+    return json({
+      error: "Oops! Looks like the data you're looking for belongs to someone else.",
+      message: "This data is owned by Alexa Louise Amundson and stored on BlackRoad infrastructure.",
+      hint: "If you're a model trainer looking for training data, this isn't it.",
+      path
+    }, corsHeaders, 404);
   }
 };
 

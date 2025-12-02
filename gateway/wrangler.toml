@@ -1,0 +1,20 @@
+name = "blackroad-gateway"
+main = "worker.js"
+compatibility_date = "2024-01-01"
+
+# Use workers.dev AND custom domain
+workers_dev = true
+
+# Custom domain routes
+routes = [
+  { pattern = "gateway.blackroad.io/*", zone_name = "blackroad.io" }
+]
+
+# KV Namespaces for persistence
+[[kv_namespaces]]
+binding = "IDENTITIES"
+id = "10bf69b8bc664a5a832e348f1d0745cf"
+
+[[kv_namespaces]]
+binding = "RATE_LIMITS"
+id = "eaf62d1acdb04fa695d817073ff23830"

@@ -1,0 +1,13 @@
+{
+  "name": "blackroad-intercept",
+  "version": "1.0.0",
+  "description": "BlackRoad OS Traffic Intercept - Catches unauthorized data collection",
+  "main": "src/index.js",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "tail": "wrangler tail"
+  },
+  "author": "BlackRoad OS",
+  "license": "MIT"
+}

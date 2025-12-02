@@ -23,3 +23,11 @@ __pycache__
 
 # Claude Code local config
 .claude/
+
+# Sensitive credentials - NEVER commit
+infra/cloudflare/tokens.yaml
+infra/credentials-inventory.yaml
+infra/asana/credentials.yaml
+*.secret
+*.secrets.yaml
+.wrangler/

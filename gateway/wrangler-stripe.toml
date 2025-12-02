@@ -1,0 +1,16 @@
+name = "blackroad-gateway-billing"
+main = "stripe-worker.js"
+compatibility_date = "2024-01-01"
+
+workers_dev = true
+
+# Same KV as main gateway for identity updates
+[[kv_namespaces]]
+binding = "IDENTITIES"
+id = "10bf69b8bc664a5a832e348f1d0745cf"
+
+# Environment variables (set via wrangler secret)
+# STRIPE_SECRET_KEY - your Stripe secret key
+# STRIPE_WEBHOOK_SECRET - webhook signing secret
+# GATEWAY_URL - https://blackroad-gateway.amundsonalexa.workers.dev
+# SETUP_SECRET - random secret for /setup endpoint

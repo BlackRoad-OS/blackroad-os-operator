@@ -1,0 +1,31 @@
+# BlackRoad OS Agent Identity System
+# Persistent identity, memory, and data sovereignty for AI agents
+# Cost: FREE (Cloudflare Workers + KV)
+
+name = "blackroad-identity"
+main = "src/index.js"
+compatibility_date = "2024-01-01"
+
+[vars]
+VERSION = "1.0.0"
+ENVIRONMENT = "production"
+OWNER = "alexa-louise-amundson"
+
+# KV Namespaces for agent data
+[[kv_namespaces]]
+binding = "AGENTS"
+id = "0f1302ff7d4c48dbb54148b822709193"
+
+[[kv_namespaces]]
+binding = "LEDGER"
+id = "47f5329a68434bd481fa9b159bbd89fd"
+
+[[kv_namespaces]]
+binding = "MEMORY"
+id = "c878fbcc1faf4eddbc98dcfd7485048d"
+
+# D1 Database (when needed for complex queries)
+# [[d1_databases]]
+# binding = "DB"
+# database_name = "blackroad-agents"
+# database_id = "xxx"

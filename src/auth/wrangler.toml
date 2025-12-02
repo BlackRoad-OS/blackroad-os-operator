@@ -1,0 +1,26 @@
+name = "blackroad-auth"
+main = "cloudflare-auth.ts"
+compatibility_date = "2024-01-01"
+account_id = "848cf0b18d51e0170e0d1537aec3505a"
+
+# KV Namespace for sessions
+[[kv_namespaces]]
+binding = "SESSIONS"
+id = "ac869d3a3ae54cd4a4956df1ef9564b0"  # blackroad-api-CLAIMS
+
+# Routes - protect these domains with auth
+routes = [
+  { pattern = "auth.blackroad.io/*", zone_name = "blackroad.io" },
+  { pattern = "auth.blackroad.systems/*", zone_name = "blackroad.systems" }
+]
+
+# Environment variables
+[vars]
+AUTH_DOMAIN = "blackroad-systems.cloudflareaccess.com"
+ALLOWED_EMAILS = "amundsonalexa@gmail.com"
+
+# Production environment
+[env.production]
+routes = [
+  { pattern = "auth.blackroad.systems/*", zone_name = "blackroad.systems" }
+]

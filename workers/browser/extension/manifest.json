@@ -1,0 +1,45 @@
+{
+  "manifest_version": 3,
+  "name": "BlackRoad Browser Bridge",
+  "version": "1.0.0",
+  "description": "Connect Claude to your browser - see what you see",
+
+  "permissions": [
+    "activeTab",
+    "tabs",
+    "scripting",
+    "storage"
+  ],
+
+  "host_permissions": [
+    "https://railway.app/*",
+    "https://dashboard.stripe.com/*",
+    "https://github.com/*",
+    "https://dash.cloudflare.com/*",
+    "https://cloud.digitalocean.com/*",
+    "https://linear.app/*",
+    "https://*.blackroad.io/*",
+    "https://*.blackroad.systems/*",
+    "https://dcc.godaddy.com/*",
+    "https://manage.auth0.com/*",
+    "https://app.posthog.com/*",
+    "https://console.anthropic.com/*",
+    "https://platform.openai.com/*"
+  ],
+
+  "background": {
+    "service_worker": "background.js"
+  },
+
+  "action": {
+    "default_popup": "popup.html"
+  },
+
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}

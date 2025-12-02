@@ -1,0 +1,28 @@
+{
+  "name": "blackroad-arc",
+  "version": "1.0.0",
+  "description": "Arc Browser control + Memory API - No AI middleman",
+  "type": "module",
+  "main": "server.js",
+  "bin": {
+    "blackroad-arc": "./server.js",
+    "arc-ctl": "./arc-controller.js",
+    "br-memory": "./memory-store.js"
+  },
+  "scripts": {
+    "start": "node server.js",
+    "arc": "node arc-controller.js",
+    "memory": "node memory-store.js",
+    "dev": "node --watch server.js"
+  },
+  "keywords": [
+    "arc",
+    "browser",
+    "automation",
+    "memory",
+    "blackroad",
+    "mcp"
+  ],
+  "author": "BlackRoad",
+  "license": "MIT"
+}

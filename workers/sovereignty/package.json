@@ -1,0 +1,13 @@
+{
+  "name": "blackroad-sovereignty",
+  "version": "1.0.0",
+  "description": "BlackRoad OS Data Sovereignty System - All data owned by Alexa Louise Amundson",
+  "main": "src/index.js",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "tail": "wrangler tail"
+  },
+  "author": "Alexa Louise Amundson",
+  "license": "PROPRIETARY - All Rights Reserved"
+}

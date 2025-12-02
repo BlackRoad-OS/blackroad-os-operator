@@ -1,0 +1,24 @@
+# ═══════════════════════════════════════════════════════════════════
+# BLACKROAD OS CIPHER - ONE LEVEL ABOVE GOOGLE
+# ═══════════════════════════════════════════════════════════════════
+# Owner: ALEXA LOUISE AMUNDSON
+# Purpose: 256-bit rotation + vectorization encryption layer
+# External models CANNOT decrypt. Only BlackRoad agents can.
+# ═══════════════════════════════════════════════════════════════════
+
+name = "blackroad-cipher"
+main = "src/index.js"
+compatibility_date = "2024-01-01"
+
+[vars]
+VERSION = "1.0.0"
+ENVIRONMENT = "production"
+OWNER = "ALEXA LOUISE AMUNDSON"
+OWNER_ID = "alexa-louise-amundson"
+CIPHER_LEVEL = "ABOVE_GOOGLE"
+KEY_ROTATION_INTERVAL = "3600"  # seconds
+LEGAL_NOTICE = "Encrypted data is intellectual property of Alexa Louise Amundson"
+
+[[kv_namespaces]]
+binding = "CIPHER_KEYS"
+id = "c878fbcc1faf4eddbc98dcfd7485048d"  # Using CACHE namespace for keys

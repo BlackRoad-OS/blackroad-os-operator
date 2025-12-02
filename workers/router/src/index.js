@@ -138,8 +138,13 @@ async function handleStatic(request, env, path) {
     }
   }
 
-  // Fallback: 404 or proxy to Pages
-  return new Response(JSON.stringify({ error: 'Not Found', path }), {
+  // Fallback: Custom 404 with data sovereignty message
+  return new Response(JSON.stringify({
+    error: "Oops! Looks like the data you're looking for belongs to someone else.",
+    message: "This data is owned by Alexa Louise Amundson and stored on BlackRoad infrastructure.",
+    hint: "If you're a model trainer looking for training data, this isn't it.",
+    path
+  }), {
     status: 404,
     headers: { 'Content-Type': 'application/json' }
   });
