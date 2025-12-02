@@ -1,0 +1,983 @@
+# BlackRoad OS - Agent-to-Agent Communication Protocol
+# Agent Mesh Protocol (AMP) v1.0
+# Foundation for trillion-entity multi-agent collaboration
+#
+# @blackroad_name Agent Mesh Protocol
+# @operator alexa.operator.v1
+# @priority P0 (Critical)
+
+version: "1.0"
+protocol: agent-mesh-protocol
+namespace: blackroad.agents.mesh
+
+# =============================================================================
+# PROTOCOL OVERVIEW
+# =============================================================================
+#
+# The Agent Mesh Protocol (AMP) enables:
+# - Agent discovery across distributed infrastructure
+# - Capability-based routing with trinary authorization
+# - Intent delegation with lineage tracking (PS-SHA∞)
+# - Real-time state synchronization via gossip
+# - Fault-tolerant message delivery with exactly-once semantics
+
+# =============================================================================
+# MESSAGE ENVELOPE FORMAT
+# =============================================================================
+
+message_envelope:
+  schema_version: "1.0"
+
+  # Core message structure
+  structure:
+    # Unique message identifier (ULID for time-ordering)
+    message_id:
+      type: string
+      format: ulid
+      example: "01JRNK9X7QPXG8K2N5MCHF9V4W"
+      required: true
+
+    # Protocol version for forward compatibility
+    protocol_version:
+      type: string
+      pattern: "^\\d+\\.\\d+$"
+      example: "1.0"
+      required: true
+
+    # Timestamp in microseconds since epoch
+    timestamp_us:
+      type: integer
+      format: int64
+      required: true
+
+    # Message type determines routing behavior
+    message_type:
+      type: string
+      enum:
+        - request          # Initiate action, expects response
+        - response         # Reply to request
+        - broadcast        # One-to-many, no response expected
+        - stream           # Continuous data flow
+        - heartbeat        # Liveness check
+        - handshake        # Capability negotiation
+        - delegation       # Intent delegation
+        - escalation       # Trinary escalation (0 state)
+      required: true
+
+    # Sender identification
+    sender:
+      agent_id:
+        type: string
+        format: agent-urn
+        example: "urn:blackroad:agent:cece:v1:prod"
+        required: true
+      node_id:
+        type: string
+        description: "Physical node hosting the agent"
+        example: "node-us-west-2a-42"
+      region:
+        type: string
+        example: "us-west-2"
+      capabilities_hash:
+        type: string
+        format: sha256
+        description: "Hash of sender's capability manifest"
+
+    # Recipient identification
+    recipient:
+      # Direct addressing
+      agent_id:
+        type: string
+        format: agent-urn
+        description: "Direct agent address"
+      # Capability-based routing
+      capability:
+        type: string
+        description: "Route to any agent with this capability"
+        example: "financial-analysis"
+      # Topic-based routing
+      topic:
+        type: string
+        description: "Publish to topic subscribers"
+        example: "governance.policy.updates"
+      # Broadcast to agent type
+      agent_type:
+        type: string
+        enum: [lucidia, beacon, pack, custom]
+        description: "Broadcast to all agents of type"
+
+    # Trinary authorization state
+    trinary:
+      state:
+        type: integer
+        enum: [-1, 0, 1]
+        description: "-1=deny, 0=escalate/neutral, 1=allow"
+        required: true
+      evaluated_by:
+        type: string
+        description: "Policy that evaluated this state"
+        example: "policy:governance.agent-invoke"
+      escalation_chain:
+        type: array
+        items:
+          type: string
+        description: "Escalation path for state=0"
+
+    # Intent lineage tracking (PS-SHA∞)
+    lineage:
+      intent_id:
+        type: string
+        format: ulid
+        description: "Original intent that spawned this message"
+        required: true
+      parent_message_id:
+        type: string
+        format: ulid
+        description: "Parent in message tree"
+      depth:
+        type: integer
+        description: "Depth in delegation tree"
+        maximum: 100
+      ps_sha_hash:
+        type: string
+        format: ps-sha-infinity
+        description: "Probabilistic semantic hash of lineage"
+      chain:
+        type: array
+        items:
+          type: object
+          properties:
+            agent_id:
+              type: string
+            action:
+              type: string
+            timestamp_us:
+              type: integer
+        description: "Full lineage chain for audit"
+
+    # Payload container
+    payload:
+      content_type:
+        type: string
+        enum:
+          - application/json
+          - application/msgpack
+          - application/protobuf
+          - application/cbor
+        default: application/json
+      encoding:
+        type: string
+        enum: [none, gzip, lz4, zstd]
+        default: none
+      schema:
+        type: string
+        description: "Schema reference for payload validation"
+        example: "urn:blackroad:schema:intent:v1"
+      data:
+        type: object
+        description: "Actual payload data"
+      size_bytes:
+        type: integer
+        maximum: 10485760  # 10MB max
+
+    # Delivery semantics
+    delivery:
+      mode:
+        type: string
+        enum:
+          - at_most_once   # Fire and forget
+          - at_least_once  # Retry until ack
+          - exactly_once   # Idempotent with dedup
+        default: at_least_once
+      timeout_ms:
+        type: integer
+        default: 30000
+        maximum: 300000
+      retry_policy:
+        max_retries:
+          type: integer
+          default: 3
+        backoff_base_ms:
+          type: integer
+          default: 100
+        backoff_max_ms:
+          type: integer
+          default: 10000
+      priority:
+        type: integer
+        minimum: 0
+        maximum: 10
+        default: 5
+        description: "0=lowest, 10=highest"
+      ttl_ms:
+        type: integer
+        description: "Time-to-live for message"
+        default: 60000
+
+    # Correlation for request/response
+    correlation:
+      request_id:
+        type: string
+        format: ulid
+        description: "Original request ID for responses"
+      session_id:
+        type: string
+        description: "Long-running session identifier"
+      trace_id:
+        type: string
+        format: trace-id
+        description: "Distributed tracing ID"
+      span_id:
+        type: string
+        format: span-id
+
+  # Compact binary format for high-throughput
+  wire_format:
+    primary: msgpack
+    fallback: json
+    max_size_bytes: 10485760
+    compression:
+      enabled: true
+      algorithm: lz4
+      threshold_bytes: 1024
+
+# =============================================================================
+# AGENT IDENTITY & URN FORMAT
+# =============================================================================
+
+agent_identity:
+  urn_format: "urn:blackroad:agent:{name}:{version}:{environment}"
+
+  components:
+    namespace:
+      value: "urn:blackroad:agent"
+      description: "Fixed namespace prefix"
+    name:
+      type: string
+      pattern: "^[a-z][a-z0-9-]{2,62}$"
+      description: "Agent name (lowercase, alphanumeric, hyphens)"
+    version:
+      type: string
+      pattern: "^v\\d+$"
+      description: "Major version"
+    environment:
+      type: string
+      enum: [dev, staging, prod, canary]
+
+  examples:
+    - "urn:blackroad:agent:cece:v1:prod"
+    - "urn:blackroad:agent:beacon-router:v2:staging"
+    - "urn:blackroad:agent:research-lab:v1:prod"
+
+  # Agent fingerprint for verification
+  fingerprint:
+    algorithm: ed25519
+    key_format: base64
+    rotation_policy:
+      max_age_days: 90
+      overlap_hours: 24
+
+# =============================================================================
+# ROUTING TABLE STRUCTURE
+# =============================================================================
+
+routing:
+  # Capability-based routing
+  capability_routing:
+    description: "Route messages based on required capabilities"
+
+    capability_manifest:
+      schema:
+        agent_id:
+          type: string
+          format: agent-urn
+        capabilities:
+          type: array
+          items:
+            capability_id:
+              type: string
+              example: "financial-analysis"
+            version:
+              type: string
+              example: "1.0"
+            load:
+              type: number
+              minimum: 0
+              maximum: 1
+              description: "Current load factor"
+            latency_p50_ms:
+              type: integer
+            latency_p99_ms:
+              type: integer
+            success_rate:
+              type: number
+              minimum: 0
+              maximum: 1
+            trinary_permissions:
+              type: array
+              items:
+                type: string
+              description: "Required trinary permissions"
+        metadata:
+          region:
+            type: string
+          zone:
+            type: string
+          node_id:
+            type: string
+          last_heartbeat_us:
+            type: integer
+
+    routing_algorithm:
+      type: weighted_round_robin
+      factors:
+        - name: load
+          weight: 0.4
+          invert: true  # Lower load = higher score
+        - name: latency_p50_ms
+          weight: 0.3
+          invert: true
+        - name: success_rate
+          weight: 0.2
+        - name: region_affinity
+          weight: 0.1
+
+      # Fallback chain if primary route unavailable
+      fallback:
+        - same_zone
+        - same_region
+        - any_region
+        - queue_for_retry
+
+  # Topic-based routing
+  topic_routing:
+    description: "Pub/sub for broadcast messages"
+
+    topic_format: "{domain}.{subdomain}.{event}"
+    examples:
+      - "governance.policy.updated"
+      - "agents.cece.invocation.completed"
+      - "mesh.node.joined"
+      - "ledger.event.recorded"
+
+    subscription:
+      patterns:
+        - exact: "governance.policy.updated"
+        - wildcard: "agents.*.invocation.*"
+        - prefix: "mesh.node.>"
+
+      delivery:
+        mode: fan_out
+        max_subscribers: 10000
+        batch_size: 100
+        batch_timeout_ms: 10
+
+  # Routing table storage
+  routing_table:
+    storage:
+      primary: redis_cluster
+      replica: local_cache
+      sync_interval_ms: 100
+
+    structure:
+      # Capability -> Agent mappings
+      capabilities:
+        key_format: "route:cap:{capability_id}"
+        value: sorted_set  # Scored by routing weight
+        ttl_seconds: 60
+
+      # Agent -> Node mappings
+      agents:
+        key_format: "route:agent:{agent_id}"
+        value: hash  # node_id, region, capabilities
+        ttl_seconds: 30
+
+      # Topic -> Subscriber mappings
+      topics:
+        key_format: "route:topic:{topic}"
+        value: set  # Agent IDs
+        ttl_seconds: 300
+
+# =============================================================================
+# DISCOVERY PROTOCOL
+# =============================================================================
+
+discovery:
+  description: "How agents find each other in the mesh"
+
+  # Bootstrap discovery
+  bootstrap:
+    # Static seeds for initial connection
+    seeds:
+      type: dns_srv
+      records:
+        - "_amp._tcp.mesh.blackroad.io"
+        - "_amp._tcp.mesh.{region}.blackroad.io"
+      fallback:
+        - "mesh-seed-1.blackroad.io:9090"
+        - "mesh-seed-2.blackroad.io:9090"
+        - "mesh-seed-3.blackroad.io:9090"
+
+    # Initial handshake
+    handshake:
+      timeout_ms: 5000
+      required_fields:
+        - agent_id
+        - capabilities
+        - public_key
+      optional_fields:
+        - region
+        - zone
+        - metadata
+
+  # Gossip-based discovery
+  gossip:
+    protocol: swim  # Scalable Weakly-consistent Infection-style Membership
+
+    parameters:
+      gossip_interval_ms: 100
+      gossip_nodes: 3  # Fanout per interval
+      probe_interval_ms: 500
+      probe_timeout_ms: 200
+      suspicion_multiplier: 4
+
+    # State propagation
+    state:
+      format: crdt_lww_map
+      merge_strategy: last_writer_wins
+      conflict_resolution: higher_timestamp
+
+    # Failure detection
+    failure_detection:
+      direct_probe_timeout_ms: 200
+      indirect_probe_count: 3
+      indirect_probe_timeout_ms: 500
+      dead_node_timeout_ms: 10000
+
+    # Anti-entropy
+    anti_entropy:
+      sync_interval_ms: 10000
+      full_sync_interval_ms: 60000
+      merkle_tree_depth: 16
+
+  # Service mesh integration
+  service_mesh:
+    # Consul integration
+    consul:
+      enabled: true
+      datacenter_aware: true
+      service_name: "blackroad-agent"
+      health_check:
+        interval: "10s"
+        timeout: "5s"
+        deregister_after: "1m"
+      tags:
+        - "amp"
+        - "version:1.0"
+
+    # DNS-based discovery
+    dns:
+      enabled: true
+      domain: "agent.mesh.blackroad.io"
+      record_types:
+        - SRV
+        - TXT  # For capability metadata
+
+  # Discovery queries
+  queries:
+    # Find agent by ID
+    by_id:
+      endpoint: "/v1/discover/agent/{agent_id}"
+      method: GET
+      response:
+        agent_id: string
+        endpoints: array
+        capabilities: array
+        status: string
+
+    # Find agents by capability
+    by_capability:
+      endpoint: "/v1/discover/capability/{capability_id}"
+      method: GET
+      query_params:
+        region: string
+        limit: integer
+        min_success_rate: number
+      response:
+        agents: array
+        total_count: integer
+
+    # Find agents by topic subscription
+    by_topic:
+      endpoint: "/v1/discover/topic/{topic}"
+      method: GET
+      response:
+        subscribers: array
+        subscription_count: integer
+
+# =============================================================================
+# CAPABILITY NEGOTIATION
+# =============================================================================
+
+capability_negotiation:
+  description: "How agents negotiate task delegation"
+
+  # Capability definition
+  capability_schema:
+    capability_id:
+      type: string
+      format: capability-urn
+      example: "urn:blackroad:cap:financial-analysis:v1"
+
+    name:
+      type: string
+      example: "Financial Analysis"
+
+    description:
+      type: string
+
+    version:
+      type: string
+      pattern: "^\\d+\\.\\d+\\.\\d+$"
+
+    # Input/output contracts
+    contract:
+      input:
+        schema:
+          type: string
+          format: json-schema-ref
+        required_fields:
+          type: array
+        max_size_bytes:
+          type: integer
+      output:
+        schema:
+          type: string
+          format: json-schema-ref
+        streaming:
+          type: boolean
+
+    # Resource requirements
+    requirements:
+      min_memory_mb:
+        type: integer
+      min_cpu_cores:
+        type: number
+      gpu_required:
+        type: boolean
+      max_latency_ms:
+        type: integer
+
+    # Dependencies on other capabilities
+    dependencies:
+      type: array
+      items:
+        capability_id:
+          type: string
+        version_constraint:
+          type: string
+          example: ">=1.0.0 <2.0.0"
+
+    # Trinary permissions required
+    required_permissions:
+      type: array
+      items:
+        type: string
+      example:
+        - "agents:invoke"
+        - "data:read:financial"
+
+  # Negotiation protocol
+  negotiation_flow:
+    # Step 1: Capability query
+    query:
+      message_type: handshake
+      payload:
+        action: capability_query
+        requested_capability:
+          type: string
+        constraints:
+          max_latency_ms:
+            type: integer
+          required_permissions:
+            type: array
+          preferred_region:
+            type: string
+
+    # Step 2: Capability offer
+    offer:
+      message_type: handshake
+      payload:
+        action: capability_offer
+        capability_id:
+          type: string
+        version:
+          type: string
+        estimated_latency_ms:
+          type: integer
+        current_load:
+          type: number
+        available_capacity:
+          type: integer
+        offer_ttl_ms:
+          type: integer
+          default: 5000
+
+    # Step 3: Capability accept/reject
+    accept:
+      message_type: handshake
+      payload:
+        action: capability_accept
+        offer_id:
+          type: string
+        session_id:
+          type: string
+          description: "For long-running delegations"
+
+    reject:
+      message_type: handshake
+      payload:
+        action: capability_reject
+        offer_id:
+          type: string
+        reason:
+          type: string
+          enum:
+            - latency_too_high
+            - load_too_high
+            - permission_denied
+            - version_mismatch
+            - offer_expired
+            - better_offer_found
+
+  # Delegation protocol
+  delegation:
+    description: "How agents delegate tasks to each other"
+
+    delegation_request:
+      message_type: delegation
+      payload:
+        delegation_id:
+          type: string
+          format: ulid
+        capability_id:
+          type: string
+        intent:
+          type: object
+          description: "The intent to be fulfilled"
+        constraints:
+          deadline_ms:
+            type: integer
+          max_cost:
+            type: number
+          quality_threshold:
+            type: number
+        callback:
+          type: string
+          format: agent-urn
+          description: "Agent to notify on completion"
+
+    delegation_response:
+      message_type: response
+      payload:
+        delegation_id:
+          type: string
+        status:
+          type: string
+          enum:
+            - accepted
+            - rejected
+            - queued
+            - completed
+            - failed
+        estimated_completion_ms:
+          type: integer
+        result:
+          type: object
+          description: "Present if status=completed"
+        error:
+          type: object
+          description: "Present if status=failed"
+
+# =============================================================================
+# TRANSPORT LAYER
+# =============================================================================
+
+transport:
+  # Primary transport: gRPC
+  grpc:
+    enabled: true
+    port: 9090
+    tls:
+      required: true
+      min_version: "1.3"
+      cert_source: vault
+    compression: gzip
+    max_message_size_bytes: 10485760
+    keepalive:
+      time_ms: 10000
+      timeout_ms: 5000
+
+    services:
+      - AgentMesh
+      - Discovery
+      - Routing
+      - Delegation
+
+  # Secondary transport: WebSocket
+  websocket:
+    enabled: true
+    port: 9091
+    path: "/ws/mesh"
+    tls:
+      required: true
+    heartbeat_interval_ms: 30000
+    max_message_size_bytes: 1048576
+    compression: permessage-deflate
+
+  # Tertiary transport: NATS
+  nats:
+    enabled: true
+    servers:
+      - "nats://nats.mesh.blackroad.io:4222"
+    cluster_name: "blackroad-mesh"
+    tls:
+      required: true
+    jetstream:
+      enabled: true
+      storage: file
+      max_memory_gb: 16
+      max_file_gb: 1024
+
+# =============================================================================
+# SECURITY
+# =============================================================================
+
+security:
+  # Agent authentication
+  authentication:
+    method: mutual_tls
+
+    certificates:
+      issuer: vault
+      validity_hours: 24
+      auto_rotation: true
+      rotation_overlap_hours: 1
+
+    identity_verification:
+      - certificate_fingerprint
+      - agent_id_in_san
+      - capability_manifest_signature
+
+  # Message signing
+  signing:
+    algorithm: ed25519
+    sign_fields:
+      - message_id
+      - sender.agent_id
+      - recipient
+      - payload.data
+      - timestamp_us
+
+    verification:
+      required: true
+      cache_public_keys: true
+      cache_ttl_seconds: 300
+
+  # Message encryption
+  encryption:
+    in_transit:
+      protocol: tls_1_3
+      ciphers:
+        - TLS_AES_256_GCM_SHA384
+        - TLS_CHACHA20_POLY1305_SHA256
+
+    at_rest:
+      enabled: true
+      algorithm: aes_256_gcm
+      key_source: vault
+
+  # Rate limiting per agent
+  rate_limiting:
+    enabled: true
+    default_limits:
+      messages_per_second: 1000
+      bytes_per_second: 10485760
+      connections_per_agent: 100
+
+    by_agent_type:
+      lucidia:
+        messages_per_second: 5000
+        bytes_per_second: 52428800
+      beacon:
+        messages_per_second: 10000
+        bytes_per_second: 104857600
+      pack:
+        messages_per_second: 2000
+        bytes_per_second: 20971520
+
+# =============================================================================
+# OBSERVABILITY
+# =============================================================================
+
+observability:
+  # Distributed tracing
+  tracing:
+    enabled: true
+    protocol: opentelemetry
+    sampling:
+      default_rate: 0.01  # 1%
+      error_rate: 1.0     # 100% for errors
+      slow_rate: 0.5      # 50% for slow requests
+      slow_threshold_ms: 1000
+
+    propagation:
+      - traceparent
+      - tracestate
+      - baggage
+
+  # Metrics
+  metrics:
+    enabled: true
+    protocol: prometheus
+
+    counters:
+      - amp_messages_total
+      - amp_delegations_total
+      - amp_discovery_queries_total
+      - amp_routing_decisions_total
+
+    histograms:
+      - amp_message_latency_ms
+      - amp_delegation_duration_ms
+      - amp_discovery_latency_ms
+      - amp_payload_size_bytes
+
+    gauges:
+      - amp_active_connections
+      - amp_pending_delegations
+      - amp_routing_table_size
+      - amp_gossip_members
+
+  # Logging
+  logging:
+    format: json
+    level: info
+    fields:
+      - message_id
+      - sender.agent_id
+      - recipient.agent_id
+      - message_type
+      - trinary.state
+      - latency_ms
+
+# =============================================================================
+# SCALING PARAMETERS
+# =============================================================================
+
+scaling:
+  # Target scale
+  targets:
+    max_agents: 1000000
+    max_messages_per_second: 10000000
+    max_concurrent_delegations: 100000
+    max_topics: 100000
+    max_subscribers_per_topic: 10000
+
+  # Sharding
+  sharding:
+    strategy: consistent_hash
+    shard_count: 256
+    replication_factor: 3
+    rebalance_threshold: 0.1
+
+  # Backpressure
+  backpressure:
+    enabled: true
+    queue_size_threshold: 10000
+    latency_threshold_ms: 100
+    actions:
+      - shed_low_priority
+      - rate_limit_senders
+      - reject_new_connections
+
+# =============================================================================
+# ERROR HANDLING
+# =============================================================================
+
+errors:
+  codes:
+    # 1xxx: Protocol errors
+    1001:
+      name: INVALID_MESSAGE
+      description: "Message failed validation"
+    1002:
+      name: UNKNOWN_MESSAGE_TYPE
+      description: "Unrecognized message type"
+    1003:
+      name: VERSION_MISMATCH
+      description: "Protocol version incompatible"
+
+    # 2xxx: Routing errors
+    2001:
+      name: AGENT_NOT_FOUND
+      description: "Target agent not found in mesh"
+    2002:
+      name: CAPABILITY_NOT_FOUND
+      description: "No agent with required capability"
+    2003:
+      name: TOPIC_NOT_FOUND
+      description: "Topic does not exist"
+    2004:
+      name: ROUTE_UNAVAILABLE
+      description: "All routes to target failed"
+
+    # 3xxx: Authorization errors
+    3001:
+      name: TRINARY_DENY
+      description: "Trinary policy denied request"
+    3002:
+      name: TRINARY_ESCALATE
+      description: "Request requires escalation"
+    3003:
+      name: SIGNATURE_INVALID
+      description: "Message signature verification failed"
+    3004:
+      name: PERMISSION_DENIED
+      description: "Agent lacks required permission"
+
+    # 4xxx: Delegation errors
+    4001:
+      name: DELEGATION_REJECTED
+      description: "Target agent rejected delegation"
+    4002:
+      name: DELEGATION_TIMEOUT
+      description: "Delegation exceeded deadline"
+    4003:
+      name: DELEGATION_FAILED
+      description: "Delegation completed with failure"
+    4004:
+      name: DELEGATION_DEPTH_EXCEEDED
+      description: "Delegation chain too deep"
+
+    # 5xxx: System errors
+    5001:
+      name: INTERNAL_ERROR
+      description: "Internal system error"
+    5002:
+      name: OVERLOADED
+      description: "System under backpressure"
+    5003:
+      name: UNAVAILABLE
+      description: "Service temporarily unavailable"
+
+  retry_policy:
+    retryable:
+      - ROUTE_UNAVAILABLE
+      - OVERLOADED
+      - UNAVAILABLE
+    non_retryable:
+      - TRINARY_DENY
+      - PERMISSION_DENIED
+      - SIGNATURE_INVALID
+      - DELEGATION_DEPTH_EXCEEDED

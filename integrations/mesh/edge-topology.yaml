@@ -1,0 +1,695 @@
+# BlackRoad OS - Edge Mesh Topology
+# Global Edge Infrastructure for Sub-50ms Agent Response
+#
+# @blackroad_name Edge Mesh Topology
+# @operator alexa.operator.v1
+# @priority P0 (Critical)
+
+version: "1.0"
+system: edge-mesh-topology
+namespace: blackroad.mesh
+
+# =============================================================================
+# TOPOLOGY OVERVIEW
+# =============================================================================
+#
+# Edge Mesh Topology enables:
+# - Sub-50ms latency for 95% of global users
+# - Hierarchical edge-regional-core topology
+# - Automatic failover and traffic rerouting
+# - Edge-native agent execution for latency-critical ops
+# - Intelligent request routing based on agent location
+# - Zero-trust security between all mesh nodes
+
+# =============================================================================
+# GLOBAL TOPOLOGY
+# =============================================================================
+
+topology:
+  # Three-tier architecture
+  tiers:
+    # Tier 1: Edge PoPs (Points of Presence)
+    edge:
+      description: "Edge locations for sub-10ms user proximity"
+      count: 300
+      deployment: cloudflare_workers
+
+      capabilities:
+        - request_routing
+        - tls_termination
+        - rate_limiting
+        - static_caching
+        - websocket_termination
+        - edge_agent_execution
+
+      providers:
+        primary:
+          name: cloudflare
+          product: workers
+          locations: 300+
+          features:
+            - durable_objects
+            - kv_storage
+            - r2_storage
+            - queues
+
+        fallback:
+          name: fastly
+          product: compute@edge
+          locations: 80+
+
+    # Tier 2: Regional Hubs
+    regional:
+      description: "Regional processing and state management"
+      count: 20
+      deployment: kubernetes
+
+      regions:
+        americas:
+          - region: us-west-2
+            location: "Oregon, USA"
+            primary: true
+          - region: us-east-1
+            location: "Virginia, USA"
+            primary: true
+          - region: sa-east-1
+            location: "Sao Paulo, Brazil"
+            primary: false
+
+        europe:
+          - region: eu-west-1
+            location: "Ireland"
+            primary: true
+          - region: eu-central-1
+            location: "Frankfurt, Germany"
+            primary: true
+          - region: eu-north-1
+            location: "Stockholm, Sweden"
+            primary: false
+
+        asia_pacific:
+          - region: ap-northeast-1
+            location: "Tokyo, Japan"
+            primary: true
+          - region: ap-southeast-1
+            location: "Singapore"
+            primary: true
+          - region: ap-south-1
+            location: "Mumbai, India"
+            primary: false
+          - region: ap-southeast-2
+            location: "Sydney, Australia"
+            primary: false
+
+        middle_east_africa:
+          - region: me-south-1
+            location: "Bahrain"
+            primary: false
+          - region: af-south-1
+            location: "Cape Town, South Africa"
+            primary: false
+
+      capabilities:
+        - agent_execution
+        - state_management
+        - database_access
+        - memory_tier_l2_l3
+        - cross_region_sync
+        - event_processing
+
+    # Tier 3: Core Data Centers
+    core:
+      description: "Central processing and permanent storage"
+      count: 3
+      deployment: kubernetes
+
+      locations:
+        - region: us-west-2
+          role: primary
+          capabilities:
+            - global_coordination
+            - permanent_storage
+            - ml_training
+            - analytics
+
+        - region: eu-west-1
+          role: secondary
+          capabilities:
+            - eu_data_sovereignty
+            - permanent_storage
+            - disaster_recovery
+
+        - region: ap-northeast-1
+          role: secondary
+          capabilities:
+            - apac_coordination
+            - permanent_storage
+            - disaster_recovery
+
+# =============================================================================
+# EDGE NODE SPECIFICATION
+# =============================================================================
+
+edge_node:
+  # Cloudflare Workers configuration
+  cloudflare_workers:
+    runtime: v8_isolate
+    memory_mb: 128
+    cpu_time_ms: 50
+    duration_ms: 30000
+
+    # Durable Objects for stateful edge
+    durable_objects:
+      enabled: true
+      classes:
+        - name: SessionState
+          description: "User session state at edge"
+          max_instances_per_location: 100000
+
+        - name: AgentProxy
+          description: "Edge agent proxy for routing"
+          max_instances_per_location: 10000
+
+        - name: RateLimiter
+          description: "Per-user rate limiting"
+          max_instances_per_location: 1000000
+
+    # KV for edge caching
+    kv_namespaces:
+      - name: ROUTING_CACHE
+        description: "Agent routing table cache"
+        ttl_seconds: 60
+
+      - name: CAPABILITY_CACHE
+        description: "Agent capability manifests"
+        ttl_seconds: 300
+
+      - name: USER_CONTEXT
+        description: "User context for personalization"
+        ttl_seconds: 3600
+
+    # Edge agent runtime
+    edge_agents:
+      enabled: true
+      max_agents_per_pop: 100
+
+      eligible_agents:
+        - type: routing
+          description: "Request routing decisions"
+        - type: validation
+          description: "Input validation and sanitization"
+        - type: transform
+          description: "Data transformation"
+        - type: cache
+          description: "Cache management"
+
+      constraints:
+        max_execution_ms: 10
+        max_memory_mb: 32
+        no_network_calls: true
+        no_filesystem: true
+
+  # Node identity
+  identity:
+    node_id_format: "edge-{provider}-{location_code}-{instance}"
+    example: "edge-cf-iad-001"
+
+    certificate:
+      issuer: vault
+      validity_hours: 24
+      auto_rotation: true
+
+    capabilities_manifest:
+      advertise_interval_seconds: 30
+      include:
+        - location
+        - latency_to_regions
+        - current_load
+        - available_capacity
+
+# =============================================================================
+# REGIONAL HUB SPECIFICATION
+# =============================================================================
+
+regional_hub:
+  # Kubernetes deployment
+  kubernetes:
+    cluster_size:
+      small:
+        nodes: 10
+        node_type: c6i.4xlarge
+      medium:
+        nodes: 25
+        node_type: c6i.8xlarge
+      large:
+        nodes: 50
+        node_type: c6i.16xlarge
+
+    namespaces:
+      - blackroad-agents
+      - blackroad-gateway
+      - blackroad-data
+      - blackroad-observability
+
+    # Resource pools
+    node_pools:
+      general:
+        type: c6i.4xlarge
+        min_nodes: 5
+        max_nodes: 50
+        scaling: auto
+
+      memory_optimized:
+        type: r6i.4xlarge
+        min_nodes: 3
+        max_nodes: 20
+        scaling: auto
+        purpose: redis_memory_tier
+
+      gpu:
+        type: g5.4xlarge
+        min_nodes: 0
+        max_nodes: 10
+        scaling: auto
+        purpose: ml_inference
+
+  # Regional services
+  services:
+    # Agent orchestrator
+    agent_orchestrator:
+      replicas: 5
+      resources:
+        cpu: "4"
+        memory: "8Gi"
+      autoscaling:
+        min: 3
+        max: 20
+        target_cpu: 70
+
+    # Regional router
+    regional_router:
+      replicas: 10
+      resources:
+        cpu: "2"
+        memory: "4Gi"
+      autoscaling:
+        min: 5
+        max: 50
+        target_cpu: 60
+
+    # State manager
+    state_manager:
+      replicas: 3
+      resources:
+        cpu: "4"
+        memory: "16Gi"
+      stateful: true
+
+  # Regional data stores
+  data_stores:
+    # Redis cluster for L2 memory
+    redis:
+      mode: cluster
+      nodes: 6
+      replicas_per_primary: 1
+      memory_gb: 64
+
+    # PostgreSQL for L3 memory
+    postgresql:
+      mode: ha
+      primary: 1
+      replicas: 2
+      storage_tb: 10
+      extensions:
+        - pgvector
+        - timescaledb
+
+    # Kafka for event streaming
+    kafka:
+      brokers: 6
+      partitions_per_topic: 32
+      replication_factor: 3
+      retention_hours: 168
+
+# =============================================================================
+# ROUTING & TRAFFIC MANAGEMENT
+# =============================================================================
+
+routing:
+  # Request routing decision flow
+  decision_flow:
+    steps:
+      - name: edge_classification
+        location: edge
+        latency_budget_ms: 1
+        actions:
+          - classify_request_type
+          - extract_user_context
+          - check_rate_limits
+
+      - name: routing_decision
+        location: edge
+        latency_budget_ms: 2
+        actions:
+          - lookup_agent_location
+          - calculate_optimal_route
+          - apply_load_balancing
+
+      - name: request_forwarding
+        location: edge_to_regional
+        latency_budget_ms: 20
+        actions:
+          - serialize_request
+          - forward_to_region
+          - wait_for_response
+
+  # Routing strategies
+  strategies:
+    # Latency-optimized routing
+    latency:
+      description: "Route to closest healthy agent"
+      algorithm: weighted_latency
+      factors:
+        - network_latency: 0.5
+        - agent_load: 0.3
+        - queue_depth: 0.2
+
+    # Cost-optimized routing
+    cost:
+      description: "Route to minimize compute costs"
+      algorithm: cost_weighted
+      factors:
+        - region_cost: 0.6
+        - compute_type: 0.3
+        - data_transfer: 0.1
+
+    # Affinity routing
+    affinity:
+      description: "Route to same agent for session"
+      algorithm: consistent_hash
+      key: session_id
+      fallback: latency
+
+    # Capability routing
+    capability:
+      description: "Route based on required capability"
+      algorithm: capability_match
+      tiebreaker: latency
+
+  # Load balancing
+  load_balancing:
+    algorithm: power_of_two_choices
+
+    health_checks:
+      interval_seconds: 5
+      timeout_seconds: 2
+      unhealthy_threshold: 3
+      healthy_threshold: 2
+
+    circuit_breaker:
+      enabled: true
+      failure_threshold: 5
+      recovery_timeout_seconds: 30
+      half_open_requests: 3
+
+    # Traffic splitting
+    traffic_splitting:
+      enabled: true
+      strategies:
+        - canary
+        - blue_green
+        - weighted
+
+# =============================================================================
+# INTER-NODE COMMUNICATION
+# =============================================================================
+
+communication:
+  # Edge to Regional
+  edge_to_regional:
+    protocol: grpc
+    tls: mutual
+    compression: gzip
+
+    connection_pool:
+      min_connections: 10
+      max_connections: 100
+      idle_timeout_seconds: 60
+
+    retry:
+      max_attempts: 3
+      backoff:
+        initial_ms: 100
+        max_ms: 1000
+        multiplier: 2
+
+    timeout:
+      connect_ms: 1000
+      request_ms: 30000
+
+  # Regional to Regional
+  regional_to_regional:
+    protocol: grpc
+    tls: mutual
+    compression: zstd
+
+    # Mesh networking
+    mesh:
+      type: full_mesh
+      heartbeat_interval_seconds: 1
+      failure_detection_ms: 5000
+
+  # Regional to Core
+  regional_to_core:
+    protocol: grpc
+    tls: mutual
+
+    # Async operations
+    async:
+      enabled: true
+      queue: kafka
+      topic_format: "core.ingest.{region}"
+
+# =============================================================================
+# FAILOVER & RESILIENCE
+# =============================================================================
+
+failover:
+  # Edge failover
+  edge:
+    detection:
+      method: health_check
+      interval_seconds: 5
+      threshold: 3
+
+    actions:
+      - route_to_next_closest_pop
+      - update_dns_if_persistent
+
+    recovery:
+      auto_recovery: true
+      validation_requests: 10
+
+  # Regional failover
+  regional:
+    detection:
+      method: consensus
+      quorum: 2
+      timeout_seconds: 10
+
+    actions:
+      - elect_new_primary
+      - reroute_traffic
+      - notify_edge_nodes
+
+    cross_region:
+      enabled: true
+      failover_regions:
+        us-west-2: us-east-1
+        us-east-1: us-west-2
+        eu-west-1: eu-central-1
+        eu-central-1: eu-west-1
+        ap-northeast-1: ap-southeast-1
+        ap-southeast-1: ap-northeast-1
+
+    recovery:
+      auto_recovery: true
+      data_sync_required: true
+      traffic_ramp_up_minutes: 5
+
+  # Core failover
+  core:
+    detection:
+      method: raft_consensus
+      timeout_seconds: 30
+
+    actions:
+      - promote_secondary
+      - update_global_routing
+      - trigger_incident
+
+    recovery:
+      manual_approval_required: true
+      data_verification: full
+
+# =============================================================================
+# SECURITY
+# =============================================================================
+
+security:
+  # Zero-trust networking
+  zero_trust:
+    enabled: true
+
+    identity:
+      method: spiffe
+      trust_domain: "mesh.blackroad.io"
+
+    authorization:
+      method: opa
+      policy_sync_interval_seconds: 60
+
+  # TLS configuration
+  tls:
+    min_version: "1.3"
+    ciphers:
+      - TLS_AES_256_GCM_SHA384
+      - TLS_CHACHA20_POLY1305_SHA256
+
+    certificates:
+      issuer: vault
+      rotation:
+        auto: true
+        overlap_hours: 2
+        max_age_hours: 24
+
+  # DDoS protection
+  ddos:
+    edge:
+      provider: cloudflare
+      features:
+        - rate_limiting
+        - bot_management
+        - waf
+        - ip_reputation
+
+    regional:
+      provider: aws_shield
+      tier: advanced
+
+  # Network policies
+  network_policies:
+    default: deny_all
+
+    allowed:
+      - from: edge
+        to: regional
+        ports: [9090]
+        protocol: grpc
+
+      - from: regional
+        to: regional
+        ports: [9090, 6379, 5432, 9092]
+        protocol: [grpc, redis, postgres, kafka]
+
+      - from: regional
+        to: core
+        ports: [9090, 5432]
+        protocol: [grpc, postgres]
+
+# =============================================================================
+# OBSERVABILITY
+# =============================================================================
+
+observability:
+  # Distributed tracing
+  tracing:
+    enabled: true
+    protocol: opentelemetry
+    sampling:
+      edge: 0.01  # 1%
+      regional: 0.1  # 10%
+      errors: 1.0  # 100%
+
+    propagation:
+      headers:
+        - traceparent
+        - tracestate
+        - x-request-id
+
+  # Metrics
+  metrics:
+    collection:
+      edge: prometheus_remote_write
+      regional: prometheus
+      core: prometheus
+
+    key_metrics:
+      - edge_request_latency_ms
+      - edge_to_regional_latency_ms
+      - regional_processing_latency_ms
+      - node_health_status
+      - traffic_per_region
+      - failover_events
+
+  # Logging
+  logging:
+    format: json
+    aggregation:
+      edge: cloudflare_logpush
+      regional: vector
+      destination: elasticsearch
+
+  # Real-time monitoring
+  monitoring:
+    dashboards:
+      - global_traffic_map
+      - latency_heatmap
+      - node_health_status
+      - failover_timeline
+
+    alerts:
+      - name: edge_latency_degraded
+        condition: "p99_latency > 50ms"
+        severity: warning
+
+      - name: regional_failover
+        condition: "failover_event = true"
+        severity: critical
+
+      - name: cross_region_replication_lag
+        condition: "replication_lag > 5s"
+        severity: warning
+
+# =============================================================================
+# SCALING PARAMETERS
+# =============================================================================
+
+scaling:
+  # Target capacity
+  targets:
+    global_rps: 100000000  # 100M requests/second
+    concurrent_connections: 50000000  # 50M concurrent
+    agents_per_region: 100000
+
+  # Latency targets
+  latency:
+    edge_p50_ms: 5
+    edge_p99_ms: 20
+    regional_p50_ms: 30
+    regional_p99_ms: 100
+    global_p50_ms: 50
+    global_p99_ms: 200
+
+  # Auto-scaling
+  autoscaling:
+    edge:
+      provider_managed: true  # Cloudflare handles
+
+    regional:
+      min_replicas: 3
+      max_replicas: 100
+      target_cpu: 70
+      target_memory: 80
+      scale_up_cooldown_seconds: 30
+      scale_down_cooldown_seconds: 300

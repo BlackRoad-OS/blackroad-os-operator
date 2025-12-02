@@ -1,0 +1,694 @@
+# BlackRoad OS - Observability SLO Definitions
+# Service Level Objectives for Trillion-Entity Platform
+#
+# @blackroad_name SLO Definitions
+# @operator alexa.operator.v1
+# @priority P1 (High)
+
+version: "1.0"
+system: slo-definitions
+namespace: blackroad.observability.slo
+
+# =============================================================================
+# SLO FRAMEWORK
+# =============================================================================
+#
+# Service Level Objectives define reliability targets for BlackRoad OS:
+# - SLI (Service Level Indicator): What we measure
+# - SLO (Service Level Objective): Target for the SLI
+# - Error Budget: How much failure we can tolerate
+#
+# All SLOs are measured over 30-day rolling windows unless specified.
+
+# =============================================================================
+# CORE PLATFORM SLOS
+# =============================================================================
+
+platform:
+  # API Availability
+  api_availability:
+    name: "API Availability"
+    description: "Percentage of successful API requests"
+    owner: platform_team
+
+    sli:
+      type: availability
+      good_events: "response.status < 500"
+      total_events: "all requests"
+      measurement: ratio
+
+    slo:
+      target: 99.95
+      window_days: 30
+      percentile: null
+
+    error_budget:
+      monthly_minutes: 21.6  # ~22 minutes downtime/month
+      alerting:
+        burn_rate_1h: 14.4
+        burn_rate_6h: 6
+        burn_rate_24h: 3
+        burn_rate_72h: 1
+
+    tiers:
+      edge: 99.99
+      regional: 99.95
+      core: 99.9
+
+  # API Latency
+  api_latency:
+    name: "API Latency"
+    description: "Request latency at various percentiles"
+    owner: platform_team
+
+    sli:
+      type: latency
+      measurement: histogram
+      unit: milliseconds
+
+    slo:
+      targets:
+        p50:
+          target_ms: 50
+          threshold: 95  # 95% of requests under 50ms
+        p90:
+          target_ms: 200
+          threshold: 90
+        p99:
+          target_ms: 1000
+          threshold: 99
+
+    by_endpoint_type:
+      read:
+        p50_ms: 30
+        p99_ms: 200
+      write:
+        p50_ms: 100
+        p99_ms: 500
+      search:
+        p50_ms: 150
+        p99_ms: 800
+
+  # Throughput
+  throughput:
+    name: "Request Throughput"
+    description: "Sustained requests per second"
+    owner: platform_team
+
+    sli:
+      type: throughput
+      measurement: rate
+      unit: requests_per_second
+
+    slo:
+      targets:
+        sustained: 10000000  # 10M RPS global
+        burst: 50000000      # 50M RPS burst
+        per_region: 2500000  # 2.5M RPS per region
+
+    scaling_targets:
+      agents: 1000000
+      concurrent_sessions: 50000000
+      events_per_second: 10000000
+
+# =============================================================================
+# AGENT SLOS
+# =============================================================================
+
+agents:
+  # Agent Invocation Success
+  invocation_success:
+    name: "Agent Invocation Success Rate"
+    description: "Percentage of successful agent invocations"
+    owner: agent_team
+
+    sli:
+      type: availability
+      good_events: "invocation.status == 'completed'"
+      bad_events: "invocation.status in ['failed', 'timeout']"
+
+    slo:
+      target: 99.9
+      window_days: 30
+
+    by_agent_type:
+      canonical:
+        target: 99.99
+        agents: [alice, lucidia, cece]
+      aria:
+        target: 99.9
+      custom:
+        target: 99.5
+
+  # Agent Response Time
+  agent_latency:
+    name: "Agent Response Latency"
+    description: "Time from invocation to response"
+    owner: agent_team
+
+    sli:
+      type: latency
+      measurement: histogram
+      unit: milliseconds
+
+    slo:
+      by_operation:
+        simple_query:
+          p50_ms: 100
+          p99_ms: 500
+        complex_reasoning:
+          p50_ms: 2000
+          p99_ms: 10000
+        delegation_chain:
+          p50_ms: 5000
+          p99_ms: 30000
+
+  # Agent Availability
+  agent_availability:
+    name: "Agent Mesh Availability"
+    description: "Agents available and responsive"
+    owner: agent_team
+
+    sli:
+      type: availability
+      measurement: "healthy_agents / total_agents"
+
+    slo:
+      target: 99.95
+      min_healthy_canonical: 100  # All canonical agents must be healthy
+
+    recovery:
+      max_failover_time_seconds: 30
+      max_restart_time_seconds: 60
+
+  # Handoff Success
+  handoff_success:
+    name: "Session Handoff Success"
+    description: "Successful state preservation across sessions"
+    owner: agent_team
+
+    sli:
+      type: availability
+      good_events: "handoff.status == 'completed'"
+
+    slo:
+      target: 99.99
+      data_loss_tolerance: 0  # Zero tolerance for memory loss
+
+# =============================================================================
+# GOVERNANCE SLOS
+# =============================================================================
+
+governance:
+  # Policy Evaluation
+  policy_evaluation:
+    name: "Policy Evaluation Performance"
+    description: "Time to evaluate governance policies"
+    owner: governance_team
+
+    sli:
+      type: latency
+      measurement: histogram
+
+    slo:
+      targets:
+        p50_ms: 5
+        p99_ms: 50
+        max_ms: 200
+
+    throughput:
+      evaluations_per_second: 1000000
+
+  # Trinary Decision Accuracy
+  trinary_accuracy:
+    name: "Trinary Decision Consistency"
+    description: "Consistency of trinary decisions"
+    owner: governance_team
+
+    sli:
+      type: quality
+      measurement: "consistent_decisions / total_decisions"
+
+    slo:
+      target: 99.99
+      contradiction_tolerance: 0.001  # 0.1% max contradictions
+
+  # Coherence Score
+  coherence:
+    name: "System Coherence"
+    description: "Multi-agent coherence score"
+    owner: governance_team
+
+    sli:
+      type: quality
+      formula: "Σ(agent_alignment) / N - contradiction_cost"
+
+    slo:
+      healthy_threshold: 0.7
+      warning_threshold: 0.4
+      recovery_time_hours: 24
+
+  # Escalation Response
+  escalation_response:
+    name: "Escalation Response Time"
+    description: "Time to respond to escalations"
+    owner: governance_team
+
+    sli:
+      type: latency
+      measurement: time_to_resolution
+
+    slo:
+      by_priority:
+        P0:
+          target_minutes: 5
+          threshold: 99
+        P1:
+          target_minutes: 30
+          threshold: 95
+        P2:
+          target_minutes: 240
+          threshold: 90
+
+# =============================================================================
+# MEMORY SLOS
+# =============================================================================
+
+memory:
+  # Memory Read Latency
+  read_latency:
+    name: "Memory Read Latency"
+    description: "Time to read from memory tiers"
+    owner: data_team
+
+    sli:
+      type: latency
+      by_tier:
+        L1_hot:
+          measurement: microseconds
+        L2_warm:
+          measurement: milliseconds
+        L3_cool:
+          measurement: milliseconds
+        L4_archive:
+          measurement: milliseconds
+
+    slo:
+      targets:
+        L1:
+          p99_us: 10
+        L2:
+          p99_ms: 5
+        L3:
+          p99_ms: 100
+        L4:
+          p99_ms: 500
+
+  # Memory Write Durability
+  write_durability:
+    name: "Memory Write Durability"
+    description: "Percentage of writes persisted"
+    owner: data_team
+
+    sli:
+      type: durability
+      measurement: "persisted_writes / total_writes"
+
+    slo:
+      target: 99.9999  # Six nines
+      data_loss_tolerance: 0.0001  # 0.0001% max loss
+
+  # Vector Search Performance
+  vector_search:
+    name: "Vector Search Performance"
+    description: "Semantic search latency and quality"
+    owner: data_team
+
+    sli:
+      type: composite
+      components:
+        latency:
+          type: latency
+        recall:
+          type: quality
+
+    slo:
+      latency:
+        p50_ms: 20
+        p99_ms: 200
+      recall:
+        target: 0.95  # 95% recall@10
+
+  # Memory Sync Lag
+  sync_lag:
+    name: "Cross-Region Memory Sync Lag"
+    description: "Replication delay between regions"
+    owner: data_team
+
+    sli:
+      type: latency
+      measurement: replication_lag_ms
+
+    slo:
+      target_ms: 500
+      max_ms: 5000
+      threshold: 99
+
+# =============================================================================
+# EVENT BUS SLOS
+# =============================================================================
+
+event_bus:
+  # Event Delivery
+  delivery:
+    name: "Event Delivery Success"
+    description: "Percentage of events successfully delivered"
+    owner: streaming_team
+
+    sli:
+      type: availability
+      good_events: "event.delivered == true"
+
+    slo:
+      target: 99.999  # Five nines
+      delivery_guarantee: exactly_once
+
+  # Event Latency
+  latency:
+    name: "Event Processing Latency"
+    description: "Time from publish to consume"
+    owner: streaming_team
+
+    sli:
+      type: latency
+      measurement: end_to_end_ms
+
+    slo:
+      same_region:
+        p50_ms: 5
+        p99_ms: 50
+      cross_region:
+        p50_ms: 100
+        p99_ms: 500
+
+  # Consumer Lag
+  consumer_lag:
+    name: "Consumer Lag"
+    description: "Messages behind for consumers"
+    owner: streaming_team
+
+    sli:
+      type: freshness
+      measurement: lag_messages
+
+    slo:
+      max_lag: 10000
+      recovery_rate: 1000  # messages/second to catch up
+      alert_threshold: 100000
+
+  # Event Throughput
+  throughput:
+    name: "Event Throughput"
+    description: "Events processed per second"
+    owner: streaming_team
+
+    sli:
+      type: throughput
+      measurement: events_per_second
+
+    slo:
+      sustained: 10000000  # 10M events/second
+      burst: 100000000     # 100M events/second burst
+
+# =============================================================================
+# EDGE MESH SLOS
+# =============================================================================
+
+edge:
+  # Edge Latency
+  edge_latency:
+    name: "Edge Response Latency"
+    description: "User-perceived latency at edge"
+    owner: edge_team
+
+    sli:
+      type: latency
+      measurement: time_to_first_byte
+
+    slo:
+      global:
+        p50_ms: 10
+        p99_ms: 50
+      regional:
+        p50_ms: 5
+        p99_ms: 20
+
+  # Edge Availability
+  edge_availability:
+    name: "Edge PoP Availability"
+    description: "Edge points of presence availability"
+    owner: edge_team
+
+    sli:
+      type: availability
+      measurement: "healthy_pops / total_pops"
+
+    slo:
+      target: 99.99
+      min_pops_per_region: 3
+
+  # Failover Time
+  failover:
+    name: "Edge Failover Time"
+    description: "Time to failover to backup edge"
+    owner: edge_team
+
+    sli:
+      type: latency
+      measurement: failover_duration_seconds
+
+    slo:
+      target_seconds: 5
+      threshold: 99
+
+# =============================================================================
+# ROADCHAIN SLOS
+# =============================================================================
+
+roadchain:
+  # Block Production
+  block_production:
+    name: "Block Production Rate"
+    description: "Consistent block production"
+    owner: blockchain_team
+
+    sli:
+      type: availability
+      measurement: "blocks_produced / expected_blocks"
+
+    slo:
+      target: 99.9
+      block_time_seconds: 3
+      max_missed_blocks: 10
+
+  # Finality
+  finality:
+    name: "Transaction Finality"
+    description: "Time to transaction finality"
+    owner: blockchain_team
+
+    sli:
+      type: latency
+      measurement: time_to_finality_seconds
+
+    slo:
+      target_seconds: 10
+      threshold: 99
+
+  # Lineage Verification
+  lineage_verification:
+    name: "Lineage Verification Success"
+    description: "Successful PS-SHA∞ verifications"
+    owner: blockchain_team
+
+    sli:
+      type: availability
+      good_events: "verification.valid == true"
+
+    slo:
+      target: 100  # Must be 100% for audit integrity
+      latency_p99_ms: 100
+
+# =============================================================================
+# COMPLIANCE SLOS
+# =============================================================================
+
+compliance:
+  # Subject Rights Response
+  subject_rights:
+    name: "Data Subject Rights Response"
+    description: "GDPR subject rights request handling"
+    owner: compliance_team
+
+    sli:
+      type: latency
+      measurement: time_to_completion_days
+
+    slo:
+      by_right:
+        access:
+          target_days: 25
+          legal_max_days: 30
+        erasure:
+          target_days: 25
+          legal_max_days: 30
+        portability:
+          target_days: 25
+          legal_max_days: 30
+
+  # Data Classification
+  data_classification:
+    name: "Data Classification Accuracy"
+    description: "Accuracy of auto-classification"
+    owner: compliance_team
+
+    sli:
+      type: quality
+      measurement: classification_accuracy
+
+    slo:
+      target: 99
+      false_positive_rate: 0.01
+      false_negative_rate: 0.001  # Stricter for PII
+
+  # Audit Log Integrity
+  audit_integrity:
+    name: "Audit Log Integrity"
+    description: "Completeness of audit logs"
+    owner: compliance_team
+
+    sli:
+      type: completeness
+      measurement: "logged_events / total_events"
+
+    slo:
+      target: 100  # Must be 100%
+      tamper_proof: required
+
+# =============================================================================
+# ERROR BUDGET POLICIES
+# =============================================================================
+
+error_budget:
+  # Calculation
+  calculation:
+    window_days: 30
+    formula: "1 - (error_rate)"
+
+  # Burn rate alerting
+  alerting:
+    multi_window:
+      - name: fast_burn
+        short_window_hours: 1
+        long_window_hours: 1
+        burn_rate: 14.4
+        severity: critical
+
+      - name: medium_burn
+        short_window_hours: 6
+        long_window_hours: 24
+        burn_rate: 6
+        severity: warning
+
+      - name: slow_burn
+        short_window_hours: 24
+        long_window_hours: 72
+        burn_rate: 1
+        severity: info
+
+  # Actions when exhausted
+  exhaustion_actions:
+    freeze_deploys: true
+    halt_experiments: true
+    incident_review_required: true
+    notify:
+      - engineering_leads
+      - on_call
+      - cecilia  # Human operator
+
+  # Budget reset
+  reset:
+    on_incident_resolution: true
+    on_window_expiry: true
+
+# =============================================================================
+# DASHBOARDS
+# =============================================================================
+
+dashboards:
+  # Executive dashboard
+  executive:
+    refresh_seconds: 60
+    widgets:
+      - type: slo_summary
+        slos: [api_availability, agent_availability, coherence]
+      - type: error_budget_remaining
+        grouped_by: team
+      - type: incident_timeline
+        last_days: 30
+
+  # Engineering dashboard
+  engineering:
+    refresh_seconds: 10
+    widgets:
+      - type: sli_current
+        all_slos: true
+      - type: burn_rate_chart
+        window_hours: 24
+      - type: latency_heatmap
+      - type: throughput_graph
+
+  # On-call dashboard
+  oncall:
+    refresh_seconds: 5
+    widgets:
+      - type: active_alerts
+      - type: error_budget_burn
+      - type: recent_deploys
+      - type: customer_impact
+
+# =============================================================================
+# ALERTING
+# =============================================================================
+
+alerting:
+  # Channels
+  channels:
+    critical:
+      - pagerduty
+      - slack_critical
+      - phone_tree
+    warning:
+      - slack_alerts
+      - email
+    info:
+      - slack_general
+
+  # Escalation
+  escalation:
+    - level: 1
+      responders: [on_call_primary]
+      timeout_minutes: 5
+    - level: 2
+      responders: [on_call_secondary, team_lead]
+      timeout_minutes: 15
+    - level: 3
+      responders: [engineering_manager, cecilia]
+      timeout_minutes: 30
+
+  # Alert fatigue prevention
+  fatigue_prevention:
+    grouping_window_minutes: 5
+    deduplication: true
+    snooze_on_ack_minutes: 30
+    auto_resolve_on_recovery: true

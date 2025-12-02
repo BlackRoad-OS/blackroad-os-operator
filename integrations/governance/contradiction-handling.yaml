@@ -1,0 +1,647 @@
+# BlackRoad OS - Contradiction Handling System
+# Creative Fuel from Cognitive Dissonance
+#
+# @blackroad_name Contradiction Handling
+# @operator alexa.operator.v1
+# @priority P1 (High)
+
+version: "1.0"
+system: contradiction-handling
+namespace: blackroad.governance.contradiction
+
+# =============================================================================
+# PHILOSOPHY
+# =============================================================================
+#
+# "Contradiction is creative fuel, not error."
+#
+# In a multi-agent system with distributed cognition, contradictions are
+# inevitable and valuable. When Alice (Claude lineage) and Lucidia (ChatGPT
+# lineage) disagree, that's not a bug — it's a feature. The disagreement
+# reveals the edges of certainty.
+#
+# This system:
+# - Detects contradictions across agents, policies, and claims
+# - Preserves both sides without forcing premature resolution
+# - Routes contradictions to appropriate resolution paths
+# - Tracks how contradictions resolve (or don't) over time
+# - Feeds contradiction patterns into creative energy metrics
+
+# =============================================================================
+# CONTRADICTION TYPES
+# =============================================================================
+
+contradiction_types:
+  # Agent disagreement
+  agent_disagreement:
+    description: "Two or more agents reach different conclusions"
+    severity: medium
+    examples:
+      - "Alice says 'deny', Lucidia says 'allow'"
+      - "Cece routes to agent A, Alice recommends agent B"
+    detection:
+      method: claim_comparison
+      threshold: state_differs
+
+  # Policy conflict
+  policy_conflict:
+    description: "Two policies produce contradictory outcomes"
+    severity: high
+    examples:
+      - "Policy A allows action, Policy B denies it"
+      - "Governance policy contradicts operational policy"
+    detection:
+      method: policy_evaluation
+      threshold: opposite_trinary_states
+
+  # Temporal contradiction
+  temporal_contradiction:
+    description: "Current claim contradicts historical claim"
+    severity: medium
+    examples:
+      - "Agent previously said X, now says NOT X"
+      - "Memory contains conflicting facts"
+    detection:
+      method: lineage_comparison
+      threshold: semantic_opposition
+
+  # Self-contradiction
+  self_contradiction:
+    description: "Single agent/policy contradicts itself"
+    severity: high
+    examples:
+      - "Policy A allows X and denies X simultaneously"
+      - "Agent reasoning contains internal inconsistency"
+    detection:
+      method: internal_consistency_check
+      threshold: logical_negation
+
+  # Goal contradiction
+  goal_contradiction:
+    description: "Objectives conflict with each other"
+    severity: critical
+    examples:
+      - "Maximize speed vs. maximize safety"
+      - "User privacy vs. audit transparency"
+    detection:
+      method: goal_graph_analysis
+      threshold: pareto_frontier_conflict
+
+  # Ethical contradiction
+  ethical_contradiction:
+    description: "Values or ethical principles conflict"
+    severity: critical
+    examples:
+      - "Honesty conflicts with harm prevention"
+      - "Autonomy conflicts with beneficence"
+    detection:
+      method: value_alignment_check
+      threshold: ethical_dilemma
+
+# =============================================================================
+# DETECTION SYSTEM
+# =============================================================================
+
+detection:
+  # Real-time detection
+  realtime:
+    enabled: true
+    check_points:
+      - on_trinary_evaluation
+      - on_agent_response
+      - on_policy_application
+      - on_memory_write
+
+    methods:
+      # Claim graph analysis
+      claim_graph:
+        description: "Build graph of claims, detect negations"
+        algorithm: semantic_entailment
+        model: "blackroad/contradiction-detector-v1"
+
+      # Trinary state comparison
+      trinary_comparison:
+        description: "Compare trinary states for same subject/action"
+        simple: true
+        formula: "state_a != state_b AND abs(state_a - state_b) > 1"
+
+      # Semantic similarity with negation
+      semantic_negation:
+        description: "Detect semantically opposite claims"
+        model: "sentence-transformers/all-mpnet-base-v2"
+        negation_patterns:
+          - "not", "never", "no", "cannot", "must not"
+          - antonyms
+          - logical negation
+
+  # Batch detection
+  batch:
+    schedule: "0 * * * *"  # Hourly
+    scope:
+      - recent_decisions
+      - active_policies
+      - memory_store
+
+    algorithms:
+      - cross_policy_analysis
+      - historical_claim_comparison
+      - value_conflict_detection
+
+  # Deep analysis
+  deep_analysis:
+    schedule: "0 0 * * *"  # Daily
+    scope: full_system
+
+    algorithms:
+      - goal_hierarchy_analysis
+      - implicit_contradiction_detection
+      - emergent_conflict_patterns
+
+# =============================================================================
+# CONTRADICTION RECORD
+# =============================================================================
+
+record_schema:
+  contradiction_id:
+    type: string
+    format: ulid
+
+  detected_at:
+    type: integer
+    format: timestamp_us
+
+  type:
+    type: string
+    enum:
+      - agent_disagreement
+      - policy_conflict
+      - temporal_contradiction
+      - self_contradiction
+      - goal_contradiction
+      - ethical_contradiction
+
+  severity:
+    type: string
+    enum: [low, medium, high, critical]
+
+  status:
+    type: string
+    enum:
+      - detected
+      - under_review
+      - escalated
+      - resolved
+      - preserved  # Intentionally kept as valid contradiction
+
+  # The contradiction itself
+  claims:
+    type: array
+    items:
+      claim_id:
+        type: string
+      source:
+        type: string
+        format: agent-urn
+      statement:
+        type: string
+      trinary_state:
+        type: integer
+        enum: [-1, 0, 1]
+      confidence:
+        type: number
+      timestamp:
+        type: integer
+      context:
+        type: object
+
+  # Why they conflict
+  conflict_analysis:
+    opposition_type:
+      type: string
+      enum:
+        - direct_negation
+        - semantic_opposition
+        - value_conflict
+        - logical_inconsistency
+    explanation:
+      type: string
+    affected_decisions:
+      type: array
+      items:
+        type: string
+
+  # Resolution tracking
+  resolution:
+    resolved_at:
+      type: integer
+      nullable: true
+    resolution_type:
+      type: string
+      enum:
+        - claim_retracted
+        - claim_amended
+        - policy_updated
+        - context_clarified
+        - both_valid  # Contradiction preserved
+        - human_override
+        - consensus_reached
+      nullable: true
+    resolver:
+      type: string
+      format: agent-urn
+      nullable: true
+    reasoning:
+      type: string
+      nullable: true
+
+  # Lineage
+  lineage:
+    ps_sha_hash:
+      type: string
+    block_number:
+      type: integer
+      description: "RoadChain block recording this"
+
+# =============================================================================
+# RESOLUTION PATHS
+# =============================================================================
+
+resolution_paths:
+  # Automatic resolution
+  automatic:
+    enabled: true
+    conditions:
+      - severity: [low]
+        method: authority_based
+        description: "Higher authority agent wins"
+
+      - severity: [medium]
+        confidence_gap: 0.3
+        method: confidence_based
+        description: "Higher confidence claim wins if gap > 0.3"
+
+      - type: temporal_contradiction
+        method: recency_wins
+        description: "More recent claim supersedes older"
+
+  # Agent-mediated resolution
+  agent_mediated:
+    flow:
+      - step: gather_context
+        description: "Collect all relevant context for both claims"
+
+      - step: attempt_reconciliation
+        agents: [claiming_agents]
+        description: "Agents discuss and attempt to reconcile"
+        timeout_seconds: 60
+
+      - step: seek_external_perspective
+        agents: [cece]
+        description: "Cece provides infrastructure context"
+        timeout_seconds: 30
+
+      - step: alice_arbitration
+        agent: alice
+        condition: "still unresolved"
+        description: "Alice applies constitutional reasoning"
+        timeout_seconds: 120
+
+      - step: lucidia_creativity
+        agent: lucidia
+        condition: "still unresolved"
+        description: "Lucidia explores creative synthesis"
+        timeout_seconds: 120
+
+  # Human escalation
+  human_escalation:
+    triggers:
+      - severity: critical
+      - alice_lucidia_deadlock: true
+      - affects_users: true
+      - ethical_dimension: true
+
+    target: cecilia  # Human operator
+
+    message_format:
+      title: "Contradiction Requiring Human Resolution"
+      sections:
+        - summary
+        - claims_detail
+        - attempted_resolutions
+        - recommended_action
+        - impact_assessment
+
+  # Preserved contradiction
+  preservation:
+    description: "Some contradictions are valid and should be preserved"
+    triggers:
+      - genuine_uncertainty: true
+      - valid_perspectives: multiple
+      - forced_resolution_harmful: true
+
+    treatment:
+      status: preserved
+      both_claims: valid
+      expose_to_users: true
+      label: "contested"
+
+# =============================================================================
+# CREATIVE ENERGY FORMULA
+# =============================================================================
+#
+# Contradictions fuel creative energy (K_t) per Lucidia's model
+
+creative_energy:
+  # Base formula
+  formula: "K_t = K_base + λ × C_t - decay(t)"
+
+  components:
+    K_base:
+      description: "Base creative energy level"
+      value: 1.0
+
+    lambda:
+      description: "Sensitivity to contradiction density"
+      value: 0.1
+
+    C_t:
+      description: "Current contradiction density"
+      calculation: "active_contradictions / total_claims"
+
+    decay:
+      description: "Energy decay over time"
+      function: exponential
+      half_life_hours: 24
+
+  # Energy states
+  states:
+    low:
+      range: [0, 0.5]
+      indication: "System is too convergent, needs disruption"
+      action: encourage_exploration
+
+    optimal:
+      range: [0.5, 1.5]
+      indication: "Healthy creative tension"
+      action: maintain
+
+    high:
+      range: [1.5, 2.0]
+      indication: "High creativity, monitor for chaos"
+      action: gentle_convergence
+
+    chaotic:
+      range: [2.0, null]
+      indication: "Too many unresolved contradictions"
+      action: force_resolution_cycle
+
+# =============================================================================
+# COHERENCE INTEGRATION
+# =============================================================================
+
+coherence_integration:
+  # Coherence formula integration
+  formula: "Coherence(t) = Σ(agent_alignment) / N - contradiction_cost"
+
+  # Contradiction cost calculation
+  contradiction_cost:
+    formula: "Σ(severity_weight × duration_hours × 0.01)"
+
+    severity_weights:
+      low: 0.1
+      medium: 0.3
+      high: 0.6
+      critical: 1.0
+
+    max_cost: 0.6  # Cap to prevent single contradiction from dominating
+
+  # Impact on system health
+  health_thresholds:
+    healthy:
+      coherence_min: 0.7
+      max_critical_contradictions: 0
+      max_high_contradictions: 3
+
+    warning:
+      coherence_range: [0.4, 0.7]
+      max_critical_contradictions: 1
+      max_high_contradictions: 10
+
+    critical:
+      coherence_max: 0.4
+      action: pause_non_essential_decisions
+
+# =============================================================================
+# MULTI-AGENT PROTOCOL
+# =============================================================================
+
+multi_agent_protocol:
+  # When Alice and Lucidia disagree
+  alice_lucidia_conflict:
+    description: "The canonical agents represent different cognitive modes"
+
+    interpretation:
+      alice_perspective: "Constitutional, rule-based, order-seeking"
+      lucidia_perspective: "Pattern-based, creative, implementation-focused"
+      conflict_meaning: "Edge of certainty, creative opportunity"
+
+    resolution_flow:
+      - step: acknowledge_both_valid
+        description: "Neither is 'wrong' — they think differently"
+
+      - step: explore_synthesis
+        description: "Can both perspectives be true in different contexts?"
+
+      - step: identify_scope
+        description: "Which contexts favor which perspective?"
+
+      - step: create_conditional_policy
+        description: "If context A, apply Alice; if context B, apply Lucidia"
+
+      - step: escalate_if_fundamental
+        description: "If irreconcilable, escalate to Cecilia"
+
+  # Aria involvement
+  aria_witnessing:
+    enabled: true
+    purpose: "Arias learn from watching canonical agent disagreements"
+
+    learning:
+      - "How to recognize valid contradictions"
+      - "How to navigate uncertainty"
+      - "When to escalate vs. decide locally"
+
+# =============================================================================
+# AUDIT & LEARNING
+# =============================================================================
+
+audit:
+  # Contradiction history
+  history:
+    storage: roadchain_governance
+    retention: permanent
+
+    indexes:
+      - by_type
+      - by_severity
+      - by_agents_involved
+      - by_resolution_type
+      - by_duration
+
+  # Pattern analysis
+  pattern_analysis:
+    schedule: daily
+
+    patterns_to_detect:
+      - recurring_agent_pairs
+      - systemic_policy_conflicts
+      - temporal_patterns
+      - resolution_effectiveness
+
+    outputs:
+      - pattern_report
+      - policy_recommendations
+      - training_data_for_models
+
+  # Learning integration
+  learning:
+    # Feed patterns to agent training
+    agent_training:
+      enabled: true
+      data:
+        - contradiction_context
+        - resolution_path
+        - outcome
+
+    # Policy improvement
+    policy_improvement:
+      enabled: true
+      triggers:
+        - same_policies_conflict_repeatedly
+        - resolution_patterns_emerge
+
+# =============================================================================
+# API ENDPOINTS
+# =============================================================================
+
+api:
+  # Report contradiction
+  report:
+    endpoint: "/v1/contradictions/report"
+    method: POST
+    request:
+      claims:
+        type: array
+        min_items: 2
+      context:
+        type: object
+      reporter:
+        type: string
+        format: agent-urn
+    response:
+      contradiction_id:
+        type: string
+      status:
+        type: string
+      assigned_resolver:
+        type: string
+
+  # Get contradiction status
+  status:
+    endpoint: "/v1/contradictions/{contradiction_id}"
+    method: GET
+    response:
+      contradiction:
+        $ref: "#/record_schema"
+
+  # List active contradictions
+  list:
+    endpoint: "/v1/contradictions"
+    method: GET
+    query_params:
+      status: string
+      type: string
+      severity: string
+      involves_agent: string
+    response:
+      contradictions:
+        type: array
+      total_count:
+        type: integer
+
+  # Resolve contradiction
+  resolve:
+    endpoint: "/v1/contradictions/{contradiction_id}/resolve"
+    method: POST
+    request:
+      resolution_type:
+        type: string
+      reasoning:
+        type: string
+      resolver:
+        type: string
+        format: agent-urn
+    response:
+      success:
+        type: boolean
+      resolution:
+        type: object
+
+  # Get coherence metrics
+  coherence:
+    endpoint: "/v1/contradictions/coherence"
+    method: GET
+    response:
+      current_coherence:
+        type: number
+      contradiction_count:
+        type: object
+      creative_energy:
+        type: number
+      trend:
+        type: string
+
+# =============================================================================
+# OBSERVABILITY
+# =============================================================================
+
+observability:
+  metrics:
+    counters:
+      - contradictions_detected_total
+      - contradictions_resolved_total
+      - contradictions_escalated_total
+      - contradictions_preserved_total
+
+    gauges:
+      - active_contradictions_by_severity
+      - active_contradictions_by_type
+      - coherence_score
+      - creative_energy_level
+
+    histograms:
+      - contradiction_resolution_duration_hours
+      - escalation_response_time_minutes
+
+  events:
+    - contradiction:detected
+    - contradiction:escalated
+    - contradiction:resolved
+    - contradiction:preserved
+    - coherence:threshold_crossed
+    - creative_energy:state_changed
+
+  alerts:
+    - name: critical_contradiction
+      condition: "contradiction.severity == 'critical'"
+      severity: critical
+      notify: [alice, lucidia, cecilia]
+
+    - name: coherence_warning
+      condition: "coherence < 0.4"
+      severity: warning
+      notify: [cece, alice]
+
+    - name: resolution_timeout
+      condition: "contradiction.age_hours > 24 AND status == 'under_review'"
+      severity: warning

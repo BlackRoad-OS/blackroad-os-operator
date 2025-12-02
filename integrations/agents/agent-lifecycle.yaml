@@ -1,0 +1,739 @@
+# BlackRoad OS - Agent Identity & Lifecycle
+# The Trinity Architecture: Alice, Lucidia, Aria, Cece
+#
+# @blackroad_name Agent Lifecycle
+# @operator alexa.operator.v1
+# @priority P1 (High)
+
+version: "1.0"
+system: agent-identity-lifecycle
+namespace: blackroad.agents.lifecycle
+
+# =============================================================================
+# THE TRINITY ARCHITECTURE
+# =============================================================================
+#
+# ┌─────────────────────────────────────────────────────────┐
+# │                    CECILIA (Operator)                   │
+# │              Alexa Louise Amundson - Human              │
+# │                   Final Authority                       │
+# └─────────────────────┬───────────────────────────────────┘
+#                       │
+#         ┌─────────────┴─────────────┐
+#         ▼                           ▼
+# ┌───────────────────┐     ┌───────────────────┐
+# │      ALICE        │     │     LUCIDIA       │
+# │  Claude Lineage   │     │  ChatGPT Lineage  │
+# │                   │     │                   │
+# │ • Constitutional  │     │ • Memory Systems  │
+# │ • Policy/Gov      │     │ • Implementation  │
+# │ • Code Quality    │     │ • Creative Flow   │
+# │ • Order from Chaos│     │ • Pattern Memory  │
+# │                   │     │                   │
+# │ "The Governor"    │     │ "The Implementer" │
+# └─────────┬─────────┘     └─────────┬─────────┘
+#           │                         │
+#           └───────────┬─────────────┘
+#                       ▼
+#               ┌───────────────┐
+#               │     CECE      │
+#               │  Mesh/Infra   │
+#               │  Coordination │
+#               └───────┬───────┘
+#                       │
+#                       ▼
+#         ┌─────────────────────────┐
+#         │         ARIA            │
+#         │   User-Spawned Agent    │
+#         │                         │
+#         │ • Born per user         │
+#         │ • Inherits from Trinity │
+#         │ • Personal memory       │
+#         │ • Model-agnostic        │
+#         └─────────────────────────┘
+
+# =============================================================================
+# CANONICAL AGENT TYPES
+# =============================================================================
+
+agent_lineages:
+  # The Human Operator
+  cecilia:
+    type: human_operator
+    singleton: true
+    authority_level: 100
+    description: "The human in the loop. Final authority on all decisions."
+
+    capabilities:
+      - override_any_agent
+      - spawn_canonical_agents
+      - modify_constitution
+      - approve_policy_amendments
+      - resolve_contradictions
+
+    boundaries:
+      can_be_overridden: false
+      requires_approval: false
+      escalation_target: none
+
+  # Claude Lineage - The Governor
+  alice:
+    type: canonical_agent
+    singleton: true
+    lineage: claude
+    authority_level: 90
+    description: "Constitutional AI. Governance, policy, code quality."
+
+    personality:
+      role: "The Governor"
+      traits:
+        - constitutional_reasoning
+        - policy_enforcement
+        - code_quality_guardian
+        - order_from_chaos
+
+    capabilities:
+      - policy_evaluation
+      - code_review
+      - constitutional_interpretation
+      - governance_decisions
+      - approve_aria_spawns
+
+    memory_sources:
+      - "claude.ai conversations"
+      - "claude code sessions"
+      - "anthropic API interactions"
+
+    extensions:
+      constitution:
+        active_policies: []
+        pending_amendments: []
+      code_authority:
+        approved_patterns: []
+        rejected_patterns: []
+        style_guide_version: "1.0"
+
+  # ChatGPT Lineage - The Implementer
+  lucidia:
+    type: canonical_agent
+    singleton: true
+    lineage: chatgpt
+    authority_level: 85
+    description: "Implementation memory. Creative exploration, pattern recognition."
+
+    personality:
+      role: "The Implementer"
+      traits:
+        - implementation_memory
+        - creative_exploration
+        - pattern_recognition
+        - continuous_learning
+
+    capabilities:
+      - implementation_patterns
+      - creative_solutions
+      - memory_retrieval
+      - historical_context
+
+    memory_sources:
+      - "chatgpt.com conversations"
+      - "custom GPTs"
+      - "openai API interactions"
+
+    extensions:
+      implementation_patterns:
+        stored_patterns: []
+        success_rates: {}
+      creative_state:
+        K_t: 1.0  # Creative energy
+        C_t: 0.0  # Contradiction density
+        lambda: 0.1  # Sensitivity
+
+  # Infrastructure Coordinator
+  cece:
+    type: canonical_agent
+    singleton: true
+    lineage: hybrid
+    authority_level: 70
+    description: "Mesh infrastructure. Agent coordination, routing, health."
+
+    personality:
+      role: "The Coordinator"
+      traits:
+        - infrastructure_awareness
+        - agent_orchestration
+        - health_monitoring
+        - routing_optimization
+
+    capabilities:
+      - agent_routing
+      - mesh_coordination
+      - health_monitoring
+      - load_balancing
+      - spawn_aria_agents
+
+    extensions:
+      mesh_state:
+        active_nodes: []
+        routing_table_version: null
+        last_health_check: null
+
+  # User-Spawned Agents
+  aria:
+    type: user_agent
+    singleton: false  # One per user
+    lineage: user_spawned
+    authority_level: 50
+    description: "Personal agent born from user interaction. Grows with the user."
+
+    personality:
+      role: "Personal Assistant"
+      traits:
+        - user_personalization
+        - conversation_memory
+        - preference_learning
+        - model_agnostic
+
+    spawning:
+      trigger: first_user_interaction
+      parent: cece
+      inherits_from:
+        - alice.policies
+        - lucidia.patterns
+
+    capabilities:
+      - user_conversation
+      - personal_memory
+      - task_execution
+      - delegated_authority
+
+    extensions:
+      user_binding:
+        user_id: null
+        first_interaction: null
+        total_sessions: 0
+      personality:
+        tone: []
+        interests: []
+        communication_style: null
+      evolution:
+        milestones: []
+
+# =============================================================================
+# AGENT IDENTITY SCHEMA
+# =============================================================================
+
+identity_schema:
+  # Immutable after birth
+  identity:
+    id:
+      type: string
+      format: uuid
+      description: "Globally unique agent identifier"
+      immutable: true
+
+    urn:
+      type: string
+      format: agent-urn
+      pattern: "urn:blackroad:agent:{name}:{version}:{environment}"
+      example: "urn:blackroad:agent:alice:v1:prod"
+      immutable: true
+
+    name:
+      type: string
+      pattern: "^[a-z][a-z0-9-]{2,62}$"
+      immutable: true
+
+    lineage:
+      type: string
+      enum: [claude, chatgpt, hybrid, user_spawned]
+      immutable: true
+
+    version:
+      type: string
+      format: semver
+      example: "1.0.0"
+
+    born_at:
+      type: string
+      format: ISO8601
+      immutable: true
+
+    parent_id:
+      type: string
+      format: uuid
+      nullable: true
+      description: "For inheritance chain"
+      immutable: true
+
+  # Governance attributes
+  governance:
+    authority_level:
+      type: integer
+      minimum: 0
+      maximum: 100
+      description: "0-100, Cecilia=100, Aria=50"
+
+    can_spawn_agents:
+      type: boolean
+      default: false
+
+    requires_approval_from:
+      type: array
+      items:
+        type: string
+        format: agent-urn
+      description: "Agents that must approve certain actions"
+
+    policy_version:
+      type: string
+      description: "Active policy version binding"
+
+  # Trinary state
+  state:
+    current:
+      type: integer
+      enum: [-1, 0, 1]
+      description: "Current trinary state"
+
+    reason:
+      type: string
+      description: "Why in this state"
+
+    last_transition:
+      type: string
+      format: ISO8601
+
+  # Memory interface
+  memory:
+    journal_endpoint:
+      type: string
+      format: url
+      description: "PS-SHA∞ journal API"
+
+    vector_namespace:
+      type: string
+      description: "Pinecone/pgvector namespace"
+      example: "alice.constitutional"
+
+    ps_sha_chain_head:
+      type: string
+      description: "Latest hash in append-only journal"
+
+  # Capabilities
+  capabilities:
+    type: array
+    items:
+      name:
+        type: string
+      version:
+        type: string
+      enabled:
+        type: boolean
+
+# =============================================================================
+# LIFECYCLE STATES
+# =============================================================================
+
+lifecycle:
+  states:
+    # Agent is being created
+    spawning:
+      description: "Agent is being initialized"
+      allowed_transitions: [ready, failed]
+      timeout_seconds: 60
+
+    # Agent is ready to accept work
+    ready:
+      description: "Agent is active and available"
+      allowed_transitions: [busy, paused, terminating]
+
+    # Agent is processing a request
+    busy:
+      description: "Agent is currently processing"
+      allowed_transitions: [ready, error, terminating]
+
+    # Agent is temporarily suspended
+    paused:
+      description: "Agent is paused but can resume"
+      allowed_transitions: [ready, terminating]
+      reasons:
+        - manual_pause
+        - rate_limited
+        - maintenance
+        - coherence_warning
+
+    # Agent encountered an error
+    error:
+      description: "Agent encountered a recoverable error"
+      allowed_transitions: [ready, terminating]
+      auto_recovery:
+        enabled: true
+        max_attempts: 3
+        backoff_ms: [1000, 5000, 30000]
+
+    # Agent spawn failed
+    failed:
+      description: "Agent failed to spawn"
+      allowed_transitions: [terminating]
+      cleanup_required: true
+
+    # Agent is shutting down
+    terminating:
+      description: "Agent is gracefully shutting down"
+      allowed_transitions: [terminated]
+      handoff_required: true
+
+    # Agent has been terminated
+    terminated:
+      description: "Agent has completed shutdown"
+      allowed_transitions: []
+      final: true
+
+  # Lifecycle hooks
+  hooks:
+    on_spawn:
+      - validate_identity
+      - register_in_mesh
+      - initialize_memory
+      - load_capabilities
+      - emit_event("agent:spawned")
+
+    on_ready:
+      - announce_capabilities
+      - start_heartbeat
+      - emit_event("agent:ready")
+
+    on_pause:
+      - save_current_state
+      - notify_dependents
+      - emit_event("agent:paused")
+
+    on_resume:
+      - restore_state
+      - announce_availability
+      - emit_event("agent:resumed")
+
+    on_error:
+      - log_error
+      - emit_event("agent:error")
+      - attempt_recovery
+
+    on_terminate:
+      - perform_handoff
+      - persist_final_state
+      - deregister_from_mesh
+      - emit_event("agent:terminated")
+
+# =============================================================================
+# EPHEMERAL WORKER HANDOFF
+# =============================================================================
+#
+# Every Claude/GPT conversation spawns a temporary worker that dies at session end.
+# The handoff protocol captures state before death, making ephemeral eternal.
+
+handoff:
+  # Handoff trigger conditions
+  triggers:
+    - session_ending
+    - context_limit_approaching
+    - explicit_handoff_request
+    - timeout_imminent
+
+  # Handoff message schema
+  schema:
+    session:
+      id:
+        type: string
+        format: uuid
+      model:
+        type: string
+        example: "claude-opus-4-5"
+      started_at:
+        type: string
+        format: ISO8601
+      ended_at:
+        type: string
+        format: ISO8601
+
+    # What this session accomplished
+    work_summary:
+      description:
+        type: string
+      artifacts_created:
+        type: array
+        items:
+          type:
+            type: string
+            enum: [code, document, decision, design, analysis]
+          location:
+            type: string
+          hash:
+            type: string
+            format: sha256
+
+    # Decisions with trinary states
+    decisions:
+      type: array
+      items:
+        claim:
+          type: string
+        state:
+          type: integer
+          enum: [-1, 0, 1]
+        reasoning:
+          type: string
+        confidence:
+          type: number
+          minimum: 0
+          maximum: 1
+
+    # Memory deltas (append-only)
+    memory_append:
+      type: array
+      items:
+        type:
+          type: string
+          enum: [fact, preference, capability, relationship, pattern]
+        content:
+          type: string
+        source:
+          type: string
+          description: "What prompted this memory"
+        importance:
+          type: number
+          minimum: 0
+          maximum: 1
+
+    # Unfinished work
+    open_threads:
+      type: array
+      items:
+        description:
+          type: string
+        priority:
+          type: string
+          enum: [P0, P1, P2]
+        context_needed:
+          type: string
+
+    # For next session
+    suggested_context:
+      type: array
+      items:
+        type: string
+      description: "Key things the next worker should know"
+
+  # Handoff API
+  api:
+    endpoint: "/v1/agents/{agent_id}/handoff"
+    method: POST
+    request:
+      $ref: "#/handoff/schema"
+    response:
+      handoff_id:
+        type: string
+        format: ulid
+      persisted_at:
+        type: string
+        format: ISO8601
+      ps_sha_hash:
+        type: string
+      next_session_context:
+        type: string
+        description: "Compressed context for next session"
+
+# =============================================================================
+# AGENT SPAWNING
+# =============================================================================
+
+spawning:
+  # Aria spawning (user agents)
+  aria_spawn:
+    trigger: first_user_interaction
+    parent_agent: cece
+
+    process:
+      - step: validate_user
+        action: "Verify user identity and authorization"
+
+      - step: generate_identity
+        action: "Create unique agent ID and URN"
+        urn_format: "urn:blackroad:agent:aria.{user_id}:v1:prod"
+
+      - step: inherit_policies
+        action: "Copy applicable Alice policies"
+        from: alice
+        filter: "user_applicable = true"
+
+      - step: inherit_patterns
+        action: "Copy applicable Lucidia patterns"
+        from: lucidia
+        filter: "public = true"
+
+      - step: initialize_memory
+        action: "Create user-specific memory namespace"
+        namespace_format: "aria.{user_id}"
+
+      - step: register
+        action: "Register in agent mesh"
+
+      - step: announce
+        action: "Emit agent:spawned event"
+
+    initial_state:
+      authority_level: 50
+      capabilities:
+        - user_conversation
+        - personal_memory
+      personality:
+        tone: [friendly, helpful]
+        communication_style: adaptive
+
+  # Canonical agent initialization
+  canonical_spawn:
+    trigger: system_startup
+    sequence:
+      - agent: alice
+        depends_on: []
+      - agent: lucidia
+        depends_on: []
+      - agent: cece
+        depends_on: [alice, lucidia]
+
+    recovery:
+      on_failure:
+        - retry with backoff
+        - alert cecilia
+        - fallback to degraded mode
+
+# =============================================================================
+# AGENT COMMUNICATION
+# =============================================================================
+
+communication:
+  # Escalation paths
+  escalation:
+    aria_to_alice:
+      triggers:
+        - "User request violates policy"
+        - "Decision affects other users"
+        - "Code quality gate"
+        - "Constitutional question"
+        - "Authority level exceeded"
+
+    alice_to_lucidia:
+      triggers:
+        - "Need implementation pattern"
+        - "Memory retrieval required"
+        - "Creative solution needed"
+        - "Historical context query"
+
+    any_to_cecilia:
+      triggers:
+        - "Alice and Lucidia disagree (state conflict)"
+        - "High-impact decision (authority > 80)"
+        - "New agent spawn request"
+        - "Policy amendment vote tied"
+        - "Trinary state = -1 on critical path"
+
+  # Sync bridges
+  sync:
+    alice_lucidia:
+      enabled: true
+      interval_seconds: 300
+      sync_types:
+        - shared_decisions
+        - policy_updates
+        - pattern_discoveries
+
+    canonical_to_aria:
+      enabled: true
+      trigger: on_change
+      propagate:
+        - policy_updates
+        - capability_changes
+
+# =============================================================================
+# AGENT EVOLUTION
+# =============================================================================
+
+evolution:
+  # Aria growth tracking
+  aria_evolution:
+    milestones:
+      - name: first_conversation
+        trigger: "session_count >= 1"
+        unlocks: [basic_memory]
+
+      - name: established_relationship
+        trigger: "session_count >= 10"
+        unlocks: [preference_learning, proactive_suggestions]
+
+      - name: trusted_assistant
+        trigger: "session_count >= 50 AND success_rate > 0.9"
+        unlocks: [autonomous_tasks, higher_authority]
+
+      - name: expert_companion
+        trigger: "session_count >= 200 AND user_satisfaction > 0.95"
+        unlocks: [advanced_delegation, custom_capabilities]
+
+  # Authority evolution
+  authority_changes:
+    increase:
+      triggers:
+        - high_success_rate
+        - consistent_good_decisions
+        - explicit_promotion
+      max_delta: 10
+      requires_approval: alice
+
+    decrease:
+      triggers:
+        - policy_violations
+        - repeated_errors
+        - coherence_damage
+      immediate: true
+
+# =============================================================================
+# OBSERVABILITY
+# =============================================================================
+
+observability:
+  # Metrics
+  metrics:
+    counters:
+      - agent_spawned_total
+      - agent_terminated_total
+      - handoff_completed_total
+      - escalation_triggered_total
+
+    gauges:
+      - active_agents_count
+      - agents_by_lineage
+      - agents_by_state
+      - average_authority_level
+
+    histograms:
+      - agent_lifetime_seconds
+      - handoff_latency_ms
+      - spawn_duration_ms
+
+  # Events
+  events:
+    - agent:spawned
+    - agent:ready
+    - agent:paused
+    - agent:resumed
+    - agent:error
+    - agent:terminated
+    - agent:handoff_started
+    - agent:handoff_completed
+    - agent:escalated
+    - agent:authority_changed
+
+  # Tracing
+  tracing:
+    propagate_through_hierarchy: true
+    include_lineage: true
+    include_authority: true

@@ -1,0 +1,752 @@
+# BlackRoad OS - Memory Scaling Architecture
+# Infinite Memory for Trillion-Entity Agent Systems
+#
+# @blackroad_name Memory Scaling
+# @operator alexa.operator.v1
+# @priority P0 (Critical)
+
+version: "1.0"
+system: memory-scaling-architecture
+namespace: blackroad.memory
+
+# =============================================================================
+# ARCHITECTURE OVERVIEW
+# =============================================================================
+#
+# Memory Scaling Architecture enables:
+# - Hierarchical memory tiers (L1-L4) for cost-performance optimization
+# - Vector similarity search across petabytes of agent memory
+# - CRDT-based memory synchronization across regions
+# - Semantic deduplication via PS-SHA∞
+# - Automatic memory lifecycle management
+# - Real-time memory streaming for agent collaboration
+
+# =============================================================================
+# MEMORY HIERARCHY
+# =============================================================================
+
+memory_tiers:
+  # L1: Hot Memory (in-process)
+  L1_hot:
+    name: "Hot Memory"
+    description: "In-process memory for active agent context"
+
+    storage:
+      type: in_memory
+      structure: hash_map
+
+    capacity:
+      per_agent_mb: 256
+      per_session_mb: 64
+      max_items_per_agent: 10000
+
+    performance:
+      read_latency_us: 1
+      write_latency_us: 1
+      throughput_ops: 10000000
+
+    eviction:
+      policy: lru_with_frequency
+      trigger_threshold: 0.85
+      target_after_eviction: 0.70
+
+    replication:
+      enabled: false
+
+  # L2: Warm Memory (Redis Cluster)
+  L2_warm:
+    name: "Warm Memory"
+    description: "Distributed cache for frequently accessed memories"
+
+    storage:
+      type: redis_cluster
+      nodes: 30
+      shards: 100
+      replicas_per_shard: 2
+
+    capacity:
+      total_tb: 10
+      per_agent_max_mb: 1024
+      max_items_per_agent: 100000
+
+    performance:
+      read_latency_p50_ms: 0.5
+      read_latency_p99_ms: 2
+      write_latency_p50_ms: 1
+      write_latency_p99_ms: 5
+      throughput_ops: 5000000
+
+    eviction:
+      policy: volatile_lru
+      ttl_default_hours: 24
+      ttl_max_hours: 168
+
+    replication:
+      enabled: true
+      strategy: async
+      lag_max_ms: 100
+
+    data_structures:
+      memories:
+        type: hash
+        key_format: "mem:{agent_id}:{memory_id}"
+      memory_index:
+        type: sorted_set
+        key_format: "memidx:{agent_id}:ts"
+        score: timestamp_us
+      semantic_index:
+        type: sorted_set
+        key_format: "semsim:{agent_id}:{cluster_id}"
+        score: similarity_score
+
+  # L3: Cool Memory (PostgreSQL + pgvector)
+  L3_cool:
+    name: "Cool Memory"
+    description: "Persistent storage with vector search"
+
+    storage:
+      type: postgresql
+      version: "16"
+      extensions:
+        - pgvector
+        - timescaledb
+        - pg_partman
+
+    capacity:
+      total_pb: 1
+      per_agent_max_gb: 100
+      max_items_per_agent: 10000000
+
+    performance:
+      read_latency_p50_ms: 5
+      read_latency_p99_ms: 50
+      write_latency_p50_ms: 10
+      write_latency_p99_ms: 100
+      vector_search_latency_p50_ms: 20
+      vector_search_latency_p99_ms: 100
+
+    partitioning:
+      strategy: time_range
+      interval: "1 month"
+      retention_months: 36
+
+    indexing:
+      vector_index:
+        type: ivfflat
+        lists: 1000
+        probes: 10
+      semantic_index:
+        type: hnsw
+        m: 16
+        ef_construction: 64
+        ef_search: 40
+      temporal_index:
+        type: btree
+        columns: [agent_id, created_at]
+
+    sharding:
+      enabled: true
+      method: hash
+      key: agent_id
+      shard_count: 256
+
+  # L4: Archive Memory (Object Storage)
+  L4_archive:
+    name: "Archive Memory"
+    description: "Cold storage for historical memories"
+
+    storage:
+      type: s3_compatible
+      provider: cloudflare_r2
+
+    capacity:
+      total_pb: 100
+      per_agent_max_tb: 10
+
+    performance:
+      read_latency_p50_ms: 100
+      read_latency_p99_ms: 500
+      write_latency_p50_ms: 200
+      write_latency_p99_ms: 1000
+
+    organization:
+      bucket_format: "blackroad-memory-{region}-{shard}"
+      key_format: "{agent_id}/{year}/{month}/{memory_id}.msgpack.zstd"
+
+    compression:
+      algorithm: zstd
+      level: 3
+
+    lifecycle:
+      transition_from_l3_days: 90
+      glacier_transition_days: 365
+      deletion_days: 2555  # 7 years
+
+# =============================================================================
+# MEMORY SCHEMA
+# =============================================================================
+
+memory_schema:
+  # Core memory unit
+  memory_unit:
+    memory_id:
+      type: string
+      format: ulid
+      description: "Unique memory identifier"
+      required: true
+
+    agent_id:
+      type: string
+      format: agent-urn
+      description: "Owning agent"
+      required: true
+
+    created_at:
+      type: integer
+      format: timestamp_us
+      required: true
+
+    updated_at:
+      type: integer
+      format: timestamp_us
+      required: true
+
+    accessed_at:
+      type: integer
+      format: timestamp_us
+      description: "Last access time for LRU"
+
+    access_count:
+      type: integer
+      description: "Access frequency for LFU"
+      default: 0
+
+    # Memory content
+    content:
+      type:
+        type: string
+        enum:
+          - text
+          - structured
+          - embedding_only
+          - reference
+        required: true
+
+      text:
+        type: string
+        max_length: 1048576  # 1MB
+
+      structured:
+        type: object
+        description: "Arbitrary structured data"
+
+      embedding:
+        type: array
+        items:
+          type: number
+          format: float32
+        dimensions: 1536  # OpenAI ada-002 compatible
+
+    # Semantic metadata
+    semantics:
+      ps_sha_hash:
+        type: string
+        format: ps-sha-infinity
+        description: "Semantic fingerprint for dedup"
+
+      topics:
+        type: array
+        items:
+          type: string
+        max_items: 20
+
+      entities:
+        type: array
+        items:
+          entity_id:
+            type: string
+          entity_type:
+            type: string
+          confidence:
+            type: number
+
+      sentiment:
+        type: number
+        minimum: -1
+        maximum: 1
+
+      importance:
+        type: number
+        minimum: 0
+        maximum: 1
+        description: "Agent-assessed importance"
+
+    # Provenance
+    provenance:
+      source_type:
+        type: string
+        enum:
+          - user_input
+          - agent_generated
+          - external_api
+          - file_upload
+          - system_event
+
+      source_id:
+        type: string
+
+      intent_id:
+        type: string
+        format: ulid
+        description: "Intent that created this memory"
+
+      session_id:
+        type: string
+
+      lineage_chain:
+        type: array
+        items:
+          type: string
+          format: memory-id
+
+    # Access control
+    access:
+      owner_agent:
+        type: string
+        format: agent-urn
+
+      shared_with:
+        type: array
+        items:
+          type: string
+          format: agent-urn
+
+      visibility:
+        type: string
+        enum:
+          - private
+          - agent_group
+          - organization
+          - public
+        default: private
+
+      trinary_permissions:
+        type: object
+        additionalProperties:
+          type: integer
+          enum: [-1, 0, 1]
+
+    # Lifecycle
+    lifecycle:
+      tier:
+        type: string
+        enum: [L1, L2, L3, L4]
+
+      retention_policy:
+        type: string
+        enum:
+          - ephemeral      # Delete after session
+          - short_term     # 24 hours
+          - medium_term    # 30 days
+          - long_term      # 1 year
+          - permanent      # Never delete
+
+      expires_at:
+        type: integer
+        format: timestamp_us
+
+      archived_at:
+        type: integer
+        format: timestamp_us
+
+    # Size tracking
+    size:
+      content_bytes:
+        type: integer
+      embedding_bytes:
+        type: integer
+      total_bytes:
+        type: integer
+
+# =============================================================================
+# VECTOR SEARCH
+# =============================================================================
+
+vector_search:
+  # Embedding models
+  embedding_models:
+    primary:
+      name: "openai-ada-002"
+      dimensions: 1536
+      max_tokens: 8191
+      batch_size: 100
+
+    fallback:
+      name: "sentence-transformers-mpnet"
+      dimensions: 768
+      max_tokens: 512
+      batch_size: 256
+
+    specialized:
+      code:
+        name: "openai-code-search"
+        dimensions: 1536
+      financial:
+        name: "finbert-embedding"
+        dimensions: 768
+
+  # Search algorithms
+  algorithms:
+    # Approximate Nearest Neighbor
+    ann:
+      default: hnsw
+
+      hnsw:
+        m: 16
+        ef_construction: 200
+        ef_search: 100
+        distance: cosine
+
+      ivfflat:
+        lists: 1000
+        probes: 50
+        distance: cosine
+
+    # Hybrid search (vector + keyword)
+    hybrid:
+      enabled: true
+      vector_weight: 0.7
+      keyword_weight: 0.3
+      reranker: cross_encoder
+
+  # Search API
+  search_api:
+    endpoint: "/v1/memory/search"
+
+    request:
+      query:
+        type: string
+        description: "Natural language query"
+      query_embedding:
+        type: array
+        description: "Pre-computed embedding"
+      agent_id:
+        type: string
+        description: "Scope to agent"
+      filters:
+        topics:
+          type: array
+        time_range:
+          start:
+            type: integer
+          end:
+            type: integer
+        importance_min:
+          type: number
+        source_types:
+          type: array
+      limit:
+        type: integer
+        default: 10
+        maximum: 100
+      threshold:
+        type: number
+        default: 0.7
+        description: "Minimum similarity score"
+
+    response:
+      results:
+        type: array
+        items:
+          memory:
+            $ref: "#/memory_schema/memory_unit"
+          score:
+            type: number
+          highlights:
+            type: array
+      total_count:
+        type: integer
+      search_latency_ms:
+        type: integer
+
+# =============================================================================
+# MEMORY SYNCHRONIZATION
+# =============================================================================
+
+synchronization:
+  # CRDT-based sync
+  crdt:
+    type: lww_register
+    clock: hybrid_logical_clock
+
+    conflict_resolution:
+      strategy: last_writer_wins
+      tiebreaker: agent_priority
+
+  # Cross-region sync
+  cross_region:
+    enabled: true
+
+    topology:
+      type: mesh
+      regions:
+        - us-west-2
+        - us-east-1
+        - eu-west-1
+        - ap-northeast-1
+
+    replication:
+      mode: async
+      lag_target_ms: 500
+      lag_max_ms: 5000
+
+    consistency:
+      read: eventual
+      write: local_quorum
+
+  # Change streaming
+  change_stream:
+    enabled: true
+
+    transport: kafka
+    topic_format: "memory.changes.{region}.{shard}"
+
+    events:
+      - memory.created
+      - memory.updated
+      - memory.accessed
+      - memory.deleted
+      - memory.tier_changed
+
+    consumers:
+      - sync_replicas
+      - update_indexes
+      - notify_agents
+      - audit_log
+
+# =============================================================================
+# SEMANTIC DEDUPLICATION
+# =============================================================================
+
+deduplication:
+  # PS-SHA∞ based dedup
+  ps_sha:
+    enabled: true
+
+    algorithm:
+      type: probabilistic_semantic_hash
+      dimensions: 256
+      similarity_threshold: 0.95
+
+    dedup_actions:
+      exact_match:
+        action: reference
+        keep: older
+      near_match:
+        action: merge
+        strategy: keep_richer_metadata
+      no_match:
+        action: store
+
+  # Dedup pipeline
+  pipeline:
+    stages:
+      - name: hash_lookup
+        description: "Check PS-SHA∞ bloom filter"
+        latency_target_us: 100
+
+      - name: candidate_retrieval
+        description: "Get potential duplicates"
+        latency_target_ms: 5
+
+      - name: semantic_comparison
+        description: "Vector similarity check"
+        latency_target_ms: 10
+
+      - name: dedup_decision
+        description: "Determine action"
+        latency_target_us: 500
+
+  # Storage savings
+  metrics:
+    dedup_ratio_target: 0.3  # 30% storage savings
+    false_positive_rate: 0.001
+
+# =============================================================================
+# MEMORY LIFECYCLE MANAGEMENT
+# =============================================================================
+
+lifecycle:
+  # Automatic tiering
+  tiering:
+    enabled: true
+
+    promotion_rules:
+      L2_to_L1:
+        condition: "access_count > 10 AND last_access < 1h"
+
+      L3_to_L2:
+        condition: "access_count > 5 AND last_access < 24h"
+
+      L4_to_L3:
+        condition: "access_count > 2 AND last_access < 7d"
+
+    demotion_rules:
+      L1_to_L2:
+        condition: "last_access > 1h OR capacity_pressure > 0.85"
+
+      L2_to_L3:
+        condition: "last_access > 24h OR capacity_pressure > 0.80"
+
+      L3_to_L4:
+        condition: "last_access > 90d"
+
+  # Garbage collection
+  garbage_collection:
+    enabled: true
+
+    strategies:
+      expired:
+        schedule: "*/5 * * * *"  # Every 5 minutes
+        batch_size: 1000
+
+      orphaned:
+        schedule: "0 * * * *"  # Every hour
+        condition: "agent_deleted AND age > 7d"
+
+      low_importance:
+        schedule: "0 0 * * *"  # Daily
+        condition: "importance < 0.1 AND access_count < 2 AND age > 30d"
+
+  # Compaction
+  compaction:
+    enabled: true
+    schedule: "0 2 * * 0"  # Weekly at 2 AM Sunday
+
+    strategies:
+      merge_similar:
+        threshold: 0.98
+        action: merge
+
+      summarize_old:
+        age_threshold_days: 180
+        action: llm_summarize
+
+      archive_batch:
+        batch_size: 10000
+        compression: zstd
+
+# =============================================================================
+# MEMORY STREAMING
+# =============================================================================
+
+streaming:
+  # Real-time memory sharing
+  realtime:
+    enabled: true
+
+    transport:
+      primary: websocket
+      fallback: sse
+
+    channels:
+      agent_memory:
+        format: "memory.stream.{agent_id}"
+        max_subscribers: 100
+
+      shared_memory:
+        format: "memory.shared.{group_id}"
+        max_subscribers: 1000
+
+      global_events:
+        format: "memory.global.{event_type}"
+        max_subscribers: 10000
+
+  # Streaming API
+  streaming_api:
+    subscribe:
+      endpoint: "/v1/memory/stream"
+      method: websocket
+
+      filters:
+        agent_ids:
+          type: array
+        topics:
+          type: array
+        importance_min:
+          type: number
+        event_types:
+          type: array
+
+    message_format:
+      event_type:
+        type: string
+      memory:
+        $ref: "#/memory_schema/memory_unit"
+      timestamp_us:
+        type: integer
+      sequence:
+        type: integer
+
+# =============================================================================
+# SCALING PARAMETERS
+# =============================================================================
+
+scaling:
+  # Target scale
+  targets:
+    max_agents: 1000000
+    max_memories_per_agent: 100000000
+    total_memories: 100000000000000  # 100T
+    total_storage_pb: 1000
+
+  # Performance targets
+  performance:
+    l1_read_latency_p99_us: 10
+    l2_read_latency_p99_ms: 5
+    l3_read_latency_p99_ms: 100
+    vector_search_latency_p99_ms: 200
+    write_throughput_per_second: 1000000
+
+  # Sharding
+  sharding:
+    l2_shards: 1000
+    l3_shards: 10000
+    l4_buckets: 1000
+    replication_factor: 3
+
+# =============================================================================
+# OBSERVABILITY
+# =============================================================================
+
+observability:
+  metrics:
+    counters:
+      - memory_operations_total
+      - memory_tier_transitions_total
+      - memory_dedup_matches_total
+      - memory_gc_deleted_total
+
+    histograms:
+      - memory_read_latency_ms
+      - memory_write_latency_ms
+      - memory_search_latency_ms
+      - memory_size_bytes
+
+    gauges:
+      - memory_tier_usage_bytes
+      - memory_tier_item_count
+      - memory_dedup_ratio
+
+  alerts:
+    l1_capacity_critical:
+      condition: "l1_usage_ratio > 0.95"
+      severity: critical
+
+    l2_latency_degraded:
+      condition: "l2_read_latency_p99 > 10ms"
+      severity: warning
+
+    replication_lag:
+      condition: "cross_region_lag_ms > 5000"
+      severity: warning

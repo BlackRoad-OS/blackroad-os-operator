@@ -1,0 +1,712 @@
+# BlackRoad OS - Multi-Region Data Locality
+# GDPR, Data Sovereignty, and Compliance-Aware Data Routing
+#
+# @blackroad_name Data Locality
+# @operator alexa.operator.v1
+# @priority P1 (High)
+
+version: "1.0"
+system: data-locality
+namespace: blackroad.compliance.locality
+
+# =============================================================================
+# DATA SOVEREIGNTY OVERVIEW
+# =============================================================================
+#
+# Multi-Region Data Locality ensures:
+# - GDPR compliance for EU users (data stays in EU)
+# - Data sovereignty for regulated industries
+# - Automatic routing based on data classification
+# - Cross-border transfer rules enforcement
+# - Audit trail for data movement
+# - User-controlled data residency preferences
+
+# =============================================================================
+# GEOGRAPHIC REGIONS
+# =============================================================================
+
+regions:
+  # Region definitions with compliance mappings
+  definitions:
+    # European Union
+    eu:
+      name: "European Union"
+      compliance_frameworks:
+        - GDPR
+        - EU_AI_ACT
+        - DORA
+      primary_zones:
+        - eu-west-1        # Ireland
+        - eu-central-1     # Frankfurt
+        - eu-north-1       # Stockholm
+      backup_zones:
+        - eu-west-2        # London (post-Brexit considerations)
+        - eu-south-1       # Milan
+      data_protection_authority: "European Data Protection Board"
+      adequacy_decisions:
+        - japan
+        - canada
+        - switzerland
+        - uk  # Pending review
+
+    # United States
+    us:
+      name: "United States"
+      compliance_frameworks:
+        - CCPA
+        - HIPAA
+        - SOC2
+        - COPPA
+      primary_zones:
+        - us-west-2        # Oregon
+        - us-east-1        # Virginia
+      backup_zones:
+        - us-west-1        # California
+        - us-east-2        # Ohio
+      data_protection_authority: "FTC / State AGs"
+      special_requirements:
+        - state_specific_privacy_laws
+        - sector_specific_regulations
+
+    # Asia Pacific
+    apac:
+      name: "Asia Pacific"
+      subregions:
+        japan:
+          compliance_frameworks:
+            - APPI
+          zones: [ap-northeast-1]
+          adequacy_with_eu: true
+
+        singapore:
+          compliance_frameworks:
+            - PDPA
+          zones: [ap-southeast-1]
+          data_center_requirements: strict
+
+        australia:
+          compliance_frameworks:
+            - PRIVACY_ACT
+            - NOTIFIABLE_DATA_BREACHES
+          zones: [ap-southeast-2]
+
+        india:
+          compliance_frameworks:
+            - DPDP_2023
+          zones: [ap-south-1]
+          data_localization: required
+
+    # Middle East & Africa
+    mea:
+      name: "Middle East & Africa"
+      subregions:
+        uae:
+          compliance_frameworks:
+            - DIFC_DP_LAW
+          zones: [me-south-1]
+
+        south_africa:
+          compliance_frameworks:
+            - POPIA
+          zones: [af-south-1]
+
+    # United Kingdom
+    uk:
+      name: "United Kingdom"
+      compliance_frameworks:
+        - UK_GDPR
+        - DPA_2018
+      zones:
+        - eu-west-2  # London
+      adequacy_with_eu: conditional
+
+# =============================================================================
+# DATA CLASSIFICATION
+# =============================================================================
+
+classification:
+  # Classification levels
+  levels:
+    public:
+      level: 0
+      description: "No restrictions on storage or transfer"
+      color: "#22C55E"
+      requirements:
+        encryption_at_rest: optional
+        encryption_in_transit: required
+        data_locality: none
+
+    internal:
+      level: 1
+      description: "Internal use, standard protections"
+      color: "#3B82F6"
+      requirements:
+        encryption_at_rest: required
+        encryption_in_transit: required
+        data_locality: preferred
+
+    confidential:
+      level: 2
+      description: "Sensitive business data"
+      color: "#F59E0B"
+      requirements:
+        encryption_at_rest: required
+        encryption_in_transit: required
+        data_locality: required
+        access_logging: required
+
+    restricted:
+      level: 3
+      description: "Highly sensitive, regulatory requirements"
+      color: "#EF4444"
+      requirements:
+        encryption_at_rest: required
+        encryption_in_transit: required
+        data_locality: strict
+        access_logging: required
+        approval_required: true
+        retention_policy: defined
+
+    pii:
+      level: 4
+      description: "Personally Identifiable Information"
+      color: "#DC2626"
+      special_handling:
+        gdpr_subject_rights: true
+        right_to_erasure: true
+        data_portability: true
+        consent_required: true
+      requirements:
+        encryption_at_rest: required
+        encryption_in_transit: required
+        data_locality: strict
+        access_logging: required
+        pseudonymization: recommended
+        retention_limit: true
+
+    special_category:
+      level: 5
+      description: "GDPR Article 9 special categories"
+      color: "#7C2D12"
+      categories:
+        - racial_ethnic_origin
+        - political_opinions
+        - religious_beliefs
+        - trade_union_membership
+        - genetic_data
+        - biometric_data
+        - health_data
+        - sex_life_orientation
+      requirements:
+        encryption_at_rest: required
+        encryption_in_transit: required
+        data_locality: strict
+        access_logging: required
+        explicit_consent: required
+        dpia_required: true
+
+  # Auto-classification
+  auto_classification:
+    enabled: true
+
+    detection_methods:
+      - type: regex_patterns
+        patterns:
+          email: "\\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Z|a-z]{2,}\\b"
+          phone: "\\b\\d{3}[-.]?\\d{3}[-.]?\\d{4}\\b"
+          ssn: "\\b\\d{3}-\\d{2}-\\d{4}\\b"
+          credit_card: "\\b\\d{4}[- ]?\\d{4}[- ]?\\d{4}[- ]?\\d{4}\\b"
+          ip_address: "\\b\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\b"
+
+      - type: ml_classification
+        model: "blackroad/pii-detector-v1"
+        confidence_threshold: 0.85
+
+      - type: metadata_tags
+        trust_source_tags: true
+
+    default_classification: internal
+
+# =============================================================================
+# LOCALITY RULES
+# =============================================================================
+
+locality_rules:
+  # EU data must stay in EU
+  eu_data_residency:
+    name: "EU Data Residency"
+    description: "GDPR-required data localization"
+    applies_when:
+      - data_subject_region: eu
+      - classification: [pii, special_category, restricted]
+    allowed_regions:
+      - eu
+    prohibited_regions:
+      - us  # Without adequacy decision or SCCs
+      - china
+    cross_border_requirements:
+      adequacy_decision: required
+      standard_contractual_clauses: alternative
+      binding_corporate_rules: alternative
+
+  # German financial data
+  bafin_requirements:
+    name: "BaFin Data Requirements"
+    description: "German financial regulator requirements"
+    applies_when:
+      - data_type: financial
+      - regulated_entity: german_bank
+    allowed_regions:
+      - eu-central-1  # Frankfurt only
+    audit_requirements:
+      bafin_audit_access: true
+      data_retention_years: 10
+
+  # US healthcare data
+  hipaa_requirements:
+    name: "HIPAA Requirements"
+    description: "US healthcare data protection"
+    applies_when:
+      - data_type: health
+      - jurisdiction: us
+    allowed_regions:
+      - us
+    requirements:
+      baa_required: true
+      encryption: required
+      access_controls: strict
+      audit_logging: required
+
+  # India data localization
+  india_localization:
+    name: "India Data Localization"
+    description: "DPDP 2023 requirements"
+    applies_when:
+      - data_subject_region: india
+      - classification: [pii, restricted]
+    allowed_regions:
+      - ap-south-1
+    mirroring_required: true
+    cross_border_conditions:
+      - government_approval
+      - contractual_safeguards
+
+  # User preference override
+  user_preference:
+    name: "User Data Residency Preference"
+    description: "User-selected data location"
+    applies_when:
+      - user_preference_set: true
+    priority: high
+    allowed_preferences:
+      - specific_region
+      - excluded_regions
+    limitation: cannot_override_legal_requirements
+
+# =============================================================================
+# DATA ROUTING
+# =============================================================================
+
+routing:
+  # Routing decision engine
+  decision_engine:
+    inputs:
+      - data_classification
+      - data_subject_region
+      - user_preferences
+      - applicable_regulations
+      - current_region
+      - latency_requirements
+
+    outputs:
+      - target_region
+      - allowed_replicas
+      - prohibited_regions
+      - required_safeguards
+      - audit_requirements
+
+    algorithm:
+      priority_order:
+        1: legal_requirements
+        2: user_preferences
+        3: data_classification_rules
+        4: latency_optimization
+        5: cost_optimization
+
+  # Routing rules
+  rules:
+    # Default routing
+    default:
+      strategy: nearest_compliant
+      fallback: user_region
+      max_latency_ms: 100
+
+    # PII routing
+    pii_routing:
+      strategy: strict_locality
+      cache_allowed: false
+      replication_allowed: within_region_only
+
+    # Cross-border transfer
+    cross_border:
+      allowed_when:
+        - adequacy_decision_exists
+        - sccs_in_place
+        - bcrs_approved
+        - explicit_consent_given
+        - derogation_applies
+      logging: required
+      approval_workflow:
+        required_for: [restricted, special_category]
+        approvers: [data_protection_officer, legal]
+
+  # Routing metadata
+  metadata_tags:
+    on_every_record:
+      - origin_region
+      - current_region
+      - classification
+      - legal_basis
+      - transfer_history
+      - retention_deadline
+
+# =============================================================================
+# DATA SUBJECT RIGHTS
+# =============================================================================
+
+subject_rights:
+  # GDPR Article 15-22 rights
+  gdpr_rights:
+    right_of_access:
+      article: 15
+      implementation:
+        endpoint: "/v1/privacy/access/{subject_id}"
+        response_time_days: 30
+        format: machine_readable
+        includes:
+          - all_personal_data
+          - processing_purposes
+          - data_recipients
+          - retention_periods
+          - source_of_data
+
+    right_to_rectification:
+      article: 16
+      implementation:
+        endpoint: "/v1/privacy/rectify/{subject_id}"
+        verification: required
+        propagation: all_systems
+
+    right_to_erasure:
+      article: 17
+      implementation:
+        endpoint: "/v1/privacy/erase/{subject_id}"
+        response_time_days: 30
+        exceptions:
+          - legal_obligation
+          - public_interest
+          - legal_claims
+        verification: cryptographic_proof
+        propagation:
+          - primary_storage
+          - backups
+          - replicas
+          - third_parties
+
+    right_to_restriction:
+      article: 18
+      implementation:
+        endpoint: "/v1/privacy/restrict/{subject_id}"
+        states:
+          restricted: "Processing limited to storage only"
+          unrestricted: "Normal processing resumed"
+
+    right_to_portability:
+      article: 20
+      implementation:
+        endpoint: "/v1/privacy/export/{subject_id}"
+        formats:
+          - json
+          - csv
+          - xml
+        includes:
+          - provided_data
+          - generated_data
+
+    right_to_object:
+      article: 21
+      implementation:
+        endpoint: "/v1/privacy/object/{subject_id}"
+        grounds:
+          - direct_marketing
+          - profiling
+          - legitimate_interests
+        effect: immediate_cessation
+
+  # Consent management
+  consent:
+    storage:
+      type: immutable_ledger
+      chain: roadchain_governance
+
+    schema:
+      consent_id:
+        type: string
+        format: ulid
+      subject_id:
+        type: string
+      purposes:
+        type: array
+        items:
+          type: string
+      granted_at:
+        type: string
+        format: ISO8601
+      expires_at:
+        type: string
+        format: ISO8601
+        nullable: true
+      withdrawn_at:
+        type: string
+        format: ISO8601
+        nullable: true
+      version:
+        type: string
+      proof:
+        type: string
+        description: "Cryptographic proof of consent"
+
+    withdrawal:
+      effect: immediate
+      propagation: all_systems
+      audit: required
+
+# =============================================================================
+# CROSS-BORDER TRANSFERS
+# =============================================================================
+
+cross_border:
+  # Transfer mechanisms
+  mechanisms:
+    adequacy_decision:
+      description: "EU Commission adequacy decision"
+      countries:
+        - andorra
+        - argentina
+        - canada
+        - faroe_islands
+        - guernsey
+        - israel
+        - isle_of_man
+        - japan
+        - jersey
+        - new_zealand
+        - republic_of_korea
+        - switzerland
+        - uk
+        - uruguay
+      auto_approved: true
+
+    standard_contractual_clauses:
+      description: "EU Commission approved SCCs"
+      versions:
+        - "2021/914"  # Controller to Controller
+        - "2021/914"  # Controller to Processor
+      requirements:
+        - signed_by_both_parties
+        - supplementary_measures_assessed
+        - tia_completed
+      documentation: required
+
+    binding_corporate_rules:
+      description: "Intra-group transfers"
+      requirements:
+        - dpa_approved
+        - binding_on_all_entities
+        - enforceable_rights
+      audit: annual
+
+    derogations:
+      description: "Article 49 derogations"
+      types:
+        - explicit_consent
+        - contract_performance
+        - public_interest
+        - legal_claims
+        - vital_interests
+      limitations: not_for_systematic_transfers
+
+  # Transfer impact assessment
+  tia:
+    required_when:
+      - destination_lacks_adequacy
+      - sccs_used
+    assessment_criteria:
+      - legal_framework_of_destination
+      - access_by_public_authorities
+      - effective_legal_remedies
+      - contractual_safeguards
+      - supplementary_measures
+    documentation_retention: 5_years
+
+# =============================================================================
+# AUDIT & COMPLIANCE
+# =============================================================================
+
+audit:
+  # Access logging
+  access_logging:
+    enabled: true
+    applies_to:
+      - pii
+      - restricted
+      - special_category
+
+    log_fields:
+      - timestamp
+      - accessor_id
+      - accessor_type
+      - data_subject_id
+      - data_classification
+      - operation
+      - legal_basis
+      - success
+      - region
+
+    storage:
+      type: append_only
+      chain: roadchain_lineage
+      retention_years: 7
+
+  # Transfer logging
+  transfer_logging:
+    enabled: true
+    log_fields:
+      - timestamp
+      - source_region
+      - destination_region
+      - data_classification
+      - transfer_mechanism
+      - legal_basis
+      - volume_bytes
+      - requester
+
+  # Compliance reports
+  reports:
+    data_inventory:
+      schedule: monthly
+      includes:
+        - data_types
+        - classifications
+        - locations
+        - retention_status
+        - access_summary
+
+    transfer_report:
+      schedule: quarterly
+      includes:
+        - cross_border_transfers
+        - mechanisms_used
+        - volumes
+        - incidents
+
+    subject_rights_report:
+      schedule: monthly
+      includes:
+        - requests_received
+        - requests_completed
+        - response_times
+        - rejections_with_reasons
+
+# =============================================================================
+# API ENDPOINTS
+# =============================================================================
+
+api:
+  # Data routing
+  routing:
+    determine_location:
+      endpoint: "/v1/locality/route"
+      method: POST
+      request:
+        data_classification:
+          type: string
+        data_subject_region:
+          type: string
+        user_preferences:
+          type: object
+        latency_requirements_ms:
+          type: integer
+      response:
+        target_region:
+          type: string
+        allowed_replicas:
+          type: array
+        prohibited_regions:
+          type: array
+        required_safeguards:
+          type: array
+        audit_requirements:
+          type: object
+
+  # Classification
+  classification:
+    classify:
+      endpoint: "/v1/locality/classify"
+      method: POST
+      request:
+        content:
+          type: string
+        metadata:
+          type: object
+      response:
+        classification:
+          type: string
+        confidence:
+          type: number
+        detected_patterns:
+          type: array
+
+  # Subject rights
+  privacy:
+    access_request:
+      endpoint: "/v1/privacy/access/{subject_id}"
+      method: GET
+
+    erasure_request:
+      endpoint: "/v1/privacy/erase/{subject_id}"
+      method: DELETE
+
+    export_request:
+      endpoint: "/v1/privacy/export/{subject_id}"
+      method: GET
+      query_params:
+        format: [json, csv, xml]
+
+# =============================================================================
+# OBSERVABILITY
+# =============================================================================
+
+observability:
+  metrics:
+    - data_records_by_classification
+    - data_records_by_region
+    - cross_border_transfers_total
+    - subject_rights_requests_total
+    - subject_rights_response_time_days
+    - consent_grants_total
+    - consent_withdrawals_total
+    - compliance_violations_total
+
+  alerts:
+    - name: response_time_breach
+      condition: "subject_rights_response_time > 25 days"
+      severity: critical
+
+    - name: unauthorized_transfer
+      condition: "transfer to prohibited region"
+      severity: critical
+
+    - name: classification_failure
+      condition: "auto_classification_confidence < 0.5"
+      severity: warning

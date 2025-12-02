@@ -1,0 +1,676 @@
+# BlackRoad OS - Trinary Logic Integration
+# Three-Valued Logic System for Agent Governance
+#
+# @blackroad_name Trinary Logic
+# @operator alexa.operator.v1
+# @priority P1 (High)
+
+version: "1.0"
+system: trinary-logic-integration
+namespace: blackroad.governance.trinary
+
+# =============================================================================
+# TRINARY LOGIC FOUNDATION
+# =============================================================================
+#
+# Unlike binary logic (true/false), trinary logic adds a third state
+# that enables nuanced decision-making:
+#
+#   1  = ALLOW   (Affirmative, proceed)
+#   0  = NEUTRAL (Uncertain, escalate, or defer)
+#  -1  = DENY    (Negative, block)
+#
+# This maps to real-world governance where not every decision is clear-cut.
+# The "0" state is the creative space for human-in-the-loop escalation.
+
+# =============================================================================
+# STATE DEFINITIONS
+# =============================================================================
+
+states:
+  allow:
+    value: 1
+    symbol: "+"
+    color: "#22C55E"  # Green
+    meaning: "Action is explicitly permitted"
+    behavior:
+      - "Proceed with action"
+      - "Log for audit"
+      - "No human intervention required"
+
+  neutral:
+    value: 0
+    symbol: "○"
+    color: "#F59E0B"  # Amber
+    meaning: "Decision is uncertain or requires escalation"
+    behavior:
+      - "Pause action"
+      - "Escalate to higher authority"
+      - "Request additional context"
+      - "Apply default policy"
+    subtypes:
+      uncertain:
+        description: "Insufficient information to decide"
+        escalation: required
+      deferred:
+        description: "Decision deliberately postponed"
+        escalation: optional
+      contested:
+        description: "Multiple policies conflict"
+        escalation: required
+
+  deny:
+    value: -1
+    symbol: "−"
+    color: "#EF4444"  # Red
+    meaning: "Action is explicitly forbidden"
+    behavior:
+      - "Block action"
+      - "Log for audit"
+      - "Notify relevant parties"
+      - "Record reason for denial"
+
+# =============================================================================
+# TRINARY OPERATIONS
+# =============================================================================
+
+operations:
+  # Logical AND (conjunction)
+  # Returns the minimum value (most restrictive)
+  and:
+    name: "Trinary AND"
+    description: "All conditions must allow for result to allow"
+    truth_table:
+      # A, B -> Result
+      - [1, 1, 1]    # allow AND allow = allow
+      - [1, 0, 0]    # allow AND neutral = neutral
+      - [1, -1, -1]  # allow AND deny = deny
+      - [0, 1, 0]    # neutral AND allow = neutral
+      - [0, 0, 0]    # neutral AND neutral = neutral
+      - [0, -1, -1]  # neutral AND deny = deny
+      - [-1, 1, -1]  # deny AND allow = deny
+      - [-1, 0, -1]  # deny AND neutral = deny
+      - [-1, -1, -1] # deny AND deny = deny
+
+    formula: "min(A, B)"
+
+  # Logical OR (disjunction)
+  # Returns the maximum value (most permissive)
+  or:
+    name: "Trinary OR"
+    description: "Any condition allowing is sufficient"
+    truth_table:
+      - [1, 1, 1]    # allow OR allow = allow
+      - [1, 0, 1]    # allow OR neutral = allow
+      - [1, -1, 1]   # allow OR deny = allow
+      - [0, 1, 1]    # neutral OR allow = allow
+      - [0, 0, 0]    # neutral OR neutral = neutral
+      - [0, -1, 0]   # neutral OR deny = neutral
+      - [-1, 1, 1]   # deny OR allow = allow
+      - [-1, 0, 0]   # deny OR neutral = neutral
+      - [-1, -1, -1] # deny OR deny = deny
+
+    formula: "max(A, B)"
+
+  # Logical NOT (negation)
+  not:
+    name: "Trinary NOT"
+    description: "Inverts the state"
+    truth_table:
+      - [1, -1]   # NOT allow = deny
+      - [0, 0]    # NOT neutral = neutral (preserved uncertainty)
+      - [-1, 1]   # NOT deny = allow
+
+    formula: "-A"
+
+  # Implication
+  implies:
+    name: "Trinary Implication"
+    description: "If A then B"
+    truth_table:
+      - [1, 1, 1]    # allow -> allow = allow
+      - [1, 0, 0]    # allow -> neutral = neutral
+      - [1, -1, -1]  # allow -> deny = deny
+      - [0, 1, 1]    # neutral -> allow = allow
+      - [0, 0, 0]    # neutral -> neutral = neutral
+      - [0, -1, 0]   # neutral -> deny = neutral
+      - [-1, 1, 1]   # deny -> allow = allow
+      - [-1, 0, 1]   # deny -> neutral = allow
+      - [-1, -1, 1]  # deny -> deny = allow
+
+    formula: "max(-A, B)"
+
+  # Consensus (agreement)
+  consensus:
+    name: "Trinary Consensus"
+    description: "Both must agree for non-neutral result"
+    truth_table:
+      - [1, 1, 1]    # Both allow = allow
+      - [1, 0, 0]    # Disagree = neutral
+      - [1, -1, 0]   # Disagree = neutral
+      - [0, 1, 0]    # Disagree = neutral
+      - [0, 0, 0]    # Both neutral = neutral
+      - [0, -1, 0]   # Disagree = neutral
+      - [-1, 1, 0]   # Disagree = neutral
+      - [-1, 0, 0]   # Disagree = neutral
+      - [-1, -1, -1] # Both deny = deny
+
+    formula: "A == B ? A : 0"
+
+  # Weighted combination
+  weighted:
+    name: "Weighted Trinary"
+    description: "Combine multiple values with weights"
+    formula: "sign(Σ(weight_i × value_i))"
+    threshold:
+      allow: 0.5     # Above this -> 1
+      deny: -0.5     # Below this -> -1
+      # Between -> 0
+
+# =============================================================================
+# POLICY EVALUATION
+# =============================================================================
+
+policy_evaluation:
+  # Policy structure
+  policy_schema:
+    policy_id:
+      type: string
+      format: policy-urn
+      example: "urn:blackroad:policy:agents:invoke:v1"
+
+    name:
+      type: string
+
+    version:
+      type: string
+      pattern: "^\\d+\\.\\d+\\.\\d+$"
+
+    # Policy expression (trinary logic)
+    expression:
+      type: string
+      description: "Trinary logic expression"
+      example: "(agent.authorized AND resource.available) OR override.granted"
+
+    # Conditions
+    conditions:
+      type: array
+      items:
+        condition_id:
+          type: string
+        expression:
+          type: string
+        weight:
+          type: number
+          default: 1.0
+
+    # Default state if no conditions match
+    default_state:
+      type: integer
+      enum: [-1, 0, 1]
+      default: 0  # Neutral by default
+
+    # Escalation configuration
+    escalation:
+      on_neutral:
+        type: string
+        enum: [escalate, apply_default, deny]
+      escalation_chain:
+        type: array
+        items:
+          type: string
+          format: agent-urn
+
+  # Evaluation engine
+  evaluation_engine:
+    # Input
+    input:
+      subject:
+        type: object
+        description: "Who is performing the action"
+        properties:
+          agent_id:
+            type: string
+          authority_level:
+            type: integer
+          capabilities:
+            type: array
+
+      action:
+        type: object
+        description: "What action is being performed"
+        properties:
+          action_type:
+            type: string
+          resource_id:
+            type: string
+          parameters:
+            type: object
+
+      context:
+        type: object
+        description: "Environmental context"
+        properties:
+          timestamp:
+            type: integer
+          region:
+            type: string
+          session_id:
+            type: string
+
+    # Output
+    output:
+      decision:
+        type: integer
+        enum: [-1, 0, 1]
+
+      reasoning:
+        type: object
+        properties:
+          policy_id:
+            type: string
+          conditions_evaluated:
+            type: array
+            items:
+              condition_id:
+                type: string
+              result:
+                type: integer
+              weight:
+                type: number
+          final_expression:
+            type: string
+          computation_trace:
+            type: array
+
+      confidence:
+        type: number
+        minimum: 0
+        maximum: 1
+
+      escalation_required:
+        type: boolean
+
+      escalation_target:
+        type: string
+        format: agent-urn
+
+# =============================================================================
+# MULTI-AGENT DECISION MAKING
+# =============================================================================
+
+multi_agent:
+  # Voting protocols
+  voting:
+    # Simple majority
+    majority:
+      description: "Most common vote wins"
+      tie_breaker: neutral
+      quorum: 0.5
+
+    # Unanimous
+    unanimous:
+      description: "All must agree"
+      any_deny: deny
+      any_neutral: neutral
+
+    # Weighted voting
+    weighted_authority:
+      description: "Votes weighted by authority level"
+      formula: "sign(Σ(authority_i × vote_i) / Σ(authority_i))"
+      threshold: 0.5
+
+    # Veto power
+    veto:
+      description: "Certain agents can override"
+      veto_holders:
+        - "urn:blackroad:agent:alice:v1:*"
+        - "urn:blackroad:agent:cecilia:v1:*"
+      veto_on_deny: true
+
+  # Conflict resolution
+  conflict_resolution:
+    # When Alice and Lucidia disagree
+    alice_lucidia_conflict:
+      detection:
+        condition: "alice.decision != lucidia.decision"
+        and: "abs(alice.decision - lucidia.decision) > 1"
+
+      resolution:
+        - attempt: consensus_discussion
+          timeout_seconds: 30
+        - attempt: cecilia_escalation
+          trigger: "still_unresolved"
+        - fallback: neutral_with_escalation
+
+    # Priority hierarchy
+    hierarchy:
+      - agent: "urn:blackroad:agent:cecilia:*"
+        authority: 100
+        can_override: all
+      - agent: "urn:blackroad:agent:alice:*"
+        authority: 90
+        can_override: [lucidia, aria, cece]
+      - agent: "urn:blackroad:agent:lucidia:*"
+        authority: 85
+        can_override: [aria, cece]
+      - agent: "urn:blackroad:agent:cece:*"
+        authority: 70
+        can_override: [aria]
+      - agent: "urn:blackroad:agent:aria:*"
+        authority: 50
+        can_override: none
+
+# =============================================================================
+# ESCALATION SYSTEM
+# =============================================================================
+
+escalation:
+  # Escalation triggers
+  triggers:
+    automatic:
+      - condition: "state == 0 AND policy.escalation.on_neutral == 'escalate'"
+        escalation_type: policy_based
+
+      - condition: "confidence < 0.3"
+        escalation_type: low_confidence
+
+      - condition: "contradictions.count > 2"
+        escalation_type: contradiction
+
+      - condition: "authority_required > agent.authority_level"
+        escalation_type: authority_exceeded
+
+    manual:
+      - action: "agent.request_escalation()"
+        escalation_type: agent_requested
+
+  # Escalation chain
+  chain:
+    default:
+      - level: 1
+        target: cece
+        timeout_seconds: 60
+        action_on_timeout: escalate_next
+
+      - level: 2
+        target: alice
+        timeout_seconds: 300
+        action_on_timeout: escalate_next
+
+      - level: 3
+        target: lucidia
+        timeout_seconds: 300
+        action_on_timeout: escalate_next
+
+      - level: 4
+        target: cecilia
+        timeout_seconds: null  # No timeout for human
+        action_on_timeout: null
+
+    # Custom chains for specific policies
+    custom_chains:
+      financial_decisions:
+        - alice
+        - cecilia
+
+      creative_decisions:
+        - lucidia
+        - alice
+        - cecilia
+
+      infrastructure_decisions:
+        - cece
+        - alice
+        - cecilia
+
+  # Escalation message
+  message_schema:
+    escalation_id:
+      type: string
+      format: ulid
+
+    original_decision:
+      subject:
+        type: object
+      action:
+        type: object
+      context:
+        type: object
+
+    reason:
+      type: string
+      enum:
+        - neutral_state
+        - low_confidence
+        - contradiction
+        - authority_exceeded
+        - agent_requested
+
+    evaluated_policies:
+      type: array
+      items:
+        policy_id:
+          type: string
+        result:
+          type: integer
+        reasoning:
+          type: string
+
+    requester:
+      type: string
+      format: agent-urn
+
+    target:
+      type: string
+      format: agent-urn
+
+    timeout_at:
+      type: integer
+      format: timestamp_us
+
+# =============================================================================
+# STATE TRANSITIONS
+# =============================================================================
+
+state_machine:
+  # Valid transitions
+  transitions:
+    pending:
+      to: [allow, neutral, deny]
+      trigger: policy_evaluation
+
+    allow:
+      to: [neutral, deny]
+      trigger: [policy_change, override, contradiction]
+      requires: authority_level >= current_authority
+
+    neutral:
+      to: [allow, deny]
+      trigger: [escalation_response, additional_context, timeout]
+
+    deny:
+      to: [neutral, allow]
+      trigger: [appeal, override, policy_change]
+      requires: authority_level >= 80
+
+  # Transition logging
+  logging:
+    required_fields:
+      - transition_id
+      - from_state
+      - to_state
+      - trigger
+      - agent_id
+      - timestamp_us
+      - policy_id
+      - reasoning
+
+    storage: ledger
+    retention: permanent
+
+# =============================================================================
+# COHERENCE MONITORING
+# =============================================================================
+
+coherence:
+  # Coherence formula
+  formula:
+    expression: "Σ(agent_alignment) / N - contradiction_cost"
+    components:
+      agent_alignment:
+        description: "Agreement between agents on shared claims"
+        calculation: "avg(1 if agents_agree else 0)"
+      contradiction_cost:
+        description: "Unresolved conflicts weighted by time"
+        calculation: "count(state=-1 AND unresolved) × duration_hours × 0.1"
+
+  # Thresholds
+  thresholds:
+    healthy:
+      min: 0.7
+      color: "#22C55E"
+    warning:
+      min: 0.4
+      max: 0.7
+      color: "#F59E0B"
+    critical:
+      max: 0.4
+      color: "#EF4444"
+
+  # Monitoring
+  monitoring:
+    calculation_interval_seconds: 60
+
+    alerts:
+      coherence_warning:
+        condition: "coherence < 0.7"
+        severity: warning
+        notify: [cece, alice]
+
+      coherence_critical:
+        condition: "coherence < 0.4"
+        severity: critical
+        notify: [alice, lucidia, cecilia]
+        auto_action: pause_non_critical_decisions
+
+  # Recovery actions
+  recovery:
+    on_warning:
+      - identify_conflicting_policies
+      - request_policy_review
+
+    on_critical:
+      - pause_autonomous_decisions
+      - escalate_all_pending_to_cecilia
+      - trigger_contradiction_resolution
+
+# =============================================================================
+# API ENDPOINTS
+# =============================================================================
+
+api:
+  # Evaluate action
+  evaluate:
+    endpoint: "/v1/governance/evaluate"
+    method: POST
+    request:
+      subject:
+        type: object
+      action:
+        type: object
+      context:
+        type: object
+      policies:
+        type: array
+        description: "Specific policies to evaluate (optional)"
+    response:
+      decision:
+        type: integer
+      reasoning:
+        type: object
+      confidence:
+        type: number
+      trace_id:
+        type: string
+
+  # Get current state
+  get_state:
+    endpoint: "/v1/governance/state/{entity_id}"
+    method: GET
+    response:
+      state:
+        type: integer
+      last_evaluation:
+        type: object
+      transition_history:
+        type: array
+
+  # Override decision
+  override:
+    endpoint: "/v1/governance/override"
+    method: POST
+    request:
+      entity_id:
+        type: string
+      new_state:
+        type: integer
+      reason:
+        type: string
+      override_authority:
+        type: string
+        format: agent-urn
+    response:
+      success:
+        type: boolean
+      previous_state:
+        type: integer
+      new_state:
+        type: integer
+
+  # Get coherence
+  coherence:
+    endpoint: "/v1/governance/coherence"
+    method: GET
+    response:
+      current_value:
+        type: number
+      trend:
+        type: string
+        enum: [improving, stable, degrading]
+      top_conflicts:
+        type: array
+
+# =============================================================================
+# INTEGRATION POINTS
+# =============================================================================
+
+integrations:
+  # Agent Mesh Protocol
+  agent_mesh:
+    message_field: "trinary.state"
+    routing_based_on: state
+    deny_routing: block
+    neutral_routing: escalation_queue
+
+  # Event Bus
+  event_bus:
+    events:
+      - "trinary:evaluated"
+      - "trinary:transitioned"
+      - "trinary:escalated"
+      - "trinary:overridden"
+      - "coherence:changed"
+    topic: "blackroad.governance.trinary"
+
+  # Ledger
+  ledger:
+    record_all_transitions: true
+    ps_sha_include: true
+    audit_queryable: true
+
+  # Memory
+  memory:
+    store_decisions: true
+    decision_ttl: permanent
+    context_retrieval: enabled
