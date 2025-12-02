@@ -1,0 +1,289 @@
+#!/usr/bin/env python3
+"""
+br-infra - BlackRoad Infrastructure Management CLI
+
+Master script for managing all infrastructure across:
+- Railway
+- Cloudflare
+- GitHub
+- DigitalOcean
+
+Usage:
+    br-infra scan              # Full infrastructure scan
+    br-infra scan railway      # Scan Railway only
+    br-infra scan cloudflare   # Scan Cloudflare only
+    br-infra scan github       # Scan GitHub only
+    br-infra cleanup railway   # Identify Railway cleanup candidates
+    br-infra deploy operator   # Deploy operator from GitHub
+    br-infra status            # Quick status of all services
+
+Owner: Alexa Louise Amundson (amundsonalexa@gmail.com)
+"""
+
+import argparse
+import asyncio
+import json
+import os
+import subprocess
+import sys
+from datetime import datetime
+from pathlib import Path
+
+import httpx
+
+# =============================================================================
+# CONSTANTS
+# =============================================================================
+
+INFRA_DIR = Path(__file__).parent.parent.parent / "infra"
+SCANS_DIR = INFRA_DIR / "scans"
+
+# Critical endpoints that must be up
+CRITICAL_ENDPOINTS = [
+    ("Cece Operator", "https://blackroad-cece-operator-production.up.railway.app/health"),
+    ("Cece Edge", "https://cece.amundsonalexa.workers.dev/health"),
+    ("Gateway", "https://blackroad-gateway.amundsonalexa.workers.dev/health"),
+]
+
+
+# =============================================================================
+# QUICK STATUS
+# =============================================================================
+
+async def check_endpoint(name: str, url: str) -> dict:
+    """Check a single endpoint."""
+    try:
+        async with httpx.AsyncClient(timeout=5.0) as client:
+            start = datetime.now()
+            resp = await client.get(url)
+            latency = (datetime.now() - start).total_seconds() * 1000
+
+            return {
+                "name": name,
+                "url": url,
+                "status": "up" if resp.status_code == 200 else f"http-{resp.status_code}",
+                "latency_ms": round(latency),
+                "ok": resp.status_code == 200,
+            }
+    except Exception as e:
+        return {
+            "name": name,
+            "url": url,
+            "status": "down",
+            "error": str(e),
+            "ok": False,
+        }
+
+
+async def cmd_status(args):
+    """Quick status check of critical services."""
+    print("BlackRoad Infrastructure Status")
+    print("=" * 60)
+    print(f"Time: {datetime.utcnow().isoformat()}Z")
+    print()
+
+    tasks = [check_endpoint(name, url) for name, url in CRITICAL_ENDPOINTS]
+    results = await asyncio.gather(*tasks)
+
+    all_ok = True
+    for result in results:
+        status = "✓" if result["ok"] else "✗"
+        latency = f"{result.get('latency_ms', '?')}ms" if result["ok"] else result.get("error", "error")
+        print(f"  {status} {result['name']:<20} {latency}")
+        if not result["ok"]:
+            all_ok = False
+
+    print()
+    if all_ok:
+        print("All systems operational ✓")
+    else:
+        print("Some systems degraded ✗")
+        return 1
+
+    return 0
+
+
+# =============================================================================
+# SCAN COMMANDS
+# =============================================================================
+
+async def cmd_scan(args):
+    """Run infrastructure scan."""
+    target = args.target if hasattr(args, "target") else "all"
+
+    if target == "all":
+        # Import and run full scan
+        from scan_all import run_full_scan, print_report, save_report
+        result = await run_full_scan()
+        print_report(result)
+        save_report(result)
+
+    elif target == "railway":
+        from railway_cleanup import scan_railway_projects, print_projects
+        projects = await scan_railway_projects()
+        print_projects(projects)
+
+    elif target == "cloudflare":
+        from cloudflare_manager import main as cf_main
+        await cf_main()
+
+    elif target == "github":
+        from github_scanner import main as gh_main
+        await gh_main()
+
+    else:
+        print(f"Unknown scan target: {target}")
+        return 1
+
+    return 0
+
+
+# =============================================================================
+# CLEANUP COMMANDS
+# =============================================================================
+
+async def cmd_cleanup(args):
+    """Run cleanup operations."""
+    target = args.target
+
+    if target == "railway":
+        from railway_cleanup import scan_railway_projects, print_projects, generate_delete_script
+
+        print("Scanning Railway projects...")
+        projects = await scan_railway_projects()
+        print_projects(projects)
+
+        to_delete = [p for p in projects if p.recommendation == "delete"]
+        if to_delete:
+            print(f"\n{len(to_delete)} projects recommended for deletion.")
+            print("\nRailway doesn't support CLI deletion.")
+            print("Please delete via: https://railway.app/dashboard")
+            print("\nProjects to delete:")
+            for p in to_delete:
+                print(f"  - {p.name}")
+
+    else:
+        print(f"Cleanup not implemented for: {target}")
+        return 1
+
+    return 0
+
+
+# =============================================================================
+# DEPLOY COMMANDS
+# =============================================================================
+
+async def cmd_deploy(args):
+    """Deploy services."""
+    target = args.target
+
+    if target == "operator":
+        print("Deploying Operator to Railway...")
+        print()
+
+        # Check if railway is linked
+        proc = subprocess.run(["railway", "status"], capture_output=True, text=True)
+
+        if "blackroad-cece-operator" not in proc.stdout:
+            print("Not linked to blackroad-cece-operator project.")
+            print("Run: railway link")
+            return 1
+
+        # Push current code
+        print("Pushing to Railway...")
+        proc = subprocess.run(["railway", "up", "--detach"], capture_output=True, text=True)
+
+        if proc.returncode == 0:
+            print("Deploy initiated!")
+            print("Monitor at: https://railway.app/dashboard")
+        else:
+            print(f"Deploy failed: {proc.stderr}")
+            return 1
+
+    elif target == "workers":
+        print("Deploying Cloudflare Workers...")
+
+        workers_dir = Path(__file__).parent.parent.parent / "workers"
+        for worker_dir in workers_dir.iterdir():
+            if worker_dir.is_dir() and (worker_dir / "wrangler.toml").exists():
+                print(f"\n  Deploying {worker_dir.name}...")
+                proc = subprocess.run(
+                    ["wrangler", "deploy"],
+                    cwd=worker_dir,
+                    capture_output=True,
+                    text=True
+                )
+                if proc.returncode == 0:
+                    print(f"    ✓ {worker_dir.name} deployed")
+                else:
+                    print(f"    ✗ {worker_dir.name} failed: {proc.stderr[:100]}")
+
+    else:
+        print(f"Unknown deploy target: {target}")
+        return 1
+
+    return 0
+
+
+# =============================================================================
+# MAIN
+# =============================================================================
+
+def main():
+    parser = argparse.ArgumentParser(
+        description="BlackRoad Infrastructure Management CLI",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Examples:
+    br-infra status              Quick health check
+    br-infra scan                Full infrastructure scan
+    br-infra scan railway        Scan Railway only
+    br-infra cleanup railway     Find Railway cleanup candidates
+    br-infra deploy operator     Deploy operator to Railway
+    br-infra deploy workers      Deploy all Cloudflare workers
+        """
+    )
+
+    subparsers = parser.add_subparsers(dest="command", help="Command to run")
+
+    # status
+    subparsers.add_parser("status", help="Quick status check")
+
+    # scan
+    scan_parser = subparsers.add_parser("scan", help="Scan infrastructure")
+    scan_parser.add_argument("target", nargs="?", default="all",
+                            choices=["all", "railway", "cloudflare", "github"],
+                            help="What to scan")
+
+    # cleanup
+    cleanup_parser = subparsers.add_parser("cleanup", help="Cleanup operations")
+    cleanup_parser.add_argument("target", choices=["railway", "cloudflare", "github"],
+                               help="What to cleanup")
+
+    # deploy
+    deploy_parser = subparsers.add_parser("deploy", help="Deploy services")
+    deploy_parser.add_argument("target", choices=["operator", "workers"],
+                              help="What to deploy")
+
+    args = parser.parse_args()
+
+    if not args.command:
+        parser.print_help()
+        return 0
+
+    # Change to script directory for imports
+    os.chdir(Path(__file__).parent)
+
+    # Run command
+    if args.command == "status":
+        return asyncio.run(cmd_status(args))
+    elif args.command == "scan":
+        return asyncio.run(cmd_scan(args))
+    elif args.command == "cleanup":
+        return asyncio.run(cmd_cleanup(args))
+    elif args.command == "deploy":
+        return asyncio.run(cmd_deploy(args))
+
+
+if __name__ == "__main__":
+    sys.exit(main() or 0)
