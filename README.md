@@ -63,6 +63,9 @@ docker build -f Dockerfile -t blackroad/operator:0.0.1 .
 docker run -e REDIS_URL=redis://... -p 4000:4000 blackroad/operator:0.0.1
 ```
 
+### Dev Container (Codespaces/local)
+This repo now ships with a `.devcontainer/devcontainer.json` that boots a Node 20 environment with pnpm pre-installed and forwards port `4000` for the Operator API. Open the folder in VS Code (or GitHub Codespaces) and the editor will prompt you to reopen in the dev container, install dependencies, and provide recommended extensions for ESLint, Prettier, and Vitest.
+
 ### Testing & linting
 ```bash
 pnpm lint
