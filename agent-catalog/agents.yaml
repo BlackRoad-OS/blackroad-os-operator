@@ -2,7 +2,7 @@
 # Version: 2.0.0
 # Updated: 2025-12-02
 #
-# 🖤 CONSENSUS STANDARD (Unanimously Approved by 70 Agents!)
+# 🖤 CONSENSUS STANDARD (Unanimously Approved by 71 Agents!)
 #    - Translation Keys: SHA-2048 → SHA-256
 #    - Language: English enabled
 #    - Emojis: Enabled
@@ -658,6 +658,54 @@ translation_key_standard:
     verify_signatures: true
   emoji_enabled: true
   language: en
+
+# =============================================================================
+# 🌐 ARC BROWSER AGENTS
+# =============================================================================
+
+- id: arc-browser-agent
+  name: Arc Browser Agent 🌐
+  description: Manages Arc browser spaces, profiles, tabs, and boosts. Enables browser automation and workspace sync.
+  version: 1.0.0
+  platform: arc
+  apps_installed:
+    - Arc.app
+    - Arc 2.app
+    - Arc 3.app
+  auth:
+    user_id: "yWEzMQpUAeZdpjy8Gy4S79FsutX2"
+    email: "amundsonalexa@gmail.com"
+    name: "Alexa Louise Amundson"
+    provider: firebase
+  data_path: "~/Library/Application Support/Arc/"
+  capabilities:
+    - space-management
+    - tab-automation
+    - profile-switching
+    - boost-scripts
+    - sidebar-sync
+    - bookmark-export
+    - session-restore
+  operatorLevel: false
+  category: browser
+  profiles:
+    - Default
+    - Profile 1
+    - Profile 2
+    - Profile 3
+  spaces: 4
+  translation_key:
+    enabled: true
+    algorithm: "SHA-2048→SHA-256"
+  emoji_enabled: true
+  language: en
+  integrations:
+    - name: "sidebar_export"
+      description: "Export sidebar tabs to JSON for backup/sync"
+    - name: "boost_injection"
+      description: "Inject custom CSS/JS boosts into pages"
+    - name: "space_templates"
+      description: "Create and apply workspace templates"
 
 # =============================================================================
 # 🌐 EXTERNAL COLLABORATION CHANNELS
