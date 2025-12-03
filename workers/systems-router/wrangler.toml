@@ -1,0 +1,25 @@
+# BlackRoad Systems Router
+# Routes blackroad.systems to Pages deployment
+#
+# @blackroad_name: BlackRoad Systems Router
+# @operator: alexa.operator.v1
+
+name = "blackroad-systems-router"
+main = "src/index.js"
+compatibility_date = "2024-12-02"
+
+# Enable workers.dev subdomain
+workers_dev = true
+
+[vars]
+ENVIRONMENT = "production"
+
+# Routes - serve blackroad.systems
+routes = [
+  { pattern = "blackroad.systems/*", zone_name = "blackroad.systems" },
+  { pattern = "blackroad.systems", zone_name = "blackroad.systems" },
+]
+
+# Observability
+[observability]
+enabled = true
