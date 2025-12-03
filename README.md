@@ -38,6 +38,20 @@ Copy the example environment file and adjust as needed:
 cp operator.env.example .env
 ```
 
+## 🏗️ Scaffolding new components
+Generate starter files for common building blocks so they can be referenced right away:
+
+```bash
+pnpm scaffold <job|workflow|scheduler|service> "Name of thing"
+```
+
+Examples:
+
+- `pnpm scaffold job "data sync"` → creates `src/jobs/data-sync.job.ts` with a queue processor and enqueue helper.
+- `pnpm scaffold workflow "weekly compliance"` → creates `src/workflows/weekly-compliance.workflow.ts` with a structured definition stub.
+
+Scaffolds are created with sane defaults and logged via the shared logger. After generating, wire them into the appropriate registries (queue registration, scheduler startup, etc.) from `src/index.ts` or related entrypoints.
+
 Key variables:
 - `PORT` (default: 4000)
 - `REDIS_URL` (e.g., `redis://localhost:6379`)
