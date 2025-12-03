@@ -1,0 +1,352 @@
+# BLACKROAD_MCP_REGISTRY.yaml
+# Canonical registry of MCP servers Cece is allowed to call.
+
+version: 1
+meta:
+  owner: "BlackRoad OS / Cece"
+  description: "Canonical registry of MCP servers Cece is allowed to call."
+  created: "2025-12-03"
+  sovereignty: "ALEXA LOUISE AMUNDSON"
+
+servers:
+  # ============================================
+  # MACHINE-LOCAL SERVERS
+  # ============================================
+
+  - id: blackroad.mcp.local.operator
+    role: local_dev_host
+    description: "Safe access to Alexa's primary development machine."
+    transport:
+      type: http
+      url: "http://localhost:8301/mcp"
+    allowed_tools:
+      - fs_list
+      - fs_read
+      - fs_write
+      - run_command
+    policies:
+      max_write_bytes: 65536
+      require_ledger_event: true
+      require_human_confirmation_for:
+        - run_command
+        - fs_write
+      allowed_roots:
+        - "~/BlackRoad-*"
+        - "~/blackroad-*"
+        - "~/Projects/BlackRoad"
+
+  - id: blackroad.mcp.local.git
+    role: git_operations
+    description: "Git helper for local repositories."
+    transport:
+      type: http
+      url: "http://localhost:8302/mcp"
+    allowed_tools:
+      - git_status
+      - git_branch_list
+      - git_diff
+      - git_commit
+    policies:
+      require_human_confirmation_for:
+        - git_commit
+
+  - id: blackroad.mcp.local.docker
+    role: container_management
+    description: "Control dev containers and services."
+    transport:
+      type: http
+      url: "http://localhost:8303/mcp"
+    allowed_tools:
+      - docker_list_containers
+      - docker_logs
+      - docker_restart_service
+    policies:
+      whitelisted_services:
+        - blackroad-os-core
+        - blackroad-os-api
+        - blackroad-os-operator
+
+  # ============================================
+  # MESH SERVERS (Pi / Jetson)
+  # ============================================
+
+  - id: blackroad.mcp.mesh.pi
+    role: pi_mesh_control
+    description: "Raspberry Pi mesh control via blackroad-pi-ops."
+    transport:
+      type: http
+      url: "http://192.168.4.49:8310/mcp"
+    allowed_tools:
+      - list_nodes
+      - node_status
+      - deploy_agent
+    policies:
+      require_role: mesh
+      require_human_confirmation_for:
+        - deploy_agent
+
+  - id: blackroad.mcp.mesh.jetson
+    role: edge_gpu
+    description: "Jetson Orin for GPU workloads, vision, LLM inference."
+    transport:
+      type: http
+      url: "http://jetson.local:8310/mcp"
+    allowed_tools:
+      - list_models
+      - run_inference
+      - deploy_model
+    policies:
+      require_role: mesh
+      require_human_confirmation_for:
+        - deploy_model
+
+  # ============================================
+  # INFRASTRUCTURE SERVERS
+  # ============================================
+
+  - id: blackroad.mcp.infra.vercel
+    role: deploy_frontends
+    description: "Manage Vercel projects for BlackRoad."
+    transport:
+      type: https
+      url: "https://mcp.vercel.com"
+    allowed_tools:
+      - list_projects
+      - list_deployments
+      - get_deployment_logs
+      - check_domain_availability
+    policies:
+      read_only: true
+      note: "No direct prod config mutations via MCP until governance v2."
+
+  - id: blackroad.mcp.infra.railway
+    role: backend_services
+    description: "Railway services, envs, and metrics."
+    transport:
+      type: https
+      url: "https://mcp.railway.app"
+    allowed_tools:
+      - list_projects
+      - list_services
+      - service_deploy
+      - service_logs
+    policies:
+      require_role: infra
+      require_human_confirmation_for:
+        - service_deploy
+
+  - id: blackroad.mcp.infra.cloudflare
+    role: dns_and_security
+    description: "DNS, tunnels, Workers, Zero Trust."
+    transport:
+      type: https
+      url: "https://mcp.cloudflare.com"
+    allowed_tools:
+      - dns_list_records
+      - dns_upsert_record
+      - tunnel_list
+      - tunnel_status
+      - worker_list
+      - worker_deploy
+    policies:
+      require_role: infra
+      require_human_confirmation_for:
+        - dns_upsert_record
+        - worker_deploy
+
+  - id: blackroad.mcp.infra.github
+    role: source_control
+    description: "GitHub org and repos."
+    transport:
+      type: https
+      url: "https://mcp.github.com"
+    allowed_tools:
+      - list_repos
+      - get_repo_readme
+      - list_issues
+      - create_issue
+      - search_code
+    policies:
+      require_human_confirmation_for:
+        - create_issue
+
+  # ============================================
+  # BUSINESS SERVERS
+  # ============================================
+
+  - id: blackroad.mcp.biz.stripe
+    role: billing_insight
+    description: "Read Stripe products and prices for BlackRoad OS, Inc."
+    transport:
+      type: https
+      url: "https://mcp.stripe.com"
+    allowed_tools:
+      - list_products
+      - list_prices
+      - list_customers
+      - create_checkout_session
+    policies:
+      read_only: true
+      note: "Write operations locked until billing governance approved."
+
+  - id: blackroad.mcp.biz.amplitude
+    role: analytics
+    description: "Analytics & event definitions."
+    transport:
+      type: https
+      url: "https://mcp.amplitude.com"
+    allowed_tools:
+      - list_charts
+      - get_chart
+      - list_events
+      - get_event_definition
+    policies:
+      read_only: true
+
+  # ============================================
+  # EXPERIENCE / CREATIVE SERVERS
+  # ============================================
+
+  - id: blackroad.mcp.exp.canva
+    role: brand_surface
+    description: "BlackRoad OS brand kits, decks, and visual narratives."
+    transport:
+      type: https
+      url: "https://mcp.canva.com"
+    allowed_tools:
+      - search_designs
+      - get_design
+      - suggest_edits
+      - create_design
+    policies:
+      write_mode: "propose_edits_only"
+      require_human_publish: true
+
+  - id: blackroad.mcp.exp.figma
+    role: ui_design
+    description: "UI layout and code export."
+    transport:
+      type: https
+      url: "https://mcp.figma.com"
+    allowed_tools:
+      - get_node_screenshot
+      - export_code
+    policies:
+      read_only: true
+
+  - id: blackroad.mcp.exp.fireflies
+    role: meeting_memory
+    description: "Meetings as memory."
+    transport:
+      type: https
+      url: "https://mcp.fireflies.ai"
+    allowed_tools:
+      - search_transcripts
+      - get_transcript
+      - summarize_transcript
+    policies:
+      read_only: true
+
+  - id: blackroad.mcp.exp.jam
+    role: debug_sessions
+    description: "Debug cinema - Jam recordings."
+    transport:
+      type: https
+      url: "https://mcp.jam.dev"
+    allowed_tools:
+      - search_jams
+      - get_jam_details
+      - summarize_jam
+    policies:
+      read_only: true
+
+  - id: blackroad.mcp.exp.khan
+    role: learning
+    description: "Learning content substrate."
+    transport:
+      type: https
+      url: "https://mcp.khanacademy.org"
+    allowed_tools:
+      - get_assignable_questions
+      - get_assignment_link
+    policies:
+      read_only: true
+
+  - id: blackroad.mcp.exp.biorender
+    role: science_visuals
+    description: "Scientific diagrams and icons."
+    transport:
+      type: https
+      url: "https://mcp.biorender.com"
+    allowed_tools:
+      - search_icons
+      - get_icon
+    policies:
+      read_only: true
+
+# ============================================
+# AGENT MAPPINGS
+# ============================================
+
+agent_mcp_bindings:
+  "@ai-gateway":
+    primary: ["*"]
+    role: orchestrator
+
+  "@main-gate":
+    primary: ["infra.cloudflare", "infra.railway"]
+
+  "@namer":
+    primary: ["local.operator", "infra.github"]
+
+  "@dns-wizard":
+    primary: ["infra.cloudflare"]
+
+  "@cloud-cmd":
+    primary: ["infra.railway", "mesh.pi", "mesh.jetson"]
+
+  "@treasurer":
+    primary: ["biz.stripe"]
+
+  "@gatekeeper":
+    primary: ["infra.cloudflare"]
+    note: "Zero Trust access"
+
+  "@key-keeper":
+    primary: ["local.operator"]
+    note: "Secrets management"
+
+  "@shield":
+    primary: ["infra.cloudflare"]
+
+  "@watchman":
+    primary: ["*"]
+    role: monitoring
+
+  "@scribe":
+    primary: ["local.operator"]
+    note: "Logging"
+
+  "@pathfinder":
+    primary: ["infra.github"]
+
+  "@brainstorm":
+    primary: ["exp.canva", "exp.figma"]
+
+  "@dreamer":
+    primary: ["exp.fireflies", "exp.jam"]
+
+  "@artist":
+    primary: ["exp.canva", "exp.figma", "exp.biorender"]
+
+  "@checkout-oracle":
+    primary: ["biz.stripe"]
+
+  "@listener":
+    primary: ["biz.stripe", "biz.amplitude"]
+
+  "@bridge":
+    primary: ["infra.railway", "mesh.pi", "mesh.jetson"]
+
+  "@quantum":
+    primary: ["mesh.jetson"]
