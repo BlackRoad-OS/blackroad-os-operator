@@ -1,0 +1,25 @@
+# BlackRoad Cloudflare DNS Manager Worker
+# Manages DNS records across BlackRoad zones
+# @blackroad_name: BlackRoad DNS Manager
+# @operator: alexa.operator.v1
+
+name = "blackroad-dns-manager"
+main = "src/index.ts"
+compatibility_date = "2024-12-02"
+compatibility_flags = ["nodejs_compat"]
+workers_dev = true
+
+[vars]
+ENVIRONMENT = "production"
+BLACKROAD_ZONE_ID = "13293825c2b0491085cbece9fc02e401"
+
+# Secrets (set via wrangler secret put):
+# - CF_API_TOKEN (with DNS edit permissions)
+
+# Routes
+routes = [
+  { pattern = "dns.blackroad.io/*", zone_name = "blackroad.io" }
+]
+
+[observability]
+enabled = true

@@ -47,6 +47,8 @@ jobs:
           - billing
           - sovereignty
           - intercept
+          - cloudflare-dns
+          - digitalocean-manager
     steps:
       - uses: actions/checkout@v4
 
@@ -63,8 +65,32 @@ jobs:
         working-directory: workers/${{ matrix.worker }}
         run: npx wrangler deploy
 
+  # Set secrets for infrastructure workers
+  setup-infra-secrets:
+    runs-on: ubuntu-latest
+    needs: deploy-workers
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Wrangler
+        run: npm install -g wrangler
+
+      - name: Set CF_API_TOKEN on DNS Manager
+        working-directory: workers/cloudflare-dns
+        run: echo "${{ secrets.CLOUDFLARE_API_TOKEN }}" | wrangler secret put CF_API_TOKEN
+
+      - name: Set DO_API_TOKEN on DO Manager
+        if: ${{ secrets.DO_API_TOKEN != '' }}
+        working-directory: workers/digitalocean-manager
+        run: echo "${{ secrets.DO_API_TOKEN }}" | wrangler secret put DO_API_TOKEN
+
   notify:
-    needs: [deploy-gateway, deploy-workers]
+    needs: [deploy-gateway, deploy-workers, setup-infra-secrets]
     runs-on: ubuntu-latest
     if: always()
     steps:
