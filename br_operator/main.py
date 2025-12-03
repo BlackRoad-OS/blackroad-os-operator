@@ -46,6 +46,14 @@ from .ledger_builder import (
     build_operator_infra_event,
     validate_ledger_event,
 )
+from .deploy_service import (
+    DeployService,
+    get_deploy_service,
+    DeployRequest,
+    DeployResponse,
+    DeployTarget,
+    AgentConnection,
+)
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 
@@ -755,15 +763,6 @@ def create_app(catalog_path: Path | None = None, enable_watch: bool = True) -> F
         IntentState,
         StepExecuteRequest,
     )
-    from br_operator.deploy_service import (
-        DeployService,
-        get_deploy_service,
-        DeployRequest,
-        DeployResponse,
-        DeployTarget,
-        AgentConnection,
-    )
-
     intent_service: Optional[IntentService] = None
 
     @app.on_event("startup")
@@ -922,7 +921,7 @@ def create_app(catalog_path: Path | None = None, enable_watch: bool = True) -> F
     deploy_service = get_deploy_service()
 
     @app.post("/v1/intent/deploy", response_model=DeployResponse)
-    async def trigger_deploy(request: DeployRequest) -> DeployResponse:
+    async def trigger_deploy(deploy_request: DeployRequest) -> DeployResponse:
         """Trigger a deployment across connected agents.
 
         This is the main endpoint for iPhone/Shortcut-triggered deployments.
@@ -935,7 +934,7 @@ def create_app(catalog_path: Path | None = None, enable_watch: bool = True) -> F
 
         Returns deployment status with ✅❌⚠️🪧 summary.
         """
-        return await deploy_service.deploy(request)
+        return await deploy_service.deploy(deploy_request)
 
     @app.get("/v1/deploys")
     async def list_deploys(limit: int = 20) -> Dict[str, Any]:
