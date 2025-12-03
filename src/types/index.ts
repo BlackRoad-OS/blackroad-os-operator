@@ -1,4 +1,4 @@
-export type QueueName = 'heartbeat' | 'sample';
+export type QueueName = 'heartbeat' | 'sample' | 'events';
 
 // ⚙️ Job Status Tracking 📊
 export type JobStatus = 'queued' | 'running' | 'succeeded' | 'failed' | 'retrying';
@@ -19,6 +19,34 @@ export interface AgentMeta {
   role?: string;
   version?: string;
   capabilities?: string[];
+}
+
+export type AgentStatus = 'online' | 'offline' | 'busy';
+
+export interface AgentRegistration {
+  id: string;
+  hostname: string;
+  displayName?: string;
+  roles?: string[];
+  tags?: string[];
+  capabilities?: {
+    docker: boolean;
+    python?: string;
+  };
+  workspaces?: string[];
+  status?: AgentStatus;
+}
+
+export interface RegisteredAgent extends AgentRegistration {
+  lastHeartbeat: number;
+  status: AgentStatus;
+  capabilities: {
+    docker: boolean;
+    python?: string;
+  };
+  tags: string[];
+  roles: string[];
+  workspaces: string[];
 }
 
 // 🔁 Idempotency

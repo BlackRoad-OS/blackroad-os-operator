@@ -42,6 +42,18 @@ export interface OperatorConfig {
 
   /** RAG API URL for context retrieval */
   ragApiUrl: string;
+
+  /** Shared API key for mutating requests */
+  apiKey?: string;
+
+  /** Optional signing secret for HMAC verification */
+  signingSecret?: string;
+
+  /** Cron cadence for heartbeat scheduler */
+  heartbeatCron: string;
+
+  /** Concurrency for the sample worker */
+  sampleWorkerConcurrency: number;
 }
 
 /**
@@ -63,6 +75,10 @@ export function getConfig(): OperatorConfig {
     ollamaUrl: process.env.OLLAMA_URL ?? 'http://gpt-oss-model.railway.internal:11434',
     ollamaModel: process.env.OLLAMA_MODEL ?? 'llama3.2:1b',
     ragApiUrl: process.env.RAG_API_URL ?? 'http://rag-api.railway.internal:8000',
+    apiKey: process.env.OPERATOR_API_KEY,
+    signingSecret: process.env.OPERATOR_SIGNING_SECRET,
+    heartbeatCron: process.env.HEARTBEAT_CRON ?? '*/5 * * * *',
+    sampleWorkerConcurrency: Number(process.env.SAMPLE_WORKER_CONCURRENCY ?? 1),
   };
 
   // Validate critical values
@@ -76,6 +92,10 @@ export function getConfig(): OperatorConfig {
 
   if (isNaN(config.defaultTimeoutSeconds) || config.defaultTimeoutSeconds <= 0) {
     throw new Error('Invalid BR_OS_OPERATOR_DEFAULT_TIMEOUT_SECONDS configuration');
+  }
+
+  if (isNaN(config.sampleWorkerConcurrency) || config.sampleWorkerConcurrency <= 0) {
+    throw new Error('Invalid SAMPLE_WORKER_CONCURRENCY configuration');
   }
 
   return config;

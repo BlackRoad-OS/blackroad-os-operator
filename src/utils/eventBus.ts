@@ -8,6 +8,7 @@
 import { randomUUID } from 'crypto';
 
 import type { DomainEvent, EventType } from '../types/index.js';
+import { getQueue } from '../queues/index.js';
 
 import logger from './logger.js';
 
@@ -49,6 +50,18 @@ export function emit(
 
   // TODO(op-next): Push to message queue or event stream for other services
   // For now, just buffer in memory for /events endpoint
+  try {
+    void getQueue('events').add(
+      'domain-event',
+      event,
+      {
+        removeOnComplete: 1000,
+        removeOnFail: 500,
+      }
+    );
+  } catch (error) {
+    logger.warn({ error }, 'failed to enqueue domain event');
+  }
 
   return event;
 }

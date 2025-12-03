@@ -6,10 +6,18 @@ import { getConfig } from './config.js';
 import { registerSampleJobProcessor } from './jobs/sample.job.js';
 import { startHeartbeatScheduler } from './schedulers/heartbeat.scheduler.js';
 import { generateChatResponse, checkLlmHealth, ChatRequest } from './services/llm.service.js';
+import { deregisterAgent, getAgent, listAgents, recordHeartbeat, registerAgent, updateAgentStatus } from './services/agentRegistry.js';
+import type { AgentRegistration, AgentStatus } from './types/index.js';
+import { connection } from './queues/index.js';
+import { enforceAuth } from './utils/auth.js';
 import logger from './utils/logger.js';
 
 const config = getConfig();
 const app = Fastify({ logger });
+
+app.addHook('onRequest', async (request, reply) => {
+  await enforceAuth(request, reply, config);
+});
 
 // Health endpoint - liveness check
 app.get('/health', async () => ({
@@ -21,10 +29,17 @@ app.get('/health', async () => ({
 // Ready endpoint - readiness check
 app.get('/ready', async () => {
   // Perform lightweight checks
-  // Note: For production, consider adding actual Redis connectivity check
+  let queueHealthy = false;
+  try {
+    await connection.ping();
+    queueHealthy = true;
+  } catch (error) {
+    logger.error({ error }, 'redis connectivity check failed');
+  }
+
   const checks = {
     config: true,
-    queue: true // Currently always true; TODO: add actual queue connectivity check if needed
+    queue: queueHealthy
   };
 
   return {
@@ -32,6 +47,65 @@ app.get('/ready', async () => {
     service: 'blackroad-os-operator',
     checks
   };
+});
+
+// Agent collaboration endpoints
+app.get('/agents', async () => ({
+  agents: listAgents()
+}));
+
+app.post<{ Body: AgentRegistration }>('/agents/register', async (request, reply) => {
+  const registration = request.body;
+
+  if (!registration?.id || !registration.hostname) {
+    return reply.status(400).send({ error: 'Bad Request', message: 'id and hostname are required' });
+  }
+
+  const agent = registerAgent(registration);
+  return reply.status(201).send(agent);
+});
+
+app.post<{ Params: { id: string }; Body: Partial<AgentRegistration> }>('/agents/:id/heartbeat', async (request, reply) => {
+  const { id } = request.params;
+  const updated = recordHeartbeat(id, request.body);
+
+  if (!updated) {
+    return reply.status(404).send({ error: 'Not Found', message: 'agent not registered' });
+  }
+
+  return { agent: updated };
+});
+
+app.post<{ Params: { id: string }; Body: { status: AgentStatus } }>('/agents/:id/status', async (request, reply) => {
+  const { id } = request.params;
+  const { status } = request.body;
+  const updated = updateAgentStatus(id, status);
+
+  if (!updated) {
+    return reply.status(404).send({ error: 'Not Found', message: 'agent not registered' });
+  }
+
+  return { agent: updated };
+});
+
+app.get<{ Params: { id: string } }>('/agents/:id', async (request, reply) => {
+  const agent = getAgent(request.params.id);
+
+  if (!agent) {
+    return reply.status(404).send({ error: 'Not Found', message: 'agent not registered' });
+  }
+
+  return agent;
+});
+
+app.delete<{ Params: { id: string } }>('/agents/:id', async (request, reply) => {
+  const removed = deregisterAgent(request.params.id);
+
+  if (!removed) {
+    return reply.status(404).send({ error: 'Not Found', message: 'agent not registered' });
+  }
+
+  return reply.status(204).send();
 });
 
 // Version endpoint - build metadata
@@ -98,7 +172,7 @@ app.get('/llm/health', async () => {
 });
 
 registerSampleJobProcessor();
-startHeartbeatScheduler();
+startHeartbeatScheduler(config.heartbeatCron);
 
 async function startServer(): Promise<void> {
   try {
@@ -119,6 +193,3 @@ async function startServer(): Promise<void> {
 }
 
 startServer();
-
-// TODO(op-next): add auth middleware and request signing
-// TODO(op-next): expose agent registration endpoints
