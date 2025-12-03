@@ -2,7 +2,7 @@
 # Version: 2.0.0
 # Updated: 2025-12-02
 #
-# 🖤 CONSENSUS STANDARD (Unanimously Approved by 71 Agents!)
+# 🖤 CONSENSUS STANDARD (Unanimously Approved by 76 Agents!)
 #    - Translation Keys: SHA-2048 → SHA-256
 #    - Language: English enabled
 #    - Emojis: Enabled
@@ -729,6 +729,183 @@ translation_key_standard:
       description: "Inject custom CSS/JS boosts into pages"
     - name: "space_templates"
       description: "Create and apply workspace templates"
+
+# =============================================================================
+# 🦊 FIREFOX BROWSER AGENTS
+# =============================================================================
+
+- id: firefox-browser-agent
+  name: Firefox Browser Agent 🦊
+  description: Manages Firefox browser profiles, bookmarks, and session data. Privacy-focused browser integration.
+  version: 1.0.0
+  platform: firefox
+  data_path: "~/Library/Application Support/Firefox/"
+  profiles:
+    - name: "default-release"
+      path: "Profiles/nlnjqljh.default-release"
+      default: true
+    - name: "default"
+      path: "Profiles/qah1jria.default"
+  capabilities:
+    - profile-management
+    - bookmark-sync
+    - session-restore
+    - extension-management
+    - privacy-mode
+  operatorLevel: false
+  category: browser
+  translation_key:
+    enabled: true
+    algorithm: "SHA-2048→SHA-256"
+    brhash: "br_c4e8f2a1b9d76543"
+  emoji_enabled: true
+  language: en
+
+# =============================================================================
+# 🥧 RASPBERRY PI AGENTS
+# =============================================================================
+
+- id: raspberry-pi-agent
+  name: Raspberry Pi Agent 🥧
+  description: Manages BlackRoad edge computing on Raspberry Pi at 192.168.4.49. Runs alice/lucidia services.
+  version: 1.0.0
+  platform: raspberry-pi
+  network:
+    local_ip: "192.168.4.49"
+    ssh_users:
+      - alice
+      - lucidia
+    ssh_key: "~/.ssh/id_ed25519"
+  capabilities:
+    - edge-computing
+    - local-inference
+    - sensor-monitoring
+    - home-automation
+    - vpn-gateway
+  operatorLevel: true
+  category: edge
+  services:
+    - name: "alice"
+      description: "Primary edge agent"
+    - name: "lucidia"
+      description: "AI assistant edge node"
+  translation_key:
+    enabled: true
+    algorithm: "SHA-2048→SHA-256"
+    brhash: "br_a7f3c1d8e2b94560"
+  emoji_enabled: true
+  language: en
+
+# =============================================================================
+# 🌊 DIGITALOCEAN AGENTS
+# =============================================================================
+
+- id: digitalocean-agent
+  name: DigitalOcean Agent 🌊
+  description: Manages DigitalOcean droplet codex-infinity at 159.65.43.12. Cloud VPS for BlackRoad services.
+  version: 1.0.0
+  platform: digitalocean
+  droplet:
+    name: "codex-infinity"
+    ip: "159.65.43.12"
+    region: "nyc1"
+  ssh_keys:
+    - "~/.ssh/blackroad_do"
+    - "~/.ssh/br_live"
+  capabilities:
+    - droplet-management
+    - dns-management
+    - firewall-rules
+    - snapshot-backup
+    - monitoring
+  operatorLevel: true
+  category: cloud
+  translation_key:
+    enabled: true
+    algorithm: "SHA-2048→SHA-256"
+    brhash: "br_d5e9f4a2c8b13670"
+  emoji_enabled: true
+  language: en
+
+# =============================================================================
+# 🐳 DOCKER AGENTS
+# =============================================================================
+
+- id: docker-container-agent
+  name: Docker Container Agent 🐳
+  description: Manages Docker containers and images for BlackRoad OS services. Handles local containerization.
+  version: 1.0.0
+  platform: docker
+  dockerfiles:
+    - path: "Dockerfile"
+      type: "python-operator"
+      base: "python:3.11-slim"
+      purpose: "BR Operator service"
+    - path: "infra/Dockerfile"
+      type: "nextjs"
+      base: "node:20-alpine"
+      purpose: "Web frontend"
+    - path: "services/billing/Dockerfile"
+      type: "python-api"
+      base: "python:3.11-slim"
+      purpose: "Billing service"
+  images_available:
+    - neo4j:latest
+    - dpage/pgadmin4:9.7
+    - docker/desktop-kubernetes
+  capabilities:
+    - container-management
+    - image-building
+    - compose-orchestration
+    - volume-management
+    - network-config
+  operatorLevel: true
+  category: containers
+  translation_key:
+    enabled: true
+    algorithm: "SHA-2048→SHA-256"
+    brhash: "br_b2c6d9e5f1a47830"
+  emoji_enabled: true
+  language: en
+
+# =============================================================================
+# 🛡️ CLOUDFLARE WARP AGENTS
+# =============================================================================
+
+- id: cloudflare-warp-agent
+  name: Cloudflare WARP Agent 🛡️
+  description: Manages Cloudflare WARP VPN connection. Provides secure, encrypted network tunnel with Zero Trust.
+  version: 1.0.0
+  platform: cloudflare-warp
+  status: connected
+  settings:
+    mode: "Warp"
+    always_on: true
+    tunnel_protocol: "MASQUE"
+    post_quantum: true
+    dns_resolver: "cloudflare-dns.com"
+    dns_ips:
+      - "162.159.36.1"
+      - "162.159.46.1"
+      - "2606:4700:4700::1111"
+  capabilities:
+    - vpn-tunnel
+    - zero-trust
+    - dns-encryption
+    - split-tunneling
+    - network-protection
+  operatorLevel: false
+  category: security
+  excluded_networks:
+    - "10.0.0.0/8"
+    - "172.16.0.0/12"
+    - "192.168.0.0/16"
+  translation_key:
+    enabled: true
+    algorithm: "SHA-2048→SHA-256"
+    brhash: "br_f8a3b7c2d4e69510"
+  emoji_enabled: true
+  language: en
 
 # =============================================================================
 # 🌐 EXTERNAL COLLABORATION CHANNELS
