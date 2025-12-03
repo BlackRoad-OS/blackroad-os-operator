@@ -13,6 +13,7 @@ from fastapi import FastAPI, HTTPException, Query, Request
 from .catalog import AgentCatalog
 from .versioning import get_git_sha
 from .llm_service import generate_chat_response, check_llm_health, check_rag_health
+from .memory_service import get_memory_service
 from .models import (
     ChatRequest,
     ChatResponse,
@@ -29,6 +30,12 @@ from .models import (
     LedgerDecision,
     LedgerEvent,
     LedgerEventCreate,
+    MemoryStoreRequest,
+    MemoryStoreResponse,
+    MemoryHistoryResponse,
+    MemoryClearResponse,
+    MemoryStatsResponse,
+    ConversationTurn,
 )
 from .models.ledger import LedgerEventList, LedgerEventQuery
 from .policy_engine import PolicyEngine, get_policy_engine
@@ -132,18 +139,47 @@ def create_app(catalog_path: Path | None = None, enable_watch: bool = True) -> F
 
         Hero Flow #2 (default): Attempts RAG context retrieval, then LLM
         Hero Flow #1 (fallback): Direct LLM call if RAG unavailable
+
+        Memory: If enabled, retrieves recent conversation history and stores new turns.
         """
         if not request.message or not request.message.strip():
             raise HTTPException(status_code=400, detail="message is required")
 
+        # Get memory service
+        memory_service = get_memory_service()
+
+        # Retrieve conversation history if memory is enabled
+        conversation_history = []
+        user_id = request.userId or "anonymous"
+
+        if memory_service.enabled and user_id != "anonymous":
+            # Get last 5 turns for context (chronological order)
+            recent_turns = memory_service.get_history(user_id, limit=5)
+            # Reverse to get chronological order (oldest first)
+            conversation_history = list(reversed(recent_turns))
+
         try:
-            # Hero Flow #2: RAG enabled by default
+            # Hero Flow #2: RAG enabled by default, with conversation history
             response = await generate_chat_response(
                 message=request.message.strip(),
-                user_id=request.userId,
+                user_id=user_id,
                 model=request.model,
                 use_rag=True,  # Enable RAG - falls back gracefully if unavailable
+                conversation_history=conversation_history,
             )
+
+            # Store the conversation turn if memory is enabled
+            if memory_service.enabled and user_id != "anonymous":
+                memory_service.store_turn(
+                    user_id=user_id,
+                    user_message=request.message.strip(),
+                    assistant_reply=response.get("reply", ""),
+                    metadata={
+                        "model": response.get("trace", {}).get("model"),
+                        "used_rag": response.get("trace", {}).get("used_rag"),
+                    },
+                )
+
             return ChatResponse(**response)
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))
@@ -159,6 +195,67 @@ def create_app(catalog_path: Path | None = None, enable_watch: bool = True) -> F
         """Check RAG API health."""
         data = await check_rag_health()
         return RAGHealthResponse(**data)
+
+    # ============================================
+    # MEMORY: Conversation History
+    # ============================================
+
+    @app.post("/memory/store", response_model=MemoryStoreResponse)
+    async def store_memory(request: MemoryStoreRequest) -> MemoryStoreResponse:
+        """Store a conversation turn in memory.
+
+        This endpoint allows manual storage of conversation turns.
+        The chat endpoint automatically stores turns when memory is enabled.
+        """
+        memory_service = get_memory_service()
+
+        result = memory_service.store_turn(
+            user_id=request.user_id,
+            user_message=request.user_message,
+            assistant_reply=request.assistant_reply,
+            metadata=request.metadata,
+        )
+
+        return MemoryStoreResponse(**result)
+
+    @app.get("/memory/{user_id}", response_model=MemoryHistoryResponse)
+    async def get_memory(user_id: str, limit: Optional[int] = Query(None, ge=1, le=100)) -> MemoryHistoryResponse:
+        """Get conversation history for a user.
+
+        Returns the conversation history with most recent turns first.
+        """
+        memory_service = get_memory_service()
+
+        turns_data = memory_service.get_history(user_id, limit=limit)
+        turns = [ConversationTurn(**turn) for turn in turns_data]
+
+        return MemoryHistoryResponse(
+            user_id=user_id,
+            turns=turns,
+            total_turns=len(turns),
+            enabled=memory_service.enabled,
+        )
+
+    @app.delete("/memory/{user_id}", response_model=MemoryClearResponse)
+    async def clear_memory(user_id: str) -> MemoryClearResponse:
+        """Clear conversation history for a user.
+
+        This permanently deletes all stored conversation turns for the specified user.
+        """
+        memory_service = get_memory_service()
+
+        result = memory_service.clear_history(user_id)
+
+        return MemoryClearResponse(**result)
+
+    @app.get("/memory/stats")
+    async def memory_stats() -> MemoryStatsResponse:
+        """Get memory service statistics."""
+        memory_service = get_memory_service()
+
+        stats = memory_service.get_stats()
+
+        return MemoryStatsResponse(**stats)
 
     # ============================================
     # GOVERNANCE: Policy Evaluation (Cece/Alice)
@@ -658,6 +755,14 @@ def create_app(catalog_path: Path | None = None, enable_watch: bool = True) -> F
         IntentState,
         StepExecuteRequest,
     )
+    from br_operator.deploy_service import (
+        DeployService,
+        get_deploy_service,
+        DeployRequest,
+        DeployResponse,
+        DeployTarget,
+        AgentConnection,
+    )
 
     intent_service: Optional[IntentService] = None
 
@@ -807,6 +912,114 @@ def create_app(catalog_path: Path | None = None, enable_watch: bool = True) -> F
         if intent_service is None:
             raise HTTPException(status_code=503, detail="Intent service not initialized")
         return await intent_service.get_stats()
+
+    # ============================================
+    # DEPLOY: iPhone-Triggered Deployments
+    # ============================================
+    # Simple POST endpoint for iOS Shortcuts / mobile triggering.
+    # This is the "remote control" for your entire fleet.
+
+    deploy_service = get_deploy_service()
+
+    @app.post("/v1/intent/deploy", response_model=DeployResponse)
+    async def trigger_deploy(request: DeployRequest) -> DeployResponse:
+        """Trigger a deployment across connected agents.
+
+        This is the main endpoint for iPhone/Shortcut-triggered deployments.
+
+        Example curl:
+            curl -X POST https://operator.blackroad.systems/v1/intent/deploy \\
+                -H "Content-Type: application/json" \\
+                -H "Authorization: Bearer <token>" \\
+                -d '{"target": "all", "env": "prod", "reason": "Deploy from iPhone"}'
+
+        Returns deployment status with ✅❌⚠️🪧 summary.
+        """
+        return await deploy_service.deploy(request)
+
+    @app.get("/v1/deploys")
+    async def list_deploys(limit: int = 20) -> Dict[str, Any]:
+        """List recent deployments."""
+        deploys = deploy_service.list_deploys(limit=limit)
+        return {"deploys": [d.model_dump() for d in deploys]}
+
+    @app.get("/v1/deploys/{deploy_id}")
+    async def get_deploy(deploy_id: UUID) -> DeployResponse:
+        """Get a specific deployment by ID."""
+        deploy = deploy_service.get_deploy(deploy_id)
+        if not deploy:
+            raise HTTPException(status_code=404, detail="Deployment not found")
+        return deploy
+
+    # ============================================
+    # AGENTS: Agent Registration & Management
+    # ============================================
+
+    @app.post("/v1/agents/register")
+    async def register_agent(
+        agent_id: str,
+        machine_id: str,
+        capabilities: List[str] = [],
+        actions: Dict[str, Any] = {},
+    ) -> AgentConnection:
+        """Register a br-agent connection.
+
+        Called by br-agent on startup to register with the operator.
+        """
+        return deploy_service.register_agent(agent_id, machine_id, capabilities, actions)
+
+    @app.delete("/v1/agents/{agent_id}")
+    async def unregister_agent(agent_id: str) -> Dict[str, Any]:
+        """Unregister a br-agent."""
+        success = deploy_service.unregister_agent(agent_id)
+        return {"success": success, "agent_id": agent_id}
+
+    @app.post("/v1/agents/{agent_id}/heartbeat")
+    async def agent_heartbeat(agent_id: str) -> Dict[str, Any]:
+        """Update agent heartbeat timestamp."""
+        success = deploy_service.heartbeat(agent_id)
+        if not success:
+            raise HTTPException(status_code=404, detail="Agent not registered")
+        return {"success": True, "agent_id": agent_id}
+
+    @app.get("/v1/agents")
+    async def list_connected_agents() -> Dict[str, Any]:
+        """List all connected br-agents."""
+        agents = deploy_service.list_agents()
+        return {"agents": [a.model_dump() for a in agents]}
+
+    @app.get("/v1/fleet/status")
+    async def fleet_status() -> Dict[str, Any]:
+        """Get overall fleet status.
+
+        Returns a quick health summary of all known services.
+        """
+        agents = deploy_service.list_agents()
+        agent_count = len(agents)
+
+        # Map agent status
+        agent_summary = {}
+        for agent in agents:
+            agent_summary[agent.agent_id] = {
+                "machine": agent.machine_id,
+                "status": "connected",
+                "last_heartbeat": agent.last_heartbeat.isoformat(),
+                "capabilities": agent.capabilities,
+            }
+
+        # Add expected agents that aren't connected
+        expected_agents = ["mac-main", "railway-agent", "pi-1", "pi-2", "pi-3"]
+        for expected in expected_agents:
+            if expected not in agent_summary:
+                agent_summary[expected] = {
+                    "status": "disconnected",
+                }
+
+        return {
+            "connected_agents": agent_count,
+            "agents": agent_summary,
+            "summary": f"{agent_count}/{len(expected_agents)} agents online",
+        }
 
     return app
 

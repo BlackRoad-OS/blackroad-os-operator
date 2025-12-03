@@ -1,0 +1,52 @@
+# br-agent configuration for Raspberry Pi
+# Copy to ~/blackroad-agent/config.yaml on your Pi
+
+agent_id: pi-1
+machine_id: pi-mesh-node-1
+
+operator_url: https://blackroad-cece-operator-production.up.railway.app
+heartbeat_interval: 30
+reconnect_delay: 10
+
+capabilities:
+  - refresh_agent
+  - restart_service
+  - health_check
+  - update_system
+
+actions:
+  refresh_agent:
+    cwd: ~/blackroad-pi-ops
+    timeout: 120
+    steps:
+      - git pull origin main
+      - pip3 install -r requirements.txt
+      - sudo systemctl restart blackroad-pi-agent
+
+  restart_service:
+    cwd: ~
+    timeout: 30
+    steps:
+      - sudo systemctl restart blackroad-pi-agent
+
+  health_check:
+    cwd: ~
+    timeout: 30
+    steps:
+      - systemctl status blackroad-pi-agent --no-pager
+      - hostname -I
+      - uptime
+
+  update_system:
+    cwd: ~
+    timeout: 600
+    steps:
+      - sudo apt update
+      - sudo apt upgrade -y
+      - sudo apt autoremove -y
+
+  run_mesh_agent:
+    cwd: ~/blackroad-pi-ops
+    timeout: 30
+    steps:
+      - python3 mesh_agent.py --status
