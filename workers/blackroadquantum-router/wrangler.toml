@@ -1,0 +1,15 @@
+# BlackRoad Quantum Router - Routes blackroadquantum.com to Pages
+# @blackroad_name: BlackRoad Quantum Router
+# @operator: alexa.operator.v1
+
+name = "blackroadquantum-router"
+main = "src/index.js"
+compatibility_date = "2024-12-02"
+workers_dev = true
+
+[vars]
+ENVIRONMENT = "production"
+ASSET = "blackroadquantum.com"
+
+[observability]
+enabled = true
