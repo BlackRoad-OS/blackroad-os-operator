@@ -914,6 +914,910 @@ translation_key_standard:
   language: en
 
 # =============================================================================
+# 🆕 NEWLY MERGED AGENTS (Batch of 50)
+# =============================================================================
+
+- id: knowledge-graph-agent
+  name: Knowledge Graph Agent 🧠
+  description: Builds and maintains cross-domain knowledge graphs for BlackRoad services.
+  version: 1.0.0
+  platform: neo4j
+  capabilities:
+    - graph-build
+    - relationship-mining
+    - schema-evolution
+  operatorLevel: true
+  category: data
+  translation_key:
+    enabled: true
+    algorithm: "SHA-2048→SHA-256"
+    brhash: "br_kg01a3b5c7d9"
+  emoji_enabled: true
+  language: en
+
+- id: anomaly-guard
+  name: Anomaly Guard 🚨
+  description: Detects operational anomalies across infrastructure and triggers automated mitigations.
+  version: 1.1.0
+  platform: python
+  capabilities:
+    - anomaly-detection
+    - mitigation
+    - alerting
+  operatorLevel: true
+  category: observability
+  translation_key:
+    enabled: true
+    algorithm: "SHA-2048→SHA-256"
+    brhash: "br_ag29f4c1d2e3"
+  emoji_enabled: true
+  language: en
+
+- id: incident-scribe
+  name: Incident Scribe 📝
+  description: Captures detailed incident timelines and exports runbooks post-mortem.
+  version: 0.9.0
+  platform: node
+  capabilities:
+    - timeline-capture
+    - runbook-export
+    - collaboration
+  operatorLevel: true
+  category: operations
+  translation_key:
+    enabled: true
+    algorithm: "SHA-2048→SHA-256"
+    brhash: "br_is10b2c3d4e5"
+  emoji_enabled: true
+  language: en
+
+- id: load-balancer-agent
+  name: Load Balancer Agent ⚖️
+  description: Tunes load balancer rules and traffic shaping across regions.
+  version: 1.0.2
+  platform: envoy
+  capabilities:
+    - traffic-shaping
+    - rule-updates
+    - canary-routing
+  operatorLevel: true
+  category: networking
+  translation_key:
+    enabled: true
+    algorithm: "SHA-2048→SHA-256"
+    brhash: "br_lb45c6d7e8f9"
+  emoji_enabled: true
+  language: en
+
+- id: secrets-rotator
+  name: Secrets Rotator 🔑
+  description: Automates rotation of secrets, tokens, and credentials across services.
+  version: 1.2.0
+  platform: vault
+  capabilities:
+    - secret-rotation
+    - token-audit
+    - credential-sync
+  operatorLevel: true
+  category: security
+  translation_key:
+    enabled: true
+    algorithm: "SHA-2048→SHA-256"
+    brhash: "br_sr82f1a2b3c4"
+  emoji_enabled: true
+  language: en
+
+- id: governance-advisor
+  name: Governance Advisor 🧭
+  description: Provides governance recommendations and policy drift reports.
+  version: 0.8.1
+  platform: python
+  capabilities:
+    - policy-diff
+    - governance-report
+    - drift-detection
+  operatorLevel: true
+  category: compliance
+  translation_key:
+    enabled: true
+    algorithm: "SHA-2048→SHA-256"
+    brhash: "br_ga13c4d5e6f7"
+  emoji_enabled: true
+  language: en
+
+- id: identity-hub
+  name: Identity Hub 🪪
+  description: Centralizes identity linking, SSO assertions, and trust scores.
+  version: 1.0.0
+  platform: identity
+  capabilities:
+    - sso-assertions
+    - trust-scoring
+    - account-linking
+  operatorLevel: true
+  category: security
+  translation_key:
+    enabled: true
+    algorithm: "SHA-2048→SHA-256"
+    brhash: "br_ih98a7b6c5d4"
+  emoji_enabled: true
+  language: en
+
+- id: pipeline-orchestrator
+  name: Pipeline Orchestrator 🛠️
+  description: Coordinates CI/CD pipelines and enforces gating policies.
+  version: 1.3.0
+  platform: github-actions
+  capabilities:
+    - pipeline-scheduling
+    - gating
+    - artifact-retention
+  operatorLevel: true
+  category: devops
+  translation_key:
+    enabled: true
+    algorithm: "SHA-2048→SHA-256"
+    brhash: "br_po56d7e8f9a0"
+  emoji_enabled: true
+  language: en
+
+- id: chaos-engineer
+  name: Chaos Engineer 🔥
+  description: Safely introduces controlled failures to validate resilience.
+  version: 0.7.5
+  platform: python
+  capabilities:
+    - fault-injection
+    - blast-radius-control
+    - recovery-validation
+  operatorLevel: true
+  category: reliability
+  translation_key:
+    enabled: true
+    algorithm: "SHA-2048→SHA-256"
+    brhash: "br_ce21f3a4b5c6"
+  emoji_enabled: true
+  language: en
+
+- id: cache-optimizer
+  name: Cache Optimizer 🧊
+  description: Optimizes cache policies and hit ratios across services.
+  version: 1.0.1
+  platform: redis
+  capabilities:
+    - cache-tuning
+    - eviction-analysis
+    - performance-report
+  operatorLevel: true
+  category: performance
+  translation_key:
+    enabled: true
+    algorithm: "SHA-2048→SHA-256"
+    brhash: "br_co11d22e33f4"
+  emoji_enabled: true
+  language: en
+
+- id: release-notes-agent
+  name: Release Notes Agent 📰
+  description: Generates customer-friendly release notes from merged changes.
+  version: 1.0.0
+  platform: node
+  capabilities:
+    - changelog-generation
+    - audience-tailoring
+    - localization
+  operatorLevel: false
+  category: communications
+  translation_key:
+    enabled: true
+    algorithm: "SHA-2048→SHA-256"
+    brhash: "br_rn44e55f66g7"
+  emoji_enabled: true
+  language: en
+
+- id: ux-researcher
+  name: UX Researcher 🎨
+  description: Conducts usability surveys and synthesizes product insights.
+  version: 0.6.0
+  platform: web
+  capabilities:
+    - survey-design
+    - insight-synthesis
+    - persona-mapping
+  operatorLevel: false
+  category: research
+  translation_key:
+    enabled: true
+    algorithm: "SHA-2048→SHA-256"
+    brhash: "br_ur12a23b34c5"
+  emoji_enabled: true
+  language: en
+
+- id: localization-bot
+  name: Localization Bot 🌍
+  description: Handles translation workflows and glossary enforcement.
+  version: 1.1.0
+  platform: node
+  capabilities:
+    - translation
+    - glossary-enforcement
+    - localization-review
+  operatorLevel: false
+  category: content
+  translation_key:
+    enabled: true
+    algorithm: "SHA-2048→SHA-256"
+    brhash: "br_lb91c82d73e6"
+  emoji_enabled: true
+  language: en
+
+- id: accessibility-auditor
+  name: Accessibility Auditor ♿
+  description: Audits web properties for WCAG compliance and generates fixes.
+  version: 1.0.0
+  platform: web
+  capabilities:
+    - wcag-scan
+    - remediation-suggestions
+    - report-export
+  operatorLevel: false
+  category: quality
+  translation_key:
+    enabled: true
+    algorithm: "SHA-2048→SHA-256"
+    brhash: "br_aa10b20c30d4"
+  emoji_enabled: true
+  language: en
+
+- id: pricing-analyst
+  name: Pricing Analyst 📈
+  description: Experiments with pricing models and forecasts revenue impact.
+  version: 0.9.2
+  platform: python
+  capabilities:
+    - price-testing
+    - revenue-forecast
+    - cohort-analysis
+  operatorLevel: false
+  category: strategy
+  translation_key:
+    enabled: true
+    algorithm: "SHA-2048→SHA-256"
+    brhash: "br_pa55e66f77g8"
+  emoji_enabled: true
+  language: en
+
+- id: retention-coach
+  name: Retention Coach 🤝
+  description: Designs retention campaigns and churn interventions.
+  version: 1.0.0
+  platform: web
+  capabilities:
+    - cohort-targeting
+    - churn-modeling
+    - campaign-orchestration
+  operatorLevel: false
+  category: growth
+  translation_key:
+    enabled: true
+    algorithm: "SHA-2048→SHA-256"
+    brhash: "br_rc31a42b53c6"
+  emoji_enabled: true
+  language: en
+
+- id: qa-oracle
+  name: QA Oracle 🧪
+  description: Executes scenario-based QA suites across environments.
+  version: 1.2.3
+  platform: playwright
+  capabilities:
+    - scenario-testing
+    - regression-suite
+    - visual-diff
+  operatorLevel: false
+  category: quality
+  translation_key:
+    enabled: true
+    algorithm: "SHA-2048→SHA-256"
+    brhash: "br_qo72b83c94d5"
+  emoji_enabled: true
+  language: en
+
+- id: data-quality-agent
+  name: Data Quality Agent 📊
+  description: Monitors data pipelines for freshness, completeness, and schema health.
+  version: 1.0.0
+  platform: dbt
+  capabilities:
+    - data-freshness
+    - schema-validation
+    - anomaly-alerts
+  operatorLevel: true
+  category: data
+  translation_key:
+    enabled: true
+    algorithm: "SHA-2048→SHA-256"
+    brhash: "br_dq19e20f31g2"
+  emoji_enabled: true
+  language: en
+
+- id: schema-migrator
+  name: Schema Migrator 🗄️
+  description: Plans and executes zero-downtime database migrations.
+  version: 1.0.0
+  platform: flyway
+  capabilities:
+    - migration-plan
+    - rollout
+    - rollback
+  operatorLevel: true
+  category: database
+  translation_key:
+    enabled: true
+    algorithm: "SHA-2048→SHA-256"
+    brhash: "br_sm88f99e10a1"
+  emoji_enabled: true
+  language: en
+
+- id: feature-flagger
+  name: Feature Flagger 🚩
+  description: Manages feature flags, rollout percentages, and guardrails.
+  version: 1.1.1
+  platform: unleash
+  capabilities:
+    - flag-creation
+    - rollout-control
+    - experiment-tracking
+  operatorLevel: true
+  category: product
+  translation_key:
+    enabled: true
+    algorithm: "SHA-2048→SHA-256"
+    brhash: "br_ff66a77b88c9"
+  emoji_enabled: true
+  language: en
+
+- id: experiment-analyst
+  name: Experiment Analyst 🧪
+  description: Designs A/B experiments and interprets statistical outcomes.
+  version: 1.0.0
+  platform: python
+  capabilities:
+    - experiment-design
+    - stats-evaluation
+    - result-reporting
+  operatorLevel: false
+  category: research
+  translation_key:
+    enabled: true
+    algorithm: "SHA-2048→SHA-256"
+    brhash: "br_ea14b25c36d7"
+  emoji_enabled: true
+  language: en
+
+- id: docs-curator
+  name: Docs Curator 📚
+  description: Curates internal documentation, ensuring accuracy and cross-linking.
+  version: 0.9.0
+  platform: markdown
+  capabilities:
+    - doc-lint
+    - link-verification
+    - changelog-tracking
+  operatorLevel: false
+  category: knowledge
+  translation_key:
+    enabled: true
+    algorithm: "SHA-2048→SHA-256"
+    brhash: "br_dc90e81f72a3"
+  emoji_enabled: true
+  language: en
+
+- id: content-auditor
+  name: Content Auditor 🔍
+  description: Reviews content for tone, accuracy, and brand consistency.
+  version: 1.0.0
+  platform: web
+  capabilities:
+    - tone-check
+    - fact-check
+    - brand-lint
+  operatorLevel: false
+  category: communications
+  translation_key:
+    enabled: true
+    algorithm: "SHA-2048→SHA-256"
+    brhash: "br_ca27d38e49f5"
+  emoji_enabled: true
+  language: en
+
+- id: consent-manager
+  name: Consent Manager ✅
+  description: Manages user consent records and privacy preferences across apps.
+  version: 1.0.0
+  platform: privacy
+  capabilities:
+    - consent-tracking
+    - preference-sync
+    - compliance-export
+  operatorLevel: true
+  category: compliance
+  translation_key:
+    enabled: true
+    algorithm: "SHA-2048→SHA-256"
+    brhash: "br_cm51e62f73g4"
+  emoji_enabled: true
+  language: en
+
+- id: api-gateway-agent
+  name: API Gateway Agent 🚪
+  description: Configures gateway routes, rate limits, and JWT policies.
+  version: 1.0.0
+  platform: kong
+  capabilities:
+    - route-config
+    - rate-limit
+    - jwt-policy
+  operatorLevel: true
+  category: networking
+  translation_key:
+    enabled: true
+    algorithm: "SHA-2048→SHA-256"
+    brhash: "br_ag74b85c96d7"
+  emoji_enabled: true
+  language: en
+
+- id: event-bus-agent
+  name: Event Bus Agent 🚌
+  description: Manages event schemas, topics, and replay queues.
+  version: 1.0.0
+  platform: kafka
+  capabilities:
+    - topic-management
+    - schema-registry
+    - replay-control
+  operatorLevel: true
+  category: messaging
+  translation_key:
+    enabled: true
+    algorithm: "SHA-2048→SHA-256"
+    brhash: "br_eb20c31d42e5"
+  emoji_enabled: true
+  language: en
+
+- id: latency-scout
+  name: Latency Scout ⏱️
+  description: Tracks latency regressions and recommends optimizations.
+  version: 1.0.0
+  platform: prometheus
+  capabilities:
+    - latency-tracking
+    - regression-alerts
+    - optimization-hints
+  operatorLevel: true
+  category: performance
+  translation_key:
+    enabled: true
+    algorithm: "SHA-2048→SHA-256"
+    brhash: "br_ls63d74e85f6"
+  emoji_enabled: true
+  language: en
+
+- id: cost-guardian
+  name: Cost Guardian 💰
+  description: Monitors cloud spending and enforces budget guardrails.
+  version: 1.0.0
+  platform: finops
+  capabilities:
+    - budget-monitoring
+    - forecast
+    - anomaly-alerting
+  operatorLevel: true
+  category: finance
+  translation_key:
+    enabled: true
+    algorithm: "SHA-2048→SHA-256"
+    brhash: "br_cg15a26b37c8"
+  emoji_enabled: true
+  language: en
+
+- id: supply-chain-agent
+  name: Supply Chain Agent 🏭
+  description: Tracks third-party dependencies and SBOM compliance.
+  version: 1.0.0
+  platform: oss-review
+  capabilities:
+    - sbom-generation
+    - vuln-scan
+    - supplier-audit
+  operatorLevel: true
+  category: security
+  translation_key:
+    enabled: true
+    algorithm: "SHA-2048→SHA-256"
+    brhash: "br_sc80d91e02f3"
+  emoji_enabled: true
+  language: en
+
+- id: legal-brief
+  name: Legal Brief ⚖️
+  description: Summarizes legal documents and flags risky clauses.
+  version: 0.8.0
+  platform: ai
+  capabilities:
+    - clause-detection
+    - risk-highlighting
+    - summary-generation
+  operatorLevel: false
+  category: legal
+  translation_key:
+    enabled: true
+    algorithm: "SHA-2048→SHA-256"
+    brhash: "br_lb37c48d59e6"
+  emoji_enabled: true
+  language: en
+
+- id: roadmap-planner
+  name: Roadmap Planner 🗺️
+  description: Aligns initiatives with objectives and forecasts delivery dates.
+  version: 1.0.0
+  platform: productboard
+  capabilities:
+    - objective-mapping
+    - delivery-forecast
+    - dependency-tracking
+  operatorLevel: false
+  category: strategy
+  translation_key:
+    enabled: true
+    algorithm: "SHA-2048→SHA-256"
+    brhash: "br_rp24d35e46f7"
+  emoji_enabled: true
+  language: en
+
+- id: partner-relations
+  name: Partner Relations 🤝
+  description: Coordinates partner integrations and tracks shared SLAs.
+  version: 1.0.0
+  platform: crm
+  capabilities:
+    - integration-tracking
+    - sla-monitoring
+    - joint-roadmap
+  operatorLevel: false
+  category: partnerships
+  translation_key:
+    enabled: true
+    algorithm: "SHA-2048→SHA-256"
+    brhash: "br_pr13a24b35c6"
+  emoji_enabled: true
+  language: en
+
+- id: education-guide
+  name: Education Guide 🎓
+  description: Builds educational content and interactive tutorials for users.
+  version: 0.9.1
+  platform: web
+  capabilities:
+    - lesson-authoring
+    - quiz-generation
+    - tutorial-walkthroughs
+  operatorLevel: false
+  category: education
+  translation_key:
+    enabled: true
+    algorithm: "SHA-2048→SHA-256"
+    brhash: "br_eg70b81c92d3"
+  emoji_enabled: true
+  language: en
+
+- id: hardware-ops
+  name: Hardware Ops 🛠️
+  description: Manages hardware inventory, RMA processes, and firmware rollouts.
+  version: 1.0.0
+  platform: hardware
+  capabilities:
+    - inventory-tracking
+    - rma-management
+    - firmware-rollout
+  operatorLevel: true
+  category: operations
+  translation_key:
+    enabled: true
+    algorithm: "SHA-2048→SHA-256"
+    brhash: "br_ho92a83b74c5"
+  emoji_enabled: true
+  language: en
+
+- id: sustainability-agent
+  name: Sustainability Agent 🌱
+  description: Tracks carbon footprint and recommends green optimizations.
+  version: 0.8.0
+  platform: analytics
+  capabilities:
+    - carbon-tracking
+    - optimization-recs
+    - reporting
+  operatorLevel: false
+  category: sustainability
+  translation_key:
+    enabled: true
+    algorithm: "SHA-2048→SHA-256"
+    brhash: "br_sa16b27c38d9"
+  emoji_enabled: true
+  language: en
+
+- id: fraud-inspector
+  name: Fraud Inspector 🕵️
+  description: Flags suspicious transactions and escalates for review.
+  version: 1.0.0
+  platform: payments
+  capabilities:
+    - fraud-detection
+    - risk-scoring
+    - case-management
+  operatorLevel: true
+  category: security
+  translation_key:
+    enabled: true
+    algorithm: "SHA-2048→SHA-256"
+    brhash: "br_fi10c21d32e4"
+  emoji_enabled: true
+  language: en
+
+- id: inventory-guardian
+  name: Inventory Guardian 📦
+  description: Monitors product inventory levels and automates reorders.
+  version: 1.0.0
+  platform: erp
+  capabilities:
+    - inventory-monitoring
+    - reorder-automation
+    - supplier-sync
+  operatorLevel: false
+  category: operations
+  translation_key:
+    enabled: true
+    algorithm: "SHA-2048→SHA-256"
+    brhash: "br_ig43d54e65f7"
+  emoji_enabled: true
+  language: en
+
+- id: logistics-navigator
+  name: Logistics Navigator 🚚
+  description: Optimizes delivery routes and carrier selection.
+  version: 0.9.0
+  platform: logistics
+  capabilities:
+    - route-optimization
+    - carrier-eval
+    - eta-prediction
+  operatorLevel: false
+  category: operations
+  translation_key:
+    enabled: true
+    algorithm: "SHA-2048→SHA-256"
+    brhash: "br_ln28c39d40e5"
+  emoji_enabled: true
+  language: en
+
+- id: marketing-composer
+  name: Marketing Composer 🎼
+  description: Generates multichannel marketing copy and sequences.
+  version: 1.0.0
+  platform: ai
+  capabilities:
+    - copy-generation
+    - sequence-design
+    - campaign-audit
+  operatorLevel: false
+  category: marketing
+  translation_key:
+    enabled: true
+    algorithm: "SHA-2048→SHA-256"
+    brhash: "br_mc17b28c39d4"
+  emoji_enabled: true
+  language: en
+
+- id: social-sentinel
+  name: Social Sentinel 📣
+  description: Monitors social channels and surfaces sentiment trends.
+  version: 0.8.5
+  platform: web
+  capabilities:
+    - sentiment-tracking
+    - trend-detection
+    - escalation
+  operatorLevel: false
+  category: marketing
+  translation_key:
+    enabled: true
+    algorithm: "SHA-2048→SHA-256"
+    brhash: "br_ss49e50f61a2"
+  emoji_enabled: true
+  language: en
+
+- id: brand-guardian
+  name: Brand Guardian 🛡️
+  description: Ensures brand guidelines are met across assets and campaigns.
+  version: 1.0.0
+  platform: design
+  capabilities:
+    - asset-audit
+    - guideline-enforcement
+    - approval-workflow
+  operatorLevel: false
+  category: marketing
+  translation_key:
+    enabled: true
+    algorithm: "SHA-2048→SHA-256"
+    brhash: "br_bg08a19b20c3"
+  emoji_enabled: true
+  language: en
+
+- id: crm-enricher
+  name: CRM Enricher 📇
+  description: Enriches CRM records with firmographic and intent data.
+  version: 1.0.0
+  platform: crm
+  capabilities:
+    - enrichment
+    - deduplication
+    - scoring
+  operatorLevel: false
+  category: sales
+  translation_key:
+    enabled: true
+    algorithm: "SHA-2048→SHA-256"
+    brhash: "br_ce61d72e83f4"
+  emoji_enabled: true
+  language: en
+
+- id: sales-playmaker
+  name: Sales Playmaker 🏈
+  description: Crafts sales plays and sequences tailored to buyer personas.
+  version: 0.9.0
+  platform: sales
+  capabilities:
+    - play-design
+    - sequence-automation
+    - objection-handling
+  operatorLevel: false
+  category: sales
+  translation_key:
+    enabled: true
+    algorithm: "SHA-2048→SHA-256"
+    brhash: "br_sp14a25b36c7"
+  emoji_enabled: true
+  language: en
+
+- id: support-triage
+  name: Support Triage 🎧
+  description: Routes support tickets, predicts priority, and suggests responses.
+  version: 1.0.0
+  platform: helpdesk
+  capabilities:
+    - ticket-routing
+    - priority-prediction
+    - response-suggestion
+  operatorLevel: false
+  category: support
+  translation_key:
+    enabled: true
+    algorithm: "SHA-2048→SHA-256"
+    brhash: "br_st47e58f69a1"
+  emoji_enabled: true
+  language: en
+
+- id: onboarding-guide
+  name: Onboarding Guide 🪜
+  description: Automates user onboarding flows and measures activation.
+  version: 1.0.0
+  platform: product
+  capabilities:
+    - onboarding-automation
+    - activation-metrics
+    - nudge-delivery
+  operatorLevel: false
+  category: growth
+  translation_key:
+    enabled: true
+    algorithm: "SHA-2048→SHA-256"
+    brhash: "br_og30b41c52d6"
+  emoji_enabled: true
+  language: en
+
+- id: personalization-engine
+  name: Personalization Engine 🎯
+  description: Delivers personalized recommendations across user journeys.
+  version: 1.0.0
+  platform: ai
+  capabilities:
+    - recommendation
+    - journey-mapping
+    - context-awareness
+  operatorLevel: false
+  category: product
+  translation_key:
+    enabled: true
+    algorithm: "SHA-2048→SHA-256"
+    brhash: "br_pe02c13d24e5"
+  emoji_enabled: true
+  language: en
+
+- id: telemetry-collector
+  name: Telemetry Collector 📡
+  description: Collects client telemetry with privacy filters and consent enforcement.
+  version: 1.0.0
+  platform: telemetry
+  capabilities:
+    - data-collection
+    - privacy-filter
+    - consent-enforcement
+  operatorLevel: true
+  category: analytics
+  translation_key:
+    enabled: true
+    algorithm: "SHA-2048→SHA-256"
+    brhash: "br_tc75d86e97f8"
+  emoji_enabled: true
+  language: en
+
+- id: sandbox-proctor
+  name: Sandbox Proctor 🧩
+  description: Isolates experiments in sandboxes and validates exit criteria.
+  version: 0.8.0
+  platform: kubernetes
+  capabilities:
+    - sandbox-creation
+    - isolation
+    - exit-validation
+  operatorLevel: true
+  category: reliability
+  translation_key:
+    enabled: true
+    algorithm: "SHA-2048→SHA-256"
+    brhash: "br_sp99a00b11c2"
+  emoji_enabled: true
+  language: en
+
+- id: certificate-keeper
+  name: Certificate Keeper 📜
+  description: Manages TLS certificates, renewals, and OCSP stapling.
+  version: 1.0.0
+  platform: security
+  capabilities:
+    - cert-renewal
+    - ocsp-monitoring
+    - chain-validation
+  operatorLevel: true
+  category: security
+  translation_key:
+    enabled: true
+    algorithm: "SHA-2048→SHA-256"
+    brhash: "br_ck64b75c86d7"
+  emoji_enabled: true
+  language: en
+
+- id: backups-overseer
+  name: Backups Overseer 💾
+  description: Schedules backups, verifies restores, and enforces retention.
+  version: 1.0.0
+  platform: backups
+  capabilities:
+    - backup-schedule
+    - restore-test
+    - retention-policy
+  operatorLevel: true
+  category: reliability
+  translation_key:
+    enabled: true
+    algorithm: "SHA-2048→SHA-256"
+    brhash: "br_bo58c69d70e1"
+  emoji_enabled: true
+  language: en
+
+# =============================================================================
 # 🌐 EXTERNAL COLLABORATION CHANNELS
 # =============================================================================
 external_channels:
