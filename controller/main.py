@@ -6,6 +6,7 @@ Central orchestration service for managing Raspberry Pi agents.
 import asyncio
 import os
 from contextlib import asynccontextmanager
+from datetime import datetime
 from pathlib import Path
 
 from fastapi import FastAPI
@@ -17,6 +18,7 @@ import uvicorn
 from api import agents_router, tasks_router, websocket_router
 from api.websocket import dispatch_loop
 from core.registry import registry
+from core.scheduler import scheduler
 from services.audit import audit, AuditEventType, AuditEvent
 
 # Configure structured logging
@@ -143,6 +145,39 @@ async def health():
             "total": len(registry.get_all()),
             "online": len(registry.get_online()),
             "available": len(registry.get_available()),
+        },
+    }
+
+
+@app.get("/metrics")
+async def metrics():
+    """Expose runtime metrics for agents, services, and connections."""
+    connections = registry.get_connection_metrics()
+    running_tasks = scheduler.get_running_tasks()
+    queued_tasks = scheduler.get_queued_tasks()
+
+    return {
+        "timestamp": datetime.utcnow().isoformat() + "Z",
+        "agents": {
+            "total": len(registry.get_all()),
+            "online": len(registry.get_online()),
+            "available": len(registry.get_available()),
+            "connections": connections,
+        },
+        "services": {
+            "running_tasks": len(running_tasks),
+            "queued_tasks": len(queued_tasks),
+            "active": [
+                {
+                    "task_id": task.id,
+                    "agent_id": task.assigned_agent_id,
+                    "agent_brhash": registry.get_connection_brhash(task.assigned_agent_id)
+                    if task.assigned_agent_id
+                    else None,
+                    "status": task.status,
+                }
+                for task in running_tasks
+            ],
         },
     }
 

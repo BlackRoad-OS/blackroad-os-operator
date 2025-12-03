@@ -2,6 +2,7 @@
 Agent Registry - Manages agent inventory and connections
 """
 import asyncio
+import hashlib
 from datetime import datetime, timedelta
 from typing import Optional
 from fastapi import WebSocket
@@ -12,6 +13,12 @@ from models import Agent, AgentStatus, AgentRegistration, AgentHeartbeat
 logger = structlog.get_logger()
 
 
+def generate_brhash(value: str) -> str:
+    """Generate a stable brhash identifier for a given value."""
+    digest = hashlib.sha256(value.encode()).hexdigest()[:16]
+    return f"br_{digest}"
+
+
 class AgentConnection:
     """Represents an active WebSocket connection to an agent"""
     def __init__(self, agent_id: str, websocket: WebSocket):
@@ -19,6 +26,7 @@ class AgentConnection:
         self.websocket = websocket
         self.connected_at = datetime.utcnow()
         self.last_message = datetime.utcnow()
+        self.brhash = generate_brhash(agent_id)
 
     async def send(self, message: dict):
         """Send a message to the agent"""
@@ -128,6 +136,25 @@ class AgentRegistry:
     def get_connection(self, agent_id: str) -> Optional[AgentConnection]:
         """Get WebSocket connection for an agent"""
         return self._connections.get(agent_id)
+
+    def get_connection_brhash(self, agent_id: str) -> str:
+        """Return the brhash identifier for an agent connection."""
+        return generate_brhash(agent_id)
+
+    def get_connection_metrics(self) -> dict:
+        """Summarize active connections with brhash identifiers."""
+        return {
+            "total": len(self._connections),
+            "agents": [
+                {
+                    "agent_id": agent_id,
+                    "brhash": conn.brhash,
+                    "connected_at": conn.connected_at.isoformat() + "Z",
+                    "last_message": conn.last_message.isoformat() + "Z",
+                }
+                for agent_id, conn in self._connections.items()
+            ],
+        }
 
     async def send_to_agent(self, agent_id: str, message: dict) -> bool:
         """Send a message to a specific agent"""
