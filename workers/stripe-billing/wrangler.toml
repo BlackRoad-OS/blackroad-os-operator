@@ -1,0 +1,29 @@
+# BlackRoad Stripe Billing Worker
+# Subscription management, usage metering, billing queries
+# @blackroad_name: BlackRoad Stripe Billing
+# @operator: alexa.operator.v1
+
+name = "blackroad-stripe-billing"
+main = "src/index.ts"
+compatibility_date = "2024-12-02"
+compatibility_flags = ["nodejs_compat"]
+workers_dev = true
+
+[vars]
+ENVIRONMENT = "production"
+
+# Secrets (set via wrangler secret put):
+# - STRIPE_SECRET_KEY
+
+# KV namespace for caching
+# [[kv_namespaces]]
+# binding = "BILLING_KV"
+# id = "your-kv-id"
+
+# Routes
+routes = [
+  { pattern = "billing.blackroad.io/*", zone_name = "blackroad.io" }
+]
+
+[observability]
+enabled = true

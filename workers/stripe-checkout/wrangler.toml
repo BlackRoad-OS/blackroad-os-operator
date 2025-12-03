@@ -1,0 +1,28 @@
+# BlackRoad Stripe Checkout Worker
+# Handles subscription checkout and billing portal
+# @blackroad_name: BlackRoad Stripe Checkout
+# @operator: alexa.operator.v1
+
+name = "blackroad-stripe-checkout"
+main = "src/index.ts"
+compatibility_date = "2024-12-02"
+compatibility_flags = ["nodejs_compat"]
+workers_dev = true
+
+[vars]
+ENVIRONMENT = "production"
+SUCCESS_URL = "https://blackroad.io/checkout/success"
+CANCEL_URL = "https://blackroad.io/checkout/cancel"
+
+# Secrets (set via wrangler secret put):
+# - STRIPE_SECRET_KEY
+# - STRIPE_PUBLISHABLE_KEY
+
+# Routes
+routes = [
+  { pattern = "checkout.blackroad.io/*", zone_name = "blackroad.io" },
+  { pattern = "pay.blackroad.io/*", zone_name = "blackroad.io" }
+]
+
+[observability]
+enabled = true

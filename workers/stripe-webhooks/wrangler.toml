@@ -1,0 +1,26 @@
+# BlackRoad Stripe Webhooks Worker
+# Receives and processes Stripe webhook events
+# @blackroad_name: BlackRoad Stripe Webhooks
+# @operator: alexa.operator.v1
+
+name = "blackroad-stripe-webhooks"
+main = "src/index.ts"
+compatibility_date = "2024-12-02"
+compatibility_flags = ["nodejs_compat"]
+workers_dev = true
+
+[vars]
+ENVIRONMENT = "production"
+BLACKROAD_API_URL = "https://api.blackroad.io"
+
+# Secrets (set via wrangler secret put):
+# - STRIPE_SECRET_KEY
+# - STRIPE_WEBHOOK_SECRET
+
+# Routes
+routes = [
+  { pattern = "webhooks.blackroad.io/stripe/*", zone_name = "blackroad.io" }
+]
+
+[observability]
+enabled = true
