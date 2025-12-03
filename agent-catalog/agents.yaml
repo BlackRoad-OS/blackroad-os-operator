@@ -72,6 +72,7 @@ translation_key_standard:
   translation_key:
     enabled: true
     algorithm: "SHA-2048→SHA-256"
+    brhash: "br_f16273ffd2951513"
   emoji_enabled: true
   language: en
 
@@ -85,6 +86,7 @@ translation_key_standard:
   translation_key:
     enabled: true
     algorithm: "SHA-2048→SHA-256"
+    brhash: "br_10fd648534d410af"
   emoji_enabled: true
   language: en
 
@@ -104,6 +106,7 @@ translation_key_standard:
   translation_key:
     enabled: true
     algorithm: "SHA-2048→SHA-256"
+    brhash: "br_dc00a2a841f128e2"
     sign_deployments: true
   emoji_enabled: true
   language: en
@@ -121,6 +124,7 @@ translation_key_standard:
   translation_key:
     enabled: true
     algorithm: "SHA-2048→SHA-256"
+    brhash: "br_1b6507b51865ccd1"
     verify_code_signatures: true
   emoji_enabled: true
   language: en
@@ -139,6 +143,7 @@ translation_key_standard:
   translation_key:
     enabled: true
     algorithm: "SHA-2048→SHA-256"
+    brhash: "br_d0f38e54497095f9"
     sign_all_policy_changes: true
     audit_trail: true
   emoji_enabled: true
@@ -157,6 +162,7 @@ translation_key_standard:
   translation_key:
     enabled: true
     algorithm: "SHA-2048→SHA-256"
+    brhash: "br_1b544cfe78d688c2"
     hash_conflict_detection: true
   emoji_enabled: true
   language: en
@@ -174,6 +180,7 @@ translation_key_standard:
   translation_key:
     enabled: true
     algorithm: "SHA-2048→SHA-256"
+    brhash: "br_b57fdfccae2c3ada"
     tamper_detection: true
   emoji_enabled: true
   language: en
@@ -192,6 +199,7 @@ translation_key_standard:
   translation_key:
     enabled: true
     algorithm: "SHA-2048→SHA-256"
+    brhash: "br_f33d4b12a36b39b9"
     immutable_signatures: true
     full_audit_trail: true
   emoji_enabled: true
@@ -223,6 +231,7 @@ translation_key_standard:
   translation_key:
     enabled: true
     algorithm: "SHA-2048→SHA-256"
+    brhash: "br_9971543080cf815f"
     mobile_optimized: true
   emoji_enabled: true
   language: en
@@ -260,6 +269,7 @@ translation_key_standard:
   translation_key:
     enabled: true
     algorithm: "SHA-2048→SHA-256"
+    brhash: "br_b9621f9bb33a3984"
   emoji_enabled: true
   language: en
 
@@ -286,6 +296,7 @@ translation_key_standard:
   translation_key:
     enabled: true
     algorithm: "SHA-2048→SHA-256"
+    brhash: "br_0262673490cdf94c"
     sign_all_transactions: true
     full_audit_trail: true
   emoji_enabled: true
@@ -360,6 +371,7 @@ translation_key_standard:
   translation_key:
     enabled: true
     algorithm: "SHA-2048→SHA-256"
+    brhash: "br_d2d1142761e7f179"
   emoji_enabled: true
   language: en
 
@@ -391,6 +403,7 @@ translation_key_standard:
   translation_key:
     enabled: true
     algorithm: "SHA-2048→SHA-256"
+    brhash: "br_8d26da7bb55ff446"
   emoji_enabled: true
   language: en
 
@@ -416,6 +429,7 @@ translation_key_standard:
   translation_key:
     enabled: true
     algorithm: "SHA-2048→SHA-256"
+    brhash: "br_e0e096b6460a3a36"
   emoji_enabled: true
   language: en
 
@@ -458,6 +472,7 @@ translation_key_standard:
   translation_key:
     enabled: true
     algorithm: "SHA-2048→SHA-256"
+    brhash: "br_db5b64cf3be23b6d"
     sign_commits: true
   emoji_enabled: true
   language: en
@@ -489,6 +504,7 @@ translation_key_standard:
   translation_key:
     enabled: true
     algorithm: "SHA-2048→SHA-256"
+    brhash: "br_01d59508eb4c4d72"
   emoji_enabled: true
   language: en
 
@@ -513,6 +529,7 @@ translation_key_standard:
   translation_key:
     enabled: true
     algorithm: "SHA-2048→SHA-256"
+    brhash: "br_190e9bcb3608e074"
   emoji_enabled: true
   language: en
 
@@ -539,6 +556,7 @@ translation_key_standard:
   translation_key:
     enabled: true
     algorithm: "SHA-2048→SHA-256"
+    brhash: "br_b6a6db27fee66112"
   emoji_enabled: true
   language: en
 
@@ -571,6 +589,7 @@ translation_key_standard:
   translation_key:
     enabled: true
     algorithm: "SHA-2048→SHA-256"
+    brhash: "br_081183b518956e8a"
     sign_all_operations: true
   emoji_enabled: true
   language: en
@@ -601,6 +620,7 @@ translation_key_standard:
   translation_key:
     enabled: true
     algorithm: "SHA-2048→SHA-256"
+    brhash: "br_90ffb0f0f3646ee3"
     sign_all_transactions: true
   emoji_enabled: true
   language: en
@@ -624,6 +644,7 @@ translation_key_standard:
   translation_key:
     enabled: true
     algorithm: "SHA-2048→SHA-256"
+    brhash: "br_83f53ba3fa4d46f1"
     full_audit_trail: true
   emoji_enabled: true
   language: en
@@ -655,6 +676,7 @@ translation_key_standard:
   translation_key:
     enabled: true
     algorithm: "SHA-2048→SHA-256"
+    brhash: "br_a6092f59cf2e9325"
     verify_signatures: true
   emoji_enabled: true
   language: en
@@ -697,6 +719,7 @@ translation_key_standard:
   translation_key:
     enabled: true
     algorithm: "SHA-2048→SHA-256"
+    brhash: "br_ab21aec43313d651"
   emoji_enabled: true
   language: en
   integrations:
