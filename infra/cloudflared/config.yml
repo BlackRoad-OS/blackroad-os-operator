@@ -1,0 +1,95 @@
+# BlackRoad OS - Cloudflare Tunnel Configuration
+# Tunnel: blackroad-primary
+#
+# This config routes all BlackRoad traffic through a single tunnel
+# with Zero Trust Access protection on all endpoints.
+
+tunnel: blackroad-primary
+credentials-file: /etc/cloudflared/blackroad-primary.json
+
+# Logging
+loglevel: info
+
+# Ingress rules (order matters - first match wins)
+ingress:
+  # ============================================
+  # CORE SERVICES
+  # ============================================
+
+  # Main web app
+  - hostname: app.blackroad.io
+    service: http://blackroad-os-web.railway.internal:3000
+    originRequest:
+      noTLSVerify: true
+
+  # API Gateway (operator)
+  - hostname: api.blackroad.io
+    service: http://blackroad-os-operator.railway.internal:8000
+    originRequest:
+      noTLSVerify: true
+
+  # Console / PRISM
+  - hostname: console.blackroad.io
+    service: http://blackroad-prism-console.railway.internal:4000
+    originRequest:
+      noTLSVerify: true
+
+  # ============================================
+  # AGENT SERVICES (Cloudflare Workers)
+  # ============================================
+
+  # CECE AI Gateway
+  - hostname: cece.blackroad.io
+    service: https://blackroad-cece.amundsonalexa.workers.dev
+
+  # Identity service
+  - hostname: identity.blackroad.io
+    service: https://blackroad-identity.amundsonalexa.workers.dev
+
+  # ============================================
+  # PORTAL SUBDOMAINS
+  # ============================================
+
+  - hostname: dashboard.blackroad.io
+    service: http://blackroad-dashboard.railway.internal:3000
+    originRequest:
+      noTLSVerify: true
+
+  - hostname: studio.blackroad.io
+    service: http://blackroad-studio.railway.internal:3000
+    originRequest:
+      noTLSVerify: true
+
+  - hostname: finance.blackroad.io
+    service: http://blackroad-finance.railway.internal:3000
+    originRequest:
+      noTLSVerify: true
+
+  # ============================================
+  # PREVIEW / STAGING
+  # ============================================
+
+  # Wildcard for preview deployments
+  - hostname: "*.preview.blackroad.io"
+    service: http://preview-router.railway.internal:8080
+    originRequest:
+      noTLSVerify: true
+
+  # ============================================
+  # SISTER DOMAINS
+  # ============================================
+
+  - hostname: "*.lucidia.earth"
+    service: https://lucidia-earth-router.amundsonalexa.workers.dev
+
+  - hostname: "*.lucidia.studio"
+    service: https://lucidia-studio-router.amundsonalexa.workers.dev
+
+  - hostname: "*.blackroadai.com"
+    service: https://blackroadai-router.amundsonalexa.workers.dev
+
+  # ============================================
+  # CATCH-ALL (404)
+  # ============================================
+
+  - service: http_status:404

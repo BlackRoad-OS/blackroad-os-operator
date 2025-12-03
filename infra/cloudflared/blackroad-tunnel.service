@@ -1,0 +1,37 @@
+# BlackRoad Cloudflare Tunnel - systemd service
+# Install to: /etc/systemd/system/blackroad-tunnel.service
+#
+# Setup:
+#   1. sudo cp blackroad-tunnel.service /etc/systemd/system/
+#   2. sudo systemctl daemon-reload
+#   3. sudo systemctl enable blackroad-tunnel
+#   4. sudo systemctl start blackroad-tunnel
+
+[Unit]
+Description=BlackRoad Cloudflare Tunnel
+After=network.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=cloudflared
+Group=cloudflared
+ExecStart=/usr/local/bin/cloudflared tunnel --config /etc/cloudflared/config.yml run blackroad-primary
+Restart=on-failure
+RestartSec=5
+LimitNOFILE=65536
+
+# Security hardening
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+ReadWritePaths=/var/log/cloudflared
+PrivateTmp=yes
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=blackroad-tunnel
+
+[Install]
+WantedBy=multi-user.target
