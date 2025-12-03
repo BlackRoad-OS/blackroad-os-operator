@@ -1,0 +1,50 @@
+# manifest describing how dynamic config should be refreshed across the repo
+refresh:
+  interval_seconds: 300
+  owner: cece
+  destinations:
+    - config/dynamic/state.json
+    - gdrive/blackroad-config-cache.json
+
+pipelines:
+  - name: governance-policies
+    sources:
+      - config/policies.infra.yaml
+      - config/policies.mesh.yaml
+      - config/policies.education.yaml
+      - config/policies.intents.yaml
+    cadence: 120
+    actions:
+      - verify-schema
+      - compute-sha
+      - publish-summary
+  - name: service-registry
+    sources:
+      - config/service_registry.yaml
+      - config/endpoints-wiring.yaml
+    cadence: 90
+    actions:
+      - verify-schema
+      - publish-summary
+  - name: agent-catalog
+    sources:
+      - agent-catalog/agents.yaml
+    cadence: 180
+    actions:
+      - sync-codex
+      - publish-summary
+
+hydration:
+  strategy: "regenerate-on-change"
+  outputs:
+    - path: config/dynamic/state.json
+      format: json
+      includes:
+        - checksums
+        - manifest
+        - updated_at
+
+slo:
+  freshness_seconds: 600
+  max_drift_seconds: 30
+  alert_channel: "#blackroad-ops"

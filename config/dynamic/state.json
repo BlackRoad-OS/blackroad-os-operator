@@ -1,0 +1,183 @@
+{
+  "generated_at": "2025-12-03T01:21:35.986239+00:00",
+  "root": "/workspace/blackroad-os-operator/config",
+  "files": [
+    {
+      "path": "config/agent-routing.yaml",
+      "sha256": "83b34539d11d21680e2c2bdb8e040d127db6e5f151f0725730bb7573ec52e745",
+      "size": 5098,
+      "modified_at": "2025-12-03T01:17:09.275076+00:00"
+    },
+    {
+      "path": "config/cloudflare-dns.csv",
+      "sha256": "2e6ebd237231d59b7bf4f245819c44abacdbe85e49aec4c5e161baa40aad6bfa",
+      "size": 6665,
+      "modified_at": "2025-12-03T01:17:09.275076+00:00"
+    },
+    {
+      "path": "config/dns-matrix.yaml",
+      "sha256": "7c8bce191fc6c633f33f713e3d199a01803467f650bcc02edd01a17da2522fc5",
+      "size": 13643,
+      "modified_at": "2025-12-03T01:17:09.275076+00:00"
+    },
+    {
+      "path": "config/dynamic/manifest.yaml",
+      "sha256": "5a881861f347289158039da025fc1e263701132cb9c76349b2b22db6e7029307",
+      "size": 1122,
+      "modified_at": "2025-12-03T01:21:24.430396+00:00"
+    },
+    {
+      "path": "config/endpoints-wiring.yaml",
+      "sha256": "6e72fe821c3d99e9cac1ad065abd1a19d93dee088c3abc77b5cfc794c1e306b3",
+      "size": 10393,
+      "modified_at": "2025-12-03T01:17:09.275076+00:00"
+    },
+    {
+      "path": "config/infrastructure.yaml",
+      "sha256": "a7e997ccf81b3704a17262b0981d361acc8bf8d4da4644ff25df64e80197e0e4",
+      "size": 16558,
+      "modified_at": "2025-12-03T01:17:09.275076+00:00"
+    },
+    {
+      "path": "config/policies.education.yaml",
+      "sha256": "a6ed0fd691a49d00a254fe7509ad8b5b470b71d361292d48a4aa147d7975a5da",
+      "size": 4392,
+      "modified_at": "2025-12-03T01:17:09.275076+00:00"
+    },
+    {
+      "path": "config/policies.infra.yaml",
+      "sha256": "ac37b7bdd09d932682ef85453429b9d991365e180f2b9919feb7ee604070d912",
+      "size": 4838,
+      "modified_at": "2025-12-03T01:17:09.275076+00:00"
+    },
+    {
+      "path": "config/policies.intents.yaml",
+      "sha256": "26fbb65199399d7b24bfb32e07216b8d6f36fcf4465de0eeedc6157863da4cb6",
+      "size": 11139,
+      "modified_at": "2025-12-03T01:17:09.275076+00:00"
+    },
+    {
+      "path": "config/policies.mesh.yaml",
+      "sha256": "f7933814ac297bc80007483cdef64be86a064f1f059814773423dfed545e7176",
+      "size": 5297,
+      "modified_at": "2025-12-03T01:17:09.275076+00:00"
+    },
+    {
+      "path": "config/railway-services.yaml",
+      "sha256": "bd2876e05adb317e64c4aa210b44905f3200f36dc3dd05e7fcb81eb79d5c18bf",
+      "size": 9356,
+      "modified_at": "2025-12-03T01:17:09.275076+00:00"
+    },
+    {
+      "path": "config/schemas/identity.schema.json",
+      "sha256": "0041047d12aa9b4f48d2e3b17deec2d3139d6c92917669154328edf2ed04d880",
+      "size": 6508,
+      "modified_at": "2025-12-03T01:17:09.275076+00:00"
+    },
+    {
+      "path": "config/secrets.aliases.yaml",
+      "sha256": "dc93b47b0f20ddb7f8f58c33730c4eb99a31b6ff0811ac5100007aa56f6f5c5b",
+      "size": 13019,
+      "modified_at": "2025-12-03T01:17:09.275076+00:00"
+    },
+    {
+      "path": "config/service_registry.yaml",
+      "sha256": "07143ac7fd6b2edddd94dff84a7634379056c357d74411a18c7015ed708e5caf",
+      "size": 12430,
+      "modified_at": "2025-12-03T01:17:09.275076+00:00"
+    },
+    {
+      "path": "config/templates/BLACKROAD_TOOL.yaml",
+      "sha256": "a22315069e252f97d466ef059e54c28285a49ae676b1159c008dce83987a503e",
+      "size": 3777,
+      "modified_at": "2025-12-03T01:17:09.275076+00:00"
+    }
+  ],
+  "summary": {
+    "count": 15,
+    "total_size": 124235,
+    "by_extension": {
+      ".yaml": {
+        "count": 13,
+        "size": 111062
+      },
+      ".csv": {
+        "count": 1,
+        "size": 6665
+      },
+      ".json": {
+        "count": 1,
+        "size": 6508
+      }
+    }
+  },
+  "manifest": {
+    "refresh": {
+      "interval_seconds": 300,
+      "owner": "cece",
+      "destinations": [
+        "config/dynamic/state.json",
+        "gdrive/blackroad-config-cache.json"
+      ]
+    },
+    "pipelines": [
+      {
+        "name": "governance-policies",
+        "sources": [
+          "config/policies.infra.yaml",
+          "config/policies.mesh.yaml",
+          "config/policies.education.yaml",
+          "config/policies.intents.yaml"
+        ],
+        "cadence": 120,
+        "actions": [
+          "verify-schema",
+          "compute-sha",
+          "publish-summary"
+        ]
+      },
+      {
+        "name": "service-registry",
+        "sources": [
+          "config/service_registry.yaml",
+          "config/endpoints-wiring.yaml"
+        ],
+        "cadence": 90,
+        "actions": [
+          "verify-schema",
+          "publish-summary"
+        ]
+      },
+      {
+        "name": "agent-catalog",
+        "sources": [
+          "agent-catalog/agents.yaml"
+        ],
+        "cadence": 180,
+        "actions": [
+          "sync-codex",
+          "publish-summary"
+        ]
+      }
+    ],
+    "hydration": {
+      "strategy": "regenerate-on-change",
+      "outputs": [
+        {
+          "path": "config/dynamic/state.json",
+          "format": "json",
+          "includes": [
+            "checksums",
+            "manifest",
+            "updated_at"
+          ]
+        }
+      ]
+    },
+    "slo": {
+      "freshness_seconds": 600,
+      "max_drift_seconds": 30,
+      "alert_channel": "#blackroad-ops"
+    }
+  }
+}

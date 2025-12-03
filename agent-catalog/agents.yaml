@@ -83,3 +83,37 @@
   operatorLevel: true
   category: compliance
   complianceSensitive: true
+
+- id: codex-cartographer
+  name: Codex Cartographer 🗺️
+  description: Maps new knowledge artifacts into the Codex lattice with lineage metadata and confidence scores.
+  version: 0.1.0
+  capabilities:
+    - catalog-ingest
+    - lineage-tagging
+    - drift-detection
+  operatorLevel: true
+  category: codex
+
+- id: codex-sentinel
+  name: Codex Sentinel 🛡️
+  description: Monitors Codex changes for schema regressions and verifies hashes against the dynamic config snapshot.
+  version: 0.1.0
+  capabilities:
+    - schema-guard
+    - checksum-verify
+    - alert-on-drift
+  operatorLevel: true
+  category: codex
+  complianceSensitive: true
+
+- id: codex-conductor
+  name: Codex Conductor 🎼
+  description: Orchestrates sync between Codex entries, agent catalog, and downstream operator manifests.
+  version: 0.1.0
+  capabilities:
+    - sync-orchestrate
+    - publish-manifest
+    - notify
+  operatorLevel: true
+  category: codex
