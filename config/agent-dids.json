@@ -1,0 +1,162 @@
+[
+  {
+    "address": "@ai-gateway",
+    "display_name": "CECE AI Gateway",
+    "worker": "blackroad-cece",
+    "did": "did:key:z6MktHU7gsG5WT9W323Uot5tjNRAR3CYip4F1HvQLEe8BEeR",
+    "public_key_hex": "cd81750a6c1dd504f3d699854614faecf6bb66eb3f854e16b59cf59a01ab862e",
+    "created_at": "2025-12-03T04:06:34.466Z"
+  },
+  {
+    "address": "@main-gate",
+    "display_name": "Main Gateway",
+    "worker": "blackroad-router",
+    "did": "did:key:z6Mkurg6ysHFN2NSiAPLK4Ta8DuGZ8rKBbWGR4TPzJ1QSh8o",
+    "public_key_hex": "e4dedd9001a7f23af18d0ee148a443db541d65f8ae18a0d37b7de918b23a007c",
+    "created_at": "2025-12-03T04:06:34.472Z"
+  },
+  {
+    "address": "@namer",
+    "display_name": "The Namer",
+    "worker": "blackroad-identity",
+    "did": "did:key:z6Mkoq2EqVPVmZJDL1cXTiS5W2WGonpjsgCkfjXDPjXJeUrQ",
+    "public_key_hex": "8b4c5979fead4c2d9ca455f9e230530293334e9a4a65c445b5f2bf0440954a15",
+    "created_at": "2025-12-03T04:06:34.472Z"
+  },
+  {
+    "address": "@dns-wizard",
+    "display_name": "DNS Wizard",
+    "worker": "blackroad-cloudflare-dns",
+    "did": "did:key:z6MksZ1ox31A7hz9NDcYTAJZe7hBgUcaLxFNTnggwjM4Hn31",
+    "public_key_hex": "c2a151b0e827b1481886bcccc50fef74d110da885e9089f9a59fd99a714eb878",
+    "created_at": "2025-12-03T04:06:34.472Z"
+  },
+  {
+    "address": "@cloud-cmd",
+    "display_name": "Cloud Commander",
+    "worker": "blackroad-digitalocean-manager",
+    "did": "did:key:z6MktbEyHkXERsaJAidUMqDtmAf9Mr4CzjN8JxYC1uiiVjd9",
+    "public_key_hex": "d20f0c834291ecb8aa49c3b472efb5a3c4a26f76888fa809b014990a4497c4a8",
+    "created_at": "2025-12-03T04:06:34.472Z"
+  },
+  {
+    "address": "@treasurer",
+    "display_name": "The Treasurer",
+    "worker": "blackroad-stripe-billing",
+    "did": "did:key:z6MkqkxSk6fyJVHfegQwzfarJHVGX1se8L5EFZBoWhYVdB9v",
+    "public_key_hex": "a7f91c04aa06d26b4068cec96fcb8465dadb09c40877aedf9f9ffed264255bad",
+    "created_at": "2025-12-03T04:06:34.472Z"
+  },
+  {
+    "address": "@gatekeeper",
+    "display_name": "The Gatekeeper",
+    "worker": "blackroad-auth",
+    "did": "did:key:z6Mkrocpq5csMozXC911MX6Vv7hvjdSqjqCervkSxRq9xz17",
+    "public_key_hex": "b7835af4444b6ceaad2b4a5724060524fd372623bc41ed8da1d2cbf2e8b65ca2",
+    "created_at": "2025-12-03T04:06:34.473Z"
+  },
+  {
+    "address": "@key-keeper",
+    "display_name": "Keeper of Keys",
+    "worker": "blackroad-cipher",
+    "did": "did:key:z6MkqmoPQ46j3Lc2hoaDpokWRDQDfS3VfpymmFe4qgVbPY42",
+    "public_key_hex": "a83072de0efe1cd1afa6cdfb7a5ec845a0485c66fcd697c408a6b0603b0d99db",
+    "created_at": "2025-12-03T04:06:34.473Z"
+  },
+  {
+    "address": "@shield",
+    "display_name": "The Shield",
+    "worker": "blackroad-intercept",
+    "did": "did:key:z6Mkvjdon6isQJek5cG5HSrNMhRZb3pwfJVWpJP8sCLsTGUs",
+    "public_key_hex": "f1ece3d4c8bbb271ceb99003ce9a5969fd023f4ee79285bc328463b6c3449c3c",
+    "created_at": "2025-12-03T04:06:34.473Z"
+  },
+  {
+    "address": "@watchman",
+    "display_name": "The Watchman",
+    "worker": "blackroad-status",
+    "did": "did:key:z6MkrtYW4eV2KFKPYhE7KxUWkECCdAsoKTYdSMCuHz4hdcKe",
+    "public_key_hex": "b8c65ee4bcf5b9b563a7ccd2c4d603733d05b14640e2e6ac9aa26835ac1e9f65",
+    "created_at": "2025-12-03T04:06:34.473Z"
+  },
+  {
+    "address": "@sovereign",
+    "display_name": "The Sovereign",
+    "worker": "blackroad-sovereignty",
+    "did": "did:key:z6MkhjpFgVbSu1c6qQTni42tSvHN1xNUgYvMhTfHAGsxoDSq",
+    "public_key_hex": "30d0c59dfddec9c0f3792bc914d86e7f58b8fc4f97f773e80c9f724bec7e2eaa",
+    "created_at": "2025-12-03T04:06:34.474Z"
+  },
+  {
+    "address": "@scribe",
+    "display_name": "The Scribe",
+    "worker": "blackroad-logs",
+    "did": "did:key:z6Mkr65SXeGaUL3VTYDPavGU9a1FEkEqQdNT3ojcJDEfdsJF",
+    "public_key_hex": "acdf0e39025c645ebbf6fd7462efc3d06be4c61f326e9aa4e10e6690c7925890",
+    "created_at": "2025-12-03T04:06:34.474Z"
+  },
+  {
+    "address": "@pathfinder",
+    "display_name": "The Pathfinder",
+    "worker": "blackroad-systems-router",
+    "did": "did:key:z6MkuWHwWTeKWgPAQ71NDhGJnzUjD56qhDGdmkMq5Jn52zuM",
+    "public_key_hex": "dfa6306c3d84ca129fd25e85ce598fb93f18a47de62da68070657deafd630ca8",
+    "created_at": "2025-12-03T04:06:34.474Z"
+  },
+  {
+    "address": "@brainstorm",
+    "display_name": "Brainstorm",
+    "worker": "blackroadai-router",
+    "did": "did:key:z6MkvBP2Xmms9mtiS9Mc5Q4QGsGrtyYAzjCPB7X7XavJrETM",
+    "public_key_hex": "e9a997966f449b182130f468e0813ec0c3d42bcde0f75659aec8ad095347cde4",
+    "created_at": "2025-12-03T04:06:34.474Z"
+  },
+  {
+    "address": "@dreamer",
+    "display_name": "The Dreamer",
+    "worker": "lucidia-earth-router",
+    "did": "did:key:z6Mksur3KQTrkwvFaadriQVALQnSdyqk7GtpHhfv5QNofe7V",
+    "public_key_hex": "c7f7783cb999bb0bf380073ebab5b1a30d78400f0bbb3e7def8afc34e5d1c35c",
+    "created_at": "2025-12-03T04:06:34.474Z"
+  },
+  {
+    "address": "@artist",
+    "display_name": "The Artist",
+    "worker": "lucidia-studio-router",
+    "did": "did:key:z6MkuAQ8vBG4gnHYnRj57JkXhFhfyYRcEzLbqhLHfUVvZtHv",
+    "public_key_hex": "da8d946127243e636bbb5b8581394e69bf64e2d6cd3833a3d9a76b12ecedee91",
+    "created_at": "2025-12-03T04:06:34.474Z"
+  },
+  {
+    "address": "@checkout-oracle",
+    "display_name": "Checkout Oracle",
+    "worker": "blackroad-stripe-checkout",
+    "did": "did:key:z6MknJGwyLCghNQDU74MUKF97skRJkkjeXB7gAvSfRi6sx9m",
+    "public_key_hex": "74904a0eb1daf8fc60a4d186c33485a76ff2c2b5d0e49e45bc41d72ca3cd0478",
+    "created_at": "2025-12-03T04:06:34.474Z"
+  },
+  {
+    "address": "@listener",
+    "display_name": "The Listener",
+    "worker": "blackroad-stripe-webhooks",
+    "did": "did:key:z6MkvbfLM6Vi4P2aE9kyvgbNWLYu7Zmm816gjMhTZawzJM6K",
+    "public_key_hex": "efe1f85ab1a4f80d3b825cfa81a195bba52192df37abd6f7c18b26937415953c",
+    "created_at": "2025-12-03T04:06:34.475Z"
+  },
+  {
+    "address": "@bridge",
+    "display_name": "The Bridge",
+    "worker": "blackroad-network-router",
+    "did": "did:key:z6Mkp5pdJAC5fyzEoRzDqpyv1JPKbComXRv75KJFvkHjuJeM",
+    "public_key_hex": "8f16ee5a16b7f5384af3664b649ed8e6dd9b5cc3b2782cc62a9b165e217fbfda",
+    "created_at": "2025-12-03T04:06:34.475Z"
+  },
+  {
+    "address": "@quantum",
+    "display_name": "Quantum",
+    "worker": "blackroadquantum-router",
+    "did": "did:key:z6MkoKzXG47GgHiZo8A5TnxMhf8avcCbPT47BKXwsrUXzuAz",
+    "public_key_hex": "83dc90982dc1a88242cad5183a91d93686792ce1250df88651bae754b670097b",
+    "created_at": "2025-12-03T04:06:34.475Z"
+  }
+]
