@@ -85,9 +85,14 @@ jobs:
         run: echo "${{ secrets.CLOUDFLARE_API_TOKEN }}" | wrangler secret put CF_API_TOKEN
 
       - name: Set DO_API_TOKEN on DO Manager
-        if: ${{ secrets.DO_API_TOKEN != '' }}
         working-directory: workers/digitalocean-manager
-        run: echo "${{ secrets.DO_API_TOKEN }}" | wrangler secret put DO_API_TOKEN
+        run: |
+          if [ -n "${{ secrets.DO_API_TOKEN }}" ]; then
+            echo "${{ secrets.DO_API_TOKEN }}" | wrangler secret put DO_API_TOKEN
+          else
+            echo "DO_API_TOKEN not set, skipping"
+          fi
+        continue-on-error: true
 
   notify:
     needs: [deploy-gateway, deploy-workers, setup-infra-secrets]
