@@ -3,6 +3,8 @@
  * Manages droplets, domains, and DO infrastructure
  * @owner Alexa Louise Amundson
  * @system BlackRoad OS
+ * @brhash e32343478f218a1910139d0dc36d46732a2238f65eaf48b368abacda3dd8c952
+ * @verified 2025-12-03T02:45:00Z
  */
 
 interface Env {
@@ -18,7 +20,10 @@ export default {
       'Access-Control-Allow-Origin': '*',
       'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
       'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-API-Key',
-      'X-Served-By': 'blackroad-do-manager'
+      'X-Served-By': 'blackroad-do-manager',
+      'X-BR-Hash': 'e32343478f218a1910139d0dc36d4673',
+      'X-BR-Signal': 'intercepted',
+      'X-BR-Operator': 'alexa.operator.v1'
     };
 
     if (request.method === 'OPTIONS') {

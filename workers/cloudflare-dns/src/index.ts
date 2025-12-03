@@ -3,6 +3,8 @@
  * Manages Cloudflare DNS records via API
  * @owner Alexa Louise Amundson
  * @system BlackRoad OS
+ * @brhash 76b27c2ddf4a258b73632869aa76277efef3b5e5fae23b09a5a8f0f4d2ac2abc
+ * @verified 2025-12-03T02:45:00Z
  */
 
 interface Env {
@@ -28,7 +30,10 @@ export default {
       'Access-Control-Allow-Origin': '*',
       'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
       'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-API-Key',
-      'X-Served-By': 'blackroad-dns-manager'
+      'X-Served-By': 'blackroad-dns-manager',
+      'X-BR-Hash': '76b27c2ddf4a258b73632869aa76277e',
+      'X-BR-Signal': 'intercepted',
+      'X-BR-Operator': 'alexa.operator.v1'
     };
 
     if (request.method === 'OPTIONS') {
