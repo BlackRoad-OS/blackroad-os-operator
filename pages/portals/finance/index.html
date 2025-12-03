@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Finance - BlackRoad OS</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💰</text></svg>">
+    <script async crossorigin="anonymous" data-clerk-publishable-key="pk_test_ZmluZS13YWxsYWJ5LTk2LmNsZXJrLmFjY291bnRzLmRldiQ" src="https://cdn.jsdelivr.net/npm/@clerk/clerk-js@latest/dist/clerk.browser.js"></script>
+    <style>
+        :root { --bg-dark: #0a0a0f; --bg-card: #12121a; --bg-hover: #1a1a25; --border: #2a2a3a; --text: #fff; --text-muted: #888; --green: #00D084; --green-dark: #00A86B; --red: #FF4757; --orange: #FF9D00; --sidebar-width: 260px; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg-dark); color: var(--text); min-height: 100vh; }
+        #auth-gate { display: flex; align-items: center; justify-content: center; min-height: 100vh; background: linear-gradient(135deg, #0a0a0a, #0a1a0a, #0a2a1a); }
+        #auth-gate .card { background: rgba(255,255,255,0.03); border: 1px solid rgba(0,208,132,0.2); border-radius: 20px; padding: 2.5rem; text-align: center; max-width: 400px; }
+        #auth-gate h1 { font-size: 2rem; background: linear-gradient(90deg, var(--green), var(--green-dark)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 1rem; }
+        .spinner { width: 24px; height: 24px; border: 2px solid rgba(0,208,132,0.2); border-top-color: var(--green); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 1rem auto; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        #app { display: none; }
+        #app.show { display: flex; min-height: 100vh; }
+        .sidebar { width: var(--sidebar-width); background: var(--bg-card); border-right: 1px solid var(--border); display: flex; flex-direction: column; position: fixed; height: 100vh; }
+        .sidebar-header { padding: 1.5rem; border-bottom: 1px solid var(--border); }
+        .sidebar-logo { font-size: 1.3rem; font-weight: 700; color: var(--green); }
+        .sidebar-nav { padding: 1rem 0; flex: 1; }
+        .nav-section { padding: 0.5rem 1rem; font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; margin-top: 1rem; }
+        .nav-item { display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 1.5rem; color: var(--text-muted); text-decoration: none; transition: all 0.15s; font-size: 0.9rem; }
+        .nav-item:hover { background: var(--bg-hover); color: var(--text); }
+        .nav-item.active { background: rgba(0,208,132,0.1); color: var(--green); border-right: 2px solid var(--green); }
+        .sidebar-footer { padding: 1rem; border-top: 1px solid var(--border); }
+        .user-card { display: flex; align-items: center; gap: 0.75rem; padding: 0.5rem; border-radius: 8px; cursor: pointer; }
+        .user-avatar { width: 36px; height: 36px; border-radius: 50%; border: 2px solid var(--green); }
+        .user-name { font-size: 0.85rem; font-weight: 500; }
+        .user-email { font-size: 0.7rem; color: var(--text-muted); }
+        .main { flex: 1; margin-left: var(--sidebar-width); padding: 2rem; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; }
+        .header h1 { font-size: 1.75rem; }
+        .btn { padding: 0.6rem 1.2rem; border-radius: 8px; font-size: 0.85rem; font-weight: 500; cursor: pointer; border: none; text-decoration: none; transition: all 0.15s; }
+        .btn-primary { background: linear-gradient(90deg, var(--green), var(--green-dark)); color: white; }
+        .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text); }
+        .balance-card { background: linear-gradient(135deg, var(--green), var(--green-dark)); border-radius: 16px; padding: 2rem; margin-bottom: 2rem; }
+        .balance-label { font-size: 0.9rem; opacity: 0.8; margin-bottom: 0.5rem; }
+        .balance-value { font-size: 3rem; font-weight: 700; }
+        .balance-change { font-size: 0.9rem; margin-top: 0.5rem; opacity: 0.9; }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
+        .stat-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 1.25rem; }
+        .stat-label { font-size: 0.75rem; color: var(--text-muted); margin-bottom: 0.5rem; }
+        .stat-value { font-size: 1.5rem; font-weight: 600; }
+        .stat-value.green { color: var(--green); }
+        .stat-value.red { color: var(--red); }
+        .card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem; }
+        .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+        .card-title { font-size: 1rem; font-weight: 600; }
+        .tx-item { display: flex; align-items: center; gap: 1rem; padding: 0.75rem 0; border-bottom: 1px solid var(--border); }
+        .tx-item:last-child { border-bottom: none; }
+        .tx-icon { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; }
+        .tx-icon.in { background: rgba(0,208,132,0.15); }
+        .tx-icon.out { background: rgba(255,71,87,0.15); }
+        .tx-info { flex: 1; }
+        .tx-title { font-size: 0.9rem; font-weight: 500; }
+        .tx-date { font-size: 0.75rem; color: var(--text-muted); }
+        .tx-amount { font-weight: 600; }
+        .tx-amount.green { color: var(--green); }
+        .tx-amount.red { color: var(--red); }
+        .crypto-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; }
+        .crypto-card { background: var(--bg-hover); border-radius: 10px; padding: 1rem; }
+        .crypto-header { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem; }
+        .crypto-icon { font-size: 1.5rem; }
+        .crypto-name { font-weight: 500; }
+        .crypto-balance { font-size: 1.25rem; font-weight: 600; }
+        .crypto-value { font-size: 0.8rem; color: var(--text-muted); }
+    </style>
+</head>
+<body>
+    <div id="auth-gate"><div class="card"><h1>💰 Finance</h1><p style="color:#888;margin-bottom:1rem">Financial Portal</p><div class="spinner"></div><p style="color:#888;font-size:0.85rem">Loading...</p></div></div>
+
+    <div id="app">
+        <aside class="sidebar">
+            <div class="sidebar-header"><div class="sidebar-logo">💰 Finance</div></div>
+            <nav class="sidebar-nav">
+                <div class="nav-section">Overview</div>
+                <a href="#" class="nav-item active"><span>📊</span> Dashboard</a>
+                <a href="#" class="nav-item"><span>💳</span> Transactions</a>
+                <a href="#" class="nav-item"><span>📈</span> Analytics</a>
+                <div class="nav-section">Assets</div>
+                <a href="#" class="nav-item"><span>🪙</span> Crypto</a>
+                <a href="#" class="nav-item"><span>🏦</span> Bank Accounts</a>
+                <a href="#" class="nav-item"><span>💎</span> Investments</a>
+                <div class="nav-section">Tools</div>
+                <a href="#" class="nav-item"><span>🧮</span> Calculator</a>
+                <a href="#" class="nav-item"><span>📑</span> Reports</a>
+                <a href="#" class="nav-item"><span>⚙️</span> Settings</a>
+                <div class="nav-section">Navigate</div>
+                <a href="https://dashboard.blackroad.io" class="nav-item"><span>🏠</span> Dashboard</a>
+            </nav>
+            <div class="sidebar-footer"><div class="user-card" id="user-card"><img class="user-avatar" id="user-avatar" src=""><div><div class="user-name" id="user-name">...</div><div class="user-email" id="user-email"></div></div></div></div>
+        </aside>
+
+        <main class="main">
+            <div class="header">
+                <h1>Finance</h1>
+                <div><button class="btn btn-outline" style="margin-right:0.5rem">📥 Export</button><button class="btn btn-primary">+ Add Account</button></div>
+            </div>
+
+            <div class="balance-card">
+                <div class="balance-label">Total Balance</div>
+                <div class="balance-value">$12,847.32</div>
+                <div class="balance-change">↑ +$1,234.56 (10.6%) this month</div>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-card"><div class="stat-label">Income (30d)</div><div class="stat-value green">+$4,230</div></div>
+                <div class="stat-card"><div class="stat-label">Expenses (30d)</div><div class="stat-value red">-$2,995</div></div>
+                <div class="stat-card"><div class="stat-label">Savings Rate</div><div class="stat-value">29%</div></div>
+                <div class="stat-card"><div class="stat-label">Crypto Value</div><div class="stat-value green">$8,420</div></div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+                <div class="card">
+                    <div class="card-header"><div class="card-title">Recent Transactions</div><button class="btn btn-outline" style="padding:0.4rem 0.8rem;font-size:0.75rem">View All</button></div>
+                    <div class="tx-item"><div class="tx-icon in">💵</div><div class="tx-info"><div class="tx-title">Freelance Payment</div><div class="tx-date">Today, 2:30 PM</div></div><div class="tx-amount green">+$1,500</div></div>
+                    <div class="tx-item"><div class="tx-icon out">🛒</div><div class="tx-info"><div class="tx-title">AWS Services</div><div class="tx-date">Yesterday</div></div><div class="tx-amount red">-$89.99</div></div>
+                    <div class="tx-item"><div class="tx-icon in">🪙</div><div class="tx-info"><div class="tx-title">ETH Staking Reward</div><div class="tx-date">Dec 1</div></div><div class="tx-amount green">+$42.50</div></div>
+                    <div class="tx-item"><div class="tx-icon out">☁️</div><div class="tx-info"><div class="tx-title">Cloudflare Pro</div><div class="tx-date">Dec 1</div></div><div class="tx-amount red">-$20.00</div></div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header"><div class="card-title">Crypto Holdings</div></div>
+                    <div class="crypto-grid">
+                        <div class="crypto-card"><div class="crypto-header"><span class="crypto-icon">⟠</span><span class="crypto-name">ETH</span></div><div class="crypto-balance">2.5 ETH</div><div class="crypto-value">≈ $6,250</div></div>
+                        <div class="crypto-card"><div class="crypto-header"><span class="crypto-icon">◎</span><span class="crypto-name">SOL</span></div><div class="crypto-balance">100 SOL</div><div class="crypto-value">≈ $1,850</div></div>
+                        <div class="crypto-card"><div class="crypto-header"><span class="crypto-icon">₿</span><span class="crypto-name">BTC</span></div><div class="crypto-balance">0.1 BTC</div><div class="crypto-value">≈ $4,200</div></div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        async function init() {
+            if (typeof Clerk === 'undefined') await new Promise(r => setTimeout(r, 1000));
+            if (typeof Clerk === 'undefined') return;
+            await Clerk.load();
+            if (!Clerk.user) { Clerk.mountSignIn(document.querySelector('#auth-gate .card'), { appearance: { variables: { colorPrimary: '#00D084' } } }); return; }
+            document.getElementById('user-avatar').src = Clerk.user.imageUrl || '';
+            document.getElementById('user-name').textContent = Clerk.user.fullName || 'User';
+            document.getElementById('user-email').textContent = Clerk.user.primaryEmailAddress?.emailAddress || '';
+            document.getElementById('user-card').onclick = () => Clerk.openUserProfile();
+            document.getElementById('auth-gate').style.display = 'none';
+            document.getElementById('app').classList.add('show');
+        }
+        init();
+    </script>
+</body>
+</html>

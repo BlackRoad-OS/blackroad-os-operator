@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Legal - BlackRoad OS</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚖️</text></svg>">
+    <script async crossorigin="anonymous" data-clerk-publishable-key="pk_test_ZmluZS13YWxsYWJ5LTk2LmNsZXJrLmFjY291bnRzLmRldiQ" src="https://cdn.jsdelivr.net/npm/@clerk/clerk-js@latest/dist/clerk.browser.js"></script>
+    <style>
+        :root { --bg-dark: #0a0a0f; --bg-card: #12121a; --bg-hover: #1a1a25; --border: #2a2a3a; --text: #fff; --text-muted: #888; --gold: #FFD700; --gold-dark: #DAA520; --sidebar-width: 260px; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Georgia', serif; background: var(--bg-dark); color: var(--text); min-height: 100vh; }
+        #auth-gate { display: flex; align-items: center; justify-content: center; min-height: 100vh; background: linear-gradient(135deg, #0a0a0a, #1a1a1a, #2a2a2a); }
+        #auth-gate .card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,215,0,0.2); border-radius: 20px; padding: 2.5rem; text-align: center; max-width: 400px; font-family: -apple-system, sans-serif; }
+        #auth-gate h1 { font-size: 2rem; color: var(--gold); margin-bottom: 1rem; }
+        .spinner { width: 24px; height: 24px; border: 2px solid rgba(255,215,0,0.2); border-top-color: var(--gold); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 1rem auto; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        #app { display: none; }
+        #app.show { display: flex; min-height: 100vh; }
+        .sidebar { width: var(--sidebar-width); background: var(--bg-card); border-right: 1px solid var(--border); display: flex; flex-direction: column; position: fixed; height: 100vh; font-family: -apple-system, sans-serif; }
+        .sidebar-header { padding: 1.5rem; border-bottom: 1px solid var(--border); }
+        .sidebar-logo { font-size: 1.3rem; font-weight: 700; color: var(--gold); }
+        .sidebar-nav { padding: 1rem 0; flex: 1; }
+        .nav-section { padding: 0.5rem 1rem; font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; margin-top: 1rem; }
+        .nav-item { display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 1.5rem; color: var(--text-muted); text-decoration: none; transition: all 0.15s; font-size: 0.85rem; }
+        .nav-item:hover { background: var(--bg-hover); color: var(--text); }
+        .nav-item.active { background: rgba(255,215,0,0.1); color: var(--gold); border-right: 2px solid var(--gold); }
+        .sidebar-footer { padding: 1rem; border-top: 1px solid var(--border); }
+        .user-card { display: flex; align-items: center; gap: 0.75rem; padding: 0.5rem; border-radius: 8px; cursor: pointer; }
+        .user-avatar { width: 36px; height: 36px; border-radius: 50%; border: 2px solid var(--gold); }
+        .user-name { font-size: 0.85rem; font-weight: 500; }
+        .user-email { font-size: 0.7rem; color: var(--text-muted); }
+        .main { flex: 1; margin-left: var(--sidebar-width); padding: 2rem; font-family: -apple-system, sans-serif; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; }
+        .header h1 { font-size: 1.75rem; font-weight: 600; font-family: Georgia, serif; }
+        .btn { padding: 0.6rem 1.2rem; border-radius: 8px; font-size: 0.85rem; font-weight: 500; cursor: pointer; border: none; transition: all 0.15s; }
+        .btn-primary { background: linear-gradient(90deg, var(--gold), var(--gold-dark)); color: #000; }
+        .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text); }
+        .doc-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; margin-bottom: 2rem; }
+        .doc-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem; cursor: pointer; transition: all 0.2s; }
+        .doc-card:hover { border-color: var(--gold); transform: translateY(-2px); }
+        .doc-icon { font-size: 2.5rem; margin-bottom: 1rem; }
+        .doc-title { font-size: 1.1rem; font-weight: 600; margin-bottom: 0.5rem; }
+        .doc-desc { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem; }
+        .doc-meta { font-size: 0.75rem; color: var(--text-muted); }
+        .card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem; }
+        .card-title { font-size: 1rem; font-weight: 600; margin-bottom: 1rem; }
+        .contract-item { display: flex; align-items: center; justify-content: space-between; padding: 1rem; background: var(--bg-hover); border-radius: 8px; margin-bottom: 0.75rem; }
+        .contract-info { flex: 1; }
+        .contract-name { font-weight: 500; margin-bottom: 0.25rem; }
+        .contract-date { font-size: 0.75rem; color: var(--text-muted); }
+        .contract-status { padding: 0.25rem 0.75rem; border-radius: 4px; font-size: 0.7rem; }
+        .contract-status.active { background: rgba(0,208,132,0.15); color: #00D084; }
+        .contract-status.pending { background: rgba(255,215,0,0.15); color: var(--gold); }
+    </style>
+</head>
+<body>
+    <div id="auth-gate"><div class="card"><h1>⚖️ Legal</h1><p style="color:#888;margin-bottom:1rem">Legal Portal</p><div class="spinner"></div></div></div>
+    <div id="app">
+        <aside class="sidebar">
+            <div class="sidebar-header"><div class="sidebar-logo">⚖️ Legal</div></div>
+            <nav class="sidebar-nav">
+                <div class="nav-section">Documents</div>
+                <a href="#" class="nav-item active"><span>📄</span> All Documents</a>
+                <a href="#" class="nav-item"><span>📝</span> Contracts</a>
+                <a href="#" class="nav-item"><span>🔒</span> NDAs</a>
+                <a href="#" class="nav-item"><span>📋</span> Terms & Policies</a>
+                <div class="nav-section">Tools</div>
+                <a href="#" class="nav-item"><span>✍️</span> Document Generator</a>
+                <a href="#" class="nav-item"><span>🔍</span> Legal Review AI</a>
+                <a href="#" class="nav-item"><span>📊</span> Compliance</a>
+                <div class="nav-section">Navigate</div>
+                <a href="https://dashboard.blackroad.io" class="nav-item"><span>🏠</span> Dashboard</a>
+            </nav>
+            <div class="sidebar-footer"><div class="user-card" id="user-card"><img class="user-avatar" id="user-avatar" src=""><div><div class="user-name" id="user-name">...</div><div class="user-email" id="user-email"></div></div></div></div>
+        </aside>
+        <main class="main">
+            <div class="header"><h1>Legal Portal</h1><div><button class="btn btn-outline" style="margin-right:0.5rem">📥 Upload</button><button class="btn btn-primary">+ New Document</button></div></div>
+            <div class="doc-grid">
+                <div class="doc-card"><div class="doc-icon">📜</div><div class="doc-title">Terms of Service</div><div class="doc-desc">Master terms governing BlackRoad OS usage</div><div class="doc-meta">Last updated: Dec 1, 2025</div></div>
+                <div class="doc-card"><div class="doc-icon">🔐</div><div class="doc-title">Privacy Policy</div><div class="doc-desc">Data handling and privacy practices</div><div class="doc-meta">Last updated: Nov 28, 2025</div></div>
+                <div class="doc-card"><div class="doc-icon">©️</div><div class="doc-title">IP & Copyright</div><div class="doc-desc">Intellectual property ownership</div><div class="doc-meta">Last updated: Nov 15, 2025</div></div>
+                <div class="doc-card"><div class="doc-icon">🤝</div><div class="doc-title">Data Sovereignty</div><div class="doc-desc">Owner rights and data ownership</div><div class="doc-meta">Last updated: Dec 2, 2025</div></div>
+            </div>
+            <div class="card">
+                <div class="card-title">Active Contracts</div>
+                <div class="contract-item"><div class="contract-info"><div class="contract-name">Cloudflare Enterprise Agreement</div><div class="contract-date">Expires: Dec 2026</div></div><span class="contract-status active">Active</span></div>
+                <div class="contract-item"><div class="contract-info"><div class="contract-name">Railway Pro Subscription</div><div class="contract-date">Renews: Jan 2025</div></div><span class="contract-status active">Active</span></div>
+                <div class="contract-item"><div class="contract-info"><div class="contract-name">OpenAI API Agreement</div><div class="contract-date">Review: Dec 15, 2025</div></div><span class="contract-status pending">Pending Review</span></div>
+            </div>
+        </main>
+    </div>
+    <script>
+        async function init() { if (typeof Clerk === 'undefined') await new Promise(r => setTimeout(r, 1000)); if (typeof Clerk === 'undefined') return; await Clerk.load(); if (!Clerk.user) { Clerk.mountSignIn(document.querySelector('#auth-gate .card'), { appearance: { variables: { colorPrimary: '#FFD700' } } }); return; } document.getElementById('user-avatar').src = Clerk.user.imageUrl || ''; document.getElementById('user-name').textContent = Clerk.user.fullName || 'User'; document.getElementById('user-email').textContent = Clerk.user.primaryEmailAddress?.emailAddress || ''; document.getElementById('user-card').onclick = () => Clerk.openUserProfile(); document.getElementById('auth-gate').style.display = 'none'; document.getElementById('app').classList.add('show'); }
+        init();
+    </script>
+</body>
+</html>

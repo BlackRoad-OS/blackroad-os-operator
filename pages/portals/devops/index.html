@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DevOps - BlackRoad OS</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔧</text></svg>">
+    <script async crossorigin="anonymous" data-clerk-publishable-key="pk_test_ZmluZS13YWxsYWJ5LTk2LmNsZXJrLmFjY291bnRzLmRldiQ" src="https://cdn.jsdelivr.net/npm/@clerk/clerk-js@latest/dist/clerk.browser.js"></script>
+    <style>
+        :root { --bg-dark: #0a0a0f; --bg-card: #12121a; --bg-hover: #1a1a25; --border: #2a2a3a; --text: #fff; --text-muted: #888; --blue: #0066FF; --blue-dark: #0052CC; --green: #00D084; --red: #FF4757; --orange: #FF9D00; --sidebar-width: 260px; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace; background: var(--bg-dark); color: var(--text); min-height: 100vh; font-size: 14px; }
+        #auth-gate { display: flex; align-items: center; justify-content: center; min-height: 100vh; background: linear-gradient(135deg, #0a0a1a, #0a1a2a, #0a2a3a); }
+        #auth-gate .card { background: rgba(255,255,255,0.03); border: 1px solid rgba(0,102,255,0.2); border-radius: 20px; padding: 2.5rem; text-align: center; max-width: 400px; font-family: -apple-system, sans-serif; }
+        #auth-gate h1 { font-size: 2rem; background: linear-gradient(90deg, var(--blue), var(--blue-dark)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 1rem; }
+        .spinner { width: 24px; height: 24px; border: 2px solid rgba(0,102,255,0.2); border-top-color: var(--blue); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 1rem auto; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        #app { display: none; }
+        #app.show { display: flex; min-height: 100vh; }
+        .sidebar { width: var(--sidebar-width); background: var(--bg-card); border-right: 1px solid var(--border); display: flex; flex-direction: column; position: fixed; height: 100vh; font-family: -apple-system, sans-serif; }
+        .sidebar-header { padding: 1.5rem; border-bottom: 1px solid var(--border); }
+        .sidebar-logo { font-size: 1.3rem; font-weight: 700; color: var(--blue); }
+        .sidebar-nav { padding: 1rem 0; flex: 1; overflow-y: auto; }
+        .nav-section { padding: 0.5rem 1rem; font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; margin-top: 1rem; }
+        .nav-item { display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 1.5rem; color: var(--text-muted); text-decoration: none; transition: all 0.15s; font-size: 0.85rem; }
+        .nav-item:hover { background: var(--bg-hover); color: var(--text); }
+        .nav-item.active { background: rgba(0,102,255,0.1); color: var(--blue); border-right: 2px solid var(--blue); }
+        .sidebar-footer { padding: 1rem; border-top: 1px solid var(--border); }
+        .user-card { display: flex; align-items: center; gap: 0.75rem; padding: 0.5rem; border-radius: 8px; cursor: pointer; }
+        .user-avatar { width: 36px; height: 36px; border-radius: 50%; border: 2px solid var(--blue); }
+        .user-name { font-size: 0.85rem; font-weight: 500; }
+        .user-email { font-size: 0.7rem; color: var(--text-muted); }
+        .main { flex: 1; margin-left: var(--sidebar-width); padding: 2rem; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; font-family: -apple-system, sans-serif; }
+        .header h1 { font-size: 1.75rem; font-weight: 600; }
+        .btn { padding: 0.6rem 1.2rem; border-radius: 8px; font-size: 0.85rem; font-weight: 500; cursor: pointer; border: none; transition: all 0.15s; font-family: -apple-system, sans-serif; }
+        .btn-primary { background: linear-gradient(90deg, var(--blue), var(--blue-dark)); color: white; }
+        .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text); }
+        .status-bar { display: flex; gap: 1.5rem; margin-bottom: 2rem; padding: 1rem; background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; }
+        .status-item { display: flex; align-items: center; gap: 0.5rem; }
+        .status-dot { width: 8px; height: 8px; border-radius: 50%; }
+        .status-dot.green { background: var(--green); box-shadow: 0 0 8px var(--green); }
+        .status-dot.red { background: var(--red); box-shadow: 0 0 8px var(--red); }
+        .status-dot.orange { background: var(--orange); box-shadow: 0 0 8px var(--orange); }
+        .services-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
+        .service-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 1.25rem; }
+        .service-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; }
+        .service-name { font-weight: 600; font-family: -apple-system, sans-serif; }
+        .service-status { padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.7rem; text-transform: uppercase; }
+        .service-status.online { background: rgba(0,208,132,0.15); color: var(--green); }
+        .service-status.offline { background: rgba(255,71,87,0.15); color: var(--red); }
+        .service-url { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.5rem; }
+        .service-metrics { display: flex; gap: 1rem; font-size: 0.75rem; color: var(--text-muted); }
+        .card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem; }
+        .card-title { font-size: 1rem; font-weight: 600; margin-bottom: 1rem; font-family: -apple-system, sans-serif; }
+        .terminal { background: #000; border-radius: 8px; padding: 1rem; max-height: 300px; overflow-y: auto; }
+        .terminal-line { margin-bottom: 0.25rem; }
+        .terminal-time { color: var(--text-muted); }
+        .terminal-info { color: var(--blue); }
+        .terminal-success { color: var(--green); }
+        .terminal-error { color: var(--red); }
+        .terminal-warn { color: var(--orange); }
+    </style>
+</head>
+<body>
+    <div id="auth-gate"><div class="card"><h1>🔧 DevOps</h1><p style="color:#888;margin-bottom:1rem">Infrastructure Portal</p><div class="spinner"></div><p style="color:#888;font-size:0.85rem">Loading...</p></div></div>
+
+    <div id="app">
+        <aside class="sidebar">
+            <div class="sidebar-header"><div class="sidebar-logo">🔧 DevOps</div></div>
+            <nav class="sidebar-nav">
+                <div class="nav-section">Monitor</div>
+                <a href="#" class="nav-item active"><span>📊</span> Overview</a>
+                <a href="#" class="nav-item"><span>🖥️</span> Services</a>
+                <a href="#" class="nav-item"><span>📈</span> Metrics</a>
+                <a href="#" class="nav-item"><span>🔔</span> Alerts</a>
+                <div class="nav-section">Deploy</div>
+                <a href="#" class="nav-item"><span>🚀</span> Deployments</a>
+                <a href="#" class="nav-item"><span>🔄</span> Pipelines</a>
+                <a href="#" class="nav-item"><span>📦</span> Containers</a>
+                <div class="nav-section">Infra</div>
+                <a href="#" class="nav-item"><span>☁️</span> Cloudflare</a>
+                <a href="#" class="nav-item"><span>🚂</span> Railway</a>
+                <a href="#" class="nav-item"><span>🐙</span> GitHub</a>
+                <div class="nav-section">Navigate</div>
+                <a href="https://dashboard.blackroad.io" class="nav-item"><span>🏠</span> Dashboard</a>
+            </nav>
+            <div class="sidebar-footer"><div class="user-card" id="user-card"><img class="user-avatar" id="user-avatar" src=""><div><div class="user-name" id="user-name">...</div><div class="user-email" id="user-email"></div></div></div></div>
+        </aside>
+
+        <main class="main">
+            <div class="header">
+                <h1>DevOps Console</h1>
+                <div><button class="btn btn-outline" style="margin-right:0.5rem">🔄 Refresh</button><button class="btn btn-primary">🚀 Deploy</button></div>
+            </div>
+
+            <div class="status-bar">
+                <div class="status-item"><span class="status-dot green"></span> All Systems Operational</div>
+                <div class="status-item"><span>Workers:</span> <strong>9 active</strong></div>
+                <div class="status-item"><span>Pages:</span> <strong>9 deployed</strong></div>
+                <div class="status-item"><span>Backend:</span> <strong>Railway OK</strong></div>
+            </div>
+
+            <div class="services-grid">
+                <div class="service-card"><div class="service-header"><span class="service-name">cece</span><span class="service-status online">Online</span></div><div class="service-url">cece.amundsonalexa.workers.dev</div><div class="service-metrics"><span>Latency: 12ms</span><span>Requests: 1.2k/hr</span></div></div>
+                <div class="service-card"><div class="service-header"><span class="service-name">api-gateway</span><span class="service-status online">Online</span></div><div class="service-url">blackroad-api-gateway.amundsonalexa.workers.dev</div><div class="service-metrics"><span>Latency: 8ms</span><span>Requests: 890/hr</span></div></div>
+                <div class="service-card"><div class="service-header"><span class="service-name">router</span><span class="service-status online">Online</span></div><div class="service-url">blackroad-router.amundsonalexa.workers.dev</div><div class="service-metrics"><span>Latency: 5ms</span><span>Requests: 2.1k/hr</span></div></div>
+                <div class="service-card"><div class="service-header"><span class="service-name">identity</span><span class="service-status online">Online</span></div><div class="service-url">blackroad-identity.amundsonalexa.workers.dev</div><div class="service-metrics"><span>Latency: 15ms</span><span>Requests: 340/hr</span></div></div>
+                <div class="service-card"><div class="service-header"><span class="service-name">billing</span><span class="service-status online">Online</span></div><div class="service-url">blackroad-billing.amundsonalexa.workers.dev</div><div class="service-metrics"><span>Latency: 10ms</span><span>Requests: 56/hr</span></div></div>
+                <div class="service-card"><div class="service-header"><span class="service-name">cece-operator</span><span class="service-status online">Online</span></div><div class="service-url">blackroad-cece-operator-production.up.railway.app</div><div class="service-metrics"><span>Uptime: 99.9%</span><span>Memory: 245MB</span></div></div>
+            </div>
+
+            <div class="card">
+                <div class="card-title">Live Logs</div>
+                <div class="terminal">
+                    <div class="terminal-line"><span class="terminal-time">[22:19:32]</span> <span class="terminal-info">INFO</span> api-gateway deployed successfully</div>
+                    <div class="terminal-line"><span class="terminal-time">[22:18:45]</span> <span class="terminal-success">OK</span> Health check passed: cece.amundsonalexa.workers.dev</div>
+                    <div class="terminal-line"><span class="terminal-time">[22:17:12]</span> <span class="terminal-info">INFO</span> DNS updated: api.blackroad.io → api-gateway</div>
+                    <div class="terminal-line"><span class="terminal-time">[22:15:30]</span> <span class="terminal-success">OK</span> 11 subdomain DNS records created</div>
+                    <div class="terminal-line"><span class="terminal-time">[22:10:05]</span> <span class="terminal-info">INFO</span> blackroad-cipher deployed</div>
+                    <div class="terminal-line"><span class="terminal-time">[22:09:58]</span> <span class="terminal-info">INFO</span> blackroad-sovereignty deployed</div>
+                    <div class="terminal-line"><span class="terminal-time">[22:09:51]</span> <span class="terminal-info">INFO</span> blackroad-billing deployed</div>
+                    <div class="terminal-line"><span class="terminal-time">[22:09:44]</span> <span class="terminal-info">INFO</span> blackroad-identity deployed</div>
+                    <div class="terminal-line"><span class="terminal-time">[22:05:00]</span> <span class="terminal-success">OK</span> All 9 Pages projects deployed with Hello World</div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        async function init() {
+            if (typeof Clerk === 'undefined') await new Promise(r => setTimeout(r, 1000));
+            if (typeof Clerk === 'undefined') return;
+            await Clerk.load();
+            if (!Clerk.user) { Clerk.mountSignIn(document.querySelector('#auth-gate .card'), { appearance: { variables: { colorPrimary: '#0066FF' } } }); return; }
+            document.getElementById('user-avatar').src = Clerk.user.imageUrl || '';
+            document.getElementById('user-name').textContent = Clerk.user.fullName || 'User';
+            document.getElementById('user-email').textContent = Clerk.user.primaryEmailAddress?.emailAddress || '';
+            document.getElementById('user-card').onclick = () => Clerk.openUserProfile();
+            document.getElementById('auth-gate').style.display = 'none';
+            document.getElementById('app').classList.add('show');
+        }
+        init();
+    </script>
+</body>
+</html>

@@ -1,0 +1,50 @@
+# BlackRoad OS - Auth Worker
+# API Key Authentication System with KV Storage
+#
+# @blackroad_name: BlackRoad Auth Worker
+# @operator: alexa.operator.v1
+
+name = "blackroad-auth"
+main = "src/index.ts"
+compatibility_date = "2024-11-01"
+
+# Enable workers.dev subdomain
+workers_dev = true
+
+[vars]
+ENVIRONMENT = "production"
+LOG_LEVEL = "info"
+ADMIN_API_KEY = "br_admin_placeholder_replace_with_secret"
+
+# Routes - serve auth.blackroad.io
+routes = [
+  { pattern = "auth.blackroad.io/*", zone_name = "blackroad.io" },
+]
+
+# KV Namespaces
+[[kv_namespaces]]
+binding = "API_KEYS"
+id = "57e48a017d4248a39df32661c3377908"
+
+[[kv_namespaces]]
+binding = "API_KEY_METADATA"
+id = "2d2478b95cbe41d9bcc79c82624bcfec"
+
+# Rate limiting for auth endpoints
+[[kv_namespaces]]
+binding = "RATE_LIMIT"
+id = "245a00ee1ffe417fbcf519b2dbb141c6"
+
+# Observability
+[observability]
+enabled = true
+
+# Development environment
+[env.dev]
+name = "blackroad-auth-dev"
+vars = { ENVIRONMENT = "development", LOG_LEVEL = "debug" }
+
+# Staging environment
+[env.staging]
+name = "blackroad-auth-staging"
+vars = { ENVIRONMENT = "staging", LOG_LEVEL = "info" }

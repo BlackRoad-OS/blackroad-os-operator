@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Education - BlackRoad OS</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📚</text></svg>">
+    <script async crossorigin="anonymous" data-clerk-publishable-key="pk_test_ZmluZS13YWxsYWJ5LTk2LmNsZXJrLmFjY291bnRzLmRldiQ" src="https://cdn.jsdelivr.net/npm/@clerk/clerk-js@latest/dist/clerk.browser.js"></script>
+    <style>
+        :root { --bg-dark: #0a0a0f; --bg-card: #12121a; --bg-hover: #1a1a25; --border: #2a2a3a; --text: #fff; --text-muted: #888; --teal: #00CED1; --teal-dark: #008B8B; --sidebar-width: 260px; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg-dark); color: var(--text); min-height: 100vh; }
+        #auth-gate { display: flex; align-items: center; justify-content: center; min-height: 100vh; background: linear-gradient(135deg, #0a1a1a, #0a2a2a, #0a3a3a); }
+        #auth-gate .card { background: rgba(255,255,255,0.03); border: 1px solid rgba(0,206,209,0.2); border-radius: 20px; padding: 2.5rem; text-align: center; max-width: 400px; }
+        #auth-gate h1 { font-size: 2rem; color: var(--teal); margin-bottom: 1rem; }
+        .spinner { width: 24px; height: 24px; border: 2px solid rgba(0,206,209,0.2); border-top-color: var(--teal); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 1rem auto; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        #app { display: none; }
+        #app.show { display: flex; min-height: 100vh; }
+        .sidebar { width: var(--sidebar-width); background: var(--bg-card); border-right: 1px solid var(--border); display: flex; flex-direction: column; position: fixed; height: 100vh; }
+        .sidebar-header { padding: 1.5rem; border-bottom: 1px solid var(--border); }
+        .sidebar-logo { font-size: 1.3rem; font-weight: 700; color: var(--teal); }
+        .sidebar-nav { padding: 1rem 0; flex: 1; }
+        .nav-section { padding: 0.5rem 1rem; font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; margin-top: 1rem; }
+        .nav-item { display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 1.5rem; color: var(--text-muted); text-decoration: none; font-size: 0.85rem; transition: all 0.15s; }
+        .nav-item:hover { background: var(--bg-hover); color: var(--text); }
+        .nav-item.active { background: rgba(0,206,209,0.1); color: var(--teal); border-right: 2px solid var(--teal); }
+        .sidebar-footer { padding: 1rem; border-top: 1px solid var(--border); }
+        .user-card { display: flex; align-items: center; gap: 0.75rem; padding: 0.5rem; border-radius: 8px; cursor: pointer; }
+        .user-avatar { width: 36px; height: 36px; border-radius: 50%; border: 2px solid var(--teal); }
+        .user-name { font-size: 0.85rem; font-weight: 500; }
+        .user-email { font-size: 0.7rem; color: var(--text-muted); }
+        .main { flex: 1; margin-left: var(--sidebar-width); padding: 2rem; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; }
+        .header h1 { font-size: 1.75rem; font-weight: 600; }
+        .btn { padding: 0.6rem 1.2rem; border-radius: 8px; font-size: 0.85rem; font-weight: 500; cursor: pointer; border: none; transition: all 0.15s; }
+        .btn-primary { background: linear-gradient(90deg, var(--teal), var(--teal-dark)); color: #000; }
+        .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text); }
+        .course-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; margin-bottom: 2rem; }
+        .course-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; cursor: pointer; transition: all 0.2s; }
+        .course-card:hover { border-color: var(--teal); transform: translateY(-2px); }
+        .course-thumb { height: 120px; background: linear-gradient(135deg, var(--teal), var(--teal-dark)); display: flex; align-items: center; justify-content: center; font-size: 3rem; }
+        .course-body { padding: 1.25rem; }
+        .course-title { font-size: 1.1rem; font-weight: 600; margin-bottom: 0.5rem; }
+        .course-desc { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem; }
+        .course-meta { display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--text-muted); }
+        .progress-bar { height: 4px; background: var(--border); border-radius: 2px; margin-top: 1rem; overflow: hidden; }
+        .progress-fill { height: 100%; background: var(--teal); border-radius: 2px; }
+        .card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem; }
+        .card-title { font-size: 1rem; font-weight: 600; margin-bottom: 1rem; }
+        .stats-row { display: flex; gap: 2rem; }
+        .stat { text-align: center; }
+        .stat-value { font-size: 2rem; font-weight: 700; color: var(--teal); }
+        .stat-label { font-size: 0.8rem; color: var(--text-muted); }
+    </style>
+</head>
+<body>
+    <div id="auth-gate"><div class="card"><h1>📚 Education</h1><p style="color:#888;margin-bottom:1rem">Learning Portal</p><div class="spinner"></div></div></div>
+    <div id="app">
+        <aside class="sidebar">
+            <div class="sidebar-header"><div class="sidebar-logo">📚 RoadWork</div></div>
+            <nav class="sidebar-nav">
+                <div class="nav-section">Learn</div>
+                <a href="#" class="nav-item active"><span>🏠</span> Dashboard</a>
+                <a href="#" class="nav-item"><span>📖</span> Courses</a>
+                <a href="#" class="nav-item"><span>🎯</span> My Progress</a>
+                <a href="#" class="nav-item"><span>📝</span> Assignments</a>
+                <div class="nav-section">AI Tools</div>
+                <a href="#" class="nav-item"><span>🤖</span> AI Tutor</a>
+                <a href="#" class="nav-item"><span>✍️</span> Homework Help</a>
+                <a href="#" class="nav-item"><span>📊</span> Quiz Generator</a>
+                <div class="nav-section">Navigate</div>
+                <a href="https://dashboard.blackroad.io" class="nav-item"><span>🏠</span> Dashboard</a>
+            </nav>
+            <div class="sidebar-footer"><div class="user-card" id="user-card"><img class="user-avatar" id="user-avatar" src=""><div><div class="user-name" id="user-name">...</div><div class="user-email" id="user-email"></div></div></div></div>
+        </aside>
+        <main class="main">
+            <div class="header"><h1>Welcome back, learner!</h1><div><button class="btn btn-primary">🎯 Continue Learning</button></div></div>
+            <div class="card" style="margin-bottom:2rem">
+                <div class="stats-row">
+                    <div class="stat"><div class="stat-value">3</div><div class="stat-label">Courses In Progress</div></div>
+                    <div class="stat"><div class="stat-value">12</div><div class="stat-label">Lessons Completed</div></div>
+                    <div class="stat"><div class="stat-value">5h</div><div class="stat-label">Time This Week</div></div>
+                    <div class="stat"><div class="stat-value">87%</div><div class="stat-label">Quiz Average</div></div>
+                </div>
+            </div>
+            <h2 style="font-size:1.25rem;margin-bottom:1rem">Continue Learning</h2>
+            <div class="course-grid">
+                <div class="course-card"><div class="course-thumb">🤖</div><div class="course-body"><div class="course-title">AI Fundamentals</div><div class="course-desc">Master the basics of artificial intelligence</div><div class="course-meta"><span>8 lessons</span><span>45% complete</span></div><div class="progress-bar"><div class="progress-fill" style="width:45%"></div></div></div></div>
+                <div class="course-card"><div class="course-thumb" style="background:linear-gradient(135deg,#FF9D00,#FF6B00)">💻</div><div class="course-body"><div class="course-title">Web Development</div><div class="course-desc">Build modern web applications</div><div class="course-meta"><span>12 lessons</span><span>30% complete</span></div><div class="progress-bar"><div class="progress-fill" style="width:30%"></div></div></div></div>
+                <div class="course-card"><div class="course-thumb" style="background:linear-gradient(135deg,#7700FF,#0066FF)">☁️</div><div class="course-body"><div class="course-title">Cloud Computing</div><div class="course-desc">AWS, Cloudflare, and Railway</div><div class="course-meta"><span>10 lessons</span><span>15% complete</span></div><div class="progress-bar"><div class="progress-fill" style="width:15%"></div></div></div></div>
+            </div>
+        </main>
+    </div>
+    <script>
+        async function init() { if (typeof Clerk === 'undefined') await new Promise(r => setTimeout(r, 1000)); if (typeof Clerk === 'undefined') return; await Clerk.load(); if (!Clerk.user) { Clerk.mountSignIn(document.querySelector('#auth-gate .card'), { appearance: { variables: { colorPrimary: '#00CED1' } } }); return; } document.getElementById('user-avatar').src = Clerk.user.imageUrl || ''; document.getElementById('user-name').textContent = Clerk.user.fullName || 'User'; document.getElementById('user-email').textContent = Clerk.user.primaryEmailAddress?.emailAddress || ''; document.getElementById('user-card').onclick = () => Clerk.openUserProfile(); document.getElementById('auth-gate').style.display = 'none'; document.getElementById('app').classList.add('show'); }
+        init();
+    </script>
+</body>
+</html>

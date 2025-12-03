@@ -1,0 +1,25 @@
+{
+  "name": "@blackroad/logs",
+  "version": "1.0.0",
+  "description": "Centralized logging system for BlackRoad OS using Cloudflare D1",
+  "main": "src/index.ts",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "migrate": "wrangler d1 execute blackroad-logs --remote --file=./migrations/0001_create_logs.sql",
+    "migrate:local": "wrangler d1 execute blackroad-logs --local --file=./migrations/0001_create_logs.sql"
+  },
+  "keywords": [
+    "cloudflare",
+    "workers",
+    "d1",
+    "logging",
+    "blackroad"
+  ],
+  "author": "BlackRoad Systems",
+  "license": "MIT",
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20241127.0",
+    "wrangler": "^3.84.1"
+  }
+}

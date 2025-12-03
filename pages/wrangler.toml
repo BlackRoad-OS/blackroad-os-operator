@@ -1,0 +1,6 @@
+# BlackRoad OS Pages
+# Deploy with: wrangler pages deploy dashboard --project-name blackroad-dashboard
+# Or use the deploy script: ./deploy-pages.sh
+
+name = "blackroad-pages"
+compatibility_date = "2024-01-01"

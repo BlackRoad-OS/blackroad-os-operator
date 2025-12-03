@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BlackRoad Systems - Infrastructure Operations</title>
+  <style>
+    :root {
+      --bg: #0a0a0a;
+      --card: #111;
+      --border: #222;
+      --text: #eee;
+      --muted: #888;
+      --accent: #FF6B00;
+      --accent2: #FF0066;
+      --green: #22c55e;
+      --blue: #0066FF;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    .nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      background: rgba(10, 10, 10, 0.95);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--border);
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 100;
+    }
+    .logo {
+      font-size: 1.3rem;
+      font-weight: bold;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-decoration: none;
+    }
+    .nav-links {
+      display: flex;
+      gap: 1.5rem;
+    }
+    .nav-links a {
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .nav-links a:hover { color: var(--text); }
+
+    .hero {
+      min-height: 60vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 8rem 2rem 4rem;
+      text-align: center;
+      background: radial-gradient(ellipse at center top, rgba(255,107,0,0.1) 0%, transparent 50%);
+    }
+    .hero-icon { font-size: 4rem; margin-bottom: 1rem; }
+    .hero-title { font-size: 3rem; font-weight: bold; margin-bottom: 0.5rem; }
+    .hero-subtitle { color: var(--muted); font-size: 1.2rem; max-width: 600px; }
+
+    .section {
+      padding: 4rem 2rem;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    .section-title {
+      font-size: 1.5rem;
+      margin-bottom: 2rem;
+      text-align: center;
+    }
+
+    .status-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+    }
+    .status-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1.5rem;
+    }
+    .status-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+    .status-name { font-weight: 600; }
+    .status-badge {
+      font-size: 0.7rem;
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+    }
+    .badge-ok { background: rgba(34, 197, 94, 0.2); color: var(--green); }
+    .badge-warn { background: rgba(234, 179, 8, 0.2); color: #eab308; }
+    .badge-err { background: rgba(239, 68, 68, 0.2); color: #ef4444; }
+    .status-detail {
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+
+    .infra-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.5rem;
+    }
+    .infra-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1.5rem;
+    }
+    .infra-icon { font-size: 2rem; margin-bottom: 1rem; }
+    .infra-title { font-weight: 600; margin-bottom: 0.5rem; }
+    .infra-desc { color: var(--muted); font-size: 0.9rem; margin-bottom: 1rem; }
+    .infra-stats {
+      display: flex;
+      gap: 1rem;
+      font-size: 0.85rem;
+    }
+    .infra-stat {
+      background: var(--bg);
+      padding: 0.5rem 0.75rem;
+      border-radius: 4px;
+    }
+
+    .footer {
+      border-top: 1px solid var(--border);
+      padding: 2rem;
+      text-align: center;
+      color: var(--muted);
+    }
+    .footer a { color: var(--muted); text-decoration: none; margin: 0 1rem; }
+    .footer a:hover { color: var(--text); }
+
+    @media (max-width: 768px) {
+      .nav-links { display: none; }
+      .hero-title { font-size: 2rem; }
+    }
+  </style>
+</head>
+<body>
+  <nav class="nav">
+    <a href="/" class="logo">BlackRoad Systems</a>
+    <div class="nav-links">
+      <a href="https://dashboard.blackroad.io">Dashboard</a>
+      <a href="https://api.blackroad.io">API</a>
+      <a href="https://console.blackroad.io">Console</a>
+    </div>
+  </nav>
+
+  <section class="hero">
+    <div class="hero-icon">&#9881;</div>
+    <h1 class="hero-title">BlackRoad Systems</h1>
+    <p class="hero-subtitle">Infrastructure operations, monitoring, and system administration for the BlackRoad network.</p>
+  </section>
+
+  <section class="section">
+    <h2 class="section-title">System Status</h2>
+    <div class="status-grid" id="status-grid">
+      <div class="status-card">
+        <div class="status-header">
+          <span class="status-name">API Gateway</span>
+          <span class="status-badge badge-ok" id="api-status">Checking...</span>
+        </div>
+        <div class="status-detail">api.blackroad.io</div>
+      </div>
+      <div class="status-card">
+        <div class="status-header">
+          <span class="status-name">Billing</span>
+          <span class="status-badge badge-ok" id="billing-status">Checking...</span>
+        </div>
+        <div class="status-detail">Railway</div>
+      </div>
+      <div class="status-card">
+        <div class="status-header">
+          <span class="status-name">Cece Operator</span>
+          <span class="status-badge badge-ok" id="cece-status">Checking...</span>
+        </div>
+        <div class="status-detail">Railway</div>
+      </div>
+      <div class="status-card">
+        <div class="status-header">
+          <span class="status-name">Workers</span>
+          <span class="status-badge badge-ok">Active</span>
+        </div>
+        <div class="status-detail">9 deployed</div>
+      </div>
+      <div class="status-card">
+        <div class="status-header">
+          <span class="status-name">Pages</span>
+          <span class="status-badge badge-ok">Active</span>
+        </div>
+        <div class="status-detail">9 projects</div>
+      </div>
+      <div class="status-card">
+        <div class="status-header">
+          <span class="status-name">DNS</span>
+          <span class="status-badge badge-ok">Active</span>
+        </div>
+        <div class="status-detail">16 zones</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <h2 class="section-title">Infrastructure</h2>
+    <div class="infra-grid">
+      <div class="infra-card">
+        <div class="infra-icon">&#9729;</div>
+        <div class="infra-title">Cloudflare</div>
+        <div class="infra-desc">Edge computing, CDN, DNS, and security services.</div>
+        <div class="infra-stats">
+          <span class="infra-stat">16 zones</span>
+          <span class="infra-stat">9 workers</span>
+          <span class="infra-stat">8 KV</span>
+        </div>
+      </div>
+      <div class="infra-card">
+        <div class="infra-icon">&#128644;</div>
+        <div class="infra-title">Railway</div>
+        <div class="infra-desc">Container hosting and managed services.</div>
+        <div class="infra-stats">
+          <span class="infra-stat">12 projects</span>
+          <span class="infra-stat">3 active</span>
+        </div>
+      </div>
+      <div class="infra-card">
+        <div class="infra-icon">&#128025;</div>
+        <div class="infra-title">GitHub</div>
+        <div class="infra-desc">Source control and CI/CD automation.</div>
+        <div class="infra-stats">
+          <span class="infra-stat">15 orgs</span>
+          <span class="infra-stat">66+ repos</span>
+        </div>
+      </div>
+      <div class="infra-card">
+        <div class="infra-icon">&#128187;</div>
+        <div class="infra-title">Servers</div>
+        <div class="infra-desc">Physical and virtual server infrastructure.</div>
+        <div class="infra-stats">
+          <span class="infra-stat">DO droplet</span>
+          <span class="infra-stat">Raspberry Pi</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <div>
+      <a href="https://blackroad.io">BlackRoad OS</a>
+      <a href="https://dashboard.blackroad.io">Dashboard</a>
+      <a href="https://console.blackroad.io">Console</a>
+      <a href="https://github.com/BlackRoad-OS">GitHub</a>
+    </div>
+    <p style="margin-top: 1rem;">&copy; 2025 BlackRoad Systems</p>
+  </footer>
+
+  <script>
+    async function checkServices() {
+      const checks = [
+        { id: 'api-status', url: 'https://api.blackroad.io/health' },
+        { id: 'billing-status', url: 'https://blackroad-billing-production.up.railway.app/health' },
+        { id: 'cece-status', url: 'https://blackroad-cece-operator-production.up.railway.app/health' }
+      ];
+
+      for (const check of checks) {
+        const el = document.getElementById(check.id);
+        try {
+          const res = await fetch(check.url, { mode: 'cors' });
+          if (res.ok) {
+            el.textContent = 'Healthy';
+            el.className = 'status-badge badge-ok';
+          } else {
+            el.textContent = 'Degraded';
+            el.className = 'status-badge badge-warn';
+          }
+        } catch (e) {
+          el.textContent = 'Unknown';
+          el.className = 'status-badge badge-warn';
+        }
+      }
+    }
+
+    checkServices();
+    setInterval(checkServices, 30000);
+  </script>
+</body>
+</html>

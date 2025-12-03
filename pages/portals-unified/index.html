@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BlackRoad OS</title>
+    <link rel="icon" id="favicon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛣️</text></svg>">
+    <script async crossorigin="anonymous" data-clerk-publishable-key="pk_test_ZmluZS13YWxsYWJ5LTk2LmNsZXJrLmFjY291bnRzLmRldiQ" src="https://cdn.jsdelivr.net/npm/@clerk/clerk-js@latest/dist/clerk.browser.js"></script>
+    <style>
+        :root {
+            --bg-dark: #0a0a0f;
+            --bg-card: #12121a;
+            --bg-hover: #1a1a25;
+            --border: #2a2a3a;
+            --text: #ffffff;
+            --text-muted: #888;
+            --accent: #FF9D00;
+            --green: #00D084;
+            --red: #FF4757;
+            --blue: #0066FF;
+            --sidebar-width: 260px;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg-dark); color: var(--text); min-height: 100vh; }
+        body.os-portal { font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace; }
+
+        /* Auth Gate */
+        #auth-gate { display: flex; align-items: center; justify-content: center; min-height: 100vh; background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #16213e 100%); }
+        #auth-gate .card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 20px; padding: 2.5rem; text-align: center; max-width: 420px; width: 90%; }
+        .auth-icon { font-size: 3rem; margin-bottom: 1rem; }
+        .auth-title { font-size: 1.75rem; font-weight: 700; margin-bottom: 0.5rem; }
+        .auth-subtitle { color: var(--text-muted); margin-bottom: 1.5rem; }
+        .spinner { width: 28px; height: 28px; border: 2px solid rgba(255,157,0,0.2); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 1.5rem auto; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        @keyframes blink { 50% { opacity: 0; } }
+
+        /* Main App */
+        #app { display: none; }
+        #app.show { display: flex; min-height: 100vh; }
+
+        /* Sidebar */
+        .sidebar { width: var(--sidebar-width); background: var(--bg-card); border-right: 1px solid var(--border); display: flex; flex-direction: column; position: fixed; height: 100vh; overflow-y: auto; }
+        .sidebar-header { padding: 1.5rem; border-bottom: 1px solid var(--border); }
+        .sidebar-logo { font-size: 1.2rem; font-weight: 700; display: flex; align-items: center; gap: 0.5rem; }
+        .sidebar-nav { padding: 1rem 0; flex: 1; }
+        .nav-section { padding: 0.5rem 1rem; font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-top: 1rem; }
+        .nav-section:first-child { margin-top: 0; }
+        .nav-item { display: flex; align-items: center; gap: 0.75rem; padding: 0.7rem 1.5rem; color: var(--text-muted); text-decoration: none; transition: all 0.15s; font-size: 0.9rem; }
+        .nav-item:hover { background: var(--bg-hover); color: var(--text); }
+        .nav-item.active { background: rgba(255,157,0,0.1); color: var(--accent); border-right: 2px solid var(--accent); }
+        .nav-icon { font-size: 1.1rem; width: 24px; text-align: center; }
+        .sidebar-footer { padding: 1rem; border-top: 1px solid var(--border); }
+        .user-card { display: flex; align-items: center; gap: 0.75rem; padding: 0.5rem; border-radius: 8px; cursor: pointer; transition: background 0.15s; }
+        .user-card:hover { background: var(--bg-hover); }
+        .user-avatar { width: 36px; height: 36px; border-radius: 50%; border: 2px solid var(--accent); }
+        .user-name { font-size: 0.85rem; font-weight: 500; }
+        .user-email { font-size: 0.7rem; color: var(--text-muted); }
+
+        /* Main Content */
+        .main { flex: 1; margin-left: var(--sidebar-width); padding: 2rem; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem; }
+        .header h1 { font-size: 1.75rem; font-weight: 600; }
+        .btn { padding: 0.6rem 1.2rem; border-radius: 8px; font-size: 0.85rem; font-weight: 500; cursor: pointer; transition: all 0.15s; border: none; text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem; }
+        .btn-primary { background: linear-gradient(90deg, var(--accent), #FF6B00); color: white; }
+        .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(255,107,0,0.3); }
+        .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text); }
+        .btn-outline:hover { border-color: var(--accent); }
+
+        /* Stats */
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1.25rem; margin-bottom: 2rem; }
+        .stat-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 1.25rem; }
+        .stat-label { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.5rem; }
+        .stat-value { font-size: 1.75rem; font-weight: 700; }
+
+        /* Cards */
+        .card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem; }
+        .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+        .card-title { font-size: 1rem; font-weight: 600; }
+
+        /* Grid Layouts */
+        .grid-2 { display: grid; grid-template-columns: 2fr 1fr; gap: 1.5rem; }
+        .grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; }
+        @media (max-width: 900px) { .grid-2, .grid-3 { grid-template-columns: 1fr; } }
+
+        /* Quick Actions */
+        .actions-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 1rem; }
+        .action-card { display: flex; flex-direction: column; align-items: center; gap: 0.75rem; padding: 1.25rem; background: var(--bg-hover); border: 1px solid var(--border); border-radius: 12px; text-decoration: none; color: var(--text); transition: all 0.15s; cursor: pointer; }
+        .action-card:hover { border-color: var(--accent); transform: translateY(-2px); }
+        .action-icon { font-size: 1.75rem; }
+        .action-label { font-size: 0.85rem; font-weight: 500; }
+
+        /* Activity */
+        .activity-item { display: flex; align-items: center; gap: 1rem; padding: 0.75rem 0; border-bottom: 1px solid var(--border); }
+        .activity-item:last-child { border-bottom: none; }
+        .activity-icon { width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1rem; background: rgba(255,157,0,0.15); }
+        .activity-text { flex: 1; }
+        .activity-title { font-size: 0.85rem; }
+        .activity-time { font-size: 0.75rem; color: var(--text-muted); }
+
+        /* Welcome Banner */
+        .welcome-banner { background: linear-gradient(135deg, rgba(255,157,0,0.1), rgba(255,107,0,0.05)); border: 1px solid rgba(255,157,0,0.2); border-radius: 16px; padding: 2rem; margin-bottom: 2rem; }
+        .welcome-title { font-size: 1.5rem; font-weight: 600; margin-bottom: 0.5rem; }
+        .welcome-text { color: var(--text-muted); }
+
+        /* OS Console Specific */
+        .terminal { background: #000; border-radius: 8px; padding: 1rem; font-family: 'SF Mono', Monaco, monospace; font-size: 13px; min-height: 400px; overflow-y: auto; }
+        .terminal .line { margin-bottom: 0.25rem; }
+        .terminal .prompt { color: #FF9D00; }
+        .terminal .cmd { color: #0f0; }
+        .terminal .output { color: #080; }
+        .terminal .success { color: #0f0; }
+        .terminal .error { color: #f00; }
+        .terminal .input-line { display: flex; align-items: center; margin-top: 1rem; }
+        .terminal .input-line .prompt { margin-right: 0.5rem; }
+        .terminal #cmd-input { background: transparent; border: none; color: #0f0; font-family: inherit; font-size: inherit; flex: 1; outline: none; }
+        .terminal .cursor { display: inline-block; width: 8px; height: 14px; background: #0f0; animation: blink 1s step-end infinite; vertical-align: middle; margin-left: 2px; }
+        .system-info-bar { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem; margin-bottom: 1rem; padding: 1rem; border: 1px solid var(--border); background: var(--bg-card); border-radius: 8px; }
+        .info-item .info-label { color: var(--text-muted); font-size: 0.7rem; text-transform: uppercase; }
+        .info-item .info-value { color: var(--accent); font-weight: 600; }
+
+        /* DevOps Specific */
+        .status-bar { display: flex; gap: 1.5rem; margin-bottom: 2rem; padding: 1rem; background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; flex-wrap: wrap; }
+        .status-item { display: flex; align-items: center; gap: 0.5rem; }
+        .status-dot { width: 8px; height: 8px; border-radius: 50%; }
+        .status-dot.green { background: var(--green); box-shadow: 0 0 8px var(--green); }
+        .status-dot.red { background: var(--red); box-shadow: 0 0 8px var(--red); }
+        .service-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 1.25rem; }
+        .service-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; }
+        .service-name { font-weight: 600; }
+        .service-status { padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.7rem; text-transform: uppercase; }
+        .service-status.online { background: rgba(0,208,132,0.15); color: var(--green); }
+        .service-url { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.5rem; }
+        .service-metrics { display: flex; gap: 1rem; font-size: 0.75rem; color: var(--text-muted); }
+        .log-terminal { background: #000; border-radius: 8px; padding: 1rem; max-height: 250px; overflow-y: auto; font-family: monospace; font-size: 0.8rem; }
+        .log-line { margin-bottom: 0.25rem; }
+        .log-time { color: var(--text-muted); }
+        .log-info { color: var(--blue); }
+        .log-success { color: var(--green); }
+        .log-error { color: var(--red); }
+
+        /* Finance Specific */
+        .balance-card { background: linear-gradient(135deg, rgba(0,208,132,0.15), rgba(0,150,100,0.1)); border-color: rgba(0,208,132,0.3); }
+        .balance-card .stat-value { color: var(--green); }
+        .crypto-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
+        .crypto-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 1.25rem; display: flex; align-items: center; gap: 1rem; }
+        .crypto-icon { font-size: 2rem; }
+        .crypto-info { flex: 1; }
+        .crypto-name { font-weight: 600; margin-bottom: 0.25rem; }
+        .crypto-amount { font-size: 0.85rem; color: var(--text-muted); }
+        .crypto-value { text-align: right; }
+        .crypto-usd { font-weight: 700; }
+        .crypto-change { font-size: 0.8rem; }
+        .crypto-change.up { color: var(--green); }
+        .crypto-change.down { color: var(--red); }
+        .transaction-item { display: flex; align-items: center; gap: 1rem; padding: 0.75rem 0; border-bottom: 1px solid var(--border); }
+        .transaction-item:last-child { border-bottom: none; }
+        .tx-icon { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.25rem; }
+        .tx-icon.income { background: rgba(0,208,132,0.15); }
+        .tx-icon.expense { background: rgba(255,71,87,0.15); }
+        .tx-details { flex: 1; }
+        .tx-title { font-weight: 500; margin-bottom: 0.25rem; }
+        .tx-date { font-size: 0.75rem; color: var(--text-muted); }
+        .tx-amount { font-weight: 600; }
+        .tx-amount.positive { color: var(--green); }
+        .tx-amount.negative { color: var(--red); }
+
+        /* Education Specific */
+        .course-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; cursor: pointer; transition: all 0.2s; }
+        .course-card:hover { border-color: var(--accent); transform: translateY(-2px); }
+        .course-thumb { height: 100px; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; }
+        .course-body { padding: 1.25rem; }
+        .course-title { font-size: 1rem; font-weight: 600; margin-bottom: 0.5rem; }
+        .course-desc { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem; }
+        .course-meta { display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--text-muted); }
+        .progress-bar { height: 4px; background: var(--border); border-radius: 2px; margin-top: 0.75rem; overflow: hidden; }
+        .progress-fill { height: 100%; background: var(--accent); border-radius: 2px; }
+
+        /* Legal Specific */
+        .doc-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem; cursor: pointer; transition: all 0.2s; }
+        .doc-card:hover { border-color: var(--accent); transform: translateY(-2px); }
+        .doc-icon { font-size: 2.5rem; margin-bottom: 1rem; }
+        .doc-title { font-size: 1.1rem; font-weight: 600; margin-bottom: 0.5rem; }
+        .doc-desc { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem; }
+        .doc-meta { font-size: 0.75rem; color: var(--text-muted); }
+        .contract-item { display: flex; align-items: center; justify-content: space-between; padding: 1rem; background: var(--bg-hover); border-radius: 8px; margin-bottom: 0.75rem; }
+        .contract-info { flex: 1; }
+        .contract-name { font-weight: 500; margin-bottom: 0.25rem; }
+        .contract-date { font-size: 0.75rem; color: var(--text-muted); }
+        .contract-status { padding: 0.25rem 0.75rem; border-radius: 4px; font-size: 0.7rem; }
+        .contract-status.active { background: rgba(0,208,132,0.15); color: var(--green); }
+        .contract-status.pending { background: rgba(255,215,0,0.15); color: #FFD700; }
+
+        /* Studio Specific */
+        .project-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; cursor: pointer; transition: all 0.2s; }
+        .project-card:hover { border-color: var(--accent); transform: translateY(-3px); box-shadow: 0 8px 24px rgba(0,0,0,0.3); }
+        .project-preview { height: 140px; display: flex; align-items: center; justify-content: center; font-size: 3rem; }
+        .project-body { padding: 1.25rem; }
+        .project-title { font-size: 1.1rem; font-weight: 600; margin-bottom: 0.5rem; }
+        .project-type { font-size: 0.8rem; color: var(--text-muted); }
+
+        /* Content Sections (hidden by default) */
+        .portal-content { display: none; }
+        .portal-content.active { display: block; }
+    </style>
+</head>
+<body>
+    <div id="auth-gate">
+        <div class="card">
+            <div class="auth-icon" id="auth-icon">🛣️</div>
+            <h1 class="auth-title" id="auth-title">BlackRoad OS</h1>
+            <p class="auth-subtitle" id="auth-subtitle">Sign in to continue</p>
+            <div class="spinner" id="auth-spinner"></div>
+            <div id="clerk-signin"></div>
+        </div>
+    </div>
+
+    <div id="app">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-logo">
+                    <span id="sidebar-icon">🛣️</span>
+                    <span id="sidebar-title">BlackRoad OS</span>
+                </div>
+            </div>
+            <nav class="sidebar-nav" id="sidebar-nav"></nav>
+            <div class="sidebar-footer">
+                <div class="user-card" id="user-card">
+                    <img class="user-avatar" id="user-avatar" src="" alt="">
+                    <div>
+                        <div class="user-name" id="user-name">Loading...</div>
+                        <div class="user-email" id="user-email"></div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <main class="main" id="main-content"></main>
+    </div>
+
+    <script>
+        // Portal configurations
+        const PORTALS = {
+            'dashboard': {
+                icon: '📊',
+                title: 'Dashboard',
+                color: '#FF9D00',
+                nav: [
+                    { section: 'Main', items: [
+                        { href: 'https://dashboard.blackroad.io', icon: '📊', label: 'Dashboard', portal: 'dashboard' },
+                        { href: 'https://studio.blackroad.io', icon: '🎨', label: 'Studio', portal: 'studio' },
+                        { href: 'https://os.blackroad.io', icon: '⚙️', label: 'Console', portal: 'os' }
+                    ]},
+                    { section: 'Tools', items: [
+                        { href: 'https://finance.blackroad.io', icon: '💰', label: 'Finance', portal: 'finance' },
+                        { href: 'https://devops.blackroad.io', icon: '🔧', label: 'DevOps', portal: 'devops' },
+                        { href: 'https://legal.blackroad.io', icon: '⚖️', label: 'Legal', portal: 'legal' },
+                        { href: 'https://education.blackroad.io', icon: '📚', label: 'Education', portal: 'education' }
+                    ]},
+                    { section: 'Create', items: [
+                        { href: 'https://creator.blackroad.io', icon: '✨', label: 'Creator', portal: 'creator' },
+                        { href: 'https://ideas.blackroad.io', icon: '💡', label: 'Ideas', portal: 'ideas' },
+                        { href: 'https://research-lab.blackroad.io', icon: '🔬', label: 'Research', portal: 'research-lab' }
+                    ]}
+                ]
+            },
+            'studio': { icon: '🎨', title: 'Studio', color: '#FF0066' },
+            'finance': { icon: '💰', title: 'Finance', color: '#00D084' },
+            'devops': { icon: '🔧', title: 'DevOps', color: '#0066FF' },
+            'legal': { icon: '⚖️', title: 'Legal', color: '#FFD700' },
+            'education': { icon: '📚', title: 'Education', color: '#00CED1' },
+            'os': { icon: '⚙️', title: 'OS Console', color: '#00FF00' },
+            'creator': { icon: '✨', title: 'Creator', color: '#7700FF' },
+            'ideas': { icon: '💡', title: 'Ideas', color: '#FF6B00' },
+            'research-lab': { icon: '🔬', title: 'Research Lab', color: '#00BFFF' }
+        };
+
+        // Get current portal
+        const host = window.location.hostname;
+        const subdomain = host.split('.')[0];
+        const portal = PORTALS[subdomain] || PORTALS['dashboard'];
+        const currentPortal = PORTALS[subdomain] ? subdomain : 'dashboard';
+
+        // Update page meta
+        document.title = `${portal.title} - BlackRoad OS`;
+        document.getElementById('favicon').href = `data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>${portal.icon}</text></svg>`;
+        document.documentElement.style.setProperty('--accent', portal.color);
+
+        if (currentPortal === 'os') {
+            document.body.classList.add('os-portal');
+        }
+
+        // Update auth gate
+        document.getElementById('auth-icon').textContent = portal.icon;
+        document.getElementById('auth-title').textContent = portal.title;
+
+        // Build navigation
+        function buildNav() {
+            const nav = document.getElementById('sidebar-nav');
+            const defaultNav = PORTALS['dashboard'].nav;
+
+            let html = '';
+            defaultNav.forEach(section => {
+                html += `<div class="nav-section">${section.section}</div>`;
+                section.items.forEach(item => {
+                    const isActive = item.portal === currentPortal ? 'active' : '';
+                    html += `<a href="${item.href}" class="nav-item ${isActive}" data-portal="${item.portal}">
+                        <span class="nav-icon">${item.icon}</span> ${item.label}
+                    </a>`;
+                });
+            });
+            nav.innerHTML = html;
+        }
+
+        // Portal content templates
+        const CONTENT = {
+            dashboard: `
+                <div class="header">
+                    <h1>Dashboard</h1>
+                    <div>
+                        <button class="btn btn-outline" onclick="location.reload()">↻ Refresh</button>
+                        <a href="https://cece.amundsonalexa.workers.dev" class="btn btn-primary" target="_blank">💬 Chat with Cece</a>
+                    </div>
+                </div>
+                <div class="welcome-banner">
+                    <div class="welcome-title">Welcome to BlackRoad OS</div>
+                    <div class="welcome-text">Your unified platform for AI-powered productivity, creativity, and infrastructure management.</div>
+                </div>
+                <div class="stats-grid">
+                    <div class="stat-card"><div class="stat-label">Active Workers</div><div class="stat-value" style="color:#00D084">9</div></div>
+                    <div class="stat-card"><div class="stat-label">Pages Deployed</div><div class="stat-value" style="color:#0066FF">9</div></div>
+                    <div class="stat-card"><div class="stat-label">Active Agents</div><div class="stat-value" style="color:#FF9D00">3</div></div>
+                    <div class="stat-card"><div class="stat-label">System Status</div><div class="stat-value" style="color:#00D084">OK</div></div>
+                </div>
+                <div class="grid-2">
+                    <div class="card">
+                        <div class="card-header"><div class="card-title">Recent Activity</div></div>
+                        <div class="activity-item"><div class="activity-icon">🚀</div><div class="activity-text"><div class="activity-title">All portals deployed successfully</div><div class="activity-time">Just now</div></div></div>
+                        <div class="activity-item"><div class="activity-icon">🔧</div><div class="activity-text"><div class="activity-title">9 Workers deployed to edge</div><div class="activity-time">30 minutes ago</div></div></div>
+                        <div class="activity-item"><div class="activity-icon">🌐</div><div class="activity-text"><div class="activity-title">11 DNS records created</div><div class="activity-time">1 hour ago</div></div></div>
+                        <div class="activity-item"><div class="activity-icon">✅</div><div class="activity-text"><div class="activity-title">Railway backend healthy</div><div class="activity-time">2 hours ago</div></div></div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header"><div class="card-title">Quick Actions</div></div>
+                        <div class="actions-grid">
+                            <a href="https://cece.amundsonalexa.workers.dev" class="action-card" target="_blank"><span class="action-icon">💬</span><span class="action-label">Chat</span></a>
+                            <a href="https://studio.blackroad.io" class="action-card"><span class="action-icon">🎨</span><span class="action-label">Create</span></a>
+                            <a href="https://devops.blackroad.io" class="action-card"><span class="action-icon">📊</span><span class="action-label">Monitor</span></a>
+                            <a href="https://api.blackroad.io/health" class="action-card" target="_blank"><span class="action-icon">🔌</span><span class="action-label">API</span></a>
+                        </div>
+                    </div>
+                </div>
+            `,
+
+            os: `
+                <div class="header">
+                    <h1 style="font-family: monospace; color: #0f0;">SYSTEM CONSOLE</h1>
+                    <span style="color:var(--text-muted);font-family:monospace">blackroad-os v1.0.0</span>
+                </div>
+                <div class="system-info-bar">
+                    <div class="info-item"><div class="info-label">UPTIME</div><div class="info-value">2h 47m 32s</div></div>
+                    <div class="info-item"><div class="info-label">WORKERS</div><div class="info-value">9 ACTIVE</div></div>
+                    <div class="info-item"><div class="info-label">AGENTS</div><div class="info-value">3 ONLINE</div></div>
+                    <div class="info-item"><div class="info-label">MEMORY</div><div class="info-value">245 MB</div></div>
+                    <div class="info-item"><div class="info-label">REQUESTS/HR</div><div class="info-value">1,247</div></div>
+                    <div class="info-item"><div class="info-label">STATUS</div><div class="info-value success" style="color:#0f0">OPERATIONAL</div></div>
+                </div>
+                <div class="terminal" id="terminal">
+                    <div class="line"><span class="output">BlackRoad OS v1.0.0</span></div>
+                    <div class="line"><span class="output">Copyright (c) 2025 Alexa Louise Amundson</span></div>
+                    <div class="line"><span class="output">Type 'help' for available commands</span></div>
+                    <div class="line"></div>
+                    <div class="line"><span class="prompt">alexa@blackroad:~$</span> <span class="cmd">status</span></div>
+                    <div class="line"><span class="success">All systems operational</span></div>
+                    <div class="line"><span class="output">  Workers: 9 active (cece, router, api-gateway, identity, billing, sovereignty, cipher, intercept, status)</span></div>
+                    <div class="line"><span class="output">  Backend: Railway OK (blackroad-cece-operator)</span></div>
+                    <div class="line"><span class="output">  Pages: 9 deployed</span></div>
+                    <div class="line"><span class="output">  DNS: 15 records active</span></div>
+                    <div class="line"></div>
+                    <div class="line"><span class="prompt">alexa@blackroad:~$</span> <span class="cmd">agents list</span></div>
+                    <div class="line"><span class="output">  [ONLINE] Cece - Primary AI Assistant</span></div>
+                    <div class="line"><span class="output">  [ONLINE] Alice - Home Automation</span></div>
+                    <div class="line"><span class="output">  [ONLINE] Lucidia - Creative Engine</span></div>
+                    <div class="line"></div>
+                    <div class="input-line">
+                        <span class="prompt">alexa@blackroad:~$</span>
+                        <input type="text" id="cmd-input" autofocus placeholder="">
+                        <span class="cursor"></span>
+                    </div>
+                </div>
+            `,
+
+            devops: `
+                <div class="header">
+                    <h1>DevOps Console</h1>
+                    <div><button class="btn btn-outline" style="margin-right:0.5rem">🔄 Refresh</button><button class="btn btn-primary">🚀 Deploy</button></div>
+                </div>
+                <div class="status-bar">
+                    <div class="status-item"><span class="status-dot green"></span> All Systems Operational</div>
+                    <div class="status-item"><span>Workers:</span> <strong>9 active</strong></div>
+                    <div class="status-item"><span>Pages:</span> <strong>9 deployed</strong></div>
+                    <div class="status-item"><span>Backend:</span> <strong>Railway OK</strong></div>
+                </div>
+                <div class="grid-3">
+                    <div class="service-card"><div class="service-header"><span class="service-name">cece</span><span class="service-status online">Online</span></div><div class="service-url">cece.amundsonalexa.workers.dev</div><div class="service-metrics"><span>Latency: 12ms</span><span>1.2k/hr</span></div></div>
+                    <div class="service-card"><div class="service-header"><span class="service-name">api-gateway</span><span class="service-status online">Online</span></div><div class="service-url">blackroad-api-gateway.amundsonalexa.workers.dev</div><div class="service-metrics"><span>Latency: 8ms</span><span>890/hr</span></div></div>
+                    <div class="service-card"><div class="service-header"><span class="service-name">router</span><span class="service-status online">Online</span></div><div class="service-url">blackroad-router.amundsonalexa.workers.dev</div><div class="service-metrics"><span>Latency: 5ms</span><span>2.1k/hr</span></div></div>
+                    <div class="service-card"><div class="service-header"><span class="service-name">identity</span><span class="service-status online">Online</span></div><div class="service-url">blackroad-identity.amundsonalexa.workers.dev</div><div class="service-metrics"><span>Latency: 15ms</span><span>340/hr</span></div></div>
+                    <div class="service-card"><div class="service-header"><span class="service-name">billing</span><span class="service-status online">Online</span></div><div class="service-url">blackroad-billing.amundsonalexa.workers.dev</div><div class="service-metrics"><span>Latency: 10ms</span><span>56/hr</span></div></div>
+                    <div class="service-card"><div class="service-header"><span class="service-name">cece-operator</span><span class="service-status online">Online</span></div><div class="service-url">blackroad-cece-operator-production.up.railway.app</div><div class="service-metrics"><span>Uptime: 99.9%</span><span>245MB</span></div></div>
+                </div>
+                <div class="card" style="margin-top:1.5rem">
+                    <div class="card-title">Live Logs</div>
+                    <div class="log-terminal">
+                        <div class="log-line"><span class="log-time">[22:19:32]</span> <span class="log-info">INFO</span> api-gateway deployed successfully</div>
+                        <div class="log-line"><span class="log-time">[22:18:45]</span> <span class="log-success">OK</span> Health check passed: cece.amundsonalexa.workers.dev</div>
+                        <div class="log-line"><span class="log-time">[22:17:12]</span> <span class="log-info">INFO</span> DNS updated: api.blackroad.io → api-gateway</div>
+                        <div class="log-line"><span class="log-time">[22:15:30]</span> <span class="log-success">OK</span> 11 subdomain DNS records created</div>
+                        <div class="log-line"><span class="log-time">[22:10:05]</span> <span class="log-info">INFO</span> blackroad-cipher deployed</div>
+                        <div class="log-line"><span class="log-time">[22:09:58]</span> <span class="log-info">INFO</span> blackroad-sovereignty deployed</div>
+                    </div>
+                </div>
+            `,
+
+            finance: `
+                <div class="header">
+                    <h1>Finance</h1>
+                    <div><button class="btn btn-outline" style="margin-right:0.5rem">📥 Export</button><button class="btn btn-primary">+ Transaction</button></div>
+                </div>
+                <div class="stats-grid">
+                    <div class="stat-card balance-card"><div class="stat-label">Total Balance</div><div class="stat-value">$12,847.32</div></div>
+                    <div class="stat-card"><div class="stat-label">This Month</div><div class="stat-value" style="color:#00D084">+$2,340</div></div>
+                    <div class="stat-card"><div class="stat-label">Crypto Value</div><div class="stat-value" style="color:#FF9D00">$8,750</div></div>
+                    <div class="stat-card"><div class="stat-label">Pending</div><div class="stat-value" style="color:#FFD700">$450</div></div>
+                </div>
+                <h2 style="font-size:1.1rem;margin-bottom:1rem">Crypto Holdings</h2>
+                <div class="crypto-grid">
+                    <div class="crypto-card">
+                        <div class="crypto-icon">🪙</div>
+                        <div class="crypto-info"><div class="crypto-name">Ethereum</div><div class="crypto-amount">2.5 ETH</div></div>
+                        <div class="crypto-value"><div class="crypto-usd">$5,875</div><div class="crypto-change up">+3.2%</div></div>
+                    </div>
+                    <div class="crypto-card">
+                        <div class="crypto-icon">☀️</div>
+                        <div class="crypto-info"><div class="crypto-name">Solana</div><div class="crypto-amount">100 SOL</div></div>
+                        <div class="crypto-value"><div class="crypto-usd">$2,450</div><div class="crypto-change up">+5.8%</div></div>
+                    </div>
+                    <div class="crypto-card">
+                        <div class="crypto-icon">₿</div>
+                        <div class="crypto-info"><div class="crypto-name">Bitcoin</div><div class="crypto-amount">0.1 BTC</div></div>
+                        <div class="crypto-value"><div class="crypto-usd">$4,250</div><div class="crypto-change down">-1.2%</div></div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header"><div class="card-title">Recent Transactions</div></div>
+                    <div class="transaction-item"><div class="tx-icon income">📥</div><div class="tx-details"><div class="tx-title">Freelance Payment</div><div class="tx-date">Dec 1, 2025</div></div><div class="tx-amount positive">+$2,500</div></div>
+                    <div class="transaction-item"><div class="tx-icon expense">📤</div><div class="tx-details"><div class="tx-title">Railway Pro</div><div class="tx-date">Nov 28, 2025</div></div><div class="tx-amount negative">-$20</div></div>
+                    <div class="transaction-item"><div class="tx-icon expense">📤</div><div class="tx-details"><div class="tx-title">Cloudflare Pro</div><div class="tx-date">Nov 25, 2025</div></div><div class="tx-amount negative">-$25</div></div>
+                    <div class="transaction-item"><div class="tx-icon income">📥</div><div class="tx-details"><div class="tx-title">API Revenue</div><div class="tx-date">Nov 20, 2025</div></div><div class="tx-amount positive">+$340</div></div>
+                </div>
+            `,
+
+            education: `
+                <div class="header">
+                    <h1>Welcome back, learner!</h1>
+                    <div><button class="btn btn-primary">🎯 Continue Learning</button></div>
+                </div>
+                <div class="stats-grid">
+                    <div class="stat-card"><div class="stat-label">Courses In Progress</div><div class="stat-value" style="color:#00CED1">3</div></div>
+                    <div class="stat-card"><div class="stat-label">Lessons Completed</div><div class="stat-value" style="color:#00D084">12</div></div>
+                    <div class="stat-card"><div class="stat-label">Time This Week</div><div class="stat-value" style="color:#FF9D00">5h</div></div>
+                    <div class="stat-card"><div class="stat-label">Quiz Average</div><div class="stat-value" style="color:#7700FF">87%</div></div>
+                </div>
+                <h2 style="font-size:1.1rem;margin-bottom:1rem">Continue Learning</h2>
+                <div class="grid-3">
+                    <div class="course-card"><div class="course-thumb" style="background:linear-gradient(135deg,#00CED1,#008B8B)">🤖</div><div class="course-body"><div class="course-title">AI Fundamentals</div><div class="course-desc">Master the basics of artificial intelligence</div><div class="course-meta"><span>8 lessons</span><span>45% complete</span></div><div class="progress-bar"><div class="progress-fill" style="width:45%;background:#00CED1"></div></div></div></div>
+                    <div class="course-card"><div class="course-thumb" style="background:linear-gradient(135deg,#FF9D00,#FF6B00)">💻</div><div class="course-body"><div class="course-title">Web Development</div><div class="course-desc">Build modern web applications</div><div class="course-meta"><span>12 lessons</span><span>30% complete</span></div><div class="progress-bar"><div class="progress-fill" style="width:30%;background:#FF9D00"></div></div></div></div>
+                    <div class="course-card"><div class="course-thumb" style="background:linear-gradient(135deg,#7700FF,#0066FF)">☁️</div><div class="course-body"><div class="course-title">Cloud Computing</div><div class="course-desc">AWS, Cloudflare, and Railway</div><div class="course-meta"><span>10 lessons</span><span>15% complete</span></div><div class="progress-bar"><div class="progress-fill" style="width:15%;background:#7700FF"></div></div></div></div>
+                </div>
+            `,
+
+            legal: `
+                <div class="header">
+                    <h1 style="font-family:Georgia,serif">Legal Portal</h1>
+                    <div><button class="btn btn-outline" style="margin-right:0.5rem">📥 Upload</button><button class="btn btn-primary">+ New Document</button></div>
+                </div>
+                <div class="grid-3" style="margin-bottom:2rem">
+                    <div class="doc-card"><div class="doc-icon">📜</div><div class="doc-title">Terms of Service</div><div class="doc-desc">Master terms governing BlackRoad OS usage</div><div class="doc-meta">Last updated: Dec 1, 2025</div></div>
+                    <div class="doc-card"><div class="doc-icon">🔐</div><div class="doc-title">Privacy Policy</div><div class="doc-desc">Data handling and privacy practices</div><div class="doc-meta">Last updated: Nov 28, 2025</div></div>
+                    <div class="doc-card"><div class="doc-icon">©️</div><div class="doc-title">IP & Copyright</div><div class="doc-desc">Intellectual property ownership</div><div class="doc-meta">Last updated: Nov 15, 2025</div></div>
+                    <div class="doc-card"><div class="doc-icon">🤝</div><div class="doc-title">Data Sovereignty</div><div class="doc-desc">Owner rights and data ownership</div><div class="doc-meta">Last updated: Dec 2, 2025</div></div>
+                </div>
+                <div class="card">
+                    <div class="card-title">Active Contracts</div>
+                    <div class="contract-item"><div class="contract-info"><div class="contract-name">Cloudflare Enterprise Agreement</div><div class="contract-date">Expires: Dec 2026</div></div><span class="contract-status active">Active</span></div>
+                    <div class="contract-item"><div class="contract-info"><div class="contract-name">Railway Pro Subscription</div><div class="contract-date">Renews: Jan 2025</div></div><span class="contract-status active">Active</span></div>
+                    <div class="contract-item"><div class="contract-info"><div class="contract-name">OpenAI API Agreement</div><div class="contract-date">Review: Dec 15, 2025</div></div><span class="contract-status pending">Pending Review</span></div>
+                </div>
+            `,
+
+            studio: `
+                <div class="header">
+                    <h1>Creative Studio</h1>
+                    <div><button class="btn btn-outline" style="margin-right:0.5rem">📁 My Files</button><button class="btn btn-primary">+ New Project</button></div>
+                </div>
+                <div class="welcome-banner" style="background:linear-gradient(135deg,rgba(255,0,102,0.1),rgba(255,0,102,0.05));border-color:rgba(255,0,102,0.2)">
+                    <div class="welcome-title">Create Something Amazing</div>
+                    <div class="welcome-text">Design, generate, and collaborate with AI-powered creative tools.</div>
+                </div>
+                <h2 style="font-size:1.1rem;margin-bottom:1rem">Recent Projects</h2>
+                <div class="grid-3">
+                    <div class="project-card"><div class="project-preview" style="background:linear-gradient(135deg,#FF0066,#FF006B)">🎨</div><div class="project-body"><div class="project-title">Brand Identity v2</div><div class="project-type">Design System</div></div></div>
+                    <div class="project-card"><div class="project-preview" style="background:linear-gradient(135deg,#7700FF,#D600AA)">🎬</div><div class="project-body"><div class="project-title">Product Demo Video</div><div class="project-type">Video Project</div></div></div>
+                    <div class="project-card"><div class="project-preview" style="background:linear-gradient(135deg,#0066FF,#00BFFF)">📝</div><div class="project-body"><div class="project-title">Blog Post Series</div><div class="project-type">Content Writing</div></div></div>
+                    <div class="project-card"><div class="project-preview" style="background:linear-gradient(135deg,#FF9D00,#FF6B00)">🖼️</div><div class="project-body"><div class="project-title">AI Art Collection</div><div class="project-type">Image Generation</div></div></div>
+                </div>
+            `,
+
+            creator: `
+                <div class="header">
+                    <h1>Creator Hub</h1>
+                    <div><button class="btn btn-primary">✨ Start Creating</button></div>
+                </div>
+                <div class="welcome-banner" style="background:linear-gradient(135deg,rgba(119,0,255,0.1),rgba(119,0,255,0.05));border-color:rgba(119,0,255,0.2)">
+                    <div class="welcome-title">Unleash Your Creativity</div>
+                    <div class="welcome-text">AI-powered tools to bring your ideas to life.</div>
+                </div>
+                <div class="grid-3">
+                    <div class="action-card" style="padding:2rem"><span class="action-icon" style="font-size:2.5rem">🎨</span><span class="action-label" style="font-size:1rem;margin-top:0.5rem">Generate Art</span></div>
+                    <div class="action-card" style="padding:2rem"><span class="action-icon" style="font-size:2.5rem">✍️</span><span class="action-label" style="font-size:1rem;margin-top:0.5rem">Write Content</span></div>
+                    <div class="action-card" style="padding:2rem"><span class="action-icon" style="font-size:2.5rem">🎵</span><span class="action-label" style="font-size:1rem;margin-top:0.5rem">Compose Music</span></div>
+                    <div class="action-card" style="padding:2rem"><span class="action-icon" style="font-size:2.5rem">🎬</span><span class="action-label" style="font-size:1rem;margin-top:0.5rem">Create Video</span></div>
+                    <div class="action-card" style="padding:2rem"><span class="action-icon" style="font-size:2.5rem">💻</span><span class="action-label" style="font-size:1rem;margin-top:0.5rem">Build Apps</span></div>
+                    <div class="action-card" style="padding:2rem"><span class="action-icon" style="font-size:2.5rem">🤖</span><span class="action-label" style="font-size:1rem;margin-top:0.5rem">Train Models</span></div>
+                </div>
+            `,
+
+            ideas: `
+                <div class="header">
+                    <h1>Ideas Lab</h1>
+                    <div><button class="btn btn-primary">💡 New Idea</button></div>
+                </div>
+                <div class="welcome-banner" style="background:linear-gradient(135deg,rgba(255,107,0,0.1),rgba(255,107,0,0.05));border-color:rgba(255,107,0,0.2)">
+                    <div class="welcome-title">Capture Every Spark</div>
+                    <div class="welcome-text">Your personal space for brainstorming, ideation, and inspiration.</div>
+                </div>
+                <div class="stats-grid">
+                    <div class="stat-card"><div class="stat-label">Total Ideas</div><div class="stat-value" style="color:#FF6B00">47</div></div>
+                    <div class="stat-card"><div class="stat-label">In Progress</div><div class="stat-value" style="color:#0066FF">8</div></div>
+                    <div class="stat-card"><div class="stat-label">Completed</div><div class="stat-value" style="color:#00D084">12</div></div>
+                    <div class="stat-card"><div class="stat-label">Archived</div><div class="stat-value" style="color:#888">27</div></div>
+                </div>
+                <div class="card">
+                    <div class="card-header"><div class="card-title">Recent Ideas</div></div>
+                    <div class="activity-item"><div class="activity-icon" style="background:rgba(255,107,0,0.15)">💡</div><div class="activity-text"><div class="activity-title">AI-powered code review system</div><div class="activity-time">Today</div></div></div>
+                    <div class="activity-item"><div class="activity-icon" style="background:rgba(255,107,0,0.15)">💡</div><div class="activity-text"><div class="activity-title">Voice-controlled home automation</div><div class="activity-time">Yesterday</div></div></div>
+                    <div class="activity-item"><div class="activity-icon" style="background:rgba(255,107,0,0.15)">💡</div><div class="activity-text"><div class="activity-title">Decentralized identity protocol</div><div class="activity-time">2 days ago</div></div></div>
+                </div>
+            `,
+
+            'research-lab': `
+                <div class="header">
+                    <h1>Research Lab</h1>
+                    <div><button class="btn btn-primary">🔬 New Experiment</button></div>
+                </div>
+                <div class="welcome-banner" style="background:linear-gradient(135deg,rgba(0,191,255,0.1),rgba(0,191,255,0.05));border-color:rgba(0,191,255,0.2)">
+                    <div class="welcome-title">Explore the Unknown</div>
+                    <div class="welcome-text">Cutting-edge research, experiments, and discoveries.</div>
+                </div>
+                <div class="stats-grid">
+                    <div class="stat-card"><div class="stat-label">Active Experiments</div><div class="stat-value" style="color:#00BFFF">5</div></div>
+                    <div class="stat-card"><div class="stat-label">Data Points</div><div class="stat-value" style="color:#00D084">12.4k</div></div>
+                    <div class="stat-card"><div class="stat-label">Papers Published</div><div class="stat-value" style="color:#FF9D00">3</div></div>
+                    <div class="stat-card"><div class="stat-label">Collaborators</div><div class="stat-value" style="color:#7700FF">7</div></div>
+                </div>
+                <div class="card">
+                    <div class="card-header"><div class="card-title">Current Research</div></div>
+                    <div class="activity-item"><div class="activity-icon" style="background:rgba(0,191,255,0.15)">🧬</div><div class="activity-text"><div class="activity-title">Neural Network Optimization Patterns</div><div class="activity-time">Active - 45% complete</div></div></div>
+                    <div class="activity-item"><div class="activity-icon" style="background:rgba(0,191,255,0.15)">🌐</div><div class="activity-text"><div class="activity-title">Distributed Computing Architecture</div><div class="activity-time">Active - 30% complete</div></div></div>
+                    <div class="activity-item"><div class="activity-icon" style="background:rgba(0,191,255,0.15)">🔮</div><div class="activity-text"><div class="activity-title">Quantum Algorithm Exploration</div><div class="activity-time">Active - 15% complete</div></div></div>
+                </div>
+            `
+        };
+
+        // Render portal content
+        function renderContent() {
+            const main = document.getElementById('main-content');
+            const content = CONTENT[currentPortal] || CONTENT['dashboard'];
+            main.innerHTML = content;
+
+            // Initialize OS terminal if on OS portal
+            if (currentPortal === 'os') {
+                initTerminal();
+            }
+        }
+
+        // OS Terminal functionality
+        function initTerminal() {
+            const terminal = document.getElementById('terminal');
+            const input = document.getElementById('cmd-input');
+            if (!input) return;
+
+            const commands = {
+                help: 'Available commands: status, agents, workers, logs, clear, exit',
+                status: 'All systems operational\n  Workers: 9 active\n  Backend: Railway OK\n  Uptime: 99.9%',
+                agents: 'agents list - Show all agents\nagents start <name> - Start agent\nagents stop <name> - Stop agent',
+                workers: 'cece, router, api-gateway, identity, billing, sovereignty, cipher, intercept, status',
+                clear: 'CLEAR',
+                exit: 'REDIRECT:https://dashboard.blackroad.io'
+            };
+
+            input.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    const cmd = input.value.trim();
+                    if (!cmd) return;
+                    const inputLine = document.querySelector('.input-line');
+                    const line = document.createElement('div');
+                    line.className = 'line';
+                    line.innerHTML = `<span class="prompt">alexa@blackroad:~$</span> <span class="cmd">${cmd}</span>`;
+                    terminal.insertBefore(line, inputLine);
+                    const result = commands[cmd.split(' ')[0]] || `command not found: ${cmd}`;
+                    if (result === 'CLEAR') {
+                        terminal.innerHTML = '';
+                        terminal.appendChild(inputLine);
+                    } else if (result.startsWith('REDIRECT:')) {
+                        window.location.href = result.replace('REDIRECT:', '');
+                    } else {
+                        const out = document.createElement('div');
+                        out.className = 'line';
+                        out.innerHTML = `<span class="output">${result.replace(/\n/g, '</span></div><div class="line"><span class="output">')}</span>`;
+                        terminal.insertBefore(out, inputLine);
+                    }
+                    input.value = '';
+                    terminal.scrollTop = terminal.scrollHeight;
+                }
+            });
+
+            input.focus();
+        }
+
+        // Auth initialization
+        async function initAuth() {
+            const authGate = document.getElementById('auth-gate');
+            const app = document.getElementById('app');
+            const spinner = document.getElementById('auth-spinner');
+            const clerkSignin = document.getElementById('clerk-signin');
+
+            // Wait for Clerk
+            if (typeof Clerk === 'undefined') {
+                await new Promise(resolve => setTimeout(resolve, 1500));
+            }
+
+            if (typeof Clerk === 'undefined') {
+                spinner.style.display = 'none';
+                clerkSignin.innerHTML = '<p style="color:#888">Auth unavailable</p><a href="/" class="btn btn-primary" style="margin-top:1rem">Retry</a>';
+                return;
+            }
+
+            await Clerk.load();
+
+            if (!Clerk.user) {
+                spinner.style.display = 'none';
+                Clerk.mountSignIn(clerkSignin, {
+                    appearance: {
+                        variables: {
+                            colorPrimary: portal.color,
+                            colorBackground: 'transparent',
+                            colorText: '#ffffff',
+                            colorTextSecondary: '#888888',
+                            colorInputBackground: 'rgba(255,255,255,0.05)',
+                            colorInputText: '#ffffff',
+                            borderRadius: '10px'
+                        },
+                        elements: {
+                            card: { backgroundColor: 'transparent', boxShadow: 'none', border: 'none' },
+                            headerTitle: { display: 'none' },
+                            headerSubtitle: { display: 'none' },
+                            formButtonPrimary: { background: `linear-gradient(90deg, ${portal.color}, #FF6B00)` }
+                        }
+                    }
+                });
+                return;
+            }
+
+            // User is signed in
+            document.getElementById('user-avatar').src = Clerk.user.imageUrl || '';
+            document.getElementById('user-name').textContent = Clerk.user.fullName || Clerk.user.username || 'User';
+            document.getElementById('user-email').textContent = Clerk.user.primaryEmailAddress?.emailAddress || '';
+            document.getElementById('user-card').onclick = () => Clerk.openUserProfile();
+            document.getElementById('sidebar-icon').textContent = portal.icon;
+            document.getElementById('sidebar-title').textContent = portal.title;
+
+            authGate.style.display = 'none';
+            app.classList.add('show');
+
+            buildNav();
+            renderContent();
+        }
+
+        initAuth();
+    </script>
+</body>
+</html>

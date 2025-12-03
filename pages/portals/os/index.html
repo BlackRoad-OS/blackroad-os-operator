@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OS Console - BlackRoad OS</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚙️</text></svg>">
+    <script async crossorigin="anonymous" data-clerk-publishable-key="pk_test_ZmluZS13YWxsYWJ5LTk2LmNsZXJrLmFjY291bnRzLmRldiQ" src="https://cdn.jsdelivr.net/npm/@clerk/clerk-js@latest/dist/clerk.browser.js"></script>
+    <style>
+        :root { --bg-dark: #000; --bg-card: #0a0a0a; --bg-hover: #151515; --border: #222; --text: #0f0; --text-bright: #0f0; --text-dim: #080; --orange: #FF9D00; --sidebar-width: 240px; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace; background: var(--bg-dark); color: var(--text); min-height: 100vh; font-size: 13px; }
+        #auth-gate { display: flex; align-items: center; justify-content: center; min-height: 100vh; background: #000; }
+        #auth-gate .card { background: #000; border: 1px solid var(--text); padding: 2rem; text-align: center; max-width: 400px; font-family: monospace; }
+        #auth-gate h1 { font-size: 1.5rem; color: var(--text); margin-bottom: 1rem; }
+        .spinner { width: 20px; height: 20px; border: 2px solid #040; border-top-color: var(--text); border-radius: 50%; animation: spin 0.6s linear infinite; margin: 1rem auto; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        @keyframes blink { 50% { opacity: 0; } }
+        #app { display: none; }
+        #app.show { display: flex; min-height: 100vh; }
+        .sidebar { width: var(--sidebar-width); background: var(--bg-card); border-right: 1px solid var(--border); display: flex; flex-direction: column; position: fixed; height: 100vh; }
+        .sidebar-header { padding: 1rem; border-bottom: 1px solid var(--border); }
+        .sidebar-logo { font-size: 1rem; color: var(--text); }
+        .sidebar-nav { padding: 0.5rem 0; flex: 1; }
+        .nav-item { display: block; padding: 0.5rem 1rem; color: var(--text-dim); text-decoration: none; font-size: 0.8rem; }
+        .nav-item:hover { background: var(--bg-hover); color: var(--text); }
+        .nav-item.active { color: var(--text-bright); background: var(--bg-hover); }
+        .nav-item::before { content: "> "; }
+        .sidebar-footer { padding: 0.75rem; border-top: 1px solid var(--border); font-size: 0.7rem; color: var(--text-dim); }
+        .main { flex: 1; margin-left: var(--sidebar-width); padding: 1rem; }
+        .terminal-header { display: flex; justify-content: space-between; margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border); }
+        .terminal-title { color: var(--text-bright); }
+        .terminal { background: #000; padding: 1rem; min-height: 400px; }
+        .line { margin-bottom: 0.25rem; }
+        .prompt { color: var(--orange); }
+        .cmd { color: var(--text-bright); }
+        .output { color: var(--text-dim); }
+        .success { color: #0f0; }
+        .error { color: #f00; }
+        .input-line { display: flex; align-items: center; margin-top: 1rem; }
+        .input-line .prompt { margin-right: 0.5rem; }
+        #cmd-input { background: transparent; border: none; color: var(--text-bright); font-family: inherit; font-size: inherit; flex: 1; outline: none; caret-color: var(--text); }
+        .cursor { display: inline-block; width: 8px; height: 14px; background: var(--text); animation: blink 1s step-end infinite; vertical-align: middle; margin-left: 2px; }
+        .system-info { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1rem; padding: 1rem; border: 1px solid var(--border); }
+        .info-item { }
+        .info-label { color: var(--text-dim); font-size: 0.7rem; }
+        .info-value { color: var(--text-bright); }
+    </style>
+</head>
+<body>
+    <div id="auth-gate"><div class="card"><h1>BLACKROAD OS v1.0</h1><p style="color:#080">SYSTEM AUTHENTICATION</p><div class="spinner"></div><p style="color:#080;font-size:0.8rem">LOADING...</p></div></div>
+    <div id="app">
+        <aside class="sidebar">
+            <div class="sidebar-header"><div class="sidebar-logo">[BLACKROAD OS]</div></div>
+            <nav class="sidebar-nav">
+                <a href="#" class="nav-item active">console</a>
+                <a href="#" class="nav-item">processes</a>
+                <a href="#" class="nav-item">agents</a>
+                <a href="#" class="nav-item">network</a>
+                <a href="#" class="nav-item">storage</a>
+                <a href="#" class="nav-item">logs</a>
+                <a href="#" class="nav-item">config</a>
+                <a href="https://dashboard.blackroad.io" class="nav-item">exit</a>
+            </nav>
+            <div class="sidebar-footer">
+                <div id="user-info">user: loading...</div>
+                <div>session: active</div>
+            </div>
+        </aside>
+        <main class="main">
+            <div class="terminal-header">
+                <span class="terminal-title">SYSTEM CONSOLE</span>
+                <span style="color:var(--text-dim)">blackroad-os v1.0.0</span>
+            </div>
+            <div class="system-info">
+                <div class="info-item"><div class="info-label">UPTIME</div><div class="info-value">2h 47m 32s</div></div>
+                <div class="info-item"><div class="info-label">WORKERS</div><div class="info-value">9 ACTIVE</div></div>
+                <div class="info-item"><div class="info-label">AGENTS</div><div class="info-value">3 ONLINE</div></div>
+                <div class="info-item"><div class="info-label">MEMORY</div><div class="info-value">245 MB</div></div>
+                <div class="info-item"><div class="info-label">REQUESTS/HR</div><div class="info-value">1,247</div></div>
+                <div class="info-item"><div class="info-label">STATUS</div><div class="info-value success">OPERATIONAL</div></div>
+            </div>
+            <div class="terminal" id="terminal">
+                <div class="line"><span class="output">BlackRoad OS v1.0.0</span></div>
+                <div class="line"><span class="output">Copyright (c) 2025 Alexa Louise Amundson</span></div>
+                <div class="line"><span class="output">Type 'help' for available commands</span></div>
+                <div class="line"></div>
+                <div class="line"><span class="prompt">alexa@blackroad:~$</span> <span class="cmd">status</span></div>
+                <div class="line"><span class="success">All systems operational</span></div>
+                <div class="line"><span class="output">  Workers: 9 active (cece, router, api-gateway, identity, billing, sovereignty, cipher, intercept, status)</span></div>
+                <div class="line"><span class="output">  Backend: Railway OK (blackroad-cece-operator)</span></div>
+                <div class="line"><span class="output">  Pages: 9 deployed</span></div>
+                <div class="line"><span class="output">  DNS: 15 records active</span></div>
+                <div class="line"></div>
+                <div class="line"><span class="prompt">alexa@blackroad:~$</span> <span class="cmd">agents list</span></div>
+                <div class="line"><span class="output">  [ONLINE] Cece - Primary AI Assistant</span></div>
+                <div class="line"><span class="output">  [ONLINE] Alice - Home Automation</span></div>
+                <div class="line"><span class="output">  [ONLINE] Lucidia - Creative Engine</span></div>
+                <div class="line"></div>
+                <div class="input-line">
+                    <span class="prompt">alexa@blackroad:~$</span>
+                    <input type="text" id="cmd-input" autofocus placeholder="">
+                    <span class="cursor"></span>
+                </div>
+            </div>
+        </main>
+    </div>
+    <script>
+        const terminal = document.getElementById('terminal');
+        const input = document.getElementById('cmd-input');
+        const commands = {
+            help: 'Available commands: status, agents, workers, logs, clear, exit',
+            status: 'All systems operational\n  Workers: 9 active\n  Backend: Railway OK\n  Uptime: 99.9%',
+            agents: 'agents list - Show all agents\nagents start <name> - Start agent\nagents stop <name> - Stop agent',
+            workers: 'cece, router, api-gateway, identity, billing, sovereignty, cipher, intercept, status',
+            clear: 'CLEAR',
+            exit: 'REDIRECT:https://dashboard.blackroad.io'
+        };
+        input.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                const cmd = input.value.trim();
+                if (!cmd) return;
+                const inputLine = document.querySelector('.input-line');
+                const line = document.createElement('div');
+                line.className = 'line';
+                line.innerHTML = `<span class="prompt">alexa@blackroad:~$</span> <span class="cmd">${cmd}</span>`;
+                terminal.insertBefore(line, inputLine);
+                const result = commands[cmd.split(' ')[0]] || `command not found: ${cmd}`;
+                if (result === 'CLEAR') { terminal.innerHTML = ''; terminal.appendChild(inputLine); }
+                else if (result.startsWith('REDIRECT:')) { window.location.href = result.replace('REDIRECT:', ''); }
+                else { const out = document.createElement('div'); out.className = 'line'; out.innerHTML = `<span class="output">${result.replace(/\n/g, '</span></div><div class="line"><span class="output">')}</span>`; terminal.insertBefore(out, inputLine); }
+                input.value = '';
+                terminal.scrollTop = terminal.scrollHeight;
+            }
+        });
+        async function init() { if (typeof Clerk === 'undefined') await new Promise(r => setTimeout(r, 1000)); if (typeof Clerk === 'undefined') return; await Clerk.load(); if (!Clerk.user) { document.querySelector('#auth-gate .card').innerHTML = '<h1>ACCESS DENIED</h1><p style="color:#f00">AUTHENTICATION REQUIRED</p><div id="clerk-signin" style="margin-top:1rem"></div>'; Clerk.mountSignIn(document.getElementById('clerk-signin'), { appearance: { variables: { colorPrimary: '#0f0', colorBackground: '#000', colorText: '#0f0' } } }); return; } document.getElementById('user-info').textContent = 'user: ' + (Clerk.user.username || Clerk.user.fullName || 'operator'); document.getElementById('auth-gate').style.display = 'none'; document.getElementById('app').classList.add('show'); input.focus(); }
+        init();
+    </script>
+</body>
+</html>

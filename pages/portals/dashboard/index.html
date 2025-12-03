@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - BlackRoad OS</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛣️</text></svg>">
+    <script async crossorigin="anonymous" data-clerk-publishable-key="pk_test_ZmluZS13YWxsYWJ5LTk2LmNsZXJrLmFjY291bnRzLmRldiQ" src="https://cdn.jsdelivr.net/npm/@clerk/clerk-js@latest/dist/clerk.browser.js"></script>
+    <style>
+        :root {
+            --bg-dark: #0a0a0f;
+            --bg-card: #12121a;
+            --bg-hover: #1a1a25;
+            --border: #2a2a3a;
+            --text: #ffffff;
+            --text-muted: #888;
+            --orange: #FF9D00;
+            --orange-dark: #FF6B00;
+            --pink: #FF0066;
+            --purple: #7700FF;
+            --blue: #0066FF;
+            --green: #00D084;
+            --sidebar-width: 260px;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg-dark);
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        /* Auth Gate */
+        #auth-gate {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #16213e 100%);
+        }
+        #auth-gate .card {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 20px;
+            padding: 2.5rem;
+            text-align: center;
+            max-width: 400px;
+        }
+        #auth-gate h1 {
+            font-size: 2rem;
+            background: linear-gradient(90deg, var(--orange), var(--pink));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 1rem;
+        }
+        .spinner { width: 24px; height: 24px; border: 2px solid rgba(255,157,0,0.2); border-top-color: var(--orange); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 1rem auto; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* Main Layout */
+        #app { display: none; }
+        #app.show { display: flex; min-height: 100vh; }
+
+        /* Sidebar */
+        .sidebar {
+            width: var(--sidebar-width);
+            background: var(--bg-card);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+        }
+        .sidebar-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--border);
+        }
+        .sidebar-logo {
+            font-size: 1.3rem;
+            font-weight: 700;
+            background: linear-gradient(90deg, var(--orange), var(--orange-dark));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .sidebar-nav { padding: 1rem 0; flex: 1; }
+        .nav-section { padding: 0.5rem 1rem; font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-top: 1rem; }
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem 1.5rem;
+            color: var(--text-muted);
+            text-decoration: none;
+            transition: all 0.15s;
+            font-size: 0.9rem;
+        }
+        .nav-item:hover { background: var(--bg-hover); color: var(--text); }
+        .nav-item.active { background: rgba(255,157,0,0.1); color: var(--orange); border-right: 2px solid var(--orange); }
+        .nav-icon { font-size: 1.1rem; width: 24px; text-align: center; }
+
+        .sidebar-footer {
+            padding: 1rem;
+            border-top: 1px solid var(--border);
+        }
+        .user-card {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+        .user-card:hover { background: var(--bg-hover); }
+        .user-avatar { width: 36px; height: 36px; border-radius: 50%; border: 2px solid var(--orange); }
+        .user-name { font-size: 0.85rem; font-weight: 500; }
+        .user-email { font-size: 0.7rem; color: var(--text-muted); }
+
+        /* Main Content */
+        .main {
+            flex: 1;
+            margin-left: var(--sidebar-width);
+            padding: 2rem;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+        .header h1 { font-size: 1.75rem; font-weight: 600; }
+        .header-actions { display: flex; gap: 0.75rem; }
+
+        .btn {
+            padding: 0.6rem 1.2rem;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.15s;
+            border: none;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .btn-primary { background: linear-gradient(90deg, var(--orange), var(--orange-dark)); color: white; }
+        .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(255,107,0,0.3); }
+        .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text); }
+        .btn-outline:hover { border-color: var(--orange); }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        .stat-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+        }
+        .stat-label { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.5rem; }
+        .stat-value { font-size: 2rem; font-weight: 700; }
+        .stat-value.orange { color: var(--orange); }
+        .stat-value.green { color: var(--green); }
+        .stat-value.blue { color: var(--blue); }
+        .stat-value.pink { color: var(--pink); }
+        .stat-change { font-size: 0.75rem; color: var(--green); margin-top: 0.5rem; }
+
+        /* Cards */
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        .card-title { font-size: 1rem; font-weight: 600; }
+
+        /* Activity List */
+        .activity-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid var(--border);
+        }
+        .activity-item:last-child { border-bottom: none; }
+        .activity-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+        }
+        .activity-icon.orange { background: rgba(255,157,0,0.15); }
+        .activity-icon.green { background: rgba(0,208,132,0.15); }
+        .activity-icon.blue { background: rgba(0,102,255,0.15); }
+        .activity-text { flex: 1; }
+        .activity-title { font-size: 0.85rem; }
+        .activity-time { font-size: 0.75rem; color: var(--text-muted); }
+
+        /* Quick Actions */
+        .quick-actions {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+        }
+        .quick-action {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 1.5rem;
+            background: var(--bg-hover);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            text-decoration: none;
+            color: var(--text);
+            transition: all 0.15s;
+        }
+        .quick-action:hover { border-color: var(--orange); transform: translateY(-2px); }
+        .quick-action-icon { font-size: 1.5rem; }
+        .quick-action-label { font-size: 0.85rem; }
+    </style>
+</head>
+<body>
+    <!-- Auth Gate -->
+    <div id="auth-gate">
+        <div class="card">
+            <h1>BlackRoad OS</h1>
+            <p style="color: var(--text-muted); margin-bottom: 1rem;">Dashboard</p>
+            <div class="spinner"></div>
+            <p style="color: var(--text-muted); font-size: 0.85rem;">Authenticating...</p>
+        </div>
+    </div>
+
+    <!-- Main App (hidden until auth) -->
+    <div id="app">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-logo">BlackRoad OS</div>
+            </div>
+            <nav class="sidebar-nav">
+                <div class="nav-section">Main</div>
+                <a href="https://dashboard.blackroad.io" class="nav-item active"><span class="nav-icon">📊</span> Dashboard</a>
+                <a href="https://studio.blackroad.io" class="nav-item"><span class="nav-icon">🎨</span> Studio</a>
+                <a href="https://os.blackroad.io" class="nav-item"><span class="nav-icon">⚙️</span> OS Console</a>
+
+                <div class="nav-section">Tools</div>
+                <a href="https://finance.blackroad.io" class="nav-item"><span class="nav-icon">💰</span> Finance</a>
+                <a href="https://legal.blackroad.io" class="nav-item"><span class="nav-icon">⚖️</span> Legal</a>
+                <a href="https://devops.blackroad.io" class="nav-item"><span class="nav-icon">🔧</span> DevOps</a>
+                <a href="https://education.blackroad.io" class="nav-item"><span class="nav-icon">📚</span> Education</a>
+
+                <div class="nav-section">Create</div>
+                <a href="https://creator.blackroad.io" class="nav-item"><span class="nav-icon">✨</span> Creator</a>
+                <a href="https://ideas.blackroad.io" class="nav-item"><span class="nav-icon">💡</span> Ideas</a>
+                <a href="https://research-lab.blackroad.io" class="nav-item"><span class="nav-icon">🔬</span> Research</a>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="user-card" id="user-card">
+                    <img class="user-avatar" id="user-avatar" src="" alt="">
+                    <div>
+                        <div class="user-name" id="user-name">Loading...</div>
+                        <div class="user-email" id="user-email"></div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <main class="main">
+            <div class="header">
+                <h1>Dashboard</h1>
+                <div class="header-actions">
+                    <button class="btn btn-outline" onclick="location.reload()">↻ Refresh</button>
+                    <button class="btn btn-primary" id="chat-btn">💬 Chat with Cece</button>
+                </div>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-label">Active Agents</div>
+                    <div class="stat-value orange">3</div>
+                    <div class="stat-change">↑ Cece, Alice, Lucidia</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">API Requests (24h)</div>
+                    <div class="stat-value green">1,247</div>
+                    <div class="stat-change">↑ 12% from yesterday</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Edge Locations</div>
+                    <div class="stat-value blue">300+</div>
+                    <div class="stat-change">Cloudflare global</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Uptime</div>
+                    <div class="stat-value pink">99.9%</div>
+                    <div class="stat-change">Last 30 days</div>
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 1.5rem;">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">Recent Activity</div>
+                        <button class="btn btn-outline" style="padding: 0.4rem 0.8rem; font-size: 0.75rem;">View All</button>
+                    </div>
+                    <div class="activity-item">
+                        <div class="activity-icon orange">🤖</div>
+                        <div class="activity-text">
+                            <div class="activity-title">Cece processed 47 requests</div>
+                            <div class="activity-time">2 minutes ago</div>
+                        </div>
+                    </div>
+                    <div class="activity-item">
+                        <div class="activity-icon green">✅</div>
+                        <div class="activity-text">
+                            <div class="activity-title">API Gateway deployed successfully</div>
+                            <div class="activity-time">15 minutes ago</div>
+                        </div>
+                    </div>
+                    <div class="activity-item">
+                        <div class="activity-icon blue">🔄</div>
+                        <div class="activity-text">
+                            <div class="activity-title">DNS records updated for 11 subdomains</div>
+                            <div class="activity-time">1 hour ago</div>
+                        </div>
+                    </div>
+                    <div class="activity-item">
+                        <div class="activity-icon orange">🚀</div>
+                        <div class="activity-text">
+                            <div class="activity-title">9 Workers deployed to edge</div>
+                            <div class="activity-time">1 hour ago</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">Quick Actions</div>
+                    </div>
+                    <div class="quick-actions">
+                        <a href="https://cece.blackroad.io" class="quick-action">
+                            <span class="quick-action-icon">💬</span>
+                            <span class="quick-action-label">Chat</span>
+                        </a>
+                        <a href="https://studio.blackroad.io" class="quick-action">
+                            <span class="quick-action-icon">🎨</span>
+                            <span class="quick-action-label">Create</span>
+                        </a>
+                        <a href="https://devops.blackroad.io" class="quick-action">
+                            <span class="quick-action-icon">📊</span>
+                            <span class="quick-action-label">Monitor</span>
+                        </a>
+                        <a href="https://api.blackroad.io/health" class="quick-action">
+                            <span class="quick-action-icon">🔌</span>
+                            <span class="quick-action-label">API</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">System Status</div>
+                    <span style="color: var(--green); font-size: 0.8rem;">● All Systems Operational</span>
+                </div>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                    <div style="padding: 0.75rem; background: var(--bg-hover); border-radius: 8px;">
+                        <div style="font-size: 0.8rem; color: var(--text-muted);">Railway Backend</div>
+                        <div style="color: var(--green);">● Online</div>
+                    </div>
+                    <div style="padding: 0.75rem; background: var(--bg-hover); border-radius: 8px;">
+                        <div style="font-size: 0.8rem; color: var(--text-muted);">Cloudflare Workers</div>
+                        <div style="color: var(--green);">● 9 Active</div>
+                    </div>
+                    <div style="padding: 0.75rem; background: var(--bg-hover); border-radius: 8px;">
+                        <div style="font-size: 0.8rem; color: var(--text-muted);">Pages Projects</div>
+                        <div style="color: var(--green);">● 9 Deployed</div>
+                    </div>
+                    <div style="padding: 0.75rem; background: var(--bg-hover); border-radius: 8px;">
+                        <div style="font-size: 0.8rem; color: var(--text-muted);">KV Namespaces</div>
+                        <div style="color: var(--green);">● 12 Active</div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        const authGate = document.getElementById('auth-gate');
+        const app = document.getElementById('app');
+
+        async function initAuth() {
+            if (typeof Clerk === 'undefined') {
+                await new Promise(r => setTimeout(r, 1000));
+                if (typeof Clerk === 'undefined') {
+                    authGate.querySelector('.card').innerHTML = '<h1>BlackRoad OS</h1><p style="color:#888">Auth unavailable</p><a href="/" class="btn btn-primary" style="margin-top:1rem">Retry</a>';
+                    return;
+                }
+            }
+
+            await Clerk.load();
+
+            if (!Clerk.user) {
+                authGate.querySelector('.card').innerHTML = '<h1>BlackRoad OS</h1><p style="color:#888;margin-bottom:1rem">Sign in to continue</p><div id="clerk-signin"></div>';
+                Clerk.mountSignIn(document.getElementById('clerk-signin'), {
+                    appearance: {
+                        variables: { colorPrimary: '#FF9D00', colorBackground: 'transparent', colorText: '#fff', colorTextSecondary: '#888' },
+                        elements: { card: { backgroundColor: 'transparent', boxShadow: 'none' }, headerTitle: { display: 'none' }, headerSubtitle: { display: 'none' } }
+                    }
+                });
+                return;
+            }
+
+            // User is signed in
+            document.getElementById('user-avatar').src = Clerk.user.imageUrl || '';
+            document.getElementById('user-name').textContent = Clerk.user.fullName || Clerk.user.username || 'User';
+            document.getElementById('user-email').textContent = Clerk.user.primaryEmailAddress?.emailAddress || '';
+
+            document.getElementById('user-card').onclick = () => Clerk.openUserProfile();
+            document.getElementById('chat-btn').onclick = () => window.open('https://cece.amundsonalexa.workers.dev', '_blank');
+
+            authGate.style.display = 'none';
+            app.classList.add('show');
+        }
+
+        initAuth();
+    </script>
+</body>
+</html>

@@ -1,0 +1,318 @@
+name: Deploy BlackRoad OS Services
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      deploy_target:
+        description: 'Deployment target'
+        required: false
+        type: choice
+        options:
+          - all
+          - workers
+          - pages
+          - railway
+        default: 'all'
+
+env:
+  CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+  CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+  RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+  NODE_VERSION: '20'
+
+jobs:
+  # ============================================================================
+  # DETECT CHANGED SERVICES
+  # ============================================================================
+  detect-changes:
+    name: Detect Changed Services
+    runs-on: ubuntu-latest
+    outputs:
+      workers: ${{ steps.filter.outputs.workers }}
+      pages: ${{ steps.filter.outputs.pages }}
+      railway: ${{ steps.filter.outputs.railway }}
+      worker-list: ${{ steps.detect-workers.outputs.workers }}
+      pages-list: ${{ steps.detect-pages.outputs.pages }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Filter Changed Paths
+        id: filter
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            workers:
+              - 'workers/**'
+            pages:
+              - 'pages/**'
+            railway:
+              - 'src/**'
+              - 'package.json'
+              - 'railway.toml'
+              - 'Dockerfile'
+
+      - name: Detect Changed Workers
+        id: detect-workers
+        run: |
+          CHANGED_WORKERS="[]"
+          if [ "${{ steps.filter.outputs.workers }}" == "true" ] || [ "${{ github.event.inputs.deploy_target }}" == "all" ] || [ "${{ github.event.inputs.deploy_target }}" == "workers" ]; then
+            WORKERS=$(find workers -maxdepth 1 -type d ! -path workers -exec basename {} \; | jq -R -s -c 'split("\n")[:-1]')
+
+            # If manual trigger with "all" or "workers", deploy all
+            if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+              CHANGED_WORKERS="$WORKERS"
+            else
+              # Otherwise, detect changed workers
+              CHANGED=$(git diff --name-only HEAD~1 HEAD | grep '^workers/' | cut -d'/' -f2 | sort -u | jq -R -s -c 'split("\n")[:-1]')
+              if [ "$CHANGED" != "[]" ] && [ "$CHANGED" != '[""]' ]; then
+                CHANGED_WORKERS="$CHANGED"
+              fi
+            fi
+          fi
+          echo "workers=$CHANGED_WORKERS" >> $GITHUB_OUTPUT
+          echo "Changed workers: $CHANGED_WORKERS"
+
+      - name: Detect Changed Pages
+        id: detect-pages
+        run: |
+          CHANGED_PAGES="[]"
+          if [ "${{ steps.filter.outputs.pages }}" == "true" ] || [ "${{ github.event.inputs.deploy_target }}" == "all" ] || [ "${{ github.event.inputs.deploy_target }}" == "pages" ]; then
+            PAGES=$(find pages -maxdepth 1 -type d ! -path pages -exec basename {} \; | jq -R -s -c 'split("\n")[:-1]')
+
+            # If manual trigger with "all" or "pages", deploy all
+            if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+              CHANGED_PAGES="$PAGES"
+            else
+              # Otherwise, detect changed pages
+              CHANGED=$(git diff --name-only HEAD~1 HEAD | grep '^pages/' | cut -d'/' -f2 | sort -u | jq -R -s -c 'split("\n")[:-1]')
+              if [ "$CHANGED" != "[]" ] && [ "$CHANGED" != '[""]' ]; then
+                CHANGED_PAGES="$CHANGED"
+              fi
+            fi
+          fi
+          echo "pages=$CHANGED_PAGES" >> $GITHUB_OUTPUT
+          echo "Changed pages: $CHANGED_PAGES"
+
+  # ============================================================================
+  # DEPLOY CLOUDFLARE WORKERS
+  # ============================================================================
+  deploy-workers:
+    name: Deploy Worker (${{ matrix.worker }})
+    needs: detect-changes
+    if: needs.detect-changes.outputs.worker-list != '[]' && needs.detect-changes.outputs.worker-list != '[""]'
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        worker: ${{ fromJson(needs.detect-changes.outputs.worker-list) }}
+      fail-fast: false
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: 'workers/${{ matrix.worker }}/package*.json'
+
+      - name: Cache Worker Dependencies
+        uses: actions/cache@v4
+        with:
+          path: workers/${{ matrix.worker }}/node_modules
+          key: ${{ runner.os }}-worker-${{ matrix.worker }}-${{ hashFiles('workers/${{ matrix.worker }}/package*.json') }}
+          restore-keys: |
+            ${{ runner.os }}-worker-${{ matrix.worker }}-
+
+      - name: Install Dependencies
+        working-directory: workers/${{ matrix.worker }}
+        run: |
+          if [ -f "package.json" ]; then
+            npm ci --prefer-offline --no-audit || npm install
+          fi
+
+      - name: Build Worker
+        working-directory: workers/${{ matrix.worker }}
+        run: |
+          if grep -q '"build"' package.json 2>/dev/null; then
+            npm run build
+          fi
+
+      - name: Deploy to Cloudflare Workers
+        working-directory: workers/${{ matrix.worker }}
+        run: |
+          npm install -g wrangler
+          wrangler deploy --env production
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ env.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ env.CLOUDFLARE_ACCOUNT_ID }}
+
+      - name: Output Deployment Info
+        run: |
+          echo "### ⚡ Worker Deployed: ${{ matrix.worker }}" >> $GITHUB_STEP_SUMMARY
+          echo "Deployment completed successfully" >> $GITHUB_STEP_SUMMARY
+
+  # ============================================================================
+  # DEPLOY CLOUDFLARE PAGES
+  # ============================================================================
+  deploy-pages:
+    name: Deploy Page (${{ matrix.page }})
+    needs: detect-changes
+    if: needs.detect-changes.outputs.pages-list != '[]' && needs.detect-changes.outputs.pages-list != '[""]'
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        page: ${{ fromJson(needs.detect-changes.outputs.pages-list) }}
+      fail-fast: false
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: 'pages/${{ matrix.page }}/package*.json'
+
+      - name: Cache Page Dependencies
+        uses: actions/cache@v4
+        with:
+          path: pages/${{ matrix.page }}/node_modules
+          key: ${{ runner.os }}-page-${{ matrix.page }}-${{ hashFiles('pages/${{ matrix.page }}/package*.json') }}
+          restore-keys: |
+            ${{ runner.os }}-page-${{ matrix.page }}-
+
+      - name: Install Dependencies
+        working-directory: pages/${{ matrix.page }}
+        run: |
+          if [ -f "package.json" ]; then
+            npm ci --prefer-offline --no-audit || npm install
+          fi
+
+      - name: Build Page
+        working-directory: pages/${{ matrix.page }}
+        run: |
+          if grep -q '"build"' package.json 2>/dev/null; then
+            npm run build
+          fi
+
+      - name: Detect Output Directory
+        id: output
+        working-directory: pages/${{ matrix.page }}
+        run: |
+          if [ -d "dist" ]; then echo "dir=dist" >> $GITHUB_OUTPUT
+          elif [ -d "build" ]; then echo "dir=build" >> $GITHUB_OUTPUT
+          elif [ -d "out" ]; then echo "dir=out" >> $GITHUB_OUTPUT
+          elif [ -d ".next" ]; then echo "dir=.next" >> $GITHUB_OUTPUT
+          elif [ -d "public" ]; then echo "dir=public" >> $GITHUB_OUTPUT
+          else echo "dir=." >> $GITHUB_OUTPUT
+          fi
+
+      - name: Deploy to Cloudflare Pages
+        working-directory: pages/${{ matrix.page }}
+        run: |
+          npm install -g wrangler
+
+          PROJECT_NAME="blackroad-${{ matrix.page }}"
+          wrangler pages project create "$PROJECT_NAME" --production-branch main 2>/dev/null || true
+
+          RESULT=$(wrangler pages deploy "${{ steps.output.outputs.dir }}" \
+            --project-name="$PROJECT_NAME" \
+            --branch=main 2>&1)
+
+          echo "$RESULT"
+          DEPLOY_URL=$(echo "$RESULT" | grep -oP 'https://[^\s]+\.pages\.dev' | head -1 || echo "")
+          echo "Deployed to: $DEPLOY_URL"
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ env.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ env.CLOUDFLARE_ACCOUNT_ID }}
+
+      - name: Output Deployment Info
+        run: |
+          echo "### 📄 Page Deployed: ${{ matrix.page }}" >> $GITHUB_STEP_SUMMARY
+          echo "Project: blackroad-${{ matrix.page }}" >> $GITHUB_STEP_SUMMARY
+
+  # ============================================================================
+  # DEPLOY RAILWAY SERVICES
+  # ============================================================================
+  deploy-railway:
+    name: Deploy to Railway
+    needs: detect-changes
+    if: |
+      (needs.detect-changes.outputs.railway == 'true' ||
+       github.event.inputs.deploy_target == 'all' ||
+       github.event.inputs.deploy_target == 'railway') &&
+      secrets.RAILWAY_TOKEN != ''
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Cache Root Dependencies
+        uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-root-${{ hashFiles('package*.json') }}
+          restore-keys: |
+            ${{ runner.os }}-root-
+
+      - name: Install Railway CLI
+        run: npm install -g @railway/cli
+
+      - name: Deploy to Railway
+        run: |
+          railway link --environment production 2>/dev/null || true
+          railway up --detach
+        env:
+          RAILWAY_TOKEN: ${{ env.RAILWAY_TOKEN }}
+
+      - name: Output Deployment Info
+        run: |
+          echo "### 🚂 Railway Service Deployed" >> $GITHUB_STEP_SUMMARY
+          echo "Environment: production" >> $GITHUB_STEP_SUMMARY
+
+  # ============================================================================
+  # DEPLOYMENT SUMMARY
+  # ============================================================================
+  summary:
+    name: Deployment Summary
+    needs: [detect-changes, deploy-workers, deploy-pages, deploy-railway]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Generate Summary
+        run: |
+          echo "## 🚀 BlackRoad OS Deployment Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Commit:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Triggered by:** ${{ github.event_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          echo "### Workers Deployed" >> $GITHUB_STEP_SUMMARY
+          echo '```json' >> $GITHUB_STEP_SUMMARY
+          echo '${{ needs.detect-changes.outputs.worker-list }}' >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          echo "### Pages Deployed" >> $GITHUB_STEP_SUMMARY
+          echo '```json' >> $GITHUB_STEP_SUMMARY
+          echo '${{ needs.detect-changes.outputs.pages-list }}' >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          echo "### Status" >> $GITHUB_STEP_SUMMARY
+          echo "- Workers: ${{ needs.deploy-workers.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Pages: ${{ needs.deploy-pages.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Railway: ${{ needs.deploy-railway.result }}" >> $GITHUB_STEP_SUMMARY

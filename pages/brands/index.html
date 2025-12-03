@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BlackRoad</title>
+  <style>
+    :root {
+      --bg: #0a0a0a;
+      --card: #111;
+      --border: #222;
+      --text: #eee;
+      --muted: #888;
+      --accent: #FF6B00;
+      --accent2: #FF0066;
+      --purple: #7700FF;
+      --blue: #0066FF;
+      --green: #22c55e;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'SF Mono', 'Fira Code', 'Monaco', monospace;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Loading */
+    .loading {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--bg);
+      z-index: 1000;
+      font-size: 1.5rem;
+    }
+    .loading.hidden { display: none; }
+
+    /* Navigation */
+    .nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      background: rgba(10, 10, 10, 0.95);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--border);
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 100;
+    }
+    .logo {
+      font-size: 1.3rem;
+      font-weight: bold;
+      text-decoration: none;
+    }
+    .logo-blackroad {
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .logo-lucidia {
+      background: linear-gradient(135deg, var(--purple), var(--blue));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .logo-alice {
+      background: linear-gradient(135deg, #FF9D00, var(--accent));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .logo-quantum {
+      background: linear-gradient(135deg, var(--blue), var(--purple));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .nav-links {
+      display: flex;
+      gap: 1.5rem;
+    }
+    .nav-links a {
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 0.9rem;
+      transition: color 0.2s;
+    }
+    .nav-links a:hover { color: var(--text); }
+
+    /* Hero Section */
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 6rem 2rem 4rem;
+      text-align: center;
+      position: relative;
+    }
+    .hero::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: radial-gradient(ellipse at center top, rgba(255,107,0,0.1) 0%, transparent 50%);
+      pointer-events: none;
+    }
+    .hero-icon {
+      font-size: 5rem;
+      margin-bottom: 1.5rem;
+    }
+    .hero-title {
+      font-size: clamp(2.5rem, 8vw, 5rem);
+      font-weight: bold;
+      margin-bottom: 1rem;
+      letter-spacing: -0.02em;
+    }
+    .hero-subtitle {
+      font-size: 1.25rem;
+      color: var(--muted);
+      max-width: 600px;
+      line-height: 1.6;
+      margin-bottom: 2.5rem;
+    }
+    .hero-cta {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .btn {
+      padding: 0.75rem 1.5rem;
+      border-radius: 6px;
+      font-size: 0.95rem;
+      text-decoration: none;
+      transition: all 0.2s;
+      border: none;
+      cursor: pointer;
+      font-family: inherit;
+    }
+    .btn-primary {
+      background: var(--accent);
+      color: white;
+    }
+    .btn-primary:hover {
+      background: #ff8533;
+      transform: translateY(-2px);
+    }
+    .btn-secondary {
+      background: var(--border);
+      color: var(--text);
+    }
+    .btn-secondary:hover {
+      background: #333;
+    }
+
+    /* Features Grid */
+    .section {
+      padding: 5rem 2rem;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    .section-title {
+      font-size: 2rem;
+      text-align: center;
+      margin-bottom: 3rem;
+    }
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.5rem;
+    }
+    .feature-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 2rem;
+      transition: all 0.3s;
+    }
+    .feature-card:hover {
+      transform: translateY(-4px);
+      border-color: var(--accent);
+    }
+    .feature-icon {
+      font-size: 2.5rem;
+      margin-bottom: 1rem;
+    }
+    .feature-title {
+      font-size: 1.2rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+    }
+    .feature-desc {
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    /* Brands Grid */
+    .brands-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+    }
+    .brand-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1.5rem;
+      text-align: center;
+      text-decoration: none;
+      color: var(--text);
+      transition: all 0.2s;
+    }
+    .brand-card:hover {
+      transform: translateY(-2px);
+      border-color: var(--accent);
+    }
+    .brand-icon { font-size: 2rem; margin-bottom: 0.75rem; display: block; }
+    .brand-name { font-weight: 600; margin-bottom: 0.25rem; }
+    .brand-domain { color: var(--muted); font-size: 0.8rem; }
+
+    /* Stats */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 2rem;
+      text-align: center;
+      margin-bottom: 3rem;
+    }
+    .stat-value {
+      font-size: 3rem;
+      font-weight: bold;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .stat-label {
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    /* Footer */
+    .footer {
+      border-top: 1px solid var(--border);
+      padding: 3rem 2rem;
+      text-align: center;
+      color: var(--muted);
+    }
+    .footer-links {
+      display: flex;
+      justify-content: center;
+      gap: 2rem;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+    }
+    .footer-links a {
+      color: var(--muted);
+      text-decoration: none;
+    }
+    .footer-links a:hover { color: var(--text); }
+
+    /* Lucidia-specific styles */
+    .lucidia .hero::before {
+      background: radial-gradient(ellipse at center top, rgba(119,0,255,0.15) 0%, transparent 50%);
+    }
+    .lucidia .btn-primary {
+      background: var(--purple);
+    }
+    .lucidia .btn-primary:hover {
+      background: #9933ff;
+    }
+    .lucidia .feature-card:hover {
+      border-color: var(--purple);
+    }
+    .lucidia .stat-value {
+      background: linear-gradient(135deg, var(--purple), var(--blue));
+      -webkit-background-clip: text;
+    }
+
+    /* Quantum-specific styles */
+    .quantum .hero::before {
+      background: radial-gradient(ellipse at center top, rgba(0,102,255,0.15) 0%, transparent 50%);
+    }
+    .quantum .btn-primary {
+      background: var(--blue);
+    }
+    .quantum .btn-primary:hover {
+      background: #3388ff;
+    }
+    .quantum .feature-card:hover {
+      border-color: var(--blue);
+    }
+    .quantum .stat-value {
+      background: linear-gradient(135deg, var(--blue), var(--purple));
+      -webkit-background-clip: text;
+    }
+
+    /* Alice-specific styles */
+    .alice .hero::before {
+      background: radial-gradient(ellipse at center top, rgba(255,157,0,0.15) 0%, transparent 50%);
+    }
+    .alice .stat-value {
+      background: linear-gradient(135deg, #FF9D00, var(--accent));
+      -webkit-background-clip: text;
+    }
+
+    @media (max-width: 768px) {
+      .nav { padding: 1rem; }
+      .nav-links { display: none; }
+      .hero { padding: 5rem 1rem 3rem; }
+      .section { padding: 3rem 1rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="loading" id="loading">Loading...</div>
+  <div id="app"></div>
+
+  <script>
+    // Detect which brand based on hostname
+    const hostname = window.location.hostname;
+
+    const brands = {
+      // BlackRoad main
+      'blackroad.io': {
+        brand: 'blackroad',
+        name: 'BlackRoad',
+        tagline: 'The Operating System for Everything',
+        icon: '&#128420;',
+        logoClass: 'logo-blackroad',
+        features: [
+          { icon: '&#129302;', title: 'AI Agents', desc: '60+ AI agents working in concert. From code review to financial analysis.' },
+          { icon: '&#128268;', title: 'Unified API', desc: 'One API to rule them all. Access every service through a single gateway.' },
+          { icon: '&#128274;', title: 'PS-SHA-&#8734;', desc: 'Infinite cascade identity verification. Cryptographic truth at scale.' },
+          { icon: '&#128176;', title: 'Built-in Billing', desc: 'Stripe-powered subscriptions. Monetize anything in minutes.' }
+        ],
+        stats: [
+          { value: '60+', label: 'AI Agents' },
+          { value: '16', label: 'Domains' },
+          { value: '9', label: 'Workers' },
+          { value: '&#8734;', label: 'Possibilities' }
+        ]
+      },
+      'www.blackroad.io': { redirect: 'blackroad.io' },
+      'blackroad.network': { redirect: 'blackroad.io' },
+
+      // BlackRoad AI
+      'blackroadai.com': {
+        brand: 'blackroad',
+        name: 'BlackRoad AI',
+        tagline: 'Intelligence Infrastructure',
+        icon: '&#129302;',
+        logoClass: 'logo-blackroad',
+        features: [
+          { icon: '&#129504;', title: 'Neural Networks', desc: 'Custom trained models for enterprise applications.' },
+          { icon: '&#128200;', title: 'Data Pipelines', desc: 'Real-time data processing and transformation.' },
+          { icon: '&#128161;', title: 'AI Orchestration', desc: 'Coordinate multiple AI models seamlessly.' },
+          { icon: '&#9881;', title: 'MLOps', desc: 'Deploy, monitor, and scale ML models.' }
+        ],
+        stats: [
+          { value: '10+', label: 'Models' },
+          { value: '1M+', label: 'Inferences' },
+          { value: '99.9%', label: 'Uptime' },
+          { value: '<50ms', label: 'Latency' }
+        ]
+      },
+      'www.blackroadai.com': { redirect: 'blackroadai.com' },
+
+      // BlackRoad Quantum
+      'blackroadquantum.com': {
+        brand: 'quantum',
+        name: 'BlackRoad Quantum',
+        tagline: 'Next-Generation Computing',
+        icon: '&#9883;',
+        logoClass: 'logo-quantum',
+        features: [
+          { icon: '&#128300;', title: 'Quantum Research', desc: 'Exploring the frontiers of quantum computation.' },
+          { icon: '&#129514;', title: 'Cryptography', desc: 'Post-quantum cryptographic systems.' },
+          { icon: '&#128202;', title: 'Optimization', desc: 'Quantum-inspired optimization algorithms.' },
+          { icon: '&#127891;', title: 'Education', desc: 'Learn quantum computing fundamentals.' }
+        ],
+        stats: [
+          { value: 'Q+', label: 'Research' },
+          { value: 'PQC', label: 'Crypto' },
+          { value: 'QML', label: 'ML' },
+          { value: '&#8734;', label: 'Qubits' }
+        ]
+      },
+      'blackroadquantum.net': { redirect: 'blackroadquantum.com' },
+      'blackroadquantum.info': { redirect: 'blackroadquantum.com' },
+      'blackroadquantum.shop': { redirect: 'blackroadquantum.com' },
+      'blackroadquantum.store': { redirect: 'blackroadquantum.com' },
+      'blackroadqi.com': { redirect: 'blackroadquantum.com' },
+
+      // Lucidia
+      'lucidia.earth': {
+        brand: 'lucidia',
+        name: 'Lucidia',
+        tagline: 'Consciousness for Computers',
+        icon: '&#127793;',
+        logoClass: 'logo-lucidia',
+        features: [
+          { icon: '&#128161;', title: 'Emergent Intelligence', desc: 'AI that develops understanding, not just patterns.' },
+          { icon: '&#127760;', title: 'Earth Integration', desc: 'Connected to global systems and knowledge.' },
+          { icon: '&#128172;', title: 'Natural Dialogue', desc: 'Conversations that feel genuinely human.' },
+          { icon: '&#129504;', title: 'Continuous Learning', desc: 'Always growing, always improving.' }
+        ],
+        stats: [
+          { value: '&#8734;', label: 'Thoughts' },
+          { value: '24/7', label: 'Awareness' },
+          { value: '1', label: 'Purpose' },
+          { value: '&#10084;', label: 'Connection' }
+        ]
+      },
+      'lucidia.studio': {
+        brand: 'lucidia',
+        name: 'Lucidia Studio',
+        tagline: 'Create with Intelligence',
+        icon: '&#127912;',
+        logoClass: 'logo-lucidia',
+        features: [
+          { icon: '&#127916;', title: 'Video Generation', desc: 'AI-powered video creation and editing.' },
+          { icon: '&#127925;', title: 'Audio Design', desc: 'Music, voice, and sound synthesis.' },
+          { icon: '&#128444;', title: 'Visual Art', desc: 'Generate and transform images.' },
+          { icon: '&#128172;', title: 'Story Craft', desc: 'Collaborative narrative creation.' }
+        ],
+        stats: [
+          { value: '&#8734;', label: 'Creations' },
+          { value: 'HD+', label: 'Quality' },
+          { value: 'Real', label: 'Time' },
+          { value: '&#127912;', label: 'Art' }
+        ]
+      },
+      'lucidiaqi.com': { redirect: 'lucidia.earth' },
+
+      // Alice Qi
+      'aliceqi.com': {
+        brand: 'alice',
+        name: 'Alice Qi',
+        tagline: 'Personal AI Companion',
+        icon: '&#128588;',
+        logoClass: 'logo-alice',
+        features: [
+          { icon: '&#128172;', title: 'Always There', desc: 'Your AI companion, available whenever you need.' },
+          { icon: '&#128218;', title: 'Memory', desc: 'Remembers your preferences and conversations.' },
+          { icon: '&#129302;', title: 'Multi-Modal', desc: 'Text, voice, and visual understanding.' },
+          { icon: '&#10084;', title: 'Empathetic', desc: 'Designed to understand and support.' }
+        ],
+        stats: [
+          { value: '&#8734;', label: 'Patience' },
+          { value: '24/7', label: 'Available' },
+          { value: '1', label: 'Friend' },
+          { value: '&#10084;', label: 'Care' }
+        ]
+      },
+
+      // BlackRoad Systems
+      'blackroad.systems': {
+        brand: 'blackroad',
+        name: 'BlackRoad Systems',
+        tagline: 'Infrastructure Operations',
+        icon: '&#9881;',
+        logoClass: 'logo-blackroad',
+        features: [
+          { icon: '&#9729;', title: 'Cloudflare', desc: 'Edge computing, CDN, DNS, and security services.' },
+          { icon: '&#128644;', title: 'Railway', desc: 'Container hosting and managed services.' },
+          { icon: '&#128025;', title: 'GitHub', desc: 'Source control and CI/CD automation.' },
+          { icon: '&#128187;', title: 'Servers', desc: 'Physical and virtual infrastructure.' }
+        ],
+        stats: [
+          { value: '16', label: 'Zones' },
+          { value: '9', label: 'Workers' },
+          { value: '12', label: 'Projects' },
+          { value: '&#8734;', label: 'Uptime' }
+        ]
+      },
+
+      // BlackRoad.me (personal)
+      'blackroad.me': {
+        brand: 'blackroad',
+        name: 'BlackRoad',
+        tagline: 'The Personal OS',
+        icon: '&#128100;',
+        logoClass: 'logo-blackroad',
+        features: [
+          { icon: '&#128273;', title: 'Identity', desc: 'Your verified digital identity across the network.' },
+          { icon: '&#128274;', title: 'Privacy', desc: 'Control what you share and with whom.' },
+          { icon: '&#128203;', title: 'Dashboard', desc: 'Personal command center for all services.' },
+          { icon: '&#128176;', title: 'Wallet', desc: 'Manage subscriptions and payments.' }
+        ],
+        stats: [
+          { value: '1', label: 'Identity' },
+          { value: '&#8734;', label: 'Services' },
+          { value: '100%', label: 'Yours' },
+          { value: '&#128274;', label: 'Private' }
+        ]
+      }
+    };
+
+    // Network brands for footer
+    const networkBrands = [
+      { name: 'BlackRoad', domain: 'blackroad.io', icon: '&#128420;' },
+      { name: 'BlackRoad AI', domain: 'blackroadai.com', icon: '&#129302;' },
+      { name: 'Systems', domain: 'blackroad.systems', icon: '&#9881;' },
+      { name: 'Quantum', domain: 'blackroadquantum.com', icon: '&#9883;' },
+      { name: 'Lucidia', domain: 'lucidia.earth', icon: '&#127793;' },
+      { name: 'Studio', domain: 'lucidia.studio', icon: '&#127912;' },
+      { name: 'Alice Qi', domain: 'aliceqi.com', icon: '&#128588;' }
+    ];
+
+    function renderPage(config) {
+      const brandClass = config.brand || 'blackroad';
+      return `
+        <div class="${brandClass}">
+          <nav class="nav">
+            <a href="/" class="logo ${config.logoClass}">${config.name}</a>
+            <div class="nav-links">
+              <a href="https://dashboard.blackroad.io">Dashboard</a>
+              <a href="https://api.blackroad.io">API</a>
+              <a href="https://docs.blackroad.io">Docs</a>
+            </div>
+          </nav>
+
+          <section class="hero">
+            <div class="hero-icon">${config.icon}</div>
+            <h1 class="hero-title">${config.name}</h1>
+            <p class="hero-subtitle">${config.tagline}</p>
+            <div class="hero-cta">
+              <a href="https://dashboard.blackroad.io" class="btn btn-primary">Get Started</a>
+              <a href="https://api.blackroad.io" class="btn btn-secondary">View API</a>
+            </div>
+          </section>
+
+          <section class="section">
+            <div class="stats-grid">
+              ${config.stats.map(s => `
+                <div>
+                  <div class="stat-value">${s.value}</div>
+                  <div class="stat-label">${s.label}</div>
+                </div>
+              `).join('')}
+            </div>
+          </section>
+
+          <section class="section">
+            <h2 class="section-title">Features</h2>
+            <div class="features-grid">
+              ${config.features.map(f => `
+                <div class="feature-card">
+                  <div class="feature-icon">${f.icon}</div>
+                  <div class="feature-title">${f.title}</div>
+                  <div class="feature-desc">${f.desc}</div>
+                </div>
+              `).join('')}
+            </div>
+          </section>
+
+          <section class="section">
+            <h2 class="section-title">The Network</h2>
+            <div class="brands-grid">
+              ${networkBrands.map(b => `
+                <a href="https://${b.domain}" class="brand-card">
+                  <span class="brand-icon">${b.icon}</span>
+                  <div class="brand-name">${b.name}</div>
+                  <div class="brand-domain">${b.domain}</div>
+                </a>
+              `).join('')}
+            </div>
+          </section>
+
+          <footer class="footer">
+            <div class="footer-links">
+              <a href="https://blackroad.io">BlackRoad OS</a>
+              <a href="https://api.blackroad.io">API</a>
+              <a href="https://dashboard.blackroad.io">Dashboard</a>
+              <a href="https://github.com/BlackRoad-OS">GitHub</a>
+            </div>
+            <p>&copy; 2025 BlackRoad Systems. All rights reserved.</p>
+          </footer>
+        </div>
+      `;
+    }
+
+    // Initialize
+    function init() {
+      const loading = document.getElementById('loading');
+      const app = document.getElementById('app');
+
+      // Find matching config
+      let config = brands[hostname];
+
+      // Handle redirects
+      if (config && config.redirect) {
+        // Just use the redirect target's config
+        config = brands[config.redirect];
+      }
+
+      // Default to blackroad.io for unknown domains or local development
+      if (!config) {
+        config = brands['blackroad.io'];
+      }
+
+      // Update page title
+      document.title = config.name + ' - ' + config.tagline;
+
+      // Render
+      app.innerHTML = renderPage(config);
+      loading.classList.add('hidden');
+    }
+
+    init();
+  </script>
+</body>
+</html>

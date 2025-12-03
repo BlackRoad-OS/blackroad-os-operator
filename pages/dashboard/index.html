@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BlackRoad OS Dashboard</title>
+  <style>
+    :root {
+      --bg: #0a0a0a;
+      --card: #111;
+      --border: #222;
+      --text: #eee;
+      --muted: #888;
+      --accent: #FF6B00;
+      --accent2: #FF0066;
+      --green: #22c55e;
+      --red: #ef4444;
+      --yellow: #eab308;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 2rem;
+    }
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .logo {
+      font-size: 1.5rem;
+      font-weight: bold;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .status-bar {
+      display: flex;
+      gap: 1rem;
+      font-size: 0.85rem;
+    }
+    .status-item {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+    }
+    .dot.green { background: var(--green); }
+    .dot.yellow { background: var(--yellow); }
+    .dot.red { background: var(--red); }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 1.5rem;
+    }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1.5rem;
+    }
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+    .card-title {
+      font-size: 1rem;
+      font-weight: 600;
+    }
+    .card-badge {
+      font-size: 0.7rem;
+      padding: 0.25rem 0.5rem;
+      border-radius: 4px;
+      background: var(--border);
+    }
+    .card-badge.live { background: rgba(34, 197, 94, 0.2); color: var(--green); }
+
+    .service-list {
+      list-style: none;
+    }
+    .service-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.75rem 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .service-item:last-child { border-bottom: none; }
+    .service-name {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .service-link {
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 0.85rem;
+    }
+    .service-link:hover { color: var(--accent); }
+
+    .quick-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-top: 1rem;
+    }
+    .action-btn {
+      background: var(--border);
+      border: none;
+      color: var(--text);
+      padding: 0.5rem 1rem;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      text-decoration: none;
+    }
+    .action-btn:hover { background: var(--accent); }
+
+    .secrets-warning {
+      background: rgba(234, 179, 8, 0.1);
+      border: 1px solid var(--yellow);
+      border-radius: 8px;
+      padding: 1rem;
+      margin-bottom: 1.5rem;
+      font-size: 0.85rem;
+    }
+    .secrets-warning h3 { color: var(--yellow); margin-bottom: 0.5rem; }
+
+    .domain-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 0.75rem;
+    }
+    .domain-link {
+      display: block;
+      background: var(--border);
+      padding: 1rem;
+      border-radius: 4px;
+      text-decoration: none;
+      color: var(--text);
+      text-align: center;
+      font-size: 0.85rem;
+      transition: all 0.2s;
+    }
+    .domain-link:hover {
+      background: var(--accent);
+      transform: translateY(-2px);
+    }
+    .domain-link .icon { font-size: 1.5rem; display: block; margin-bottom: 0.5rem; }
+
+    #services-status { margin-top: 1rem; }
+    .loading { color: var(--muted); font-style: italic; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="logo">BlackRoad OS</div>
+    <div class="status-bar">
+      <div class="status-item">
+        <span class="dot green" id="api-dot"></span>
+        <span>API</span>
+      </div>
+      <div class="status-item">
+        <span class="dot green" id="billing-dot"></span>
+        <span>Billing</span>
+      </div>
+      <div class="status-item">
+        <span class="dot green" id="cece-dot"></span>
+        <span>Cece</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="secrets-warning" id="secrets-warning" style="display: none;">
+    <h3>Secrets Need Attention</h3>
+    <p>Some services are missing configuration. Visit <a href="https://console.blackroad.io" style="color: var(--yellow);">console.blackroad.io</a> to manage secrets.</p>
+  </div>
+
+  <div class="grid">
+    <!-- Quick Navigation -->
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">Quick Access</span>
+      </div>
+      <div class="domain-grid">
+        <a href="https://console.blackroad.io" class="domain-link">
+          <span class="icon">&#128274;</span>
+          Console
+        </a>
+        <a href="https://api.blackroad.io" class="domain-link">
+          <span class="icon">&#128268;</span>
+          API
+        </a>
+        <a href="https://docs.blackroad.io" class="domain-link">
+          <span class="icon">&#128214;</span>
+          Docs
+        </a>
+        <a href="https://studio.blackroad.io" class="domain-link">
+          <span class="icon">&#127912;</span>
+          Studio
+        </a>
+      </div>
+    </div>
+
+    <!-- Packs -->
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">Packs</span>
+        <span class="card-badge">6 installed</span>
+      </div>
+      <div class="domain-grid">
+        <a href="https://finance.blackroad.io" class="domain-link">
+          <span class="icon">&#128176;</span>
+          Finance
+        </a>
+        <a href="https://devops.blackroad.io" class="domain-link">
+          <span class="icon">&#9881;</span>
+          DevOps
+        </a>
+        <a href="https://legal.blackroad.io" class="domain-link">
+          <span class="icon">&#9878;</span>
+          Legal
+        </a>
+        <a href="https://education.blackroad.io" class="domain-link">
+          <span class="icon">&#127891;</span>
+          Education
+        </a>
+        <a href="https://creator.blackroad.io" class="domain-link">
+          <span class="icon">&#127916;</span>
+          Creator
+        </a>
+        <a href="https://research-lab.blackroad.io" class="domain-link">
+          <span class="icon">&#128300;</span>
+          Research
+        </a>
+      </div>
+    </div>
+
+    <!-- Services Status -->
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">Services</span>
+        <span class="card-badge live">Live</span>
+      </div>
+      <ul class="service-list" id="services-status">
+        <li class="loading">Checking services...</li>
+      </ul>
+    </div>
+
+    <!-- Railway -->
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">Railway Services</span>
+      </div>
+      <ul class="service-list">
+        <li class="service-item">
+          <span class="service-name"><span class="dot green"></span> Cece Operator</span>
+          <a href="https://blackroad-cece-operator-production.up.railway.app" class="service-link" target="_blank">View</a>
+        </li>
+        <li class="service-item">
+          <span class="service-name"><span class="dot green"></span> Billing</span>
+          <a href="https://blackroad-billing-production.up.railway.app" class="service-link" target="_blank">View</a>
+        </li>
+        <li class="service-item">
+          <span class="service-name"><span class="dot green"></span> API Gateway</span>
+          <a href="https://blackroad-os-api-production.up.railway.app" class="service-link" target="_blank">View</a>
+        </li>
+      </ul>
+    </div>
+
+    <!-- Cloudflare Workers -->
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">Cloudflare Workers</span>
+      </div>
+      <ul class="service-list">
+        <li class="service-item">
+          <span class="service-name"><span class="dot green"></span> Gateway</span>
+          <a href="https://blackroad-gateway.amundsonalexa.workers.dev" class="service-link" target="_blank">View</a>
+        </li>
+        <li class="service-item">
+          <span class="service-name"><span class="dot green"></span> Router</span>
+          <span class="service-link">Internal</span>
+        </li>
+        <li class="service-item">
+          <span class="service-name"><span class="dot green"></span> Identity</span>
+          <span class="service-link">Internal</span>
+        </li>
+        <li class="service-item">
+          <span class="service-name"><span class="dot green"></span> Cipher</span>
+          <span class="service-link">Internal</span>
+        </li>
+      </ul>
+    </div>
+
+    <!-- Billing Quick View -->
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">Billing</span>
+      </div>
+      <div id="billing-status">
+        <p class="loading">Loading billing status...</p>
+      </div>
+      <div class="quick-actions">
+        <a href="https://blackroad-billing-production.up.railway.app/plans" class="action-btn" target="_blank">View Plans</a>
+        <a href="#" class="action-btn" onclick="manageBilling()">Manage</a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Check service health
+    async function checkServices() {
+      const services = [
+        { name: 'API Gateway', url: 'https://api.blackroad.io/health', dot: 'api-dot' },
+        { name: 'Billing', url: 'https://blackroad-billing-production.up.railway.app/health', dot: 'billing-dot' },
+        { name: 'Cece', url: 'https://blackroad-cece-operator-production.up.railway.app/health', dot: 'cece-dot' }
+      ];
+
+      const results = [];
+      for (const svc of services) {
+        try {
+          const res = await fetch(svc.url, { mode: 'cors' });
+          const ok = res.ok;
+          document.getElementById(svc.dot).className = 'dot ' + (ok ? 'green' : 'red');
+          results.push({ name: svc.name, status: ok ? 'healthy' : 'error' });
+        } catch (e) {
+          document.getElementById(svc.dot).className = 'dot yellow';
+          results.push({ name: svc.name, status: 'unknown' });
+        }
+      }
+
+      // Update services list
+      const list = document.getElementById('services-status');
+      list.innerHTML = results.map(r => `
+        <li class="service-item">
+          <span class="service-name">
+            <span class="dot ${r.status === 'healthy' ? 'green' : r.status === 'error' ? 'red' : 'yellow'}"></span>
+            ${r.name}
+          </span>
+          <span class="service-link">${r.status}</span>
+        </li>
+      `).join('');
+    }
+
+    // Check billing
+    async function checkBilling() {
+      try {
+        const res = await fetch('https://blackroad-billing-production.up.railway.app/health');
+        const data = await res.json();
+        document.getElementById('billing-status').innerHTML = `
+          <p style="color: ${data.stripe_configured ? 'var(--green)' : 'var(--yellow)'}">
+            Stripe: ${data.stripe_configured ? 'Configured' : 'Not configured'}
+          </p>
+          <p style="color: var(--muted); font-size: 0.85rem;">
+            Plans: ${data.plans_available?.join(', ') || 'Loading...'}
+          </p>
+        `;
+
+        if (!data.stripe_configured) {
+          document.getElementById('secrets-warning').style.display = 'block';
+        }
+      } catch (e) {
+        document.getElementById('billing-status').innerHTML = '<p style="color: var(--red)">Unable to reach billing service</p>';
+      }
+    }
+
+    function manageBilling() {
+      alert('Billing management coming soon! Configure Stripe keys in Railway.');
+    }
+
+    // Init
+    checkServices();
+    checkBilling();
+
+    // Refresh every 30s
+    setInterval(checkServices, 30000);
+  </script>
+</body>
+</html>

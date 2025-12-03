@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BlackRoad OS</title>
+  <style>
+    :root {
+      --bg: #0a0a0a;
+      --card: #111;
+      --border: #222;
+      --text: #eee;
+      --muted: #888;
+      --accent: #FF6B00;
+      --accent2: #FF0066;
+      --green: #22c55e;
+      --red: #ef4444;
+      --yellow: #eab308;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+    .loading {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      font-size: 1.2rem;
+      color: var(--muted);
+    }
+    .nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      background: var(--card);
+      border-bottom: 1px solid var(--border);
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 100;
+    }
+    .logo {
+      font-size: 1.2rem;
+      font-weight: bold;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .nav-links { display: flex; gap: 1.5rem; }
+    .nav-links a {
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .nav-links a:hover, .nav-links a.active { color: var(--text); }
+
+    .content { padding: 5rem 2rem 2rem; max-width: 1200px; margin: 0 auto; }
+    .page-title { font-size: 2rem; margin-bottom: 0.5rem; }
+    .page-subtitle { color: var(--muted); margin-bottom: 2rem; }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.5rem;
+    }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1.5rem;
+    }
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+    .card-title { font-weight: 600; }
+    .card-badge {
+      font-size: 0.7rem;
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+      background: rgba(34,197,94,0.2);
+      color: var(--green);
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      display: inline-block;
+      margin-right: 0.5rem;
+    }
+    .status-dot.green { background: var(--green); }
+    .status-dot.yellow { background: var(--yellow); }
+    .status-dot.red { background: var(--red); }
+
+    .service-list { list-style: none; }
+    .service-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.75rem 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .service-item:last-child { border-bottom: none; }
+
+    .domain-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 0.75rem;
+    }
+    .domain-link {
+      display: block;
+      background: var(--border);
+      padding: 1rem;
+      border-radius: 4px;
+      text-decoration: none;
+      color: var(--text);
+      text-align: center;
+      transition: all 0.2s;
+    }
+    .domain-link:hover {
+      background: var(--accent);
+      transform: translateY(-2px);
+    }
+    .domain-link .icon { font-size: 1.5rem; display: block; margin-bottom: 0.5rem; }
+
+    .btn {
+      background: var(--accent);
+      border: none;
+      color: white;
+      padding: 0.5rem 1rem;
+      border-radius: 4px;
+      cursor: pointer;
+      text-decoration: none;
+      font-size: 0.85rem;
+    }
+    .btn:hover { opacity: 0.9; }
+    .btn.secondary { background: var(--border); color: var(--text); }
+
+    /* Console-specific styles */
+    .sidebar {
+      position: fixed;
+      left: 0;
+      top: 56px;
+      width: 220px;
+      height: calc(100vh - 56px);
+      background: var(--card);
+      border-right: 1px solid var(--border);
+      padding: 1rem;
+      display: none;
+    }
+    .sidebar.active { display: block; }
+    .main-with-sidebar { margin-left: 220px; padding: 1rem 2rem; }
+    .nav-section { margin-bottom: 1.5rem; }
+    .nav-section-title { font-size: 0.7rem; text-transform: uppercase; color: var(--muted); margin-bottom: 0.5rem; }
+    .nav-item {
+      display: block;
+      padding: 0.5rem 0.75rem;
+      color: var(--text);
+      text-decoration: none;
+      border-radius: 4px;
+      font-size: 0.85rem;
+    }
+    .nav-item:hover { background: var(--border); }
+
+    .secret-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.75rem;
+      background: var(--bg);
+      border-radius: 4px;
+      margin-bottom: 0.5rem;
+    }
+    .secret-name { font-size: 0.85rem; }
+    .secret-value { font-size: 0.85rem; color: var(--muted); }
+    .secret-value.set { color: var(--green); }
+    .secret-value.missing { color: var(--red); }
+
+    .cmd-box {
+      background: #1a1a1a;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 1rem;
+      font-size: 0.8rem;
+      overflow-x: auto;
+      margin-top: 1rem;
+    }
+    .cmd-box code { color: var(--green); white-space: pre-wrap; }
+
+    /* Pack pages */
+    .pack-hero {
+      text-align: center;
+      padding: 4rem 2rem;
+      background: linear-gradient(135deg, rgba(255,107,0,0.1), rgba(255,0,102,0.1));
+      border-radius: 12px;
+      margin-bottom: 2rem;
+    }
+    .pack-icon { font-size: 4rem; margin-bottom: 1rem; }
+    .pack-title { font-size: 2.5rem; margin-bottom: 0.5rem; }
+    .pack-desc { color: var(--muted); max-width: 600px; margin: 0 auto; }
+
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 1.5rem;
+      margin-top: 2rem;
+    }
+    .feature-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1.5rem;
+    }
+    .feature-icon { font-size: 2rem; margin-bottom: 1rem; }
+    .feature-title { font-weight: 600; margin-bottom: 0.5rem; }
+    .feature-desc { color: var(--muted); font-size: 0.9rem; }
+  </style>
+</head>
+<body>
+  <div class="loading" id="loading">Loading BlackRoad OS...</div>
+  <div id="app" style="display: none;"></div>
+
+  <script>
+    const subdomain = window.location.hostname.split('.')[0];
+    const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+
+    // Page configurations
+    const pages = {
+      dashboard: {
+        title: 'Dashboard',
+        render: renderDashboard
+      },
+      console: {
+        title: 'Console',
+        render: renderConsole
+      },
+      finance: {
+        title: 'Finance Pack',
+        icon: '&#128176;',
+        desc: 'Financial tools, budgeting, and crypto tracking for BlackRoad OS.',
+        features: [
+          { icon: '&#128200;', title: 'Portfolio Tracker', desc: 'Track crypto, stocks, and assets in real-time.' },
+          { icon: '&#128179;', title: 'Billing Integration', desc: 'Stripe-powered subscriptions and payments.' },
+          { icon: '&#128202;', title: 'Reports', desc: 'Generate financial reports and analytics.' },
+          { icon: '&#127974;', title: 'Tax Tools', desc: 'Calculate and export tax documents.' }
+        ]
+      },
+      devops: {
+        title: 'DevOps Pack',
+        icon: '&#9881;',
+        desc: 'Infrastructure management, CI/CD, and deployment tools.',
+        features: [
+          { icon: '&#128644;', title: 'Railway Integration', desc: 'Deploy and manage Railway services.' },
+          { icon: '&#9729;', title: 'Cloudflare Tools', desc: 'Workers, Pages, KV, and DNS management.' },
+          { icon: '&#128025;', title: 'GitHub Actions', desc: 'CI/CD workflows and automation.' },
+          { icon: '&#128202;', title: 'Monitoring', desc: 'Service health and performance metrics.' }
+        ]
+      },
+      legal: {
+        title: 'Legal Pack',
+        icon: '&#9878;',
+        desc: 'Contract generation, compliance, and document management.',
+        features: [
+          { icon: '&#128196;', title: 'Contract Templates', desc: 'NDA, MSA, and custom agreements.' },
+          { icon: '&#9989;', title: 'Compliance', desc: 'GDPR, CCPA, and SOC2 compliance tools.' },
+          { icon: '&#128221;', title: 'Document Vault', desc: 'Secure storage for legal documents.' },
+          { icon: '&#128274;', title: 'E-Signatures', desc: 'Digital signature integration.' }
+        ]
+      },
+      education: {
+        title: 'Education Pack',
+        icon: '&#127891;',
+        desc: 'Learning management, courses, and knowledge bases.',
+        features: [
+          { icon: '&#128218;', title: 'Course Builder', desc: 'Create and publish learning content.' },
+          { icon: '&#127942;', title: 'Certifications', desc: 'Issue and verify credentials.' },
+          { icon: '&#128300;', title: 'Research Tools', desc: 'Academic research and citations.' },
+          { icon: '&#128101;', title: 'Collaboration', desc: 'Team learning and study groups.' }
+        ]
+      },
+      studio: {
+        title: 'Studio',
+        icon: '&#127912;',
+        desc: 'Creative tools for design, media, and content creation.',
+        features: [
+          { icon: '&#127916;', title: 'Video Tools', desc: 'Edit and process video content.' },
+          { icon: '&#127925;', title: 'Audio Suite', desc: 'Podcast and music production.' },
+          { icon: '&#128444;', title: 'Image Editor', desc: 'Graphics and photo editing.' },
+          { icon: '&#128172;', title: 'Brand Kit', desc: 'Logos, colors, and brand assets.' }
+        ]
+      },
+      creator: {
+        title: 'Creator Studio',
+        icon: '&#127916;',
+        desc: 'Content creation, publishing, and audience tools.',
+        features: [
+          { icon: '&#128221;', title: 'Content Editor', desc: 'Write and publish blog posts.' },
+          { icon: '&#128247;', title: 'Media Library', desc: 'Organize images, videos, and files.' },
+          { icon: '&#128202;', title: 'Analytics', desc: 'Track engagement and growth.' },
+          { icon: '&#128176;', title: 'Monetization', desc: 'Subscriptions and tip jars.' }
+        ]
+      },
+      ideas: {
+        title: 'Ideas Lab',
+        icon: '&#128161;',
+        desc: 'Brainstorming, ideation, and project planning.',
+        features: [
+          { icon: '&#129504;', title: 'Mind Maps', desc: 'Visual thinking and connections.' },
+          { icon: '&#128203;', title: 'Kanban Boards', desc: 'Project and task management.' },
+          { icon: '&#128172;', title: 'Collaboration', desc: 'Real-time team brainstorming.' },
+          { icon: '&#128640;', title: 'Launch Planner', desc: 'From idea to execution.' }
+        ]
+      },
+      'research-lab': {
+        title: 'Research Lab',
+        icon: '&#128300;',
+        desc: 'Scientific research, experiments, and data analysis.',
+        features: [
+          { icon: '&#128202;', title: 'Data Analysis', desc: 'Statistical tools and visualization.' },
+          { icon: '&#129514;', title: 'Experiments', desc: 'A/B testing and research design.' },
+          { icon: '&#128209;', title: 'Papers', desc: 'Write and publish research.' },
+          { icon: '&#129302;', title: 'AI Models', desc: 'ML training and inference.' }
+        ]
+      },
+      os: {
+        title: 'BlackRoad OS',
+        icon: '&#128420;',
+        desc: 'The operating system for everything.',
+        features: [
+          { icon: '&#129302;', title: 'Agents', desc: '60+ AI agents working together.' },
+          { icon: '&#128274;', title: 'PS-SHA-∞', desc: 'Infinite cascade identity system.' },
+          { icon: '&#128268;', title: 'API Gateway', desc: 'Unified access to all services.' },
+          { icon: '&#128176;', title: 'Billing', desc: 'Stripe-powered subscriptions.' }
+        ]
+      }
+    };
+
+    function renderNav(current) {
+      return `
+        <nav class="nav">
+          <a href="https://dashboard.blackroad.io" class="logo">BlackRoad OS</a>
+          <div class="nav-links">
+            <a href="https://dashboard.blackroad.io" class="${current === 'dashboard' ? 'active' : ''}">Dashboard</a>
+            <a href="https://console.blackroad.io" class="${current === 'console' ? 'active' : ''}">Console</a>
+            <a href="https://api.blackroad.io" class="${current === 'api' ? 'active' : ''}">API</a>
+            <a href="https://docs.blackroad.io">Docs</a>
+          </div>
+        </nav>
+      `;
+    }
+
+    function renderDashboard() {
+      return `
+        ${renderNav('dashboard')}
+        <div class="content">
+          <h1 class="page-title">Welcome to BlackRoad OS</h1>
+          <p class="page-subtitle">Your unified command center for all services.</p>
+
+          <div class="grid">
+            <div class="card">
+              <div class="card-header">
+                <span class="card-title">Quick Access</span>
+              </div>
+              <div class="domain-grid">
+                <a href="https://console.blackroad.io" class="domain-link">
+                  <span class="icon">&#128274;</span>Console
+                </a>
+                <a href="https://api.blackroad.io" class="domain-link">
+                  <span class="icon">&#128268;</span>API
+                </a>
+                <a href="https://docs.blackroad.io" class="domain-link">
+                  <span class="icon">&#128214;</span>Docs
+                </a>
+                <a href="https://studio.blackroad.io" class="domain-link">
+                  <span class="icon">&#127912;</span>Studio
+                </a>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-header">
+                <span class="card-title">Packs</span>
+                <span class="card-badge">6 installed</span>
+              </div>
+              <div class="domain-grid">
+                <a href="https://finance.blackroad.io" class="domain-link">
+                  <span class="icon">&#128176;</span>Finance
+                </a>
+                <a href="https://devops.blackroad.io" class="domain-link">
+                  <span class="icon">&#9881;</span>DevOps
+                </a>
+                <a href="https://legal.blackroad.io" class="domain-link">
+                  <span class="icon">&#9878;</span>Legal
+                </a>
+                <a href="https://education.blackroad.io" class="domain-link">
+                  <span class="icon">&#127891;</span>Education
+                </a>
+                <a href="https://creator.blackroad.io" class="domain-link">
+                  <span class="icon">&#127916;</span>Creator
+                </a>
+                <a href="https://research-lab.blackroad.io" class="domain-link">
+                  <span class="icon">&#128300;</span>Research
+                </a>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-header">
+                <span class="card-title">Services</span>
+                <span class="card-badge">Live</span>
+              </div>
+              <ul class="service-list" id="services">
+                <li class="service-item">
+                  <span><span class="status-dot green"></span>API Gateway</span>
+                  <a href="https://api.blackroad.io" style="color: var(--muted);">api.blackroad.io</a>
+                </li>
+                <li class="service-item">
+                  <span><span class="status-dot green"></span>Billing</span>
+                  <a href="https://blackroad-billing-production.up.railway.app" style="color: var(--muted);">Railway</a>
+                </li>
+                <li class="service-item">
+                  <span><span class="status-dot green"></span>Cece Operator</span>
+                  <a href="https://blackroad-cece-operator-production.up.railway.app" style="color: var(--muted);">Railway</a>
+                </li>
+              </ul>
+            </div>
+
+            <div class="card">
+              <div class="card-header">
+                <span class="card-title">Billing</span>
+              </div>
+              <div id="billing-status">
+                <p style="color: var(--muted);">Checking billing status...</p>
+              </div>
+              <div style="margin-top: 1rem; display: flex; gap: 0.5rem;">
+                <a href="https://blackroad-billing-production.up.railway.app/plans" class="btn secondary" target="_blank">View Plans</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderConsole() {
+      return `
+        ${renderNav('console')}
+        <aside class="sidebar active">
+          <div class="nav-section">
+            <div class="nav-section-title">Secrets</div>
+            <a href="#stripe" class="nav-item">Stripe</a>
+            <a href="#railway" class="nav-item">Railway</a>
+            <a href="#cloudflare" class="nav-item">Cloudflare</a>
+          </div>
+          <div class="nav-section">
+            <div class="nav-section-title">Services</div>
+            <a href="#billing" class="nav-item">Billing</a>
+            <a href="#cece" class="nav-item">Cece</a>
+          </div>
+        </aside>
+        <div class="main-with-sidebar" style="margin-top: 56px;">
+          <h1 class="page-title">Secrets & Config</h1>
+          <p class="page-subtitle">Manage API keys and service configuration.</p>
+
+          <div class="grid" style="margin-top: 2rem;">
+            <div class="card" id="stripe">
+              <div class="card-header">
+                <span class="card-title">&#128179; Stripe</span>
+                <span class="card-badge" style="background: rgba(239,68,68,0.2); color: var(--red);">Needs Setup</span>
+              </div>
+              <div class="secret-item">
+                <span class="secret-name">STRIPE_SECRET_KEY</span>
+                <span class="secret-value missing">Not Set</span>
+              </div>
+              <div class="secret-item">
+                <span class="secret-name">STRIPE_PRICE_SOLO</span>
+                <span class="secret-value missing">Not Set</span>
+              </div>
+              <div class="secret-item">
+                <span class="secret-name">STRIPE_PRICE_TEAM</span>
+                <span class="secret-value missing">Not Set</span>
+              </div>
+              <div class="cmd-box">
+                <code>cd ~/blackroad-os-operator/services/billing
+railway variables set STRIPE_SECRET_KEY=sk_test_...
+railway variables set STRIPE_PRICE_SOLO=price_...</code>
+              </div>
+            </div>
+
+            <div class="card" id="railway">
+              <div class="card-header">
+                <span class="card-title">&#128644; Railway</span>
+                <span class="card-badge">Configured</span>
+              </div>
+              <div class="secret-item">
+                <span class="secret-name">RAILWAY_TOKEN</span>
+                <span class="secret-value set">***...configured</span>
+              </div>
+              <div class="secret-item">
+                <span class="secret-name">Projects</span>
+                <span class="secret-value set">3 linked</span>
+              </div>
+            </div>
+
+            <div class="card" id="cloudflare">
+              <div class="card-header">
+                <span class="card-title">&#9729; Cloudflare</span>
+                <span class="card-badge">Configured</span>
+              </div>
+              <div class="secret-item">
+                <span class="secret-name">Account</span>
+                <span class="secret-value set">Linked via Wrangler</span>
+              </div>
+              <div class="secret-item">
+                <span class="secret-name">Workers</span>
+                <span class="secret-value set">9 deployed</span>
+              </div>
+              <div class="secret-item">
+                <span class="secret-name">Pages</span>
+                <span class="secret-value set">9 projects</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderPackPage(pack) {
+      const p = pages[pack];
+      return `
+        ${renderNav(pack)}
+        <div class="content">
+          <div class="pack-hero">
+            <div class="pack-icon">${p.icon}</div>
+            <h1 class="pack-title">${p.title}</h1>
+            <p class="pack-desc">${p.desc}</p>
+          </div>
+
+          <h2 style="margin-bottom: 1rem;">Features</h2>
+          <div class="feature-grid">
+            ${p.features.map(f => `
+              <div class="feature-card">
+                <div class="feature-icon">${f.icon}</div>
+                <div class="feature-title">${f.title}</div>
+                <div class="feature-desc">${f.desc}</div>
+              </div>
+            `).join('')}
+          </div>
+
+          <div style="text-align: center; margin-top: 3rem;">
+            <a href="https://dashboard.blackroad.io" class="btn">Back to Dashboard</a>
+          </div>
+        </div>
+      `;
+    }
+
+    // Determine which page to show
+    let currentPage = 'dashboard';
+
+    if (isLocal) {
+      // For local testing, use query param
+      const params = new URLSearchParams(window.location.search);
+      currentPage = params.get('page') || 'dashboard';
+    } else {
+      // Use subdomain
+      currentPage = subdomain;
+    }
+
+    // Handle blackroad-hello.pages.dev
+    if (currentPage === 'blackroad-hello' || currentPage === 'www' || currentPage === 'blackroad') {
+      currentPage = 'dashboard';
+    }
+
+    // Render
+    document.getElementById('loading').style.display = 'none';
+    const app = document.getElementById('app');
+    app.style.display = 'block';
+
+    if (pages[currentPage]) {
+      if (pages[currentPage].render) {
+        app.innerHTML = pages[currentPage].render();
+      } else {
+        app.innerHTML = renderPackPage(currentPage);
+      }
+    } else {
+      app.innerHTML = renderDashboard();
+    }
+
+    // Check billing status
+    if (currentPage === 'dashboard') {
+      fetch('https://blackroad-billing-production.up.railway.app/health')
+        .then(r => r.json())
+        .then(data => {
+          document.getElementById('billing-status').innerHTML = `
+            <p style="color: ${data.stripe_configured ? 'var(--green)' : 'var(--yellow)'}">
+              Stripe: ${data.stripe_configured ? 'Configured' : 'Not configured'}
+            </p>
+            <p style="color: var(--muted); font-size: 0.85rem;">
+              Plans: ${data.plans_available?.join(', ') || 'Loading...'}
+            </p>
+          `;
+        })
+        .catch(() => {
+          document.getElementById('billing-status').innerHTML = '<p style="color: var(--red)">Unable to reach billing</p>';
+        });
+    }
+  </script>
+</body>
+</html>
