@@ -3,6 +3,7 @@ WebSocket Routes - Real-time agent connections and client updates
 """
 import asyncio
 from datetime import datetime
+from pathlib import Path
 from typing import Optional
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 import structlog
@@ -11,6 +12,7 @@ from models import AgentRegistration, AgentHeartbeat, CommandResult, Task
 from core.registry import registry
 from core.scheduler import scheduler
 from services.audit import audit
+from services.git_remotes import GitRemote, list_git_remotes
 
 router = APIRouter(tags=["websocket"])
 logger = structlog.get_logger()
@@ -221,6 +223,67 @@ async def client_websocket(websocket: WebSocket):
         if websocket in client_connections:
             client_connections.remove(websocket)
         logger.info("client_disconnected", total_clients=len(client_connections))
+
+
+@router.websocket("/ws/local-remotes")
+async def local_remotes_websocket(websocket: WebSocket):
+    """Stream git remotes from a local working copy over WebSocket.
+
+    The client must send an initial JSON payload with ``path`` (the repository
+    root) and an optional ``poll_interval`` in seconds. On every poll cycle the
+    current remotes are sent to the client, and updates are pushed whenever they
+    change.
+    """
+
+    await websocket.accept()
+
+    repo_path: Optional[Path] = None
+    poll_interval = 5.0
+    last_payload: list[GitRemote] = []
+
+    try:
+        init_message = await websocket.receive_json()
+        path_value = init_message.get("path")
+        if not path_value:
+            await websocket.send_json({"type": "error", "message": "Missing 'path' in init message"})
+            await websocket.close(code=1003)
+            return
+
+        repo_path = Path(path_value).expanduser().resolve()
+        poll_interval = float(init_message.get("poll_interval", poll_interval))
+
+        while True:
+            try:
+                remotes = await asyncio.to_thread(list_git_remotes, repo_path)
+            except Exception as error:  # noqa: PERF203 - explicit error handling for clients
+                await websocket.send_json({
+                    "type": "error",
+                    "message": str(error),
+                    "path": str(repo_path),
+                })
+                logger.error("local_remotes_error", path=str(repo_path), error=str(error))
+                await asyncio.sleep(poll_interval)
+                continue
+
+            if remotes != last_payload:
+                await websocket.send_json({
+                    "type": "local_remotes",
+                    "path": str(repo_path),
+                    "remotes": [remote.as_dict() for remote in remotes],
+                })
+                last_payload = remotes
+
+            await asyncio.sleep(poll_interval)
+
+    except WebSocketDisconnect:
+        logger.info("local_remotes_disconnected", path=str(repo_path))
+    except Exception as e:
+        logger.error("local_remotes_connection_error", path=str(repo_path), error=str(e))
+    finally:
+        try:
+            await websocket.close()
+        except Exception:
+            pass
 
 
 async def broadcast_to_clients(message: dict):
