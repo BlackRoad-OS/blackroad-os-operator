@@ -6,6 +6,7 @@ import { getConfig } from './config.js';
 import { registerSampleJobProcessor } from './jobs/sample.job.js';
 import { startHeartbeatScheduler } from './schedulers/heartbeat.scheduler.js';
 import { generateChatResponse, checkLlmHealth, ChatRequest } from './services/llm.service.js';
+import { fingerprintPayload } from './utils/fingerprint.js';
 import logger from './utils/logger.js';
 
 const config = getConfig();
@@ -52,6 +53,11 @@ interface ChatRequestBody {
   model?: string;
 }
 
+interface FingerprintRequestBody {
+  data: unknown;
+  salt?: string;
+}
+
 // Chat endpoint - talk to Cece through the Operator Engine
 app.post<{ Body: ChatRequestBody }>('/chat', async (request, reply) => {
   const { message, userId, model } = request.body;
@@ -81,6 +87,34 @@ app.post<{ Body: ChatRequestBody }>('/chat', async (request, reply) => {
     return reply.status(500).send({
       error: 'Internal Server Error',
       message: error instanceof Error ? error.message : 'Failed to generate response'
+    });
+  }
+});
+
+// Immutable fingerprint endpoint - produce layered hashes for any payload
+app.post<{ Body: FingerprintRequestBody }>('/fingerprint', async (request, reply) => {
+  const { data, salt } = request.body ?? {};
+
+  if (typeof data === 'undefined') {
+    return reply.status(400).send({
+      error: 'Bad Request',
+      message: 'data field is required to compute a fingerprint'
+    });
+  }
+
+  try {
+    const fingerprint = fingerprintPayload(data as never, { salt });
+
+    return {
+      fingerprint,
+      immutable: true,
+      message: 'Fingerprint generated using SHA-256 seed with SHA-512 cascade expansion.'
+    };
+  } catch (error) {
+    logger.error({ error, dataType: typeof data }, 'Fingerprint request failed');
+    return reply.status(500).send({
+      error: 'Internal Server Error',
+      message: error instanceof Error ? error.message : 'Failed to generate fingerprint'
     });
   }
 });
