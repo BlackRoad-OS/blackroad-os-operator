@@ -770,6 +770,9 @@ translation_key_standard:
   description: Manages BlackRoad edge computing on Raspberry Pi at 192.168.4.49. Runs alice/lucidia services.
   version: 1.0.0
   platform: raspberry-pi
+  status: offline
+  status_reason: "Cron shutdown - needs physical restart"
+  last_seen: "2025-12-02"
   network:
     local_ip: "192.168.4.49"
     ssh_users:
@@ -805,6 +808,9 @@ translation_key_standard:
   description: Manages DigitalOcean droplet codex-infinity at 159.65.43.12. Cloud VPS for BlackRoad services.
   version: 1.0.0
   platform: digitalocean
+  status: offline
+  status_reason: "Droplet unreachable - check DO console"
+  last_seen: "2025-12-02"
   droplet:
     name: "codex-infinity"
     ip: "159.65.43.12"
