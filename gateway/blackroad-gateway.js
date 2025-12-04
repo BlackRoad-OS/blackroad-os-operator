@@ -15,6 +15,7 @@ import path from 'path';
 
 const PORT = process.env.GATEWAY_PORT || 3849;
 const DATA_DIR = process.env.DATA_DIR || path.join(process.env.HOME, '.blackroad', 'gateway');
+const SANDBOX_URL = process.env.BLACKROAD_SANDBOX_URL || 'https://blackroad-sandbox.up.railway.app';
 
 // Ensure data directory exists
 if (!fs.existsSync(DATA_DIR)) {
@@ -405,6 +406,33 @@ const server = http.createServer(async (req, res) => {
     });
   }
 
+  // Sandbox connectivity check
+  if (url.pathname === '/blackroad-sandbox') {
+    try {
+      const response = await fetch(`${SANDBOX_URL}/health`);
+      const body = await response.text();
+
+      return json(res, {
+        service: 'blackroad-gateway',
+        sandbox: {
+          target: SANDBOX_URL,
+          status: response.ok ? 'reachable' : 'unreachable',
+          httpStatus: response.status,
+          message: body.slice(0, 200)
+        }
+      }, response.ok ? 200 : 502);
+    } catch (err) {
+      return json(res, {
+        service: 'blackroad-gateway',
+        sandbox: {
+          target: SANDBOX_URL,
+          status: 'unreachable',
+          error: err.message
+        }
+      }, 502);
+    }
+  }
+
   // Stats
   if (url.pathname === '/stats') {
     const stats = {
@@ -528,6 +556,7 @@ Endpoints:
   POST /v1/chat      - Send message (requires X-API-Key header)
   GET  /v1/identity  - Get your agent identity
   POST /v1/upgrade   - Upgrade tier (Stripe webhook)
+  GET  /blackroad-sandbox - Verify sandbox connectivity
   GET  /stats        - Gateway statistics
   GET  /health       - Health check
 
