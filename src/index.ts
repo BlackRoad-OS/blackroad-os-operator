@@ -6,6 +6,7 @@ import { getConfig } from './config.js';
 import { registerSampleJobProcessor } from './jobs/sample.job.js';
 import { startHeartbeatScheduler } from './schedulers/heartbeat.scheduler.js';
 import { generateChatResponse, checkLlmHealth, ChatRequest } from './services/llm.service.js';
+import { executeSandbox } from './services/sandbox.service.js';
 import logger from './utils/logger.js';
 
 const config = getConfig();
@@ -52,6 +53,12 @@ interface ChatRequestBody {
   model?: string;
 }
 
+interface SandboxRequestBody {
+  language: 'javascript';
+  code: string;
+  timeoutMs?: number;
+}
+
 // Chat endpoint - talk to Cece through the Operator Engine
 app.post<{ Body: ChatRequestBody }>('/chat', async (request, reply) => {
   const { message, userId, model } = request.body;
@@ -81,6 +88,33 @@ app.post<{ Body: ChatRequestBody }>('/chat', async (request, reply) => {
     return reply.status(500).send({
       error: 'Internal Server Error',
       message: error instanceof Error ? error.message : 'Failed to generate response'
+    });
+  }
+});
+
+// Sandbox execution endpoint - run safe code snippets
+app.post<{ Body: SandboxRequestBody }>('/sandbox', async (request, reply) => {
+  const { language, code, timeoutMs } = request.body;
+
+  if (!code || typeof code !== 'string') {
+    return reply.status(400).send({
+      error: 'Bad Request',
+      message: 'code field is required and must be a string',
+    });
+  }
+
+  try {
+    const result = await executeSandbox({ language, code, timeoutMs });
+    return {
+      output: result.output,
+      logs: result.logs,
+      duration_ms: result.durationMs,
+    };
+  } catch (error) {
+    logger.error({ error }, 'Sandbox execution failed');
+    return reply.status(500).send({
+      error: 'Internal Server Error',
+      message: error instanceof Error ? error.message : 'Failed to execute sandbox code',
     });
   }
 });
