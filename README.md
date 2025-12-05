@@ -102,6 +102,9 @@ pnpm start
 - TODO(op-next): agent auto-registration
 - TODO(op-next): authentication and request signing
 - TODO(op-next): multi-queue orchestration policies
+- TODO(op-next): persist journal and event history in Postgres instead of in-memory stores
+- TODO(op-next): ship metrics/traces to Grafana/Prometheus with alert thresholds for queue health
+- TODO(op-next): provide a CLI (or Make targets) for common operator maintenance tasks
 
 
 ---
