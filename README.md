@@ -91,6 +91,7 @@ All routes are prefixed with `/internal`:
 See:
 - `docs/OPERATOR_ENGINE.md` for comprehensive operator engine documentation with emoji legend 🧬
 - `docs/OPERATOR_RUNTIME_OVERVIEW.md` for a brief runtime walkthrough
+- `docs/FEATURE_ROADMAP.md` for the 20-feature roadmap spanning reliability, governance, workflows, and UX
 
 ### Production build
 ```bash
