@@ -1,0 +1,131 @@
+# BlackRoad Auto-Deploy Template
+# Copy this to any BlackRoad repo's .github/workflows/ directory
+# It will automatically deploy on push to main
+
+name: BlackRoad Auto-Deploy
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    types: [closed]
+    branches: [main]
+  workflow_dispatch:
+
+env:
+  CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+  CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
+jobs:
+  # Detect what type of repo this is and what to deploy
+  detect:
+    runs-on: ubuntu-latest
+    outputs:
+      deploy_type: ${{ steps.detect.outputs.type }}
+      deploy_target: ${{ steps.detect.outputs.target }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Detect Repo Type
+        id: detect
+        run: |
+          REPO_NAME="${{ github.repository }}"
+
+          # Determine deployment type based on repo structure
+          if [ -d "workers" ]; then
+            echo "type=workers" >> $GITHUB_OUTPUT
+            echo "target=all" >> $GITHUB_OUTPUT
+          elif [ -f "wrangler.toml" ]; then
+            echo "type=worker" >> $GITHUB_OUTPUT
+            echo "target=." >> $GITHUB_OUTPUT
+          elif [ -f "next.config.js" ] || [ -f "next.config.mjs" ]; then
+            echo "type=nextjs" >> $GITHUB_OUTPUT
+            echo "target=." >> $GITHUB_OUTPUT
+          elif [ -f "package.json" ] && grep -q '"build"' package.json; then
+            echo "type=pages" >> $GITHUB_OUTPUT
+            echo "target=." >> $GITHUB_OUTPUT
+          elif [ -f "railway.toml" ] || [ -f "Dockerfile" ]; then
+            echo "type=railway" >> $GITHUB_OUTPUT
+            echo "target=." >> $GITHUB_OUTPUT
+          else
+            echo "type=static" >> $GITHUB_OUTPUT
+            echo "target=." >> $GITHUB_OUTPUT
+          fi
+
+  # Deploy based on detected type
+  deploy:
+    needs: detect
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Dependencies
+        if: hashFiles('package.json') != ''
+        run: npm ci --prefer-offline --no-audit || npm install
+
+      - name: Build
+        if: hashFiles('package.json') != ''
+        run: npm run build 2>/dev/null || true
+
+      # Deploy Cloudflare Worker
+      - name: Deploy Worker
+        if: needs.detect.outputs.deploy_type == 'worker'
+        run: |
+          npm install -g wrangler
+          wrangler deploy
+
+      # Deploy to Cloudflare Pages
+      - name: Deploy Pages
+        if: needs.detect.outputs.deploy_type == 'pages' || needs.detect.outputs.deploy_type == 'nextjs' || needs.detect.outputs.deploy_type == 'static'
+        run: |
+          npm install -g wrangler
+
+          # Detect output directory
+          if [ -d "dist" ]; then OUTPUT="dist"
+          elif [ -d "build" ]; then OUTPUT="build"
+          elif [ -d "out" ]; then OUTPUT="out"
+          elif [ -d ".next" ]; then OUTPUT=".next"
+          elif [ -d "public" ]; then OUTPUT="public"
+          else OUTPUT="."
+          fi
+
+          # Get project name from repo name
+          REPO="${{ github.repository }}"
+          PROJECT=$(echo "$REPO" | cut -d'/' -f2 | sed 's/^blackroad-os-/blackroad-/')
+
+          wrangler pages project create "$PROJECT" --production-branch main 2>/dev/null || true
+          wrangler pages deploy "$OUTPUT" --project-name="$PROJECT" --branch=main
+
+      # Deploy to Railway
+      - name: Deploy Railway
+        if: needs.detect.outputs.deploy_type == 'railway'
+        run: |
+          npm install -g @railway/cli
+          railway up --detach
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+
+  # Notify the orchestrator of deployment
+  notify-orchestrator:
+    needs: deploy
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Notify BlackRoad Orchestrator
+        uses: peter-evans/repository-dispatch@v3
+        with:
+          token: ${{ secrets.CROSS_REPO_TOKEN }}
+          repository: BlackRoad-OS/blackroad-os-operator
+          event-type: repo-deployed
+          client-payload: |
+            {
+              "repo": "${{ github.repository }}",
+              "ref": "${{ github.sha }}",
+              "status": "${{ needs.deploy.result }}",
+              "branch": "${{ github.ref_name }}"
+            }
+        continue-on-error: true

@@ -1,0 +1,319 @@
+# BlackRoad Domain Configuration
+# This file maps domains to their deployment targets
+# Any repo can deploy to any domain by referencing this config
+
+version: "1.0"
+updated: "2025-12-06"
+
+# Primary domains and their routing
+domains:
+  # === MAIN BLACKROAD DOMAINS ===
+  blackroad.io:
+    pages_project: blackroad-os-web
+    workers:
+      - router
+      - api-gateway
+    subdomains:
+      api: api-gateway
+      cece: cece
+      auth: auth
+      billing: stripe-billing
+      checkout: stripe-checkout
+      webhooks: stripe-webhooks
+      status: status
+      identity: identity
+      cipher: cipher
+      sovereignty: sovereignty
+      intercept: intercept
+      gateway: blackroad-gateway
+      os: blackroad-hello
+      dashboard: blackroad-hello
+      studio: blackroad-hello
+      creator: blackroad-hello
+      finance: blackroad-hello
+      legal: blackroad-hello
+      education: blackroad-hello
+      research-lab: blackroad-hello
+      ideas: blackroad-hello
+      devops: blackroad-hello
+      demo: blackroad-os-demo
+      home: blackroad-os-home
+      app: blackroad-console
+
+  blackroadai.com:
+    pages_project: blackroad-os-web
+    workers:
+      - blackroadai-router
+
+  blackroad.network:
+    pages_project: blackroad-os-web
+    workers:
+      - blackroad-network-router
+
+  blackroadquantum.com:
+    pages_project: blackroad-os-web
+    workers:
+      - blackroadquantum-router
+
+  blackroadquantum.net:
+    pages_project: blackroad-os-web
+    workers:
+      - blackroadquantum-router
+
+  blackroadquantum.info:
+    pages_project: blackroad-os-web
+    workers:
+      - blackroadquantum-router
+
+  blackroadquantum.shop:
+    pages_project: blackroad-os-web
+    workers:
+      - blackroadquantum-router
+
+  blackroadquantum.store:
+    pages_project: blackroad-os-web
+    workers:
+      - blackroadquantum-router
+
+  # === LUCIDIA DOMAINS ===
+  lucidia.earth:
+    pages_project: blackroad-os-web
+    workers:
+      - lucidia-earth-router
+
+  lucidia.studio:
+    pages_project: blackroad-os-web
+    workers:
+      - lucidia-studio-router
+
+  lucidiaqi.com:
+    pages_project: blackroad-os-web
+    workers: []
+
+  # === BLACKROAD SECONDARY ===
+  blackroad.systems:
+    pages_project: blackroad-systems
+    workers:
+      - systems-router
+
+  blackroad.me:
+    pages_project: blackroad-os-web
+    workers: []
+
+  blackroadinc.us:
+    pages_project: blackroad-os-web
+    workers: []
+
+  blackroadqi.com:
+    pages_project: blackroad-os-web
+    workers: []
+
+  # === ALICE QI ===
+  aliceqi.com:
+    pages_project: blackroad-os-web
+    workers: []
+
+# Pages projects and their GitHub source repos
+pages_projects:
+  blackroad-os-web:
+    github_repo: BlackRoad-OS/blackroad-os-web
+    branch: main
+    build_command: npm run build
+    output_dir: dist
+    custom_domains:
+      - blackroad.io
+      - www.blackroad.io
+      - blackroadai.com
+      - www.blackroadai.com
+      - blackroad.network
+      - blackroadquantum.com
+      - blackroadquantum.net
+      - blackroadquantum.info
+      - blackroadquantum.shop
+      - blackroadquantum.store
+      - lucidia.earth
+      - lucidia.studio
+      - blackroad.me
+      - blackroadinc.us
+      - aliceqi.com
+      - lucidiaqi.com
+      - blackroadqi.com
+
+  blackroad-os-prism:
+    github_repo: BlackRoad-OS/blackroad-os-prism-console
+    branch: main
+    build_command: npm run build
+    output_dir: dist
+
+  blackroad-hello:
+    github_repo: null  # Static deploy from operator
+    custom_domains:
+      - os.blackroad.io
+      - dashboard.blackroad.io
+      - studio.blackroad.io
+      - creator.blackroad.io
+      - creator-studio.blackroad.io
+      - finance.blackroad.io
+      - legal.blackroad.io
+      - education.blackroad.io
+      - research-lab.blackroad.io
+      - ideas.blackroad.io
+      - devops.blackroad.io
+
+  blackroad-systems:
+    github_repo: null
+
+  blackroad-os-brand:
+    github_repo: BlackRoad-OS/blackroad-os-brand
+    branch: main
+
+  blackroad-os-docs:
+    github_repo: BlackRoad-OS/blackroad-os-docs
+    branch: main
+
+  blackroad-console:
+    github_repo: null
+    custom_domains:
+      - app.blackroad.io
+
+  blackroad-os-demo:
+    github_repo: null
+    custom_domains:
+      - demo.blackroad.io
+
+  blackroad-os-home:
+    github_repo: null
+    custom_domains:
+      - home.blackroad.io
+
+# Workers and their deployment config
+workers:
+  router:
+    path: workers/router
+    routes:
+      - "*.blackroad.io/*"
+
+  api-gateway:
+    path: workers/api-gateway
+    routes:
+      - "api.blackroad.io/*"
+
+  cece:
+    path: workers/cece
+    routes:
+      - "cece.blackroad.io/*"
+
+  auth:
+    path: workers/auth
+    routes:
+      - "auth.blackroad.io/*"
+
+  status:
+    path: workers/status
+    routes:
+      - "status.blackroad.io/*"
+
+  identity:
+    path: workers/identity
+    routes:
+      - "identity.blackroad.io/*"
+
+  cipher:
+    path: workers/cipher
+    routes:
+      - "cipher.blackroad.io/*"
+
+  sovereignty:
+    path: workers/sovereignty
+    routes:
+      - "sovereignty.blackroad.io/*"
+
+  intercept:
+    path: workers/intercept
+    routes:
+      - "intercept.blackroad.io/*"
+
+  billing:
+    path: workers/billing
+
+  stripe-billing:
+    path: workers/stripe-billing
+    routes:
+      - "billing.blackroad.io/*"
+
+  stripe-checkout:
+    path: workers/stripe-checkout
+    routes:
+      - "checkout.blackroad.io/*"
+
+  stripe-webhooks:
+    path: workers/stripe-webhooks
+    routes:
+      - "webhooks.blackroad.io/*"
+
+  blackroadai-router:
+    path: workers/blackroadai-router
+    routes:
+      - "blackroadai.com/*"
+      - "*.blackroadai.com/*"
+
+  blackroad-network-router:
+    path: workers/blackroad-network-router
+    routes:
+      - "blackroad.network/*"
+      - "*.blackroad.network/*"
+
+  blackroadquantum-router:
+    path: workers/blackroadquantum-router
+    routes:
+      - "blackroadquantum.com/*"
+      - "*.blackroadquantum.com/*"
+
+  lucidia-earth-router:
+    path: workers/lucidia-earth-router
+    routes:
+      - "lucidia.earth/*"
+      - "*.lucidia.earth/*"
+
+  lucidia-studio-router:
+    path: workers/lucidia-studio-router
+    routes:
+      - "lucidia.studio/*"
+      - "*.lucidia.studio/*"
+
+  systems-router:
+    path: workers/systems-router
+    routes:
+      - "blackroad.systems/*"
+      - "*.blackroad.systems/*"
+
+# Railway services
+railway:
+  blackroad-cece-operator:
+    project_id: blackroad-cece-operator-production
+    github_repo: BlackRoad-OS/blackroad-os-operator
+    service: cece-operator
+
+  blackroad-os-api:
+    project_id: blackroad-os-api-production
+    github_repo: BlackRoad-OS/blackroad-os-api
+    service: api
+
+# Cross-repo triggers
+# When a repo is updated, trigger these related deployments
+triggers:
+  BlackRoad-OS/blackroad-os-web:
+    - pages: blackroad-os-web
+
+  BlackRoad-OS/blackroad-os-operator:
+    - workers: all
+    - railway: blackroad-cece-operator
+
+  BlackRoad-OS/blackroad-os-api:
+    - railway: blackroad-os-api
+
+  BlackRoad-OS/blackroad-os-prism-console:
+    - pages: blackroad-os-prism
+
+  BlackRoad-OS/blackroad-os-brand:
+    - pages: blackroad-os-brand
