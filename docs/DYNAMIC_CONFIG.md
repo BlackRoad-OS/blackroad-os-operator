@@ -29,4 +29,4 @@ python scripts/dynamic_config_refresh.py \
   --manifest config/dynamic/manifest.yaml
 ```
 
-The script is dependency-free and suitable for CI, Railway, or cron. Because it writes deterministic JSON (sorted file ordering and stable keys), downstream diffs are predictable while still reflecting real-time changes.
+The script has minimal dependencies (only PyYAML) and is suitable for CI, Railway, or cron. Because it writes deterministic JSON (sorted file ordering and stable keys), downstream diffs are predictable while still reflecting real-time changes.
