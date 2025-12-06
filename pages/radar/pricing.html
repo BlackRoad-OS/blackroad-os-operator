@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pricing | New Internet Radar | BlackRoad OS</title>
+  <link rel="stylesheet" href="assets/brand-tokens.css">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: var(--br-font-mono);
+      background: var(--br-bg-dark);
+      color: var(--br-text-primary);
+      min-height: 100vh;
+      padding: var(--br-space-4);
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: var(--br-space-6);
+    }
+
+    .header h1 {
+      font-size: 2.5rem;
+      background: var(--br-gradient-hero);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: var(--br-space-2);
+    }
+
+    .header p {
+      color: var(--br-text-muted);
+      font-size: 1.1rem;
+    }
+
+    .tagline {
+      color: var(--br-magenta);
+      font-size: 0.9rem;
+      margin-top: var(--br-space-2);
+    }
+
+    .pricing-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: var(--br-space-4);
+      max-width: 1400px;
+      margin: 0 auto var(--br-space-6);
+    }
+
+    .plan-card {
+      background: var(--br-bg-card);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: var(--br-radius-lg);
+      padding: var(--br-space-4);
+      display: flex;
+      flex-direction: column;
+      transition: all var(--br-duration-default) var(--br-ease-default);
+    }
+
+    .plan-card:hover {
+      border-color: rgba(255, 255, 255, 0.2);
+      transform: translateY(-4px);
+    }
+
+    .plan-card.featured {
+      border-color: var(--br-violet);
+      box-shadow: var(--br-glow-violet);
+    }
+
+    .plan-card.enterprise {
+      border-color: var(--br-magenta);
+      box-shadow: var(--br-glow-magenta);
+    }
+
+    .plan-header {
+      margin-bottom: var(--br-space-3);
+    }
+
+    .plan-name {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: var(--br-space-1);
+    }
+
+    .plan-card.featured .plan-name {
+      color: var(--br-violet);
+    }
+
+    .plan-card.enterprise .plan-name {
+      color: var(--br-magenta);
+    }
+
+    .plan-description {
+      color: var(--br-text-muted);
+      font-size: 0.85rem;
+    }
+
+    .plan-price {
+      margin-bottom: var(--br-space-3);
+    }
+
+    .price-amount {
+      font-size: 2.5rem;
+      font-weight: 700;
+    }
+
+    .price-period {
+      color: var(--br-text-muted);
+      font-size: 0.85rem;
+    }
+
+    .yearly-price {
+      color: var(--br-text-muted);
+      font-size: 0.8rem;
+      margin-top: 4px;
+    }
+
+    .yearly-price .savings {
+      color: #00ff88;
+    }
+
+    .events-included {
+      background: var(--br-bg-elevated);
+      border-radius: var(--br-radius-md);
+      padding: var(--br-space-2);
+      margin-bottom: var(--br-space-3);
+      text-align: center;
+    }
+
+    .events-number {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--br-cyan);
+    }
+
+    .events-label {
+      color: var(--br-text-muted);
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .features-list {
+      list-style: none;
+      flex-grow: 1;
+      margin-bottom: var(--br-space-3);
+    }
+
+    .features-list li {
+      padding: var(--br-space-1) 0;
+      padding-left: 20px;
+      position: relative;
+      font-size: 0.85rem;
+      color: var(--br-text-secondary);
+    }
+
+    .features-list li::before {
+      content: '+';
+      position: absolute;
+      left: 0;
+      color: var(--br-violet);
+      font-weight: bold;
+    }
+
+    .cta-button {
+      width: 100%;
+      padding: var(--br-space-2) var(--br-space-3);
+      border: none;
+      border-radius: var(--br-radius-md);
+      font-family: var(--br-font-mono);
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: all var(--br-duration-fast) var(--br-ease-default);
+    }
+
+    .cta-button.primary {
+      background: var(--br-cta-primary);
+      color: white;
+    }
+
+    .cta-button.primary:hover {
+      background: var(--br-cta-hover);
+      box-shadow: var(--br-glow-violet);
+    }
+
+    .cta-button.secondary {
+      background: transparent;
+      color: var(--br-text-primary);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .cta-button.secondary:hover {
+      border-color: var(--br-violet);
+      color: var(--br-violet);
+    }
+
+    .cta-button.enterprise {
+      background: var(--br-magenta);
+    }
+
+    .cta-button.enterprise:hover {
+      box-shadow: var(--br-glow-magenta);
+    }
+
+    .overage-info {
+      font-size: 0.75rem;
+      color: var(--br-text-muted);
+      text-align: center;
+      margin-top: var(--br-space-2);
+    }
+
+    .faq-section {
+      max-width: 800px;
+      margin: 0 auto var(--br-space-6);
+    }
+
+    .faq-section h2 {
+      font-size: 1.5rem;
+      margin-bottom: var(--br-space-3);
+      text-align: center;
+    }
+
+    .faq-item {
+      background: var(--br-bg-card);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: var(--br-radius-md);
+      padding: var(--br-space-3);
+      margin-bottom: var(--br-space-2);
+    }
+
+    .faq-question {
+      font-weight: 600;
+      margin-bottom: var(--br-space-1);
+    }
+
+    .faq-answer {
+      color: var(--br-text-muted);
+      font-size: 0.9rem;
+    }
+
+    .calculator {
+      max-width: 600px;
+      margin: 0 auto var(--br-space-6);
+      background: var(--br-bg-card);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: var(--br-radius-lg);
+      padding: var(--br-space-4);
+    }
+
+    .calculator h3 {
+      margin-bottom: var(--br-space-3);
+      text-align: center;
+    }
+
+    .calculator-form {
+      display: flex;
+      gap: var(--br-space-2);
+      margin-bottom: var(--br-space-3);
+    }
+
+    .calculator-form input {
+      flex: 1;
+      padding: var(--br-space-2);
+      background: var(--br-bg-elevated);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: var(--br-radius-md);
+      color: var(--br-text-primary);
+      font-family: var(--br-font-mono);
+    }
+
+    .calculator-form button {
+      padding: var(--br-space-2) var(--br-space-3);
+      background: var(--br-violet);
+      border: none;
+      border-radius: var(--br-radius-md);
+      color: white;
+      cursor: pointer;
+      font-family: var(--br-font-mono);
+    }
+
+    .calculator-result {
+      text-align: center;
+      padding: var(--br-space-3);
+      background: var(--br-bg-elevated);
+      border-radius: var(--br-radius-md);
+    }
+
+    .recommended-plan {
+      font-size: 1.25rem;
+      color: var(--br-violet);
+      font-weight: 600;
+    }
+
+    footer {
+      text-align: center;
+      color: var(--br-text-muted);
+      font-size: 0.75rem;
+      padding-top: var(--br-space-4);
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    footer a {
+      color: var(--br-violet);
+      text-decoration: none;
+    }
+
+    .nav-links {
+      display: flex;
+      justify-content: center;
+      gap: var(--br-space-3);
+      margin-bottom: var(--br-space-4);
+    }
+
+    .nav-links a {
+      color: var(--br-text-muted);
+      text-decoration: none;
+      font-size: 0.9rem;
+      transition: color var(--br-duration-fast);
+    }
+
+    .nav-links a:hover {
+      color: var(--br-violet);
+    }
+  </style>
+</head>
+<body>
+  <nav class="nav-links">
+    <a href="index.html">Radar Dashboard</a>
+    <a href="pricing.html">Pricing</a>
+    <a href="https://blackroad.io">BlackRoad OS</a>
+  </nav>
+
+  <header class="header">
+    <h1>New Internet Radar</h1>
+    <p>Track every HTTP call. Discover the new internet.</p>
+    <p class="tagline">All roads lead to BlackRoad</p>
+  </header>
+
+  <div class="calculator">
+    <h3>Find Your Plan</h3>
+    <div class="calculator-form">
+      <input type="number" id="eventsInput" placeholder="Expected events/month" value="50000">
+      <button onclick="recommendPlan()">Calculate</button>
+    </div>
+    <div class="calculator-result" id="calcResult">
+      <p>Enter your expected monthly events to get a recommendation</p>
+    </div>
+  </div>
+
+  <div class="pricing-grid" id="pricingGrid">
+    <!-- Plans loaded dynamically -->
+  </div>
+
+  <section class="faq-section">
+    <h2>Questions</h2>
+
+    <div class="faq-item">
+      <div class="faq-question">What counts as an event?</div>
+      <div class="faq-answer">Each HTTP call logged to the telemetry API counts as one event. This includes calls from your agents, services, and applications using the TracedClient.</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-question">What happens if I exceed my event limit?</div>
+      <div class="faq-answer">On paid plans, you'll be charged the overage rate per 1,000 additional events. On the free plan, logging stops until the next billing period.</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-question">What is the "New Internet"?</div>
+      <div class="faq-answer">The New Internet Radar identifies hosts outside the traditional big tech ecosystem (Google, Meta, Amazon, etc.). These are the independent sites, APIs, and services building the decentralized future.</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-question">How do I integrate?</div>
+      <div class="faq-answer">Drop in our TracedClient library (Python, TypeScript, or plain HTTP) and every outbound request is automatically logged. Takes about 5 minutes.</div>
+    </div>
+  </section>
+
+  <footer>
+    <p>BlackRoad OS | Queen of the New Internet | <a href="https://blackroad.io">blackroad.io</a></p>
+    <p style="margin-top: 8px;">Built by Alexa Louise Amundson</p>
+  </footer>
+
+  <script>
+    const TELEMETRY_URL = 'https://blackroad-telemetry.amundsonalexa.workers.dev';
+
+    async function loadPricing() {
+      try {
+        const res = await fetch(`${TELEMETRY_URL}/v1/billing/plans`);
+        const data = await res.json();
+        renderPlans(data.plans);
+      } catch (e) {
+        console.error('Failed to load pricing:', e);
+        document.getElementById('pricingGrid').innerHTML = '<p style="text-align:center;color:var(--br-text-muted)">Failed to load pricing. Please refresh.</p>';
+      }
+    }
+
+    function renderPlans(plans) {
+      const grid = document.getElementById('pricingGrid');
+
+      grid.innerHTML = plans.map((plan, i) => {
+        const isFeatured = plan.id === 'pro';
+        const isEnterprise = plan.id === 'enterprise';
+
+        const yearlySavings = plan.price_yearly > 0
+          ? Math.round((plan.price_monthly * 12 - plan.price_yearly) / (plan.price_monthly * 12) * 100)
+          : 0;
+
+        return `
+          <div class="plan-card ${isFeatured ? 'featured' : ''} ${isEnterprise ? 'enterprise' : ''}">
+            <div class="plan-header">
+              <div class="plan-name">${plan.name}</div>
+              <div class="plan-description">${plan.description}</div>
+            </div>
+
+            <div class="plan-price">
+              <span class="price-amount">$${plan.price_monthly}</span>
+              <span class="price-period">/month</span>
+              ${plan.price_yearly > 0 ? `
+                <div class="yearly-price">
+                  $${plan.price_yearly}/year <span class="savings">(save ${yearlySavings}%)</span>
+                </div>
+              ` : ''}
+            </div>
+
+            <div class="events-included">
+              <div class="events-number">${formatNumber(plan.events_included)}</div>
+              <div class="events-label">events/month</div>
+            </div>
+
+            <ul class="features-list">
+              ${plan.features.map(f => `<li>${f}</li>`).join('')}
+            </ul>
+
+            <button class="cta-button ${plan.id === 'free' ? 'secondary' : 'primary'} ${isEnterprise ? 'enterprise' : ''}"
+                    onclick="selectPlan('${plan.id}')">
+              ${plan.id === 'free' ? 'Start Free' : plan.id === 'enterprise' ? 'Contact Sales' : 'Get Started'}
+            </button>
+
+            ${plan.overage_per_1k > 0 ? `
+              <div class="overage-info">$${plan.overage_per_1k}/1k events overage</div>
+            ` : ''}
+          </div>
+        `;
+      }).join('');
+    }
+
+    function formatNumber(n) {
+      if (n >= 1000000) return (n / 1000000).toFixed(0) + 'M';
+      if (n >= 1000) return (n / 1000).toFixed(0) + 'K';
+      return n.toString();
+    }
+
+    async function recommendPlan() {
+      const events = parseInt(document.getElementById('eventsInput').value) || 0;
+      const result = document.getElementById('calcResult');
+
+      try {
+        const res = await fetch(`${TELEMETRY_URL}/v1/billing/recommend`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ expected_events_per_month: events })
+        });
+        const data = await res.json();
+
+        result.innerHTML = `
+          <p>Recommended for ${formatNumber(events)} events/month:</p>
+          <p class="recommended-plan">${data.recommended_plan.name} - $${data.recommended_plan.price_monthly}/mo</p>
+          <p style="color:var(--br-text-muted);font-size:0.85rem;margin-top:8px">
+            ${data.recommended_plan.events_included.toLocaleString()} events included
+          </p>
+        `;
+      } catch (e) {
+        result.innerHTML = '<p style="color:#ff4444">Error calculating recommendation</p>';
+      }
+    }
+
+    function selectPlan(planId) {
+      if (planId === 'enterprise') {
+        window.location.href = 'mailto:blackroad.systems@gmail.com?subject=Enterprise%20Plan%20Inquiry';
+      } else {
+        // TODO: Connect to Stripe checkout
+        alert(`Plan "${planId}" selected. Stripe checkout coming soon!`);
+      }
+    }
+
+    // Load on page load
+    loadPricing();
+  </script>
+</body>
+</html>

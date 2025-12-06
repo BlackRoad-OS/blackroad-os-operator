@@ -27,6 +27,26 @@ export default {
     try {
       const path = url.pathname;
 
+      // Root path - service info
+      if (path === '/' || path === '') {
+        return jsonResponse({
+          service: 'blackroad-stripe-billing',
+          status: 'online',
+          version: '1.0.0',
+          owner: 'Alexa Louise Amundson',
+          description: 'Subscription & Usage Billing Manager',
+          endpoints: [
+            'GET /subscription/:customer_id',
+            'POST /usage',
+            'GET /invoices/:customer_id',
+            'POST /cancel',
+            'POST /upgrade',
+            'GET /usage-summary/:subscription_id',
+            'GET /health'
+          ]
+        }, 200, corsHeaders);
+      }
+
       // GET /subscription/:customer_id - Get subscription details
       if (path.match(/^\/subscription\/[\w]+$/) && request.method === 'GET') {
         const customerId = path.split('/').pop()!;

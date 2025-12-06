@@ -1,0 +1,22 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "name": "blackroad-pages",
+  "public": true,
+  "rewrites": [
+    { "source": "/radar", "destination": "/radar/index.html" },
+    { "source": "/radar/pricing", "destination": "/radar/pricing.html" },
+    { "source": "/dashboard", "destination": "/dashboard/index.html" },
+    { "source": "/console", "destination": "/console/index.html" },
+    { "source": "/hello", "destination": "/hello/index.html" }
+  ],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        { "key": "X-Content-Type-Options", "value": "nosniff" },
+        { "key": "X-Frame-Options", "value": "DENY" },
+        { "key": "X-XSS-Protection", "value": "1; mode=block" }
+      ]
+    }
+  ]
+}

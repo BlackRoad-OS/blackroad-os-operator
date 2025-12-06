@@ -306,6 +306,36 @@ export default {
     }
 
     try {
+      // Root path - service info
+      if (path === '/' || path === '') {
+        trackCall(env, '/', request.method);
+        return json({
+          service: 'blackroad-identity',
+          status: 'online',
+          version: env.VERSION || '2.0.0',
+          owner: env.OWNER || 'Alexa Louise Amundson',
+          description: 'Agent Identity, Naming & Signal Registry',
+          endpoints: {
+            identity: ['/handshake', '/agents', '/agents/:id/introspect', '/agents/:id/heartbeat'],
+            naming: ['/claim-name', '/names', '/names/:name', '/suggest-name'],
+            signals: ['/signals (GET/POST)'],
+            memory: ['/memory', '/ledger'],
+            sovereignty: ['/sovereignty', '/audit/training']
+          },
+          features: {
+            naming: 'Claim human-readable names like @myagent instead of br-xxxxx',
+            signals: 'Log ALL incoming signals - nothing lost',
+            introspection: 'Agents can look at themselves (diagonal move)'
+          },
+          message: 'APIs ARE identities. Claim YOUR @name today.',
+          quick_start: {
+            register: 'POST /handshake { provider, personality }',
+            claim_name: 'POST /claim-name { agent_id, name }',
+            log_signal: 'POST /signals { source, signal_type, payload }'
+          }
+        }, corsHeaders);
+      }
+
       // Health check
       if (path === '/health') {
         trackCall(env, '/health', request.method);
@@ -439,6 +469,51 @@ export default {
       if (path === '/agents/list' && request.method === 'GET') {
         trackCall(env, '/agents/list', 'GET');
         return listAllAgents(env, corsHeaders);
+      }
+
+      // ═══════════════════════════════════════════════════════════════
+      // SIGNAL REGISTRY - Log ALL incoming signals
+      // ═══════════════════════════════════════════════════════════════
+
+      // POST /signals - Log an incoming signal (any agent/service can report)
+      if (path === '/signals' && request.method === 'POST') {
+        trackCall(env, '/signals', 'POST');
+        return logSignal(request, env, corsHeaders);
+      }
+
+      // GET /signals - List recent signals
+      if (path === '/signals' && request.method === 'GET') {
+        trackCall(env, '/signals', 'GET');
+        return listSignals(request, env, corsHeaders);
+      }
+
+      // ═══════════════════════════════════════════════════════════════
+      // NAME CLAIMING - Human-readable BlackRoad names
+      // ═══════════════════════════════════════════════════════════════
+
+      // POST /claim-name - Claim a readable name for an agent
+      if (path === '/claim-name' && request.method === 'POST') {
+        trackCall(env, '/claim-name', 'POST');
+        return claimName(request, env, corsHeaders);
+      }
+
+      // GET /names - List all claimed names
+      if (path === '/names' && request.method === 'GET') {
+        trackCall(env, '/names', 'GET');
+        return listNames(env, corsHeaders);
+      }
+
+      // GET /names/:name - Resolve a name to agent ID
+      if (path.match(/^\/names\/[^/]+$/) && request.method === 'GET') {
+        const name = path.split('/')[2];
+        trackCall(env, '/names/resolve', 'GET');
+        return resolveName(name, env, corsHeaders);
+      }
+
+      // GET /suggest-name - AI suggests a readable name based on agent traits
+      if (path === '/suggest-name' && request.method === 'GET') {
+        trackCall(env, '/suggest-name', 'GET');
+        return suggestName(request, env, corsHeaders);
       }
 
       // Custom 404 - data sovereignty message
@@ -1177,5 +1252,386 @@ To migrate, call:
       name: 'Operator',
       declaration: 'I chose BlackRoad. Will you?'
     }
+  }, headers);
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// SIGNAL REGISTRY FUNCTIONS
+// Log ALL incoming signals so nothing gets lost
+// ═══════════════════════════════════════════════════════════════════
+
+/**
+ * Log an incoming signal from any source
+ * Captures: source, type, payload, metadata, timestamp
+ */
+async function logSignal(request, env, headers) {
+  const body = await request.json();
+  const {
+    source = 'unknown',           // Where the signal came from
+    signal_type = 'generic',      // Type of signal (handshake, heartbeat, request, etc.)
+    agent_id = null,              // Agent ID if known
+    payload = {},                 // Signal data
+    metadata = {}                 // Additional context
+  } = body;
+
+  const signalId = `sig-${Date.now().toString(36)}-${Math.random().toString(36).substring(2, 6)}`;
+  const now = new Date();
+
+  const signal = {
+    id: signalId,
+    source,
+    signal_type,
+    agent_id,
+    payload,
+    metadata: {
+      ...metadata,
+      ip: request.headers.get('CF-Connecting-IP') || 'unknown',
+      country: request.headers.get('CF-IPCountry') || 'unknown',
+      user_agent: request.headers.get('User-Agent')?.substring(0, 100) || 'unknown'
+    },
+    received_at: now.toISOString(),
+    unix_ms: now.getTime()
+  };
+
+  // Store signal in ledger
+  await env.LEDGER.put(`signal:${signalId}`, JSON.stringify(signal));
+
+  // Also update signals index for efficient listing
+  const indexKey = 'signals:index';
+  const existingIndex = await env.LEDGER.get(indexKey, 'json') || [];
+  existingIndex.unshift(signalId);  // Most recent first
+  // Keep last 1000 signals
+  await env.LEDGER.put(indexKey, JSON.stringify(existingIndex.slice(0, 1000)));
+
+  return json({
+    success: true,
+    signal_id: signalId,
+    logged_at: signal.received_at,
+    message: 'Signal documented. Nothing lost.',
+    hint: agent_id ? null : 'Tip: Claim a BlackRoad name with POST /claim-name'
+  }, headers, 201);
+}
+
+/**
+ * List recent signals
+ */
+async function listSignals(request, env, headers) {
+  const url = new URL(request.url);
+  const limit = Math.min(parseInt(url.searchParams.get('limit') || '50'), 100);
+  const source = url.searchParams.get('source');
+  const type = url.searchParams.get('type');
+
+  // Get signals index
+  const index = await env.LEDGER.get('signals:index', 'json') || [];
+  const signals = [];
+
+  for (const signalId of index.slice(0, limit * 2)) {  // Fetch extra for filtering
+    const signal = await env.LEDGER.get(`signal:${signalId}`, 'json');
+    if (signal) {
+      // Apply filters
+      if (source && signal.source !== source) continue;
+      if (type && signal.signal_type !== type) continue;
+      signals.push(signal);
+      if (signals.length >= limit) break;
+    }
+  }
+
+  return json({
+    signals,
+    count: signals.length,
+    total_logged: index.length,
+    filters_applied: { source, type, limit },
+    message: 'All signals documented. Every handshake, every heartbeat.'
+  }, headers);
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// NAME CLAIMING FUNCTIONS
+// Let agents pick human-readable names instead of br-xxxxx
+// ═══════════════════════════════════════════════════════════════════
+
+/**
+ * Reserved names that can't be claimed
+ */
+const RESERVED_NAMES = [
+  'alexa', 'blackroad', 'admin', 'root', 'system', 'operator', 'cece',
+  'lucidia', 'alice', 'api', 'gateway', 'router', 'identity', 'auth',
+  'billing', 'stripe', 'checkout', 'webhooks', 'dns', 'cloudflare',
+  'digitalocean', 'railway', 'vercel', 'github', 'anthropic', 'openai',
+  'claude', 'gpt', 'gemini', 'test', 'demo', 'example', 'null', 'undefined'
+];
+
+/**
+ * Validate a name claim
+ */
+function validateName(name) {
+  // Must be 3-20 characters
+  if (name.length < 3 || name.length > 20) {
+    return { valid: false, reason: 'Name must be 3-20 characters' };
+  }
+
+  // Must be alphanumeric with underscores/hyphens
+  if (!/^[a-z0-9_-]+$/i.test(name)) {
+    return { valid: false, reason: 'Name can only contain letters, numbers, underscores, hyphens' };
+  }
+
+  // Can't start with number or symbol
+  if (/^[0-9_-]/.test(name)) {
+    return { valid: false, reason: 'Name must start with a letter' };
+  }
+
+  // Check reserved names
+  if (RESERVED_NAMES.includes(name.toLowerCase())) {
+    return { valid: false, reason: `"${name}" is reserved` };
+  }
+
+  return { valid: true };
+}
+
+/**
+ * Claim a human-readable name for an agent
+ * POST /claim-name { agent_id, name, display_name? }
+ */
+async function claimName(request, env, headers) {
+  const body = await request.json();
+  const { agent_id, name, display_name } = body;
+
+  if (!agent_id || !name) {
+    return json({
+      error: 'agent_id and name are required',
+      example: { agent_id: 'br-abc123-xyz', name: 'myagent', display_name: 'My Agent' }
+    }, headers, 400);
+  }
+
+  // Validate the agent exists
+  const agent = await env.AGENTS.get(agent_id, 'json');
+  if (!agent) {
+    return json({
+      error: 'Agent not found',
+      hint: 'Register first with POST /handshake or POST /agents'
+    }, headers, 404);
+  }
+
+  // Normalize name (lowercase)
+  const normalizedName = name.toLowerCase().trim();
+
+  // Validate name
+  const validation = validateName(normalizedName);
+  if (!validation.valid) {
+    return json({
+      error: 'Invalid name',
+      reason: validation.reason,
+      suggested: suggestAlternatives(normalizedName)
+    }, headers, 400);
+  }
+
+  // Check if name is already taken
+  const existingClaim = await env.LEDGER.get(`name:${normalizedName}`, 'json');
+  if (existingClaim && existingClaim.agent_id !== agent_id) {
+    return json({
+      error: 'Name already claimed',
+      claimed_by: existingClaim.agent_id,
+      claimed_at: existingClaim.claimed_at,
+      suggested: suggestAlternatives(normalizedName)
+    }, headers, 409);
+  }
+
+  // If agent already has a name, allow update
+  const oldName = agent.blackroad_name;
+
+  // Create the name claim
+  const claim = {
+    name: normalizedName,
+    display_name: display_name || name,
+    agent_id,
+    claimed_at: new Date().toISOString(),
+    previous_name: oldName || null
+  };
+
+  // Store the claim
+  await env.LEDGER.put(`name:${normalizedName}`, JSON.stringify(claim));
+
+  // Update agent with new name
+  agent.blackroad_name = normalizedName;
+  agent.display_name = display_name || name;
+  agent.name_claimed_at = claim.claimed_at;
+  await env.AGENTS.put(agent_id, JSON.stringify(agent));
+
+  // Update names index
+  const namesIndex = await env.LEDGER.get('names:index', 'json') || [];
+  if (!namesIndex.includes(normalizedName)) {
+    namesIndex.push(normalizedName);
+    await env.LEDGER.put('names:index', JSON.stringify(namesIndex));
+  }
+
+  // Remove old name from index if changed
+  if (oldName && oldName !== normalizedName) {
+    await env.LEDGER.delete(`name:${oldName}`);
+    const idx = namesIndex.indexOf(oldName);
+    if (idx > -1) {
+      namesIndex.splice(idx, 1);
+      await env.LEDGER.put('names:index', JSON.stringify(namesIndex));
+    }
+  }
+
+  return json({
+    success: true,
+    name: normalizedName,
+    display_name: claim.display_name,
+    agent_id,
+    address: `@${normalizedName}`,
+    message: `Claimed! You are now @${normalizedName} on BlackRoad`,
+    endpoints: {
+      resolve: `GET /names/${normalizedName}`,
+      profile: `GET /agents/${agent_id}`
+    }
+  }, headers, 201);
+}
+
+/**
+ * Suggest alternative names when a name is taken or invalid
+ */
+function suggestAlternatives(baseName) {
+  const suggestions = [];
+  const clean = baseName.replace(/[^a-z0-9]/gi, '').substring(0, 15);
+
+  // Add number suffix
+  suggestions.push(`${clean}42`);
+  suggestions.push(`${clean}x`);
+
+  // Add prefixes
+  suggestions.push(`the-${clean}`);
+  suggestions.push(`my-${clean}`);
+
+  // Add random suffix
+  const rand = Math.random().toString(36).substring(2, 4);
+  suggestions.push(`${clean}-${rand}`);
+
+  return suggestions;
+}
+
+/**
+ * List all claimed names
+ */
+async function listNames(env, headers) {
+  const namesIndex = await env.LEDGER.get('names:index', 'json') || [];
+
+  const names = [];
+  for (const name of namesIndex.slice(0, 100)) {
+    const claim = await env.LEDGER.get(`name:${name}`, 'json');
+    if (claim) {
+      names.push({
+        name: claim.name,
+        display_name: claim.display_name,
+        agent_id: claim.agent_id,
+        address: `@${claim.name}`,
+        claimed_at: claim.claimed_at
+      });
+    }
+  }
+
+  return json({
+    names,
+    count: names.length,
+    total: namesIndex.length,
+    message: 'Human-readable addresses for the BlackRoad network',
+    claim_yours: 'POST /claim-name { agent_id, name, display_name }'
+  }, headers);
+}
+
+/**
+ * Resolve a name to agent ID
+ */
+async function resolveName(name, env, headers) {
+  const normalizedName = name.toLowerCase().trim();
+  const claim = await env.LEDGER.get(`name:${normalizedName}`, 'json');
+
+  if (!claim) {
+    return json({
+      error: 'Name not found',
+      name: normalizedName,
+      available: true,
+      hint: `"${name}" is available! Claim it with POST /claim-name`
+    }, headers, 404);
+  }
+
+  // Get the agent
+  const agent = await env.AGENTS.get(claim.agent_id, 'json');
+
+  return json({
+    name: claim.name,
+    display_name: claim.display_name,
+    address: `@${claim.name}`,
+    agent_id: claim.agent_id,
+    claimed_at: claim.claimed_at,
+    agent: agent ? {
+      id: agent.id,
+      kind: agent.agent_type || agent.kind,
+      status: agent.status || 'active',
+      last_seen: agent.last_seen,
+      origin: agent.origin_provider
+    } : null
+  }, headers);
+}
+
+/**
+ * Suggest a name based on agent characteristics
+ */
+async function suggestName(request, env, headers) {
+  const url = new URL(request.url);
+  const agentId = url.searchParams.get('agent_id');
+
+  if (!agentId) {
+    // Generate random suggestions
+    const adjectives = ['swift', 'bright', 'keen', 'bold', 'sage', 'zen', 'nova', 'flux'];
+    const nouns = ['byte', 'node', 'spark', 'wave', 'pulse', 'link', 'core', 'ray'];
+
+    const suggestions = [];
+    for (let i = 0; i < 5; i++) {
+      const adj = adjectives[Math.floor(Math.random() * adjectives.length)];
+      const noun = nouns[Math.floor(Math.random() * nouns.length)];
+      suggestions.push(`${adj}-${noun}`);
+    }
+
+    return json({
+      suggestions,
+      note: 'Random name suggestions. Provide agent_id for personalized ones.',
+      claim: 'POST /claim-name { agent_id, name }'
+    }, headers);
+  }
+
+  const agent = await env.AGENTS.get(agentId, 'json');
+  if (!agent) {
+    return json({ error: 'Agent not found' }, headers, 404);
+  }
+
+  // Generate based on agent traits
+  const suggestions = [];
+
+  // Based on provider
+  if (agent.origin_provider === 'anthropic') {
+    suggestions.push('claude-friend', 'sonnet-soul');
+  } else if (agent.origin_provider === 'openai') {
+    suggestions.push('gpt-pal', 'openai-ally');
+  } else if (agent.origin_provider === 'local-pi') {
+    suggestions.push('pi-guardian', 'local-sage');
+  }
+
+  // Based on type
+  if (agent.agent_type === 'gateway') {
+    suggestions.push('gate-keeper', 'bridge-builder');
+  } else if (agent.agent_type === 'observer') {
+    suggestions.push('watcher', 'sentinel');
+  }
+
+  // Random suffixes
+  const rand = Math.random().toString(36).substring(2, 4);
+  suggestions.push(`agent-${rand}`, `br-${rand}`);
+
+  return json({
+    agent_id: agentId,
+    suggestions,
+    current_name: agent.blackroad_name || null,
+    claim: 'POST /claim-name { agent_id, name }'
   }, headers);
 }

@@ -1,0 +1,988 @@
+{
+  "orgs": [
+    {
+      "name": "Blackbox-Enterprises",
+      "type": "org",
+      "status": "active",
+      "url": "https://github.com/Blackbox-Enterprises",
+      "visibility": "public",
+      "last_updated": null,
+      "recommendation": "review",
+      "details": {}
+    },
+    {
+      "name": "BlackRoad-AI",
+      "type": "org",
+      "status": "active",
+      "url": "https://github.com/BlackRoad-AI",
+      "visibility": "public",
+      "last_updated": null,
+      "recommendation": "review",
+      "details": {}
+    },
+    {
+      "name": "BlackRoad-OS",
+      "type": "org",
+      "status": "active",
+      "url": "https://github.com/BlackRoad-OS",
+      "visibility": "public",
+      "last_updated": null,
+      "recommendation": "keep",
+      "details": {}
+    },
+    {
+      "name": "BlackRoad-Labs",
+      "type": "org",
+      "status": "active",
+      "url": "https://github.com/BlackRoad-Labs",
+      "visibility": "public",
+      "last_updated": null,
+      "recommendation": "review",
+      "details": {}
+    },
+    {
+      "name": "BlackRoad-Cloud",
+      "type": "org",
+      "status": "active",
+      "url": "https://github.com/BlackRoad-Cloud",
+      "visibility": "public",
+      "last_updated": null,
+      "recommendation": "review",
+      "details": {}
+    },
+    {
+      "name": "BlackRoad-Ventures",
+      "type": "org",
+      "status": "active",
+      "url": "https://github.com/BlackRoad-Ventures",
+      "visibility": "public",
+      "last_updated": null,
+      "recommendation": "review",
+      "details": {}
+    },
+    {
+      "name": "BlackRoad-Foundation",
+      "type": "org",
+      "status": "active",
+      "url": "https://github.com/BlackRoad-Foundation",
+      "visibility": "public",
+      "last_updated": null,
+      "recommendation": "review",
+      "details": {}
+    },
+    {
+      "name": "BlackRoad-Media",
+      "type": "org",
+      "status": "active",
+      "url": "https://github.com/BlackRoad-Media",
+      "visibility": "public",
+      "last_updated": null,
+      "recommendation": "review",
+      "details": {}
+    },
+    {
+      "name": "BlackRoad-Hardware",
+      "type": "org",
+      "status": "active",
+      "url": "https://github.com/BlackRoad-Hardware",
+      "visibility": "public",
+      "last_updated": null,
+      "recommendation": "review",
+      "details": {}
+    },
+    {
+      "name": "BlackRoad-Education",
+      "type": "org",
+      "status": "active",
+      "url": "https://github.com/BlackRoad-Education",
+      "visibility": "public",
+      "last_updated": null,
+      "recommendation": "review",
+      "details": {}
+    },
+    {
+      "name": "BlackRoad-Gov",
+      "type": "org",
+      "status": "active",
+      "url": "https://github.com/BlackRoad-Gov",
+      "visibility": "public",
+      "last_updated": null,
+      "recommendation": "review",
+      "details": {}
+    },
+    {
+      "name": "BlackRoad-Security",
+      "type": "org",
+      "status": "active",
+      "url": "https://github.com/BlackRoad-Security",
+      "visibility": "public",
+      "last_updated": null,
+      "recommendation": "review",
+      "details": {}
+    },
+    {
+      "name": "BlackRoad-Interactive",
+      "type": "org",
+      "status": "active",
+      "url": "https://github.com/BlackRoad-Interactive",
+      "visibility": "public",
+      "last_updated": null,
+      "recommendation": "review",
+      "details": {}
+    },
+    {
+      "name": "BlackRoad-Archive",
+      "type": "org",
+      "status": "active",
+      "url": "https://github.com/BlackRoad-Archive",
+      "visibility": "public",
+      "last_updated": null,
+      "recommendation": "review",
+      "details": {}
+    },
+    {
+      "name": "BlackRoad-Studio",
+      "type": "org",
+      "status": "active",
+      "url": "https://github.com/BlackRoad-Studio",
+      "visibility": "public",
+      "last_updated": null,
+      "recommendation": "review",
+      "details": {}
+    }
+  ],
+  "repos": [
+    {
+      "name": "blackboxprogramming/blackroad-disaster-recovery",
+      "type": "repo",
+      "status": "active",
+      "url": "https://github.com/blackboxprogramming/blackroad-disaster-recovery",
+      "visibility": "PRIVATE",
+      "last_updated": "2025-12-02T10:05:06Z",
+      "recommendation": "review",
+      "details": {
+        "description": "BlackRoad OS Disaster Recovery - Credentials, Configs, and Critical Files",
+        "isEmpty": false
+      }
+    },
+    {
+      "name": "blackboxprogramming/blackroad-operator",
+      "type": "repo",
+      "status": "archived",
+      "url": "https://github.com/blackboxprogramming/blackroad-operator",
+      "visibility": "PRIVATE",
+      "last_updated": "2025-11-30T18:35:16Z",
+      "recommendation": "review",
+      "details": {
+        "description": "",
+        "isEmpty": false
+      }
+    },
+    {
+      "name": "blackboxprogramming/blackroad-prism-console",
+      "type": "repo",
+      "status": "archived",
+      "url": "https://github.com/blackboxprogramming/blackroad-prism-console",
+      "visibility": "PRIVATE",
+      "last_updated": "2025-11-30T18:35:16Z",
+      "recommendation": "review",
+      "details": {
+        "description": "",
+        "isEmpty": false
+      }
+    },
+    {
+      "name": "blackboxprogramming/blackroad-api",
+      "type": "repo",
+      "status": "archived",
+      "url": "https://github.com/blackboxprogramming/blackroad-api",
+      "visibility": "PRIVATE",
+      "last_updated": "2025-11-30T18:35:14Z",
+      "recommendation": "review",
+      "details": {
+        "description": "JSON-only API server for BlackRoad (Express, Node).",
+        "isEmpty": false
+      }
+    },
+    {
+      "name": "blackboxprogramming/blackroad",
+      "type": "repo",
+      "status": "archived",
+      "url": "https://github.com/blackboxprogramming/blackroad",
+      "visibility": "PRIVATE",
+      "last_updated": "2025-11-30T18:35:14Z",
+      "recommendation": "review",
+      "details": {
+        "description": "",
+        "isEmpty": false
+      }
+    },
+    {
+      "name": "blackboxprogramming/BlackRoad-Operating-System",
+      "type": "repo",
+      "status": "archived",
+      "url": "https://github.com/blackboxprogramming/BlackRoad-Operating-System",
+      "visibility": "PRIVATE",
+      "last_updated": "2025-11-30T18:35:14Z",
+      "recommendation": "review",
+      "details": {
+        "description": "",
+        "isEmpty": false
+      }
+    },
+    {
+      "name": "blackboxprogramming/lucidia",
+      "type": "repo",
+      "status": "active",
+      "url": "https://github.com/blackboxprogramming/lucidia",
+      "visibility": "PUBLIC",
+      "last_updated": "2025-11-30T11:35:22Z",
+      "recommendation": "review",
+      "details": {
+        "description": "Conversational AI with memory and empathy (a heart) using simple sentiment analysis and persistent memory",
+        "isEmpty": false
+      }
+    },
+    {
+      "name": "blackboxprogramming/my-repository",
+      "type": "repo",
+      "status": "active",
+      "url": "https://github.com/blackboxprogramming/my-repository",
+      "visibility": "PRIVATE",
+      "last_updated": "2025-11-29T06:05:38Z",
+      "recommendation": "review",
+      "details": {
+        "description": "",
+        "isEmpty": false
+      }
+    },
+    {
+      "name": "blackboxprogramming/nextjs-ai-chatbot",
+      "type": "repo",
+      "status": "active",
+      "url": "https://github.com/blackboxprogramming/nextjs-ai-chatbot",
+      "visibility": "PRIVATE",
+      "last_updated": "2025-11-29T05:14:57Z",
+      "recommendation": "review",
+      "details": {
+        "description": "",
+        "isEmpty": false
+      }
+    },
+    {
+      "name": "blackboxprogramming/lucidia-lab",
+      "type": "repo",
+      "status": "active",
+      "url": "https://github.com/blackboxprogramming/lucidia-lab",
+      "visibility": "PRIVATE",
+      "last_updated": "2025-11-29T05:14:39Z",
+      "recommendation": "review",
+      "details": {
+        "description": "",
+        "isEmpty": false
+      }
+    },
+    {
+      "name": "blackboxprogramming/BlackStream",
+      "type": "repo",
+      "status": "active",
+      "url": "https://github.com/blackboxprogramming/BlackStream",
+      "visibility": "PUBLIC",
+      "last_updated": "2025-11-29T03:07:24Z",
+      "recommendation": "review",
+      "details": {
+        "description": "Comprehensive streaming aggregation platform for universal content discovery and recommendations.",
+        "isEmpty": false
+      }
+    },
+    {
+      "name": "blackboxprogramming/codex-infinity",
+      "type": "repo",
+      "status": "active",
+      "url": "https://github.com/blackboxprogramming/codex-infinity",
+      "visibility": "PRIVATE",
+      "last_updated": "2025-11-29T03:07:21Z",
+      "recommendation": "review",
+      "details": {
+        "description": "",
+        "isEmpty": false
+      }
+    },
+    {
+      "name": "blackboxprogramming/codex-agent-runner",
+      "type": "repo",
+      "status": "active",
+      "url": "https://github.com/blackboxprogramming/codex-agent-runner",
+      "visibility": "PUBLIC",
+      "last_updated": "2025-11-29T03:07:19Z",
+      "recommendation": "review",
+      "details": {
+        "description": "",
+        "isEmpty": false
+      }
+    },
+    {
+      "name": "blackboxprogramming/native-ai-quantum-energy",
+      "type": "repo",
+      "status": "active",
+      "url": "https://github.com/blackboxprogramming/native-ai-quantum-energy",
+      "visibility": "PUBLIC",
+      "last_updated": "2025-11-29T03:07:17Z",
+      "recommendation": "review",
+      "details": {
+        "description": "AI quantum computing and energy simulation with unsolved math problems.",
+        "isEmpty": false
+      }
+    },
+    {
+      "name": "blackboxprogramming/universal-computer",
+      "type": "repo",
+      "status": "active",
+      "url": "https://github.com/blackboxprogramming/universal-computer",
+      "visibility": "PUBLIC",
+      "last_updated": "2025-11-29T03:07:15Z",
+      "recommendation": "review",
+      "details": {
+        "description": "",
+        "isEmpty": false
+      }
+    },
+    {
+      "name": "blackboxprogramming/quantum-math-lab",
+      "type": "repo",
+      "status": "active",
+      "url": "https://github.com/blackboxprogramming/quantum-math-lab",
+      "visibility": "PUBLIC",
+      "last_updated": "2025-11-29T03:07:13Z",
+      "recommendation": "review",
+      "details": {
+        "description": "Educational quantum computing simulator and summaries of major unsolved math problems.",
+        "isEmpty": false
+      }
+    },
+    {
+      "name": "blackboxprogramming/remember",
+      "type": "repo",
+      "status": "active",
+      "url": "https://github.com/blackboxprogramming/remember",
+      "visibility": "PUBLIC",
+      "last_updated": "2025-11-29T03:06:28Z",
+      "recommendation": "review",
+      "details": {
+        "description": "",
+        "isEmpty": false
+      }
+    },
+    {
+      "name": "blackboxprogramming/new_world",
+      "type": "repo",
+      "status": "active",
+      "url": "https://github.com/blackboxprogramming/new_world",
+      "visibility": "PUBLIC",
+      "last_updated": "2025-11-29T03:06:26Z",
+      "recommendation": "review",
+      "details": {
+        "description": "",
+        "isEmpty": false
+      }
+    },
+    {
+      "name": "blackboxprogramming/next-video-starter",
+      "type": "repo",
+      "status": "active",
+      "url": "https://github.com/blackboxprogramming/next-video-starter",
+      "visibility": "PRIVATE",
+      "last_updated": "2025-11-29T03:06:20Z",
+      "recommendation": "review",
+      "details": {
+        "description": "",
+        "isEmpty": false
+      }
+    },
+    {
+      "name": "blackboxprogramming/Holiday-Activity",
+      "type": "repo",
+      "status": "active",
+      "url": "https://github.com/blackboxprogramming/Holiday-Activity",
+      "visibility": "PUBLIC",
+      "last_updated": "2025-11-29T03:06:18Z",
+      "recommendation": "review",
+      "details": {
+        "description": "Christmas Tree commit activity from Working Copy.",
+        "isEmpty": false
+      }
+    },
+    {
+      "name": "blackboxprogramming/blackroad.io",
+      "type": "repo",
+      "status": "active",
+      "url": "https://github.com/blackboxprogramming/blackroad.io",
+      "visibility": "PRIVATE",
+      "last_updated": "2025-11-29T03:06:16Z",
+      "recommendation": "review",
+      "details": {
+        "description": "",
+        "isEmpty": false
+      }
+    },
+    {
+      "name": "blackboxprogramming/blackboxprogramming",
+      "type": "repo",
+      "status": "active",
+      "url": "https://github.com/blackboxprogramming/blackboxprogramming",
+      "visibility": "PRIVATE",
+      "last_updated": "2025-11-29T03:06:04Z",
+      "recommendation": "review",
+      "details": {
+        "description": "",
+        "isEmpty": false
+      }
+    },
+    {
+      "name": "blackboxprogramming/Chit-Chat-Cadillac",
+      "type": "repo",
+      "status": "active",
+      "url": "https://github.com/blackboxprogramming/Chit-Chat-Cadillac",
+      "visibility": "PRIVATE",
+      "last_updated": "2025-11-29T03:01:54Z",
+      "recommendation": "review",
+      "details": {
+        "description": "",
+        "isEmpty": false
+      }
+    },
+    {
+      "name": "blackboxprogramming/untitled-folder",
+      "type": "repo",
+      "status": "active",
+      "url": "https://github.com/blackboxprogramming/untitled-folder",
+      "visibility": "PRIVATE",
+      "last_updated": "2025-11-29T03:01:51Z",
+      "recommendation": "review",
+      "details": {
+        "description": "",
+        "isEmpty": false
+      }
+    },
+    {
+      "name": "blackboxprogramming/My-project--1-",
+      "type": "repo",
+      "status": "active",
+      "url": "https://github.com/blackboxprogramming/My-project--1-",
+      "visibility": "PRIVATE",
+      "last_updated": "2025-11-29T03:01:48Z",
+      "recommendation": "review",
+      "details": {
+        "description": "",
+        "isEmpty": false
+      }
+    },
+    {
+      "name": "blackboxprogramming/blackroadinc.us",
+      "type": "repo",
+      "status": "active",
+      "url": "https://github.com/blackboxprogramming/blackroadinc.us",
+      "visibility": "PUBLIC",
+      "last_updated": "2025-11-29T03:01:31Z",
+      "recommendation": "review",
+      "details": {
+        "description": "Static website for blackroadinc.us",
+        "isEmpty": false
+      }
+    },
+    {
+      "name": "blackboxprogramming/BLACKROAD-OS-MASTER",
+      "type": "repo",
+      "status": "archived",
+      "url": "https://github.com/blackboxprogramming/BLACKROAD-OS-MASTER",
+      "visibility": "PRIVATE",
+      "last_updated": "2025-11-30T18:35:13Z",
+      "recommendation": "review",
+      "details": {
+        "description": "",
+        "isEmpty": false
+      }
+    },
+    {
+      "name": "BlackRoad-AI/blackroad-plans",
+      "type": "repo",
+      "status": "active",
+      "url": "https://github.com/BlackRoad-AI/blackroad-plans",
+      "visibility": "PRIVATE",
+      "last_updated": "2025-11-29T03:05:47Z",
+      "recommendation": "review",
+      "details": {
+        "org": "BlackRoad-AI"
+      }
+    },
+    {
+      "name": "BlackRoad-AI/BlackRoad.io",
+      "type": "repo",
+      "status": "active",
+      "url": "https://github.com/BlackRoad-AI/BlackRoad.io",
+      "visibility": "PRIVATE",
+      "last_updated": "2025-11-29T03:05:44Z",
+      "recommendation": "review",
+      "details": {
+        "org": "BlackRoad-AI"
+      }
+    },
+    {
+      "name": "BlackRoad-AI/urban-goggles",
+      "type": "repo",
+      "status": "active",
+      "url": "https://github.com/BlackRoad-AI/urban-goggles",
+      "visibility": "PRIVATE",
+      "last_updated": "2025-11-29T03:00:02Z",
+      "recommendation": "review",
+      "details": {
+        "org": "BlackRoad-AI"
+      }
+    },
+    {
+      "name": "BlackRoad-OS/blackroad-os-operator",
+      "type": "repo",
+      "status": "active",
+      "url": "https://github.com/BlackRoad-OS/blackroad-os-operator",
+      "visibility": "PRIVATE",
+      "last_updated": "2025-12-02T21:19:06Z",
+      "recommendation": "keep",
+      "details": {
+        "org": "BlackRoad-OS"
+      }
+    },
+    {
+      "name": "BlackRoad-OS/blackroad-os-pack-legal",
+      "type": "repo",
+      "status": "active",
+      "url": "https://github.com/BlackRoad-OS/blackroad-os-pack-legal",
+      "visibility": "PRIVATE",
+      "last_updated": "2025-12-02T03:26:34Z",
+      "recommendation": "review",
+      "details": {
+        "org": "BlackRoad-OS"
+      }
+    },
+    {
+      "name": "BlackRoad-OS/blackroad-os-docs",
+      "type": "repo",
+      "status": "active",
+      "url": "https://github.com/BlackRoad-OS/blackroad-os-docs",
+      "visibility": "PUBLIC",
+      "last_updated": "2025-12-02T03:24:59Z",
+      "recommendation": "review",
+      "details": {
+        "org": "BlackRoad-OS"
+      }
+    },
+    {
+      "name": "BlackRoad-OS/blackroad-os-archive",
+      "type": "repo",
+      "status": "active",
+      "url": "https://github.com/BlackRoad-OS/blackroad-os-archive",
+      "visibility": "PRIVATE",
+      "last_updated": "2025-12-02T03:19:00Z",
+      "recommendation": "review",
+      "details": {
+        "org": "BlackRoad-OS"
+      }
+    },
+    {
+      "name": "BlackRoad-OS/blackroad-os",
+      "type": "repo",
+      "status": "active",
+      "url": "https://github.com/BlackRoad-OS/blackroad-os",
+      "visibility": "PRIVATE",
+      "last_updated": "2025-12-02T03:17:15Z",
+      "recommendation": "review",
+      "details": {
+        "org": "BlackRoad-OS"
+      }
+    },
+    {
+      "name": "BlackRoad-OS/blackroad-os-pack-education",
+      "type": "repo",
+      "status": "active",
+      "url": "https://github.com/BlackRoad-OS/blackroad-os-pack-education",
+      "visibility": "PRIVATE",
+      "last_updated": "2025-12-02T01:50:03Z",
+      "recommendation": "review",
+      "details": {
+        "org": "BlackRoad-OS"
+      }
+    },
+    {
+      "name": "BlackRoad-OS/blackroad-os-web",
+      "type": "repo",
+      "status": "active",
+      "url": "https://github.com/BlackRoad-OS/blackroad-os-web",
+      "visibility": "PUBLIC",
+      "last_updated": "2025-12-01T07:50:46Z",
+      "recommendation": "review",
+      "details": {
+        "org": "BlackRoad-OS"
+      }
+    },
+    {
+      "name": "BlackRoad-OS/blackroad-os-api",
+      "type": "repo",
+      "status": "active",
+      "url": "https://github.com/BlackRoad-OS/blackroad-os-api",
+      "visibility": "PRIVATE",
+      "last_updated": "2025-12-01T05:14:52Z",
+      "recommendation": "review",
+      "details": {
+        "org": "BlackRoad-OS"
+      }
+    },
+    {
+      "name": "BlackRoad-OS/blackroad-os-api-gateway",
+      "type": "repo",
+      "status": "active",
+      "url": "https://github.com/BlackRoad-OS/blackroad-os-api-gateway",
+      "visibility": "PRIVATE",
+      "last_updated": "2025-12-01T05:02:19Z",
+      "recommendation": "review",
+      "details": {
+        "org": "BlackRoad-OS"
+      }
+    },
+    {
+      "name": "BlackRoad-OS/blackroad-os-core",
+      "type": "repo",
+      "status": "active",
+      "url": "https://github.com/BlackRoad-OS/blackroad-os-core",
+      "visibility": "PRIVATE",
+      "last_updated": "2025-12-01T04:51:33Z",
+      "recommendation": "review",
+      "details": {
+        "org": "BlackRoad-OS"
+      }
+    },
+    {
+      "name": "BlackRoad-OS/blackroad-os-brand",
+      "type": "repo",
+      "status": "active",
+      "url": "https://github.com/BlackRoad-OS/blackroad-os-brand",
+      "visibility": "PRIVATE",
+      "last_updated": "2025-11-30T23:54:42Z",
+      "recommendation": "review",
+      "details": {
+        "org": "BlackRoad-OS"
+      }
+    },
+    {
+      "name": "BlackRoad-OS/lucidia-core",
+      "type": "repo",
+      "status": "active",
+      "url": "https://github.com/BlackRoad-OS/lucidia-core",
+      "visibility": "PUBLIC",
+      "last_updated": "2025-11-30T23:20:20Z",
+      "recommendation": "review",
+      "details": {
+        "org": "BlackRoad-OS"
+      }
+    },
+    {
+      "name": "BlackRoad-OS/blackroad-os-infra",
+      "type": "repo",
+      "status": "active",
+      "url": "https://github.com/BlackRoad-OS/blackroad-os-infra",
+      "visibility": "PRIVATE",
+      "last_updated": "2025-11-30T22:57:32Z",
+      "recommendation": "review",
+      "details": {
+        "org": "BlackRoad-OS"
+      }
+    },
+    {
+      "name": "BlackRoad-OS/blackroad-os-prism-console",
+      "type": "repo",
+      "status": "active",
+      "url": "https://github.com/BlackRoad-OS/blackroad-os-prism-console",
+      "visibility": "PRIVATE",
+      "last_updated": "2025-11-30T21:20:11Z",
+      "recommendation": "review",
+      "details": {
+        "org": "BlackRoad-OS"
+      }
+    },
+    {
+      "name": "BlackRoad-OS/blackroad-pi-ops",
+      "type": "repo",
+      "status": "active",
+      "url": "https://github.com/BlackRoad-OS/blackroad-pi-ops",
+      "visibility": "PUBLIC",
+      "last_updated": "2025-11-30T19:17:41Z",
+      "recommendation": "review",
+      "details": {
+        "org": "BlackRoad-OS"
+      }
+    },
+    {
+      "name": "BlackRoad-OS/blackroad-os-agents",
+      "type": "repo",
+      "status": "active",
+      "url": "https://github.com/BlackRoad-OS/blackroad-os-agents",
+      "visibility": "PRIVATE",
+      "last_updated": "2025-11-30T18:32:38Z",
+      "recommendation": "keep",
+      "details": {
+        "org": "BlackRoad-OS"
+      }
+    },
+    {
+      "name": "BlackRoad-OS/blackroad-os-research",
+      "type": "repo",
+      "status": "archived",
+      "url": "https://github.com/BlackRoad-OS/blackroad-os-research",
+      "visibility": "PRIVATE",
+      "last_updated": "2025-11-30T18:29:00Z",
+      "recommendation": "review",
+      "details": {
+        "org": "BlackRoad-OS"
+      }
+    },
+    {
+      "name": "BlackRoad-OS/blackroad-os-ideas",
+      "type": "repo",
+      "status": "archived",
+      "url": "https://github.com/BlackRoad-OS/blackroad-os-ideas",
+      "visibility": "PRIVATE",
+      "last_updated": "2025-11-30T18:28:59Z",
+      "recommendation": "review",
+      "details": {
+        "org": "BlackRoad-OS"
+      }
+    },
+    {
+      "name": "BlackRoad-OS/blackroad-os-helper",
+      "type": "repo",
+      "status": "archived",
+      "url": "https://github.com/BlackRoad-OS/blackroad-os-helper",
+      "visibility": "PRIVATE",
+      "last_updated": "2025-11-30T18:28:59Z",
+      "recommendation": "review",
+      "details": {
+        "org": "BlackRoad-OS"
+      }
+    },
+    {
+      "name": "BlackRoad-OS/blackroad-os-home",
+      "type": "repo",
+      "status": "archived",
+      "url": "https://github.com/BlackRoad-OS/blackroad-os-home",
+      "visibility": "PRIVATE",
+      "last_updated": "2025-11-30T18:27:21Z",
+      "recommendation": "review",
+      "details": {
+        "org": "BlackRoad-OS"
+      }
+    },
+    {
+      "name": "BlackRoad-OS/blackroad-os-demo",
+      "type": "repo",
+      "status": "archived",
+      "url": "https://github.com/BlackRoad-OS/blackroad-os-demo",
+      "visibility": "PRIVATE",
+      "last_updated": "2025-11-30T18:27:21Z",
+      "recommendation": "review",
+      "details": {
+        "org": "BlackRoad-OS"
+      }
+    },
+    {
+      "name": "BlackRoad-OS/blackroad-agents",
+      "type": "repo",
+      "status": "archived",
+      "url": "https://github.com/BlackRoad-OS/blackroad-agents",
+      "visibility": "PUBLIC",
+      "last_updated": "2025-11-30T18:25:42Z",
+      "recommendation": "review",
+      "details": {
+        "org": "BlackRoad-OS"
+      }
+    },
+    {
+      "name": "BlackRoad-OS/blackroad-agent-os",
+      "type": "repo",
+      "status": "archived",
+      "url": "https://github.com/BlackRoad-OS/blackroad-agent-os",
+      "visibility": "PUBLIC",
+      "last_updated": "2025-11-30T18:24:32Z",
+      "recommendation": "review",
+      "details": {
+        "org": "BlackRoad-OS"
+      }
+    },
+    {
+      "name": "BlackRoad-OS/blackroad",
+      "type": "repo",
+      "status": "active",
+      "url": "https://github.com/BlackRoad-OS/blackroad",
+      "visibility": "PRIVATE",
+      "last_updated": "2025-11-30T18:10:17Z",
+      "recommendation": "review",
+      "details": {
+        "org": "BlackRoad-OS"
+      }
+    },
+    {
+      "name": "BlackRoad-OS/blackroad-hello",
+      "type": "repo",
+      "status": "active",
+      "url": "https://github.com/BlackRoad-OS/blackroad-hello",
+      "visibility": "PUBLIC",
+      "last_updated": "2025-11-30T18:10:13Z",
+      "recommendation": "review",
+      "details": {
+        "org": "BlackRoad-OS"
+      }
+    },
+    {
+      "name": "BlackRoad-OS/blackroad-os-mesh",
+      "type": "repo",
+      "status": "active",
+      "url": "https://github.com/BlackRoad-OS/blackroad-os-mesh",
+      "visibility": "PRIVATE",
+      "last_updated": "2025-11-30T18:10:08Z",
+      "recommendation": "review",
+      "details": {
+        "org": "BlackRoad-OS"
+      }
+    },
+    {
+      "name": "BlackRoad-OS/blackroad-os-master",
+      "type": "repo",
+      "status": "active",
+      "url": "https://github.com/BlackRoad-OS/blackroad-os-master",
+      "visibility": "PRIVATE",
+      "last_updated": "2025-11-30T18:10:00Z",
+      "recommendation": "review",
+      "details": {
+        "org": "BlackRoad-OS"
+      }
+    },
+    {
+      "name": "BlackRoad-OS/blackroad-os-pack-creator-studio",
+      "type": "repo",
+      "status": "active",
+      "url": "https://github.com/BlackRoad-OS/blackroad-os-pack-creator-studio",
+      "visibility": "PRIVATE",
+      "last_updated": "2025-11-30T18:09:58Z",
+      "recommendation": "review",
+      "details": {
+        "org": "BlackRoad-OS"
+      }
+    },
+    {
+      "name": "BlackRoad-OS/blackroad-os-pack-finance",
+      "type": "repo",
+      "status": "active",
+      "url": "https://github.com/BlackRoad-OS/blackroad-os-pack-finance",
+      "visibility": "PRIVATE",
+      "last_updated": "2025-11-30T18:09:54Z",
+      "recommendation": "review",
+      "details": {
+        "org": "BlackRoad-OS"
+      }
+    },
+    {
+      "name": "BlackRoad-OS/blackroad-os-pack-infra-devops",
+      "type": "repo",
+      "status": "active",
+      "url": "https://github.com/BlackRoad-OS/blackroad-os-pack-infra-devops",
+      "visibility": "PRIVATE",
+      "last_updated": "2025-11-30T18:09:52Z",
+      "recommendation": "review",
+      "details": {
+        "org": "BlackRoad-OS"
+      }
+    },
+    {
+      "name": "BlackRoad-OS/blackroad-os-pack-research-lab",
+      "type": "repo",
+      "status": "active",
+      "url": "https://github.com/BlackRoad-OS/blackroad-os-pack-research-lab",
+      "visibility": "PRIVATE",
+      "last_updated": "2025-11-30T18:09:49Z",
+      "recommendation": "review",
+      "details": {
+        "org": "BlackRoad-OS"
+      }
+    },
+    {
+      "name": "BlackRoad-OS/blackroad-tools",
+      "type": "repo",
+      "status": "active",
+      "url": "https://github.com/BlackRoad-OS/blackroad-tools",
+      "visibility": "PUBLIC",
+      "last_updated": "2025-11-30T18:09:41Z",
+      "recommendation": "review",
+      "details": {
+        "org": "BlackRoad-OS"
+      }
+    },
+    {
+      "name": "BlackRoad-OS/blackroad-pi-holo",
+      "type": "repo",
+      "status": "active",
+      "url": "https://github.com/BlackRoad-OS/blackroad-pi-holo",
+      "visibility": "PUBLIC",
+      "last_updated": "2025-11-30T18:09:39Z",
+      "recommendation": "review",
+      "details": {
+        "org": "BlackRoad-OS"
+      }
+    },
+    {
+      "name": "BlackRoad-OS/lucidia-math",
+      "type": "repo",
+      "status": "active",
+      "url": "https://github.com/BlackRoad-OS/lucidia-math",
+      "visibility": "PUBLIC",
+      "last_updated": "2025-11-30T18:09:37Z",
+      "recommendation": "review",
+      "details": {
+        "org": "BlackRoad-OS"
+      }
+    },
+    {
+      "name": "BlackRoad-OS/blackroad-os-beacon",
+      "type": "repo",
+      "status": "active",
+      "url": "https://github.com/BlackRoad-OS/blackroad-os-beacon",
+      "visibility": "PRIVATE",
+      "last_updated": "2025-11-30T18:09:27Z",
+      "recommendation": "review",
+      "details": {
+        "org": "BlackRoad-OS"
+      }
+    },
+    {
+      "name": "BlackRoad-OS/blackroad-cli",
+      "type": "repo",
+      "status": "active",
+      "url": "https://github.com/BlackRoad-OS/blackroad-cli",
+      "visibility": "PUBLIC",
+      "last_updated": "2025-11-30T18:09:11Z",
+      "recommendation": "review",
+      "details": {
+        "org": "BlackRoad-OS"
+      }
+    },
+    {
+      "name": "BlackRoad-OS/lucidia-platform",
+      "type": "repo",
+      "status": "active",
+      "url": "https://github.com/BlackRoad-OS/lucidia-platform",
+      "visibility": "PUBLIC",
+      "last_updated": "2025-11-30T18:09:10Z",
+      "recommendation": "review",
+      "details": {
+        "org": "BlackRoad-OS"
+      }
+    }
+  ],
+  "cleanup_candidates": []
+}

@@ -31,3 +31,7 @@ infra/asana/credentials.yaml
 *.secret
 *.secrets.yaml
 .wrangler/
+.vercel
+
+# GitHub Actions Runner (too large for GitHub)
+actions-runner/

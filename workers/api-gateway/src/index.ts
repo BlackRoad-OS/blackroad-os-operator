@@ -170,6 +170,27 @@ async function withAnalytics(
 // ROUTES
 // ============================================
 
+// Root path - service info
+router.get('/', () => {
+  return new Response(JSON.stringify({
+    service: 'blackroad-api-gateway',
+    status: 'online',
+    version: '1.0.0',
+    timestamp: new Date().toISOString(),
+    owner: 'Alexa Louise Amundson',
+    endpoints: ['/health', '/version', '/v1/*'],
+    rate_limits: {
+      anonymous: '100 rpm',
+      free: '1000 rpm',
+      starter: '5000 rpm',
+      pro: '50000 rpm',
+      enterprise: '500000 rpm'
+    }
+  }, null, 2), {
+    headers: { 'Content-Type': 'application/json' },
+  });
+});
+
 // Health check
 router.get('/health', () => {
   return new Response(JSON.stringify({
@@ -206,11 +227,11 @@ router.all('/v1/*', async (request: IRequest, env: Env) => {
     }
   }
 
-  // Get backend URL
+  // Get backend URL - consolidated to single operator
   const backendUrls: Record<string, string | undefined> = {
-    operator: env.OPERATOR_URL || 'https://operator-ws.railway.app',
-    governance: env.GOVERNANCE_URL || 'https://gov-api.railway.app',
-    collaboration: env.COLLABORATION_URL || 'https://collab.railway.app',
+    operator: env.OPERATOR_URL || 'https://blackroad-cece-operator-production.up.railway.app',
+    governance: env.GOVERNANCE_URL || 'https://blackroad-cece-operator-production.up.railway.app',
+    collaboration: env.COLLABORATION_URL || 'https://blackroad-cece-operator-production.up.railway.app',
   };
 
   const backendUrl = backendUrls[backendKey];

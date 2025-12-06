@@ -300,6 +300,21 @@ export async function validateApiKey(
 const router = Router();
 
 /**
+ * Root path - service info
+ */
+router.get('/', () => {
+  return jsonResponse({
+    service: 'blackroad-auth',
+    status: 'online',
+    version: '1.0.0',
+    owner: 'Alexa Louise Amundson',
+    description: 'API Key Authentication System',
+    endpoints: ['/health', '/version', '/keys/create', '/keys/validate', '/keys/revoke', '/keys/list'],
+    tiers: Object.keys(RATE_LIMITS)
+  });
+});
+
+/**
  * Health check
  */
 router.get('/health', () => {

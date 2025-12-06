@@ -284,6 +284,22 @@ export default {
       return new Response(null, { headers: corsHeaders });
     }
 
+    // Root path - service info
+    if (path === '/' || path === '') {
+      return json({
+        service: 'blackroad-cipher',
+        status: 'online',
+        version: env.VERSION || '1.0.0',
+        owner: 'Alexa Louise Amundson',
+        description: 'BlackRoad Cipher - One Level Above Google',
+        level: 'ABOVE_GOOGLE',
+        algorithm: 'AES-256-GCM + Pattern Vectorization',
+        key_rotation: 'Hourly epochs',
+        endpoints: ['/health', '/epoch', '/encrypt', '/decrypt', '/rotate', '/vectorize', '/test'],
+        message: 'Your data, encrypted. External models cannot decrypt.'
+      }, corsHeaders);
+    }
+
     // Health check
     if (path === '/health') {
       return json({

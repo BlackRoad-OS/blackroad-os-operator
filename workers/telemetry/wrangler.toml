@@ -1,0 +1,27 @@
+# BlackRoad Telemetry Service
+# "All roads lead to BlackRoad"
+# @owner Alexa Louise Amundson
+# @system BlackRoad OS
+
+name = "blackroad-telemetry"
+main = "src/index.ts"
+compatibility_date = "2024-11-01"
+compatibility_flags = ["nodejs_compat"]
+
+workers_dev = true
+
+# Custom domain
+[[routes]]
+pattern = "telemetry.blackroad.io"
+custom_domain = true
+
+[vars]
+VERSION = "1.0.0"
+
+# KV namespace for telemetry storage
+[[kv_namespaces]]
+binding = "TELEMETRY_KV"
+id = "170866257568421baa3f65bffd45df65"
+
+[observability]
+enabled = true

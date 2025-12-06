@@ -326,6 +326,24 @@ export default {
     }
 
     try {
+      // Root path - service info
+      if (path === '/' || path === '') {
+        return json({
+          service: 'blackroad-billing',
+          status: 'online',
+          version: env.VERSION || '1.0.0',
+          owner: 'Alexa Louise Amundson',
+          description: 'Agent Billing & Usage Metering',
+          stripe_configured: !!env.STRIPE_SECRET_KEY,
+          endpoints: ['/health', '/customers', '/checkout', '/portal', '/usage', '/overview'],
+          pricing: {
+            api_call: '$0.001',
+            agent_registration: '$1.00',
+            premium_monthly: '$10.00'
+          }
+        }, corsHeaders);
+      }
+
       // Health check
       if (path === '/health') {
         return json({

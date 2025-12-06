@@ -1,0 +1,179 @@
+/**
+ * BlackRoad Brand Tokens
+ * Neon Palette System
+ *
+ * @owner Alexa Louise Amundson
+ * @system BlackRoad OS
+ */
+
+:root {
+  /* ═══════════════════════════════════════════════════════
+     PRIMARY NEON PALETTE
+     ═══════════════════════════════════════════════════════ */
+  --br-orange:        #FF9D00;
+  --br-deep-orange:   #FF6B00;
+  --br-hot-pink:      #FF0066;
+  --br-magenta:       #FF006B;
+  --br-purple:        #D600AA;
+  --br-violet:        #7700FF;
+  --br-blue:          #0066FF;
+
+  /* ═══════════════════════════════════════════════════════
+     BACKGROUND TONES
+     ═══════════════════════════════════════════════════════ */
+  --br-bg-dark:       #0b0b0f;
+  --br-bg-card:       #12121a;
+  --br-bg-elevated:   #1a1a24;
+  --br-bg-surface:    #22222e;
+
+  /* ═══════════════════════════════════════════════════════
+     GRADIENTS
+     ═══════════════════════════════════════════════════════ */
+  --br-gradient-hero: linear-gradient(
+    135deg,
+    var(--br-orange),
+    var(--br-hot-pink),
+    var(--br-violet),
+    var(--br-blue)
+  );
+
+  --br-gradient-sunset: linear-gradient(
+    90deg,
+    var(--br-orange),
+    var(--br-deep-orange),
+    var(--br-hot-pink),
+    var(--br-magenta)
+  );
+
+  --br-gradient-neon: linear-gradient(
+    180deg,
+    var(--br-violet),
+    var(--br-purple),
+    var(--br-magenta)
+  );
+
+  --br-gradient-cold: linear-gradient(
+    135deg,
+    var(--br-blue),
+    var(--br-violet)
+  );
+
+  /* ═══════════════════════════════════════════════════════
+     CTA / BUTTON COLORS
+     ═══════════════════════════════════════════════════════ */
+  --br-cta-primary:    var(--br-magenta);
+  --br-cta-hover:      var(--br-purple);
+  --br-cta-focus-ring: var(--br-blue);
+  --br-cta-active:     var(--br-violet);
+
+  /* ═══════════════════════════════════════════════════════
+     TEXT COLORS
+     ═══════════════════════════════════════════════════════ */
+  --br-text-primary:   #ffffff;
+  --br-text-secondary: rgba(255, 255, 255, 0.7);
+  --br-text-muted:     rgba(255, 255, 255, 0.5);
+  --br-text-accent:    var(--br-orange);
+
+  /* ═══════════════════════════════════════════════════════
+     GLOW EFFECTS (box-shadow / text-shadow)
+     ═══════════════════════════════════════════════════════ */
+  --br-glow-orange:  0 0 20px rgba(255, 157, 0, 0.5);
+  --br-glow-pink:    0 0 20px rgba(255, 0, 102, 0.5);
+  --br-glow-violet:  0 0 20px rgba(119, 0, 255, 0.5);
+  --br-glow-blue:    0 0 20px rgba(0, 102, 255, 0.5);
+  --br-glow-magenta: 0 0 20px rgba(255, 0, 107, 0.5);
+
+  /* ═══════════════════════════════════════════════════════
+     TYPOGRAPHY
+     ═══════════════════════════════════════════════════════ */
+  --br-font-mono:    'JetBrains Mono', 'Fira Code', 'SF Mono', monospace;
+  --br-font-sans:    'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --br-font-display: 'Space Grotesk', var(--br-font-sans);
+
+  /* ═══════════════════════════════════════════════════════
+     SPACING SCALE (8px base)
+     ═══════════════════════════════════════════════════════ */
+  --br-space-1:  8px;
+  --br-space-2:  16px;
+  --br-space-3:  24px;
+  --br-space-4:  32px;
+  --br-space-5:  40px;
+  --br-space-6:  48px;
+  --br-space-8:  64px;
+  --br-space-10: 80px;
+  --br-space-12: 96px;
+
+  /* ═══════════════════════════════════════════════════════
+     BORDER RADIUS
+     ═══════════════════════════════════════════════════════ */
+  --br-radius-sm:   4px;
+  --br-radius-md:   8px;
+  --br-radius-lg:   12px;
+  --br-radius-xl:   16px;
+  --br-radius-pill: 9999px;
+
+  /* ═══════════════════════════════════════════════════════
+     TRANSITIONS
+     ═══════════════════════════════════════════════════════ */
+  --br-ease-default:  cubic-bezier(0.4, 0, 0.2, 1);
+  --br-ease-bounce:   cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  --br-duration-fast: 150ms;
+  --br-duration-base: 250ms;
+  --br-duration-slow: 400ms;
+}
+
+/* ═══════════════════════════════════════════════════════
+   UTILITY CLASSES
+   ═══════════════════════════════════════════════════════ */
+
+.br-gradient-text {
+  background: var(--br-gradient-hero);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.br-glow-box {
+  box-shadow: var(--br-glow-magenta);
+}
+
+.br-btn-primary {
+  background: var(--br-cta-primary);
+  color: var(--br-text-primary);
+  border: none;
+  padding: var(--br-space-2) var(--br-space-4);
+  border-radius: var(--br-radius-md);
+  font-family: var(--br-font-mono);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--br-duration-fast) var(--br-ease-default);
+}
+
+.br-btn-primary:hover {
+  background: var(--br-cta-hover);
+  box-shadow: var(--br-glow-violet);
+}
+
+.br-btn-primary:focus {
+  outline: 2px solid var(--br-cta-focus-ring);
+  outline-offset: 2px;
+}
+
+.br-card {
+  background: var(--br-bg-card);
+  border-radius: var(--br-radius-lg);
+  padding: var(--br-space-4);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.br-hero-gradient {
+  background: var(--br-gradient-hero);
+}
+
+/* Grid overlay effect */
+.br-grid-overlay {
+  background-image:
+    linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px);
+  background-size: 64px 64px;
+}

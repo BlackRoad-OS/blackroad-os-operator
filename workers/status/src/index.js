@@ -19,9 +19,9 @@ const SERVICES = {
     'blackroad-console': 'https://blackroad-console.pages.dev',
   },
 
-  // Railway (dynamic backends)
+  // Railway (consolidated backend)
   railway: {
-    'docs-api': 'https://blackroad-os-docs-production.up.railway.app',
+    'cece-operator': 'https://blackroad-cece-operator-production.up.railway.app',
   },
 
   // Custom domains

@@ -1,0 +1,222 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8"/>
+<title>BlackRoad Neon Spiral — 2048px</title>
+<style>
+html, body {
+  margin: 0;
+  height: 100%;
+  background: #0b0b0f;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+canvas { max-width: 100%; height: auto; }
+.download-btn {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background: linear-gradient(135deg, #FF9D00, #FF0066, #7700FF);
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 14px;
+  cursor: pointer;
+  border-radius: 4px;
+}
+</style>
+</head>
+<body>
+<canvas id="c" width="2048" height="2048"></canvas>
+<button class="download-btn" onclick="download()">Download PNG</button>
+
+<script>
+const C = 2048;
+const ctx = document.getElementById('c').getContext('2d');
+
+// Background
+ctx.fillStyle = "#0b0b0f";
+ctx.fillRect(0, 0, C, C);
+
+// 1) Low-opacity grid (evokes "road" geometry)
+ctx.globalAlpha = 0.08;
+ctx.lineWidth = 1;
+ctx.strokeStyle = "#ffffff";
+const step = 64;
+for (let x = 0; x <= C; x += step) {
+  ctx.beginPath();
+  ctx.moveTo(x, 0);
+  ctx.lineTo(x, C);
+  ctx.stroke();
+}
+for (let y = 0; y <= C; y += step) {
+  ctx.beginPath();
+  ctx.moveTo(0, y);
+  ctx.lineTo(C, y);
+  ctx.stroke();
+}
+ctx.globalAlpha = 1;
+
+// 2) 8-segment neon gradient ramp (BlackRoad palette)
+const colors = [
+  "#FF9D00",  // Orange
+  "#FF6B00",  // Deep orange
+  "#FF0066",  // Hot pink
+  "#FF006B",  // Magenta pink
+  "#D600AA",  // Purple magenta
+  "#7700FF",  // Violet
+  "#0066FF",  // Blue
+  "#FF9D00"   // Loop back
+];
+
+// Create gradient canvas
+const gradCanvas = document.createElement('canvas');
+gradCanvas.width = C;
+gradCanvas.height = C;
+const gctx = gradCanvas.getContext('2d');
+const grad = gctx.createLinearGradient(0, 0, C, C);
+colors.forEach((c, i) => grad.addColorStop(i / (colors.length - 1), c));
+gctx.fillStyle = grad;
+gctx.fillRect(0, 0, C, C);
+
+// 3) Golden-ratio spiral mask (Phi)
+const phi = (1 + Math.sqrt(5)) / 2;
+const cx = C / 2, cy = C / 2;
+const mask = document.createElement('canvas');
+mask.width = C;
+mask.height = C;
+const m = mask.getContext('2d');
+
+// Fill mask with black (will hide gradient)
+m.fillStyle = "#000";
+m.fillRect(0, 0, C, C);
+
+// Cut out the spiral path (reveals gradient)
+m.globalCompositeOperation = "destination-out";
+m.strokeStyle = "#000";
+m.lineWidth = 32;
+m.lineCap = "round";
+m.lineJoin = "round";
+
+const k = Math.log(phi);
+let r = C * 0.42;
+
+m.beginPath();
+for (let t = 0; t < 12; t += 0.008) {
+  const rr = r * Math.exp(-k * t);
+  const x = cx + rr * Math.cos(t);
+  const y = cy + rr * Math.sin(t);
+  t === 0 ? m.moveTo(x, y) : m.lineTo(x, y);
+}
+m.stroke();
+
+// Soften edges with glow
+m.shadowBlur = 30;
+m.shadowColor = "#000";
+m.lineWidth = 48;
+m.stroke();
+
+// 4) Apply gradient
+ctx.drawImage(gradCanvas, 0, 0);
+
+// 5) Apply mask (cuts the spiral shape)
+ctx.globalCompositeOperation = "destination-in";
+m.globalCompositeOperation = "source-over";
+m.fillStyle = "#fff";
+m.fillRect(0, 0, C, C);
+
+// Invert mask - we want spiral visible, rest hidden
+const invertMask = document.createElement('canvas');
+invertMask.width = C;
+invertMask.height = C;
+const im = invertMask.getContext('2d');
+im.fillStyle = "#000";
+im.fillRect(0, 0, C, C);
+im.globalCompositeOperation = "destination-out";
+im.drawImage(mask, 0, 0);
+im.globalCompositeOperation = "source-over";
+
+// Reset and redraw properly
+ctx.globalCompositeOperation = "source-over";
+ctx.fillStyle = "#0b0b0f";
+ctx.fillRect(0, 0, C, C);
+
+// Grid again
+ctx.globalAlpha = 0.06;
+ctx.lineWidth = 1;
+ctx.strokeStyle = "#ffffff";
+for (let x = 0; x <= C; x += step) {
+  ctx.beginPath();
+  ctx.moveTo(x, 0);
+  ctx.lineTo(x, C);
+  ctx.stroke();
+}
+for (let y = 0; y <= C; y += step) {
+  ctx.beginPath();
+  ctx.moveTo(0, y);
+  ctx.lineTo(C, y);
+  ctx.stroke();
+}
+ctx.globalAlpha = 1;
+
+// Draw spiral with gradient
+ctx.lineWidth = 36;
+ctx.lineCap = "round";
+ctx.lineJoin = "round";
+
+// Create gradient along spiral
+const spiralGrad = ctx.createLinearGradient(0, 0, C, C);
+colors.forEach((c, i) => spiralGrad.addColorStop(i / (colors.length - 1), c));
+ctx.strokeStyle = spiralGrad;
+
+// Glow effect
+ctx.shadowBlur = 40;
+ctx.shadowColor = "#FF006B";
+
+ctx.beginPath();
+for (let t = 0; t < 12; t += 0.008) {
+  const rr = r * Math.exp(-k * t);
+  const x = cx + rr * Math.cos(t);
+  const y = cy + rr * Math.sin(t);
+  t === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+}
+ctx.stroke();
+
+// Second pass for core brightness
+ctx.shadowBlur = 0;
+ctx.lineWidth = 18;
+ctx.globalAlpha = 0.9;
+ctx.stroke();
+ctx.globalAlpha = 1;
+
+// Inner bright core
+ctx.lineWidth = 6;
+ctx.strokeStyle = "rgba(255, 255, 255, 0.6)";
+ctx.stroke();
+
+// 6) Vignette for depth
+ctx.shadowBlur = 0;
+const vg = ctx.createRadialGradient(C/2, C/2, 0, C/2, C/2, C/1.1);
+vg.addColorStop(0, "rgba(0,0,0,0)");
+vg.addColorStop(0.6, "rgba(0,0,0,0)");
+vg.addColorStop(1, "rgba(0,0,0,0.5)");
+ctx.fillStyle = vg;
+ctx.fillRect(0, 0, C, C);
+
+// 7) Add "BLACKROAD" text watermark
+ctx.font = "bold 48px 'JetBrains Mono', monospace";
+ctx.fillStyle = "rgba(255, 255, 255, 0.15)";
+ctx.textAlign = "center";
+ctx.fillText("BLACKROAD", C/2, C - 80);
+
+function download() {
+  const link = document.createElement('a');
+  link.download = 'blackroad-neon-spiral-2048.png';
+  link.href = document.getElementById('c').toDataURL('image/png');
+  link.click();
+}
+</script>
+</body>
+</html>

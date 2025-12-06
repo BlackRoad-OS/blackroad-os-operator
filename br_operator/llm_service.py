@@ -18,6 +18,7 @@ from typing import Any, Dict, List, Optional
 import httpx
 
 from .llm_client import LLMClient, LLMMessage, LLMResult, get_llm_client
+from .traced_http import TracedAsyncClient
 from .ps_sha_infinity import get_cece_identity, create_verification_stamp, get_root_cipher
 
 # =============================================================================
@@ -78,7 +79,11 @@ async def fetch_rag_context(
     """
     start_time = time.time()
 
-    async with httpx.AsyncClient(timeout=RAG_TIMEOUT_SECONDS) as client:
+    # Use TracedAsyncClient for telemetry
+    async with TracedAsyncClient(
+        service_name="cece-rag",
+        timeout=httpx.Timeout(RAG_TIMEOUT_SECONDS)
+    ) as client:
         response = await client.post(
             f"{RAG_API_URL}/query",
             json={
@@ -105,6 +110,7 @@ async def generate_chat_response(
     model: Optional[str] = None,
     system_prompt: Optional[str] = None,
     use_rag: bool = True,
+    conversation_history: Optional[List[Dict[str, str]]] = None,
 ) -> Dict[str, Any]:
     """
     Generate a response from the LLM, optionally with RAG context.
@@ -144,8 +150,17 @@ async def generate_chat_response(
     # Build messages for LLMClient
     messages = [
         LLMMessage(role="system", content=effective_system_prompt),
-        LLMMessage(role="user", content=message),
     ]
+
+    # Add conversation history if provided
+    if conversation_history:
+        for turn in conversation_history:
+            if "user_message" in turn and "assistant_reply" in turn:
+                messages.append(LLMMessage(role="user", content=turn["user_message"]))
+                messages.append(LLMMessage(role="assistant", content=turn["assistant_reply"]))
+
+    # Add current message
+    messages.append(LLMMessage(role="user", content=message))
 
     # Get LLM client and make the call
     try:
@@ -210,7 +225,10 @@ async def check_llm_health() -> Dict[str, Any]:
 async def check_rag_health() -> Dict[str, Any]:
     """Check if RAG API is healthy and reachable."""
     try:
-        async with httpx.AsyncClient(timeout=5.0) as client:
+        async with TracedAsyncClient(
+            service_name="cece-health",
+            timeout=httpx.Timeout(5.0)
+        ) as client:
             response = await client.get(f"{RAG_API_URL}/health")
             response.raise_for_status()
 

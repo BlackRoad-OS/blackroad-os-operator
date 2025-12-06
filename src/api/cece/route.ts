@@ -10,7 +10,7 @@
 
 import { NextResponse } from 'next/server';
 
-const DEFAULT_OPERATOR_URL = 'https://cozy-dream-all.up.railway.app';
+const DEFAULT_OPERATOR_URL = 'https://blackroad-cece-operator-production.up.railway.app';
 
 interface ChatRequest {
   message: string;

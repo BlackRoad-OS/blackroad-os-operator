@@ -1,0 +1,362 @@
+[
+  {
+    "name": "blackroad-cece-operator",
+    "org": "BlackRoad OS, Inc.",
+    "status": "running",
+    "url": "https://blackroad-cece-operator-production.up.railway.app",
+    "health": "healthy",
+    "recommendation": "keep",
+    "reason": "protected project"
+  },
+  {
+    "name": "Operator Engine",
+    "org": "BlackRoad OS, Inc.",
+    "status": "running",
+    "url": "https://operator-engine-production.up.railway.app",
+    "health": "no-health-endpoint",
+    "recommendation": "review",
+    "reason": "potentially useful project"
+  },
+  {
+    "name": "Orchestrator",
+    "org": "BlackRoad OS, Inc.",
+    "status": "running",
+    "url": "https://orchestrator-production.up.railway.app",
+    "health": "no-health-endpoint",
+    "recommendation": "review",
+    "reason": "unclassified project"
+  },
+  {
+    "name": "blackroad-os-core",
+    "org": "BlackRoad OS, Inc.",
+    "status": "running",
+    "url": "https://blackroad-os-core-production.up.railway.app",
+    "health": "no-health-endpoint",
+    "recommendation": "review",
+    "reason": "potentially useful project"
+  },
+  {
+    "name": "Prism Console",
+    "org": "BlackRoad OS, Inc.",
+    "status": "running",
+    "url": "https://prism-console-production.up.railway.app",
+    "health": "no-health-endpoint",
+    "recommendation": "review",
+    "reason": "potentially useful project"
+  },
+  {
+    "name": "Lucidia Core",
+    "org": "BlackRoad OS, Inc.",
+    "status": "running",
+    "url": "https://lucidia-core-production.up.railway.app",
+    "health": "no-health-endpoint",
+    "recommendation": "review",
+    "reason": "potentially useful project"
+  },
+  {
+    "name": "secure-grace",
+    "org": "BlackRoad OS, Inc.",
+    "status": "unknown",
+    "url": null,
+    "health": null,
+    "recommendation": "delete",
+    "reason": "random name pattern: secure-"
+  },
+  {
+    "name": "wonderful-celebration",
+    "org": "BlackRoad OS, Inc.",
+    "status": "unknown",
+    "url": null,
+    "health": null,
+    "recommendation": "delete",
+    "reason": "random name pattern: wonderful-"
+  },
+  {
+    "name": "fabulous-connection",
+    "org": "BlackRoad OS, Inc.",
+    "status": "unknown",
+    "url": null,
+    "health": null,
+    "recommendation": "delete",
+    "reason": "random name pattern: fabulous-"
+  },
+  {
+    "name": "railway-blackroad-os",
+    "org": "BlackRoad OS, Inc.",
+    "status": "running",
+    "url": "https://railway-blackroad-os-production.up.railway.app",
+    "health": "no-health-endpoint",
+    "recommendation": "review",
+    "reason": "unclassified project"
+  },
+  {
+    "name": "blackroad-os-api",
+    "org": "BlackRoad OS, Inc.",
+    "status": "running",
+    "url": "https://blackroad-os-api-production.up.railway.app",
+    "health": "no-health-endpoint",
+    "recommendation": "review",
+    "reason": "potentially useful project"
+  },
+  {
+    "name": "blackroad-login",
+    "org": "BlackRoad OS, Inc.",
+    "status": "running",
+    "url": "https://blackroad-login-production.up.railway.app",
+    "health": "no-health-endpoint",
+    "recommendation": "review",
+    "reason": "potentially useful project"
+  },
+  {
+    "name": "Docusaurus Documentation Hub",
+    "org": "BlackRoad OS, Inc.",
+    "status": "running",
+    "url": "https://docusaurus-documentation-hub-production.up.railway.app",
+    "health": "no-health-endpoint",
+    "recommendation": "review",
+    "reason": "unclassified project"
+  },
+  {
+    "name": "BlackRoad API",
+    "org": "BlackRoad OS, Inc.",
+    "status": "running",
+    "url": "https://blackroad-api-production.up.railway.app",
+    "health": "no-health-endpoint",
+    "recommendation": "review",
+    "reason": "potentially useful project"
+  },
+  {
+    "name": "BlackRoad Portal",
+    "org": "BlackRoad OS, Inc.",
+    "status": "running",
+    "url": "https://blackroad-portal-production.up.railway.app",
+    "health": "no-health-endpoint",
+    "recommendation": "review",
+    "reason": "potentially useful project"
+  },
+  {
+    "name": "Operator Engine",
+    "org": "BlackRoad OS, Inc.",
+    "status": "running",
+    "url": "https://operator-engine-production.up.railway.app",
+    "health": "no-health-endpoint",
+    "recommendation": "review",
+    "reason": "potentially useful project"
+  },
+  {
+    "name": "lucidia-platform",
+    "org": "BlackRoad OS, Inc.",
+    "status": "running",
+    "url": "https://lucidia-platform-production.up.railway.app",
+    "health": "no-health-endpoint",
+    "recommendation": "review",
+    "reason": "potentially useful project"
+  },
+  {
+    "name": "noble-gentleness",
+    "org": "BlackRoad OS, Inc.",
+    "status": "unknown",
+    "url": null,
+    "health": null,
+    "recommendation": "delete",
+    "reason": "random name pattern: noble-"
+  },
+  {
+    "name": "sincere-recreation",
+    "org": "BlackRoad OS, Inc.",
+    "status": "unknown",
+    "url": null,
+    "health": null,
+    "recommendation": "delete",
+    "reason": "random name pattern: sincere-"
+  },
+  {
+    "name": "blackroad-operating-system",
+    "org": "BlackRoad OS, Inc.",
+    "status": "running",
+    "url": "https://blackroad-operating-system-production.up.railway.app",
+    "health": "no-health-endpoint",
+    "recommendation": "review",
+    "reason": "unclassified project"
+  },
+  {
+    "name": "gregarious-wonder",
+    "org": "BlackRoad OS, Inc.",
+    "status": "unknown",
+    "url": null,
+    "health": null,
+    "recommendation": "delete",
+    "reason": "random name pattern: gregarious-"
+  },
+  {
+    "name": "merry-warmth",
+    "org": "BlackRoad OS, Inc.",
+    "status": "unknown",
+    "url": null,
+    "health": null,
+    "recommendation": "delete",
+    "reason": "random name pattern: merry-"
+  },
+  {
+    "name": "fulfilling-spirit",
+    "org": "BlackRoad OS, Inc.",
+    "status": "unknown",
+    "url": null,
+    "health": null,
+    "recommendation": "delete",
+    "reason": "random name pattern: fulfilling-"
+  },
+  {
+    "name": "discerning-expression",
+    "org": "BlackRoad OS, Inc.",
+    "status": "unknown",
+    "url": null,
+    "health": null,
+    "recommendation": "delete",
+    "reason": "random name pattern: discerning-"
+  },
+  {
+    "name": "steadfast-delight",
+    "org": "BlackRoad OS, Inc.",
+    "status": "unknown",
+    "url": null,
+    "health": null,
+    "recommendation": "delete",
+    "reason": "random name pattern: steadfast-"
+  },
+  {
+    "name": "intuitive-endurance",
+    "org": "BlackRoad OS, Inc.",
+    "status": "unknown",
+    "url": null,
+    "health": null,
+    "recommendation": "delete",
+    "reason": "random name pattern: intuitive-"
+  },
+  {
+    "name": "impartial-vision",
+    "org": "BlackRoad OS, Inc.",
+    "status": "unknown",
+    "url": null,
+    "health": null,
+    "recommendation": "delete",
+    "reason": "random name pattern: impartial-"
+  },
+  {
+    "name": "loyal-tranquility",
+    "org": "BlackRoad OS, Inc.",
+    "status": "unknown",
+    "url": null,
+    "health": null,
+    "recommendation": "delete",
+    "reason": "random name pattern: loyal-"
+  },
+  {
+    "name": "innovative-cooperation",
+    "org": "BlackRoad OS, Inc.",
+    "status": "unknown",
+    "url": null,
+    "health": null,
+    "recommendation": "delete",
+    "reason": "random name pattern: innovative-"
+  },
+  {
+    "name": "gentle-reprieve",
+    "org": "BlackRoad OS, Inc.",
+    "status": "unknown",
+    "url": null,
+    "health": null,
+    "recommendation": "delete",
+    "reason": "random name pattern: gentle-"
+  },
+  {
+    "name": "blackroad-os-prism-console",
+    "org": "BlackRoad OS, Inc.",
+    "status": "running",
+    "url": "https://blackroad-os-prism-console-production.up.railway.app",
+    "health": "no-health-endpoint",
+    "recommendation": "review",
+    "reason": "unclassified project"
+  },
+  {
+    "name": "alert-enjoyment",
+    "org": "BlackRoad OS, Inc.",
+    "status": "unknown",
+    "url": null,
+    "health": null,
+    "recommendation": "delete",
+    "reason": "random name pattern: alert-"
+  },
+  {
+    "name": "blackroad-os-operator",
+    "org": "BlackRoad OS, Inc.",
+    "status": "running",
+    "url": "https://blackroad-os-operator-production.up.railway.app",
+    "health": "healthy",
+    "recommendation": "keep",
+    "reason": "protected project"
+  },
+  {
+    "name": "blackroad-os-docs",
+    "org": "BlackRoad OS, Inc.",
+    "status": "running",
+    "url": "https://blackroad-os-docs-production.up.railway.app",
+    "health": "no-health-endpoint",
+    "recommendation": "review",
+    "reason": "potentially useful project"
+  },
+  {
+    "name": "thriving-blessing",
+    "org": "BlackRoad OS, Inc.",
+    "status": "unknown",
+    "url": null,
+    "health": null,
+    "recommendation": "delete",
+    "reason": "random name pattern: thriving-"
+  },
+  {
+    "name": "terrific-truth",
+    "org": "BlackRoad OS, Inc.",
+    "status": "unknown",
+    "url": null,
+    "health": null,
+    "recommendation": "delete",
+    "reason": "random name pattern: terrific-"
+  },
+  {
+    "name": "NA-6",
+    "org": "BlackRoad OS, Inc.",
+    "status": "unknown",
+    "url": null,
+    "health": null,
+    "recommendation": "delete",
+    "reason": "random name pattern: NA-"
+  },
+  {
+    "name": "NA-6",
+    "org": "BlackRoad OS, Inc.",
+    "status": "unknown",
+    "url": null,
+    "health": null,
+    "recommendation": "delete",
+    "reason": "random name pattern: NA-"
+  },
+  {
+    "name": "NA-4",
+    "org": "BlackRoad OS, Inc.",
+    "status": "unknown",
+    "url": null,
+    "health": null,
+    "recommendation": "delete",
+    "reason": "random name pattern: NA-"
+  },
+  {
+    "name": "NA-3",
+    "org": "BlackRoad OS, Inc.",
+    "status": "unknown",
+    "url": null,
+    "health": null,
+    "recommendation": "delete",
+    "reason": "random name pattern: NA-"
+  }
+]

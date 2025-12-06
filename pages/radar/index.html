@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>New Internet Radar | BlackRoad OS</title>
+  <link rel="stylesheet" href="assets/brand-tokens.css">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: var(--br-font-mono);
+      background: var(--br-bg-dark);
+      color: var(--br-text-primary);
+      min-height: 100vh;
+      padding: var(--br-space-4);
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: var(--br-space-4);
+      padding-bottom: var(--br-space-3);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: var(--br-space-2);
+    }
+
+    .logo-icon {
+      width: 48px;
+      height: 48px;
+      background: var(--br-gradient-hero);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+    }
+
+    .logo-text h1 {
+      font-size: 1.5rem;
+      background: var(--br-gradient-hero);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .logo-text p {
+      color: var(--br-text-muted);
+      font-size: 0.75rem;
+    }
+
+    .status-badge {
+      padding: var(--br-space-1) var(--br-space-2);
+      background: rgba(0, 255, 136, 0.2);
+      border: 1px solid rgba(0, 255, 136, 0.4);
+      border-radius: var(--br-radius-pill);
+      color: #00ff88;
+      font-size: 0.75rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .pulse {
+      width: 8px;
+      height: 8px;
+      background: #00ff88;
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(1.2); }
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: var(--br-space-3);
+      margin-bottom: var(--br-space-4);
+    }
+
+    .stat-card {
+      background: var(--br-bg-card);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: var(--br-radius-lg);
+      padding: var(--br-space-3);
+    }
+
+    .stat-card.new-internet {
+      border-color: var(--br-magenta);
+      box-shadow: var(--br-glow-magenta);
+    }
+
+    .stat-label {
+      color: var(--br-text-muted);
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: var(--br-space-1);
+    }
+
+    .stat-value {
+      font-size: 2rem;
+      font-weight: 700;
+    }
+
+    .stat-card.new-internet .stat-value {
+      color: var(--br-magenta);
+    }
+
+    .section-title {
+      font-size: 1rem;
+      color: var(--br-text-secondary);
+      margin-bottom: var(--br-space-2);
+      display: flex;
+      align-items: center;
+      gap: var(--br-space-2);
+    }
+
+    .section-title::before {
+      content: '';
+      width: 4px;
+      height: 16px;
+      background: var(--br-gradient-hero);
+      border-radius: 2px;
+    }
+
+    .hosts-table {
+      width: 100%;
+      background: var(--br-bg-card);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: var(--br-radius-lg);
+      overflow: hidden;
+      margin-bottom: var(--br-space-4);
+    }
+
+    .hosts-table table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .hosts-table th,
+    .hosts-table td {
+      padding: var(--br-space-2) var(--br-space-3);
+      text-align: left;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .hosts-table th {
+      background: var(--br-bg-elevated);
+      color: var(--br-text-muted);
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .hosts-table tr:hover {
+      background: var(--br-bg-elevated);
+    }
+
+    .host-cell {
+      font-family: var(--br-font-mono);
+    }
+
+    .new-internet-host {
+      color: var(--br-magenta);
+      text-shadow: 0 0 10px rgba(255, 0, 107, 0.5);
+    }
+
+    .known-host {
+      color: var(--br-text-muted);
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: var(--br-radius-pill);
+      font-size: 0.7rem;
+      text-transform: uppercase;
+    }
+
+    .badge-new {
+      background: rgba(255, 0, 107, 0.2);
+      color: var(--br-magenta);
+      border: 1px solid var(--br-magenta);
+    }
+
+    .badge-known {
+      background: rgba(255, 255, 255, 0.1);
+      color: var(--br-text-muted);
+    }
+
+    .services-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+    }
+
+    .service-tag {
+      padding: 2px 6px;
+      background: rgba(119, 0, 255, 0.2);
+      border-radius: var(--br-radius-sm);
+      font-size: 0.7rem;
+      color: var(--br-violet);
+    }
+
+    .events-feed {
+      background: var(--br-bg-card);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: var(--br-radius-lg);
+      padding: var(--br-space-3);
+      max-height: 400px;
+      overflow-y: auto;
+    }
+
+    .event-item {
+      display: flex;
+      align-items: center;
+      gap: var(--br-space-2);
+      padding: var(--br-space-2);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      font-size: 0.85rem;
+    }
+
+    .event-item:last-child {
+      border-bottom: none;
+    }
+
+    .event-time {
+      color: var(--br-text-muted);
+      font-size: 0.75rem;
+      min-width: 80px;
+    }
+
+    .event-service {
+      color: var(--br-violet);
+      min-width: 120px;
+    }
+
+    .event-arrow {
+      color: var(--br-text-muted);
+    }
+
+    .event-host.new {
+      color: var(--br-magenta);
+      text-shadow: 0 0 8px rgba(255, 0, 107, 0.4);
+    }
+
+    .event-status {
+      margin-left: auto;
+      padding: 2px 8px;
+      border-radius: var(--br-radius-sm);
+      font-size: 0.75rem;
+    }
+
+    .event-status.ok {
+      background: rgba(0, 255, 136, 0.2);
+      color: #00ff88;
+    }
+
+    .event-status.error {
+      background: rgba(255, 68, 68, 0.2);
+      color: #ff4444;
+    }
+
+    .refresh-btn {
+      background: var(--br-cta-primary);
+      color: white;
+      border: none;
+      padding: var(--br-space-1) var(--br-space-3);
+      border-radius: var(--br-radius-md);
+      cursor: pointer;
+      font-family: var(--br-font-mono);
+      transition: all var(--br-duration-fast) var(--br-ease-default);
+    }
+
+    .refresh-btn:hover {
+      background: var(--br-cta-hover);
+      box-shadow: var(--br-glow-violet);
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: var(--br-space-6);
+      color: var(--br-text-muted);
+    }
+
+    .loading {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      border: 2px solid rgba(255, 255, 255, 0.2);
+      border-top-color: var(--br-magenta);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    footer {
+      margin-top: var(--br-space-6);
+      text-align: center;
+      color: var(--br-text-muted);
+      font-size: 0.75rem;
+    }
+
+    footer a {
+      color: var(--br-violet);
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="logo">
+      <div class="logo-icon">R</div>
+      <div class="logo-text">
+        <h1>New Internet Radar</h1>
+        <p>All roads lead to BlackRoad</p>
+      </div>
+    </div>
+    <div style="display: flex; gap: 16px; align-items: center;">
+      <button class="refresh-btn" onclick="refreshData()">Refresh</button>
+      <div class="status-badge">
+        <span class="pulse"></span>
+        <span id="status">Connecting...</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-label">Total Events</div>
+      <div class="stat-value" id="totalEvents">-</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Unique Hosts</div>
+      <div class="stat-value" id="uniqueHosts">-</div>
+    </div>
+    <div class="stat-card new-internet">
+      <div class="stat-label">New Internet Hosts</div>
+      <div class="stat-value" id="newInternetHosts">-</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Known Giants</div>
+      <div class="stat-value" id="knownGiants">-</div>
+    </div>
+  </div>
+
+  <h2 class="section-title">New Internet Hosts</h2>
+  <div class="hosts-table">
+    <table>
+      <thead>
+        <tr>
+          <th>Host</th>
+          <th>Type</th>
+          <th>First Seen</th>
+          <th>Last Seen</th>
+          <th>Calls</th>
+        </tr>
+      </thead>
+      <tbody id="newInternetTable">
+        <tr><td colspan="5" class="empty-state"><span class="loading"></span> Loading...</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2 class="section-title">All Tracked Hosts</h2>
+  <div class="hosts-table">
+    <table>
+      <thead>
+        <tr>
+          <th>Host</th>
+          <th>Type</th>
+          <th>Calls</th>
+          <th>Avg Latency</th>
+          <th>Services</th>
+        </tr>
+      </thead>
+      <tbody id="allHostsTable">
+        <tr><td colspan="5" class="empty-state"><span class="loading"></span> Loading...</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2 class="section-title">Live Event Feed</h2>
+  <div class="events-feed" id="eventsFeed">
+    <div class="empty-state"><span class="loading"></span> Loading events...</div>
+  </div>
+
+  <footer>
+    <p>BlackRoad OS | Queen of the New Internet | <a href="https://blackroad.io">blackroad.io</a></p>
+  </footer>
+
+  <script>
+    const TELEMETRY_URL = 'https://blackroad-telemetry.amundsonalexa.workers.dev';
+    // Alternative: 'https://telemetry.blackroad.io' once DNS propagates
+
+    async function fetchStats() {
+      try {
+        const res = await fetch(`${TELEMETRY_URL}/v1/telemetry/stats`);
+        const data = await res.json();
+        document.getElementById('totalEvents').textContent = data.total_events || 0;
+        document.getElementById('uniqueHosts').textContent = data.unique_hosts || 0;
+        document.getElementById('newInternetHosts').textContent = data.new_internet_hosts || 0;
+        document.getElementById('knownGiants').textContent = data.known_giants_count || 0;
+        document.getElementById('status').textContent = 'Live';
+      } catch (e) {
+        document.getElementById('status').textContent = 'Error';
+        console.error('Stats error:', e);
+      }
+    }
+
+    async function fetchNewInternet() {
+      try {
+        const res = await fetch(`${TELEMETRY_URL}/v1/telemetry/new-internet`);
+        const data = await res.json();
+        const tbody = document.getElementById('newInternetTable');
+
+        if (!data.hosts || data.hosts.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="5" class="empty-state">No new internet hosts detected yet</td></tr>';
+          return;
+        }
+
+        tbody.innerHTML = data.hosts.map(h => `
+          <tr>
+            <td class="host-cell new-internet-host">${h.host}</td>
+            <td><span class="badge badge-new">New Internet</span></td>
+            <td>${formatTime(h.first_seen)}</td>
+            <td>${formatTime(h.last_seen)}</td>
+            <td>${h.call_count}</td>
+          </tr>
+        `).join('');
+      } catch (e) {
+        console.error('New internet error:', e);
+      }
+    }
+
+    async function fetchAllHosts() {
+      try {
+        const res = await fetch(`${TELEMETRY_URL}/v1/telemetry/hosts`);
+        const data = await res.json();
+        const tbody = document.getElementById('allHostsTable');
+
+        if (!data.hosts || data.hosts.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="5" class="empty-state">No hosts tracked yet</td></tr>';
+          return;
+        }
+
+        tbody.innerHTML = data.hosts.slice(0, 50).map(h => `
+          <tr>
+            <td class="host-cell ${h.is_new_internet ? 'new-internet-host' : 'known-host'}">${h.host}</td>
+            <td><span class="badge ${h.is_new_internet ? 'badge-new' : 'badge-known'}">${h.is_new_internet ? 'New' : 'Known'}</span></td>
+            <td>${h.call_count}</td>
+            <td>${h.avg_latency_ms}ms</td>
+            <td>
+              <div class="services-list">
+                ${h.services.slice(0, 3).map(s => `<span class="service-tag">${s}</span>`).join('')}
+                ${h.services.length > 3 ? `<span class="service-tag">+${h.services.length - 3}</span>` : ''}
+              </div>
+            </td>
+          </tr>
+        `).join('');
+      } catch (e) {
+        console.error('Hosts error:', e);
+      }
+    }
+
+    async function fetchEvents() {
+      try {
+        const res = await fetch(`${TELEMETRY_URL}/v1/telemetry/recent?limit=20`);
+        const data = await res.json();
+        const feed = document.getElementById('eventsFeed');
+
+        if (!data.events || data.events.length === 0) {
+          feed.innerHTML = '<div class="empty-state">No events yet. Agents will report here.</div>';
+          return;
+        }
+
+        feed.innerHTML = data.events.map(e => `
+          <div class="event-item">
+            <span class="event-time">${formatTime(e.timestamp)}</span>
+            <span class="event-service">${e.service}</span>
+            <span class="event-arrow">-></span>
+            <span class="event-host ${e.is_new_internet ? 'new' : ''}">${e.host}</span>
+            <span class="event-status ${e.status >= 200 && e.status < 400 ? 'ok' : 'error'}">${e.status || '?'}</span>
+          </div>
+        `).join('');
+      } catch (e) {
+        console.error('Events error:', e);
+      }
+    }
+
+    function formatTime(ts) {
+      if (!ts) return '-';
+      const d = new Date(ts);
+      return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    }
+
+    async function refreshData() {
+      await Promise.all([
+        fetchStats(),
+        fetchNewInternet(),
+        fetchAllHosts(),
+        fetchEvents()
+      ]);
+    }
+
+    // Initial load
+    refreshData();
+
+    // Auto-refresh every 10 seconds
+    setInterval(refreshData, 10000);
+  </script>
+</body>
+</html>

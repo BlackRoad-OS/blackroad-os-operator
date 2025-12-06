@@ -1,18 +1,31 @@
+# CECE - BlackRoad Multi-Model AI Gateway
+# Routes to: Lucidia, Claude, ChatGPT, Cadillac, HuggingFace
+# @owner Alexa Louise Amundson
+# @system BlackRoad OS
+
 name = "cece"
 main = "src/index.ts"
 compatibility_date = "2024-11-01"
+compatibility_flags = ["nodejs_compat"]
 
 # Enable workers.dev subdomain
 workers_dev = true
 
-# Custom domain route
-routes = [
-  { pattern = "cece.blackroad.io/*", zone_name = "blackroad.io" }
-]
+# Custom domain (auto-creates DNS record)
+[[routes]]
+pattern = "cece.blackroad.io"
+custom_domain = true
 
 [vars]
+CECE_VERSION = "2.0.0"
 OPERATOR_URL = "https://blackroad-cece-operator-production.up.railway.app"
-CECE_VERSION = "1.0.0"
+CADILLAC_URL = "https://cadillac.blackroad.io"
+OLLAMA_URL = "http://localhost:11434"
+
+# Secrets (set via wrangler secret put):
+# - OPENAI_API_KEY
+# - ANTHROPIC_API_KEY
+# - HUGGINGFACE_API_KEY
 
 # Observability
 [observability]

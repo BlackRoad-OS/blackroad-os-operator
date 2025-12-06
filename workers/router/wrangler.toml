@@ -13,7 +13,7 @@ compatibility_date = "2024-01-01"
 
 # Environment variables
 [vars]
-RAILWAY_API_URL = "https://blackroad-os-docs-production.up.railway.app"
+RAILWAY_API_URL = "https://blackroad-cece-operator-production.up.railway.app"
 PAGES_URL = "https://blackroad-os-web.pages.dev"
 ENVIRONMENT = "production"
 

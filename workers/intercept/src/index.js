@@ -89,6 +89,19 @@ export default {
       return new Response(null, { headers: corsHeaders });
     }
 
+    // Root path - service info
+    if (path === '/' || path === '') {
+      return json({
+        service: 'blackroad-intercept',
+        status: 'online',
+        version: env.VERSION || '1.0.0',
+        owner: 'Alexa Louise Amundson',
+        description: 'Traffic Interception & Data Sovereignty',
+        endpoints: ['/health', '/logs', '/stats'],
+        message: 'Blocking unauthorized data collection. Your data belongs to you.'
+      }, corsHeaders);
+    }
+
     // Health check
     if (path === '/health') {
       return json({ status: 'intercepting', service: 'blackroad-intercept', version: env.VERSION }, corsHeaders);

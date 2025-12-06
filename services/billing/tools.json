@@ -1,0 +1,151 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "BlackRoad Billing Tools",
+  "description": "Tool definitions for Cece/Claude to interact with billing. Agents NEVER see Stripe keys - only these safe interfaces.",
+  "version": "1.0.0",
+  "consensus": "SHA-2048->SHA-256 (UNANIMOUS)",
+  "tools": [
+    {
+      "name": "billing_list_plans",
+      "description": "List all available subscription plans with pricing and features. Use this to help users understand their options.",
+      "input_schema": {
+        "type": "object",
+        "properties": {},
+        "required": []
+      },
+      "endpoint": "GET /plans",
+      "example_response": {
+        "plans": [
+          {"id": "solo", "name": "Solo", "price_monthly": 9, "features": ["1 agent", "10K API calls/mo"]},
+          {"id": "team", "name": "Team", "price_monthly": 29, "features": ["5 agents", "100K API calls/mo"]},
+          {"id": "enterprise", "name": "Enterprise", "price_monthly": 199, "features": ["Unlimited"]}
+        ]
+      }
+    },
+    {
+      "name": "billing_recommend_plan",
+      "description": "Get a plan recommendation based on user's needs. Use this when helping users decide which plan is right for them.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "agent_count": {
+            "type": "integer",
+            "description": "Number of agents the user needs",
+            "default": 1
+          },
+          "expected_api_calls": {
+            "type": "integer",
+            "description": "Expected monthly API calls",
+            "default": 1000
+          },
+          "needs_support": {
+            "type": "boolean",
+            "description": "Whether dedicated support is needed",
+            "default": false
+          }
+        },
+        "required": []
+      },
+      "endpoint": "POST /agent/recommend-plan",
+      "example_response": {
+        "recommended_plan": "team",
+        "reason": "Perfect for small teams with moderate usage.",
+        "plan_details": {
+          "name": "Team",
+          "price_monthly": 29,
+          "features": ["5 agents", "100K API calls/mo", "Priority support"]
+        },
+        "next_action": "Call /checkout with plan='team' to start subscription."
+      }
+    },
+    {
+      "name": "billing_create_checkout",
+      "description": "Create a checkout session for a subscription. Returns a URL that the human can click to complete payment. NEVER share Stripe keys - only the checkout URL.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "plan": {
+            "type": "string",
+            "enum": ["solo", "team", "enterprise"],
+            "description": "The subscription plan to purchase"
+          },
+          "customer_email": {
+            "type": "string",
+            "description": "Customer email to pre-fill in checkout (optional)"
+          }
+        },
+        "required": ["plan"]
+      },
+      "endpoint": "POST /checkout",
+      "example_response": {
+        "checkout_url": "https://checkout.stripe.com/c/pay/cs_live_...",
+        "session_id": "cs_live_abc123",
+        "plan": "team",
+        "expires_at": "2025-12-03T01:00:00Z"
+      },
+      "agent_instructions": "After calling this, present the checkout_url to the user and say something like: 'Here's your payment link! Click to complete your subscription.' NEVER try to process payments yourself."
+    },
+    {
+      "name": "billing_create_portal",
+      "description": "Create a billing portal session for an existing customer. The portal lets them manage their subscription, update payment methods, and view invoices.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "customer_id": {
+            "type": "string",
+            "description": "The Stripe customer ID (starts with cus_)"
+          }
+        },
+        "required": ["customer_id"]
+      },
+      "endpoint": "POST /portal",
+      "example_response": {
+        "portal_url": "https://billing.stripe.com/p/session/...",
+        "customer_id": "cus_abc123"
+      },
+      "agent_instructions": "Present the portal_url to the user so they can manage their subscription."
+    },
+    {
+      "name": "billing_check_subscription",
+      "description": "Check the subscription status for a customer. Use this to verify if a user has an active subscription before granting access to premium features.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "customer_id": {
+            "type": "string",
+            "description": "The Stripe customer ID (starts with cus_)"
+          }
+        },
+        "required": ["customer_id"]
+      },
+      "endpoint": "GET /subscription/{customer_id}",
+      "example_response": {
+        "active": true,
+        "plan": "team",
+        "status": "active",
+        "current_period_end": "2026-01-02T00:00:00Z",
+        "cancel_at_period_end": false
+      },
+      "agent_instructions": "If active is false or status is not 'active', guide the user to subscribe using billing_create_checkout."
+    }
+  ],
+  "security_notes": [
+    "Agents NEVER see sk_live_... or any Stripe secret keys",
+    "Agents NEVER handle raw card data",
+    "All payment processing happens through Stripe's hosted checkout",
+    "Webhook secrets are server-side only",
+    "Audit trail is maintained in the billing ledger"
+  ],
+  "integration_pattern": {
+    "flow": [
+      "1. User asks about pricing -> Agent calls billing_list_plans",
+      "2. User wants recommendation -> Agent calls billing_recommend_plan",
+      "3. User decides to subscribe -> Agent calls billing_create_checkout",
+      "4. Agent presents checkout_url to user",
+      "5. User clicks link, pays on Stripe's secure page",
+      "6. Stripe sends webhook to our backend",
+      "7. Backend logs BILLING.SUBSCRIPTION.CREATED event",
+      "8. Agent can verify with billing_check_subscription"
+    ]
+  }
+}

@@ -29,6 +29,21 @@ export default {
     }
 
     try {
+      // Root path - service info
+      if (path === '/' || path === '') {
+        return new Response(JSON.stringify({
+          service: 'blackroad-router',
+          status: 'online',
+          version: '1.0.0',
+          edge: request.cf?.colo || 'unknown',
+          timestamp: new Date().toISOString(),
+          owner: 'Alexa Louise Amundson',
+          endpoints: ['/health', '/api/*', '/agents/*', '/docs/*']
+        }, null, 2), {
+          headers: { 'Content-Type': 'application/json', ...corsHeaders }
+        });
+      }
+
       // Health check endpoint
       if (path === '/health' || path === '/_health') {
         return new Response(JSON.stringify({
@@ -88,7 +103,7 @@ export default {
  * Proxy request to Railway backend
  */
 async function proxyToRailway(request, env, path) {
-  const railwayUrl = env.RAILWAY_API_URL || 'https://blackroad-os-docs-production.up.railway.app';
+  const railwayUrl = env.RAILWAY_API_URL || 'https://blackroad-cece-operator-production.up.railway.app';
   const targetUrl = `${railwayUrl}${path}`;
 
   // Clone request with new URL

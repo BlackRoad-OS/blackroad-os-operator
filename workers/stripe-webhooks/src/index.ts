@@ -23,10 +23,34 @@ type StripeEventType =
 
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
+    const url = new URL(request.url);
     const corsHeaders = {
       'Access-Control-Allow-Origin': '*',
       'X-Served-By': 'blackroad-stripe-webhooks'
     };
+
+    // Root path - service info (allows GET)
+    if ((url.pathname === '/' || url.pathname === '') && request.method === 'GET') {
+      return new Response(JSON.stringify({
+        service: 'blackroad-stripe-webhooks',
+        status: 'online',
+        version: '1.0.0',
+        owner: 'Alexa Louise Amundson',
+        description: 'Stripe Webhook Event Handler',
+        accepts: 'POST requests with Stripe webhook events',
+        events_handled: [
+          'checkout.session.completed',
+          'customer.subscription.created',
+          'customer.subscription.updated',
+          'customer.subscription.deleted',
+          'invoice.paid',
+          'invoice.payment_failed',
+          'customer.created'
+        ]
+      }, null, 2), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
 
     // Only accept POST for webhooks
     if (request.method !== 'POST') {

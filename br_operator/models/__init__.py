@@ -71,6 +71,16 @@ from br_operator.models.intent import (
     StepExecuteResponse,
 )
 
+# Memory models
+from br_operator.models.memory import (
+    ConversationTurn,
+    MemoryStoreRequest,
+    MemoryStoreResponse,
+    MemoryHistoryResponse,
+    MemoryClearResponse,
+    MemoryStatsResponse,
+)
+
 __all__ = [
     # Chat models
     "ChatRequest",
@@ -119,4 +129,11 @@ __all__ = [
     "StepDefinition",
     "StepExecuteRequest",
     "StepExecuteResponse",
+    # Memory models
+    "ConversationTurn",
+    "MemoryStoreRequest",
+    "MemoryStoreResponse",
+    "MemoryHistoryResponse",
+    "MemoryClearResponse",
+    "MemoryStatsResponse",
 ]

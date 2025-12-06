@@ -1,5 +1,8 @@
 # ⚙️ BlackRoad OS Operator Engine · Gen-0
 
+[![Deploy BlackRoad OS Services](https://github.com/blackboxprogramming/blackroad-os-operator/actions/workflows/deploy.yml/badge.svg)](https://github.com/blackboxprogramming/blackroad-os-operator/actions/workflows/deploy.yml)
+[![CI](https://github.com/blackboxprogramming/blackroad-os-operator/actions/workflows/ci.yml/badge.svg)](https://github.com/blackboxprogramming/blackroad-os-operator/actions/workflows/ci.yml)
+
 **ROLE:** Operator Engine ⚙️🤖 – jobs, schedulers, background workers, and agent workflows for BlackRoad OS.
 
 ## 🎯 MISSION

@@ -50,6 +50,21 @@ export default {
     }
 
     try {
+      // Root path - service info
+      if (url.pathname === '/' || url.pathname === '') {
+        return new Response(JSON.stringify({
+          service: 'blackroad-stripe-checkout',
+          status: 'online',
+          version: '1.0.0',
+          owner: 'Alexa Louise Amundson',
+          description: 'Stripe Checkout Session Creator',
+          endpoints: ['/plans', '/create-checkout', '/create-portal', '/health'],
+          plans: Object.keys(PLANS)
+        }, null, 2), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      }
+
       // GET /plans - List available plans
       if (url.pathname === '/plans' && request.method === 'GET') {
         return new Response(JSON.stringify({
