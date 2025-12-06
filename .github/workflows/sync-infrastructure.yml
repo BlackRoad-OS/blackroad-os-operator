@@ -23,7 +23,7 @@ jobs:
           - BlackRoad-Labs
           - BlackRoad-Security
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
 
       - name: Sync org secrets
         env:
@@ -48,7 +48,7 @@ jobs:
   sync-cloudflare-kv:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
 
       - name: Install Wrangler
         run: npm install -g wrangler
@@ -68,7 +68,7 @@ jobs:
   sync-railway-services:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
 
       - name: Install Railway CLI
         run: npm install -g @railway/cli
