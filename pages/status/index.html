@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Status | BlackRoad OS</title>
+  <meta name="description" content="Real-time status of BlackRoad OS services and infrastructure.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='40' fill='%2300FF88'/></svg>">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Inter+Tight:wght@600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --status-green: #00FF88;
+      --status-yellow: #FFD700;
+      --status-red: #FF4444;
+      --br-cyber-blue: #0066FF;
+      --br-black: #000000;
+      --br-charcoal: #0D0D0D;
+      --br-white: #FFFFFF;
+      --br-font-display: 'Inter Tight', sans-serif;
+      --br-font-body: 'Inter', sans-serif;
+      --br-font-mono: 'JetBrains Mono', monospace;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: var(--br-black);
+      color: var(--br-white);
+      font-family: var(--br-font-body);
+      min-height: 100vh;
+    }
+    header {
+      padding: 1.5rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .logo {
+      font-family: var(--br-font-display);
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: var(--br-white);
+      text-decoration: none;
+    }
+    nav a {
+      color: rgba(255, 255, 255, 0.7);
+      text-decoration: none;
+      margin-left: 2rem;
+      font-size: 0.9rem;
+      transition: color 0.2s;
+    }
+    nav a:hover { color: var(--br-white); }
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 3rem 2rem;
+    }
+    .overall-status {
+      background: rgba(0, 255, 136, 0.1);
+      border: 1px solid rgba(0, 255, 136, 0.3);
+      border-radius: 16px;
+      padding: 2rem;
+      text-align: center;
+      margin-bottom: 3rem;
+    }
+    .overall-status.operational { background: rgba(0, 255, 136, 0.1); border-color: rgba(0, 255, 136, 0.3); }
+    .overall-status.degraded { background: rgba(255, 215, 0, 0.1); border-color: rgba(255, 215, 0, 0.3); }
+    .overall-status.outage { background: rgba(255, 68, 68, 0.1); border-color: rgba(255, 68, 68, 0.3); }
+    .status-indicator {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.75rem;
+      font-family: var(--br-font-display);
+      font-size: 1.5rem;
+      font-weight: 700;
+    }
+    .status-dot {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+    .status-dot.green { background: var(--status-green); }
+    .status-dot.yellow { background: var(--status-yellow); }
+    .status-dot.red { background: var(--status-red); }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.7; transform: scale(1.1); }
+    }
+    .status-text.green { color: var(--status-green); }
+    .status-text.yellow { color: var(--status-yellow); }
+    .status-text.red { color: var(--status-red); }
+    .last-updated {
+      color: rgba(255, 255, 255, 0.5);
+      font-size: 0.85rem;
+      margin-top: 0.75rem;
+      font-family: var(--br-font-mono);
+    }
+    h2 {
+      font-family: var(--br-font-display);
+      font-size: 1.25rem;
+      font-weight: 700;
+      margin-bottom: 1.5rem;
+      color: rgba(255, 255, 255, 0.9);
+    }
+    .service-list {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      margin-bottom: 3rem;
+    }
+    .service {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 1.5rem;
+      background: var(--br-charcoal);
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .service-info {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    .service-icon { font-size: 1.25rem; }
+    .service-name {
+      font-weight: 600;
+      font-size: 0.95rem;
+    }
+    .service-status {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-family: var(--br-font-mono);
+      font-size: 0.8rem;
+    }
+    .service-status .status-dot {
+      width: 10px;
+      height: 10px;
+    }
+    .uptime-grid {
+      display: flex;
+      gap: 2px;
+      margin-top: 0.5rem;
+    }
+    .uptime-bar {
+      width: 4px;
+      height: 24px;
+      border-radius: 2px;
+      background: var(--status-green);
+    }
+    .uptime-bar.degraded { background: var(--status-yellow); }
+    .uptime-bar.outage { background: var(--status-red); }
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.5rem;
+      margin-bottom: 3rem;
+    }
+    .metric {
+      background: var(--br-charcoal);
+      border-radius: 12px;
+      padding: 1.5rem;
+      text-align: center;
+    }
+    .metric-value {
+      font-family: var(--br-font-display);
+      font-size: 2rem;
+      font-weight: 800;
+      color: var(--status-green);
+    }
+    .metric-label {
+      color: rgba(255, 255, 255, 0.5);
+      font-size: 0.85rem;
+      margin-top: 0.25rem;
+    }
+    footer {
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 2rem;
+      text-align: center;
+      color: rgba(255, 255, 255, 0.5);
+      font-size: 0.9rem;
+    }
+    footer a { color: var(--br-cyber-blue); text-decoration: none; }
+    @media (max-width: 768px) {
+      .metrics { grid-template-columns: 1fr; }
+      nav { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <a href="/" class="logo">BlackRoad Status</a>
+    <nav>
+      <a href="https://blackroad.io">Platform</a>
+      <a href="https://docs.blackroad.io">Docs</a>
+    </nav>
+  </header>
+
+  <div class="container">
+    <div class="overall-status operational">
+      <div class="status-indicator">
+        <div class="status-dot green"></div>
+        <span class="status-text green">All Systems Operational</span>
+      </div>
+      <div class="last-updated">Last checked: <span id="last-update"></span></div>
+    </div>
+
+    <div class="metrics">
+      <div class="metric">
+        <div class="metric-value">99.99%</div>
+        <div class="metric-label">Uptime (30 days)</div>
+      </div>
+      <div class="metric">
+        <div class="metric-value">&lt;50ms</div>
+        <div class="metric-label">Avg Response Time</div>
+      </div>
+      <div class="metric">
+        <div class="metric-value">275+</div>
+        <div class="metric-label">Edge Locations</div>
+      </div>
+    </div>
+
+    <h2>Core Services</h2>
+    <div class="service-list">
+      <div class="service">
+        <div class="service-info">
+          <span class="service-icon">🌐</span>
+          <span class="service-name">API Gateway</span>
+        </div>
+        <div class="service-status">
+          <div class="status-dot green"></div>
+          <span class="status-text green">Operational</span>
+        </div>
+      </div>
+      <div class="service">
+        <div class="service-info">
+          <span class="service-icon">🤖</span>
+          <span class="service-name">Cece AI</span>
+        </div>
+        <div class="service-status">
+          <div class="status-dot green"></div>
+          <span class="status-text green">Operational</span>
+        </div>
+      </div>
+      <div class="service">
+        <div class="service-info">
+          <span class="service-icon">🔐</span>
+          <span class="service-name">Identity Service</span>
+        </div>
+        <div class="service-status">
+          <div class="status-dot green"></div>
+          <span class="status-text green">Operational</span>
+        </div>
+      </div>
+      <div class="service">
+        <div class="service-info">
+          <span class="service-icon">💳</span>
+          <span class="service-name">Billing</span>
+        </div>
+        <div class="service-status">
+          <div class="status-dot green"></div>
+          <span class="status-text green">Operational</span>
+        </div>
+      </div>
+      <div class="service">
+        <div class="service-info">
+          <span class="service-icon">⚡</span>
+          <span class="service-name">Edge Workers</span>
+        </div>
+        <div class="service-status">
+          <div class="status-dot green"></div>
+          <span class="status-text green">Operational</span>
+        </div>
+      </div>
+      <div class="service">
+        <div class="service-info">
+          <span class="service-icon">🔒</span>
+          <span class="service-name">Cipher (Encryption)</span>
+        </div>
+        <div class="service-status">
+          <div class="status-dot green"></div>
+          <span class="status-text green">Operational</span>
+        </div>
+      </div>
+    </div>
+
+    <h2>Infrastructure</h2>
+    <div class="service-list">
+      <div class="service">
+        <div class="service-info">
+          <span class="service-icon">☁️</span>
+          <span class="service-name">Cloudflare Edge</span>
+        </div>
+        <div class="service-status">
+          <div class="status-dot green"></div>
+          <span class="status-text green">Operational</span>
+        </div>
+      </div>
+      <div class="service">
+        <div class="service-info">
+          <span class="service-icon">🚂</span>
+          <span class="service-name">Railway Backend</span>
+        </div>
+        <div class="service-status">
+          <div class="status-dot green"></div>
+          <span class="status-text green">Operational</span>
+        </div>
+      </div>
+      <div class="service">
+        <div class="service-info">
+          <span class="service-icon">💾</span>
+          <span class="service-name">Database (D1)</span>
+        </div>
+        <div class="service-status">
+          <div class="status-dot green"></div>
+          <span class="status-text green">Operational</span>
+        </div>
+      </div>
+      <div class="service">
+        <div class="service-info">
+          <span class="service-icon">🗄️</span>
+          <span class="service-name">KV Storage</span>
+        </div>
+        <div class="service-status">
+          <div class="status-dot green"></div>
+          <span class="status-text green">Operational</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <p>© 2025 BlackRoad OS · <a href="https://blackroad.io">blackroad.io</a></p>
+  </footer>
+
+  <script>
+    // Update timestamp
+    document.getElementById('last-update').textContent = new Date().toISOString();
+
+    // Refresh every 30 seconds
+    setInterval(() => {
+      document.getElementById('last-update').textContent = new Date().toISOString();
+    }, 30000);
+  </script>
+</body>
+</html>

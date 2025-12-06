@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BlackRoad Quantum | Post-Quantum Cryptography</title>
+  <meta name="description" content="Quantum-resistant security for the next computing era. Future-proof your infrastructure today.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='40' fill='%23D600AA'/></svg>">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Inter+Tight:wght@600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --br-deep-magenta: #D600AA;
+      --br-vivid-purple: #7700FF;
+      --br-cyber-blue: #0066FF;
+      --br-black: #000000;
+      --br-white: #FFFFFF;
+      --br-gradient-quantum: linear-gradient(135deg, #D600AA 0%, #7700FF 50%, #0066FF 100%);
+      --br-font-display: 'Inter Tight', sans-serif;
+      --br-font-body: 'Inter', sans-serif;
+      --br-font-mono: 'JetBrains Mono', monospace;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: var(--br-black);
+      color: var(--br-white);
+      font-family: var(--br-font-body);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+    .quantum-bg {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background:
+        radial-gradient(ellipse at 50% 50%, rgba(214, 0, 170, 0.15) 0%, transparent 50%),
+        radial-gradient(ellipse at 20% 80%, rgba(119, 0, 255, 0.1) 0%, transparent 40%),
+        radial-gradient(ellipse at 80% 20%, rgba(0, 102, 255, 0.1) 0%, transparent 40%);
+      z-index: -1;
+    }
+    .particles {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      overflow: hidden;
+      z-index: -1;
+    }
+    .particle {
+      position: absolute;
+      width: 4px;
+      height: 4px;
+      background: var(--br-deep-magenta);
+      border-radius: 50%;
+      animation: float 20s infinite linear;
+      opacity: 0.5;
+    }
+    .particle:nth-child(2n) { background: var(--br-vivid-purple); animation-duration: 25s; }
+    .particle:nth-child(3n) { background: var(--br-cyber-blue); animation-duration: 30s; }
+    @keyframes float {
+      0% { transform: translateY(100vh) rotate(0deg); opacity: 0; }
+      10% { opacity: 0.5; }
+      90% { opacity: 0.5; }
+      100% { transform: translateY(-100vh) rotate(720deg); opacity: 0; }
+    }
+    header {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      padding: 1.5rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      backdrop-filter: blur(20px);
+      background: rgba(0, 0, 0, 0.5);
+      border-bottom: 1px solid rgba(214, 0, 170, 0.2);
+      z-index: 100;
+    }
+    .logo {
+      font-family: var(--br-font-display);
+      font-size: 1.5rem;
+      font-weight: 800;
+      background: var(--br-gradient-quantum);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-decoration: none;
+    }
+    nav a {
+      color: rgba(255, 255, 255, 0.7);
+      text-decoration: none;
+      margin-left: 2rem;
+      transition: color 0.2s;
+    }
+    nav a:hover { color: var(--br-deep-magenta); }
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      padding: 8rem 2rem 4rem;
+    }
+    .quantum-symbol {
+      width: 120px;
+      height: 120px;
+      margin-bottom: 2rem;
+      position: relative;
+    }
+    .quantum-symbol::before,
+    .quantum-symbol::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 100%;
+      height: 100%;
+      border: 2px solid var(--br-deep-magenta);
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+      animation: orbit 8s linear infinite;
+    }
+    .quantum-symbol::after {
+      width: 80%;
+      height: 80%;
+      border-color: var(--br-vivid-purple);
+      animation-direction: reverse;
+      animation-duration: 6s;
+    }
+    .quantum-symbol .core {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 20px;
+      height: 20px;
+      background: var(--br-gradient-quantum);
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+      box-shadow: 0 0 30px rgba(214, 0, 170, 0.8);
+    }
+    @keyframes orbit {
+      0% { transform: translate(-50%, -50%) rotateX(60deg) rotateZ(0deg); }
+      100% { transform: translate(-50%, -50%) rotateX(60deg) rotateZ(360deg); }
+    }
+    .hero h1 {
+      font-family: var(--br-font-display);
+      font-size: clamp(3rem, 8vw, 5rem);
+      font-weight: 800;
+      margin-bottom: 1.5rem;
+      background: var(--br-gradient-quantum);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .hero p {
+      font-size: 1.25rem;
+      color: rgba(255, 255, 255, 0.7);
+      max-width: 600px;
+      margin-bottom: 2.5rem;
+      line-height: 1.6;
+    }
+    .badge {
+      background: rgba(214, 0, 170, 0.2);
+      color: var(--br-deep-magenta);
+      padding: 0.5rem 1rem;
+      border-radius: 20px;
+      font-size: 0.875rem;
+      font-weight: 600;
+      margin-bottom: 2rem;
+      border: 1px solid rgba(214, 0, 170, 0.3);
+      font-family: var(--br-font-mono);
+    }
+    .btn-primary {
+      background: var(--br-gradient-quantum);
+      color: var(--br-white);
+      font-family: var(--br-font-display);
+      font-weight: 700;
+      padding: 1rem 2.5rem;
+      border-radius: 8px;
+      border: none;
+      text-decoration: none;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 0 40px rgba(214, 0, 170, 0.4);
+    }
+    .features {
+      padding: 6rem 2rem;
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 2rem;
+    }
+    .feature {
+      background: rgba(214, 0, 170, 0.05);
+      border: 1px solid rgba(214, 0, 170, 0.2);
+      border-radius: 16px;
+      padding: 2rem;
+      transition: all 0.2s;
+    }
+    .feature:hover {
+      border-color: var(--br-deep-magenta);
+      box-shadow: 0 0 30px rgba(214, 0, 170, 0.2);
+    }
+    .feature h3 {
+      font-family: var(--br-font-display);
+      font-size: 1.25rem;
+      font-weight: 700;
+      margin-bottom: 0.75rem;
+      color: var(--br-deep-magenta);
+    }
+    .feature p { color: rgba(255, 255, 255, 0.6); line-height: 1.6; }
+    .cta {
+      padding: 6rem 2rem;
+      text-align: center;
+      background: linear-gradient(180deg, transparent 0%, rgba(214, 0, 170, 0.1) 100%);
+    }
+    .cta h2 {
+      font-family: var(--br-font-display);
+      font-size: 2.5rem;
+      font-weight: 800;
+      margin-bottom: 1rem;
+    }
+    .cta p { color: rgba(255, 255, 255, 0.6); margin-bottom: 2rem; }
+    footer {
+      border-top: 1px solid rgba(214, 0, 170, 0.2);
+      padding: 3rem 2rem;
+      text-align: center;
+      color: rgba(255, 255, 255, 0.5);
+    }
+    footer a { color: var(--br-deep-magenta); text-decoration: none; }
+    @media (max-width: 768px) {
+      .hero h1 { font-size: 2.5rem; }
+      nav { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="quantum-bg"></div>
+  <div class="particles">
+    <div class="particle" style="left: 10%; animation-delay: 0s;"></div>
+    <div class="particle" style="left: 20%; animation-delay: 2s;"></div>
+    <div class="particle" style="left: 30%; animation-delay: 4s;"></div>
+    <div class="particle" style="left: 40%; animation-delay: 1s;"></div>
+    <div class="particle" style="left: 50%; animation-delay: 3s;"></div>
+    <div class="particle" style="left: 60%; animation-delay: 5s;"></div>
+    <div class="particle" style="left: 70%; animation-delay: 2s;"></div>
+    <div class="particle" style="left: 80%; animation-delay: 4s;"></div>
+    <div class="particle" style="left: 90%; animation-delay: 1s;"></div>
+  </div>
+  <header>
+    <a href="/" class="logo">BlackRoad Quantum</a>
+    <nav>
+      <a href="https://blackroad.io">Platform</a>
+      <a href="https://docs.blackroad.io">Docs</a>
+      <a href="https://blackroadai.com">AI</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="quantum-symbol">
+        <div class="core"></div>
+      </div>
+      <div class="badge">🔮 POST-QUANTUM SECURITY</div>
+      <h1>Quantum-Ready</h1>
+      <p>Future-proof cryptography for the post-quantum era. Protect your data against tomorrow's threats, today.</p>
+      <a href="https://blackroad.io" class="btn-primary">Learn More →</a>
+    </section>
+
+    <section class="features">
+      <div class="feature-grid">
+        <div class="feature">
+          <h3>🛡️ Lattice-Based Encryption</h3>
+          <p>CRYSTALS-Kyber and CRYSTALS-Dilithium implementations. NIST-approved post-quantum algorithms.</p>
+        </div>
+        <div class="feature">
+          <h3>🔐 Hybrid Mode</h3>
+          <p>Classical + post-quantum encryption in parallel. Backward compatible, forward secure.</p>
+        </div>
+        <div class="feature">
+          <h3>⚡ Hardware Acceleration</h3>
+          <p>Optimized for modern CPUs with AVX-512. Near-classical performance with quantum resistance.</p>
+        </div>
+        <div class="feature">
+          <h3>🌐 Zero-Knowledge Proofs</h3>
+          <p>Quantum-safe ZK protocols for privacy-preserving verification. Prove without revealing.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="cta">
+      <h2>The quantum era is coming.</h2>
+      <p>Start migrating your cryptography today.</p>
+      <a href="https://blackroad.io" class="btn-primary">Get Started</a>
+    </section>
+  </main>
+
+  <footer>
+    <p>© 2025 BlackRoad Quantum · Part of <a href="https://blackroad.io">BlackRoad OS</a></p>
+  </footer>
+</body>
+</html>

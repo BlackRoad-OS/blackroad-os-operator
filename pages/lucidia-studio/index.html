@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lucidia Studio | Creative Intelligence Workspace</title>
+  <meta name="description" content="The creative workspace powered by ambient AI. Design, develop, and deploy with Lucidia.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='40' fill='%238855FF'/></svg>">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Inter+Tight:wght@600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --studio-violet: #8855FF;
+      --studio-pink: #FF55AA;
+      --studio-cyan: #00CCFF;
+      --br-black: #000000;
+      --br-white: #FFFFFF;
+      --br-gradient-studio: linear-gradient(135deg, #8855FF 0%, #FF55AA 50%, #00CCFF 100%);
+      --br-font-display: 'Inter Tight', sans-serif;
+      --br-font-body: 'Inter', sans-serif;
+      --br-font-mono: 'JetBrains Mono', monospace;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: var(--br-black);
+      color: var(--br-white);
+      font-family: var(--br-font-body);
+      min-height: 100vh;
+    }
+    .studio-bg {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background:
+        radial-gradient(ellipse at 30% 20%, rgba(136, 85, 255, 0.2) 0%, transparent 50%),
+        radial-gradient(ellipse at 70% 80%, rgba(255, 85, 170, 0.15) 0%, transparent 50%),
+        radial-gradient(ellipse at 90% 10%, rgba(0, 204, 255, 0.1) 0%, transparent 40%);
+      z-index: -1;
+    }
+    header {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      padding: 1.5rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      backdrop-filter: blur(20px);
+      background: rgba(0, 0, 0, 0.5);
+      border-bottom: 1px solid rgba(136, 85, 255, 0.2);
+      z-index: 100;
+    }
+    .logo {
+      font-family: var(--br-font-display);
+      font-size: 1.5rem;
+      font-weight: 800;
+      background: var(--br-gradient-studio);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-decoration: none;
+    }
+    nav a {
+      color: rgba(255, 255, 255, 0.7);
+      text-decoration: none;
+      margin-left: 2rem;
+      transition: color 0.2s;
+    }
+    nav a:hover { color: var(--studio-violet); }
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      padding: 8rem 2rem 4rem;
+    }
+    .studio-icon {
+      width: 80px;
+      height: 80px;
+      margin-bottom: 2rem;
+      position: relative;
+    }
+    .studio-icon::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%;
+      height: 100%;
+      background: var(--br-gradient-studio);
+      border-radius: 20px;
+      transform: rotate(45deg);
+    }
+    .studio-icon::after {
+      content: '◆';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 2rem;
+      color: var(--br-black);
+    }
+    .badge {
+      background: rgba(136, 85, 255, 0.2);
+      color: var(--studio-violet);
+      padding: 0.5rem 1rem;
+      border-radius: 20px;
+      font-size: 0.875rem;
+      font-weight: 600;
+      margin-bottom: 2rem;
+      border: 1px solid rgba(136, 85, 255, 0.3);
+    }
+    .hero h1 {
+      font-family: var(--br-font-display);
+      font-size: clamp(3rem, 8vw, 5rem);
+      font-weight: 800;
+      margin-bottom: 1.5rem;
+      background: var(--br-gradient-studio);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .hero p {
+      font-size: 1.25rem;
+      color: rgba(255, 255, 255, 0.7);
+      max-width: 600px;
+      margin-bottom: 2.5rem;
+      line-height: 1.6;
+    }
+    .btn-group {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .btn-primary {
+      background: var(--br-gradient-studio);
+      color: var(--br-white);
+      font-family: var(--br-font-display);
+      font-weight: 700;
+      padding: 1rem 2rem;
+      border-radius: 8px;
+      border: none;
+      text-decoration: none;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 0 40px rgba(136, 85, 255, 0.4);
+    }
+    .btn-secondary {
+      background: transparent;
+      color: var(--studio-violet);
+      font-family: var(--br-font-display);
+      font-weight: 700;
+      padding: 1rem 2rem;
+      border-radius: 8px;
+      border: 1px solid var(--studio-violet);
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+    .btn-secondary:hover {
+      background: var(--studio-violet);
+      color: var(--br-white);
+    }
+    .tools {
+      padding: 6rem 2rem;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    .tools h2 {
+      font-family: var(--br-font-display);
+      font-size: 2rem;
+      font-weight: 800;
+      margin-bottom: 3rem;
+      text-align: center;
+      background: var(--br-gradient-studio);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .tool-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 2rem;
+    }
+    .tool {
+      background: rgba(136, 85, 255, 0.05);
+      border: 1px solid rgba(136, 85, 255, 0.2);
+      border-radius: 16px;
+      padding: 2rem;
+      transition: all 0.3s;
+    }
+    .tool:hover {
+      border-color: var(--studio-violet);
+      transform: translateY(-4px);
+      box-shadow: 0 20px 40px rgba(136, 85, 255, 0.15);
+    }
+    .tool-header {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+    .tool-icon {
+      width: 48px;
+      height: 48px;
+      background: var(--br-gradient-studio);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+    }
+    .tool h3 {
+      font-family: var(--br-font-display);
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--br-white);
+    }
+    .tool p { color: rgba(255, 255, 255, 0.6); line-height: 1.6; }
+    .tool-tag {
+      display: inline-block;
+      margin-top: 1rem;
+      padding: 0.25rem 0.75rem;
+      background: rgba(136, 85, 255, 0.2);
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-family: var(--br-font-mono);
+      color: var(--studio-violet);
+    }
+    .cta {
+      padding: 6rem 2rem;
+      text-align: center;
+      background: linear-gradient(180deg, transparent 0%, rgba(136, 85, 255, 0.1) 100%);
+    }
+    .cta h2 {
+      font-family: var(--br-font-display);
+      font-size: 2.5rem;
+      font-weight: 800;
+      margin-bottom: 1rem;
+    }
+    .cta p { color: rgba(255, 255, 255, 0.6); margin-bottom: 2rem; }
+    footer {
+      border-top: 1px solid rgba(136, 85, 255, 0.2);
+      padding: 3rem 2rem;
+      text-align: center;
+      color: rgba(255, 255, 255, 0.5);
+    }
+    footer a { color: var(--studio-violet); text-decoration: none; }
+    @media (max-width: 768px) {
+      .hero h1 { font-size: 2.5rem; }
+      nav { display: none; }
+      .btn-group { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+  <div class="studio-bg"></div>
+  <header>
+    <a href="/" class="logo">Lucidia Studio</a>
+    <nav>
+      <a href="https://lucidia.earth">Lucidia</a>
+      <a href="https://blackroad.io">BlackRoad</a>
+      <a href="https://docs.blackroad.io">Docs</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="badge">✨ Creative Intelligence</div>
+      <h1>Your AI-Powered Studio</h1>
+      <p>Design, develop, and deploy with ambient intelligence. Lucidia Studio is where creativity meets capability.</p>
+      <div class="btn-group">
+        <a href="https://app.blackroad.io" class="btn-primary">Open Studio →</a>
+        <a href="https://lucidia.earth" class="btn-secondary">Learn About Lucidia</a>
+      </div>
+    </section>
+
+    <section class="tools">
+      <h2>Creative Tools</h2>
+      <div class="tool-grid">
+        <div class="tool">
+          <div class="tool-header">
+            <div class="tool-icon">🎨</div>
+            <h3>Design Canvas</h3>
+          </div>
+          <p>AI-assisted design tools that understand your aesthetic. Generate variations, suggest improvements, maintain consistency.</p>
+          <span class="tool-tag">DESIGN</span>
+        </div>
+        <div class="tool">
+          <div class="tool-header">
+            <div class="tool-icon">💻</div>
+            <h3>Code Editor</h3>
+          </div>
+          <p>Intelligent code completion that understands your project architecture. Write less, ship more, maintain quality.</p>
+          <span class="tool-tag">DEVELOP</span>
+        </div>
+        <div class="tool">
+          <div class="tool-header">
+            <div class="tool-icon">🚀</div>
+            <h3>Deploy Pipeline</h3>
+          </div>
+          <p>One-click deployment to BlackRoad's global edge network. From idea to production in minutes.</p>
+          <span class="tool-tag">DEPLOY</span>
+        </div>
+        <div class="tool">
+          <div class="tool-header">
+            <div class="tool-icon">🤝</div>
+            <h3>Collaborate</h3>
+          </div>
+          <p>Real-time collaboration with AI mediation. Share context, not confusion. Work together, seamlessly.</p>
+          <span class="tool-tag">TEAM</span>
+        </div>
+        <div class="tool">
+          <div class="tool-header">
+            <div class="tool-icon">📊</div>
+            <h3>Analytics</h3>
+          </div>
+          <p>Understand how your creations perform. AI-powered insights that surface what matters.</p>
+          <span class="tool-tag">MEASURE</span>
+        </div>
+        <div class="tool">
+          <div class="tool-header">
+            <div class="tool-icon">🔧</div>
+            <h3>Integrations</h3>
+          </div>
+          <p>Connect to everything. Figma, GitHub, Slack, and hundreds more. Your tools, unified.</p>
+          <span class="tool-tag">CONNECT</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="cta">
+      <h2>Start creating today.</h2>
+      <p>Free to start. Scale when you're ready.</p>
+      <a href="https://app.blackroad.io" class="btn-primary">Open Lucidia Studio</a>
+    </section>
+  </main>
+
+  <footer>
+    <p>© 2025 Lucidia Studio · Powered by <a href="https://blackroad.io">BlackRoad OS</a></p>
+  </footer>
+</body>
+</html>

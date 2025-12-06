@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BlackRoad.me | Your Identity</title>
+  <meta name="description" content="Your decentralized identity on BlackRoad OS. Own your data, control your presence.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='40' fill='%23FF0066'/></svg>">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Inter+Tight:wght@600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --br-hot-pink: #FF0066;
+      --br-vivid-purple: #7700FF;
+      --br-sunrise: #FF9D00;
+      --br-black: #000000;
+      --br-white: #FFFFFF;
+      --br-gradient-identity: linear-gradient(135deg, #FF0066 0%, #7700FF 100%);
+      --br-font-display: 'Inter Tight', sans-serif;
+      --br-font-body: 'Inter', sans-serif;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: var(--br-black);
+      color: var(--br-white);
+      font-family: var(--br-font-body);
+      min-height: 100vh;
+    }
+    .bg-mesh {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background:
+        radial-gradient(ellipse at 50% 30%, rgba(255, 0, 102, 0.2) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 80%, rgba(119, 0, 255, 0.15) 0%, transparent 40%);
+      z-index: -1;
+    }
+    header {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      padding: 1.5rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      backdrop-filter: blur(20px);
+      background: rgba(0, 0, 0, 0.5);
+      border-bottom: 1px solid rgba(255, 0, 102, 0.2);
+      z-index: 100;
+    }
+    .logo {
+      font-family: var(--br-font-display);
+      font-size: 1.5rem;
+      font-weight: 800;
+      background: var(--br-gradient-identity);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-decoration: none;
+    }
+    nav a {
+      color: rgba(255, 255, 255, 0.7);
+      text-decoration: none;
+      margin-left: 2rem;
+      transition: color 0.2s;
+    }
+    nav a:hover { color: var(--br-hot-pink); }
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      padding: 8rem 2rem 4rem;
+    }
+    .avatar {
+      width: 120px;
+      height: 120px;
+      background: var(--br-gradient-identity);
+      border-radius: 50%;
+      margin-bottom: 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 3rem;
+      box-shadow: 0 0 60px rgba(255, 0, 102, 0.4);
+    }
+    .hero h1 {
+      font-family: var(--br-font-display);
+      font-size: clamp(3rem, 8vw, 5rem);
+      font-weight: 800;
+      margin-bottom: 1.5rem;
+      background: var(--br-gradient-identity);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .hero p {
+      font-size: 1.25rem;
+      color: rgba(255, 255, 255, 0.7);
+      max-width: 500px;
+      margin-bottom: 2.5rem;
+      line-height: 1.6;
+    }
+    .btn-primary {
+      background: var(--br-gradient-identity);
+      color: var(--br-white);
+      font-family: var(--br-font-display);
+      font-weight: 700;
+      padding: 1rem 2.5rem;
+      border-radius: 50px;
+      border: none;
+      text-decoration: none;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 0 40px rgba(255, 0, 102, 0.4);
+    }
+    .features {
+      padding: 4rem 2rem;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .feature-list {
+      display: grid;
+      gap: 1.5rem;
+    }
+    .feature {
+      background: rgba(255, 0, 102, 0.05);
+      border: 1px solid rgba(255, 0, 102, 0.2);
+      border-radius: 16px;
+      padding: 1.5rem 2rem;
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+      transition: all 0.2s;
+    }
+    .feature:hover {
+      border-color: var(--br-hot-pink);
+      transform: translateX(8px);
+    }
+    .feature-icon {
+      font-size: 2rem;
+    }
+    .feature h3 {
+      font-family: var(--br-font-display);
+      font-size: 1.125rem;
+      font-weight: 700;
+      color: var(--br-hot-pink);
+      margin-bottom: 0.25rem;
+    }
+    .feature p { color: rgba(255, 255, 255, 0.6); font-size: 0.9rem; }
+    footer {
+      border-top: 1px solid rgba(255, 0, 102, 0.2);
+      padding: 3rem 2rem;
+      text-align: center;
+      color: rgba(255, 255, 255, 0.5);
+    }
+    footer a { color: var(--br-hot-pink); text-decoration: none; }
+    @media (max-width: 768px) {
+      .hero h1 { font-size: 2.5rem; }
+      nav { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="bg-mesh"></div>
+  <header>
+    <a href="/" class="logo">BlackRoad.me</a>
+    <nav>
+      <a href="https://blackroad.io">Platform</a>
+      <a href="https://app.blackroad.io/login">Sign In</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="avatar">👤</div>
+      <h1>Your Identity</h1>
+      <p>Decentralized identity for the modern internet. Own your data, control your presence, prove who you are.</p>
+      <a href="https://app.blackroad.io/login" class="btn-primary">Claim Your Identity →</a>
+    </section>
+
+    <section class="features">
+      <div class="feature-list">
+        <div class="feature">
+          <span class="feature-icon">🔐</span>
+          <div>
+            <h3>Self-Sovereign</h3>
+            <p>Your identity belongs to you. No central authority, no data harvesting.</p>
+          </div>
+        </div>
+        <div class="feature">
+          <span class="feature-icon">🌐</span>
+          <div>
+            <h3>Portable</h3>
+            <p>Use your BlackRoad identity across any service. One login, everywhere.</p>
+          </div>
+        </div>
+        <div class="feature">
+          <span class="feature-icon">✅</span>
+          <div>
+            <h3>Verifiable</h3>
+            <p>Cryptographic proof of identity. Zero-knowledge verification without exposure.</p>
+          </div>
+        </div>
+        <div class="feature">
+          <span class="feature-icon">🛡️</span>
+          <div>
+            <h3>Private</h3>
+            <p>Share only what you choose. Selective disclosure for every context.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <p>© 2025 BlackRoad.me · Part of <a href="https://blackroad.io">BlackRoad OS</a></p>
+  </footer>
+</body>
+</html>

@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lucidia | Ambient Intelligence</title>
+  <meta name="description" content="Ambient AI that understands context, anticipates needs, and enhances human capability.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='40' fill='%2300CCFF'/></svg>">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Inter+Tight:wght@600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --lucidia-cyan: #00CCFF;
+      --lucidia-teal: #00AA99;
+      --lucidia-violet: #8855FF;
+      --br-black: #000000;
+      --br-white: #FFFFFF;
+      --br-gradient-lucidia: linear-gradient(135deg, #00CCFF 0%, #00AA99 50%, #8855FF 100%);
+      --br-font-display: 'Inter Tight', sans-serif;
+      --br-font-body: 'Inter', sans-serif;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: var(--br-black);
+      color: var(--br-white);
+      font-family: var(--br-font-body);
+      min-height: 100vh;
+    }
+    .ambient-bg {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background:
+        radial-gradient(ellipse at 50% 0%, rgba(0, 204, 255, 0.2) 0%, transparent 50%),
+        radial-gradient(ellipse at 0% 100%, rgba(0, 170, 153, 0.15) 0%, transparent 40%),
+        radial-gradient(ellipse at 100% 100%, rgba(136, 85, 255, 0.15) 0%, transparent 40%);
+      z-index: -1;
+    }
+    header {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      padding: 1.5rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      backdrop-filter: blur(20px);
+      background: rgba(0, 0, 0, 0.5);
+      border-bottom: 1px solid rgba(0, 204, 255, 0.2);
+      z-index: 100;
+    }
+    .logo {
+      font-family: var(--br-font-display);
+      font-size: 1.75rem;
+      font-weight: 800;
+      background: var(--br-gradient-lucidia);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-decoration: none;
+    }
+    nav a {
+      color: rgba(255, 255, 255, 0.7);
+      text-decoration: none;
+      margin-left: 2rem;
+      transition: color 0.2s;
+    }
+    nav a:hover { color: var(--lucidia-cyan); }
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      padding: 8rem 2rem 4rem;
+    }
+    .orb {
+      width: 200px;
+      height: 200px;
+      margin-bottom: 3rem;
+      position: relative;
+    }
+    .orb-inner {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 100px;
+      height: 100px;
+      background: var(--br-gradient-lucidia);
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+      box-shadow:
+        0 0 60px rgba(0, 204, 255, 0.5),
+        0 0 120px rgba(0, 204, 255, 0.3);
+      animation: pulse 4s ease-in-out infinite;
+    }
+    .orb-ring {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 180px;
+      height: 180px;
+      border: 1px solid rgba(0, 204, 255, 0.3);
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+      animation: expand 4s ease-in-out infinite;
+    }
+    .orb-ring:nth-child(2) { animation-delay: 1s; }
+    .orb-ring:nth-child(3) { animation-delay: 2s; }
+    @keyframes pulse {
+      0%, 100% { transform: translate(-50%, -50%) scale(1); }
+      50% { transform: translate(-50%, -50%) scale(1.1); }
+    }
+    @keyframes expand {
+      0% { transform: translate(-50%, -50%) scale(0.5); opacity: 1; }
+      100% { transform: translate(-50%, -50%) scale(1.5); opacity: 0; }
+    }
+    .hero h1 {
+      font-family: var(--br-font-display);
+      font-size: clamp(3rem, 10vw, 6rem);
+      font-weight: 800;
+      margin-bottom: 1.5rem;
+      background: var(--br-gradient-lucidia);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .hero p {
+      font-size: 1.25rem;
+      color: rgba(255, 255, 255, 0.7);
+      max-width: 600px;
+      margin-bottom: 2.5rem;
+      line-height: 1.6;
+    }
+    .hero .subtitle {
+      font-size: 1rem;
+      color: rgba(0, 204, 255, 0.8);
+      font-family: var(--br-font-display);
+      font-weight: 600;
+      margin-bottom: 3rem;
+    }
+    .btn-primary {
+      background: var(--br-gradient-lucidia);
+      color: var(--br-black);
+      font-family: var(--br-font-display);
+      font-weight: 700;
+      padding: 1rem 2.5rem;
+      border-radius: 50px;
+      border: none;
+      text-decoration: none;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 0 40px rgba(0, 204, 255, 0.4);
+    }
+    .capabilities {
+      padding: 6rem 2rem;
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+    .capability-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 2rem;
+    }
+    .capability {
+      background: rgba(0, 204, 255, 0.05);
+      border: 1px solid rgba(0, 204, 255, 0.2);
+      border-radius: 24px;
+      padding: 2rem;
+      transition: all 0.3s;
+    }
+    .capability:hover {
+      border-color: var(--lucidia-cyan);
+      transform: translateY(-4px);
+      box-shadow: 0 20px 40px rgba(0, 204, 255, 0.15);
+    }
+    .capability h3 {
+      font-family: var(--br-font-display);
+      font-size: 1.25rem;
+      font-weight: 700;
+      margin-bottom: 0.75rem;
+      color: var(--lucidia-cyan);
+    }
+    .capability p { color: rgba(255, 255, 255, 0.6); line-height: 1.6; }
+    .philosophy {
+      padding: 6rem 2rem;
+      text-align: center;
+      background: linear-gradient(180deg, transparent 0%, rgba(0, 204, 255, 0.05) 100%);
+    }
+    .philosophy blockquote {
+      font-family: var(--br-font-display);
+      font-size: clamp(1.5rem, 4vw, 2.5rem);
+      font-weight: 600;
+      font-style: italic;
+      color: rgba(255, 255, 255, 0.9);
+      max-width: 800px;
+      margin: 0 auto;
+      line-height: 1.4;
+    }
+    .philosophy cite {
+      display: block;
+      margin-top: 1.5rem;
+      font-size: 1rem;
+      font-style: normal;
+      color: var(--lucidia-cyan);
+    }
+    footer {
+      border-top: 1px solid rgba(0, 204, 255, 0.2);
+      padding: 3rem 2rem;
+      text-align: center;
+      color: rgba(255, 255, 255, 0.5);
+    }
+    footer a { color: var(--lucidia-cyan); text-decoration: none; }
+    @media (max-width: 768px) {
+      .hero h1 { font-size: 3rem; }
+      nav { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="ambient-bg"></div>
+  <header>
+    <a href="/" class="logo">Lucidia</a>
+    <nav>
+      <a href="https://lucidia.studio">Studio</a>
+      <a href="https://blackroad.io">BlackRoad</a>
+      <a href="https://blackroadai.com">AI</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="orb">
+        <div class="orb-ring"></div>
+        <div class="orb-ring"></div>
+        <div class="orb-ring"></div>
+        <div class="orb-inner"></div>
+      </div>
+      <h1>Lucidia</h1>
+      <p class="subtitle">Ambient Intelligence</p>
+      <p>AI that flows with you. Understands context, anticipates needs, amplifies human capability without demanding attention.</p>
+      <a href="https://lucidia.studio" class="btn-primary">Experience Lucidia →</a>
+    </section>
+
+    <section class="capabilities">
+      <div class="capability-grid">
+        <div class="capability">
+          <h3>🌊 Contextual Flow</h3>
+          <p>Lucidia observes patterns in your work, learning when to assist and when to stay silent. Intelligence that respects your focus.</p>
+        </div>
+        <div class="capability">
+          <h3>🎯 Intent Recognition</h3>
+          <p>Understands what you're trying to accomplish, not just what you say. Bridges the gap between thought and action.</p>
+        </div>
+        <div class="capability">
+          <h3>🔮 Predictive Assistance</h3>
+          <p>Anticipates your next move. Prepares resources, surfaces relevant information, removes friction before you notice it.</p>
+        </div>
+        <div class="capability">
+          <h3>🌐 Seamless Integration</h3>
+          <p>Works across all your tools and platforms. One intelligence, infinite touchpoints, zero context switching.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="philosophy">
+      <blockquote>
+        "The best AI is invisible. It doesn't interrupt—it enables."
+      </blockquote>
+      <cite>— The Lucidia Principle</cite>
+    </section>
+  </main>
+
+  <footer>
+    <p>© 2025 Lucidia · A <a href="https://blackroad.io">BlackRoad OS</a> Experience</p>
+  </footer>
+</body>
+</html>

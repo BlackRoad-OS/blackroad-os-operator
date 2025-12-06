@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BlackRoad Inc | Enterprise Solutions</title>
+  <meta name="description" content="Enterprise AI and infrastructure solutions. BlackRoad for business.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='40' fill='%23FF6B00'/></svg>">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Inter+Tight:wght@600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --br-sunrise: #FF9D00;
+      --br-warm-orange: #FF6B00;
+      --br-hot-pink: #FF0066;
+      --br-vivid-purple: #7700FF;
+      --br-black: #000000;
+      --br-white: #FFFFFF;
+      --br-gradient-enterprise: linear-gradient(135deg, #FF6B00 0%, #FF9D00 100%);
+      --br-font-display: 'Inter Tight', sans-serif;
+      --br-font-body: 'Inter', sans-serif;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: var(--br-black);
+      color: var(--br-white);
+      font-family: var(--br-font-body);
+      min-height: 100vh;
+    }
+    .bg-mesh {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background:
+        radial-gradient(ellipse at 50% 0%, rgba(255, 107, 0, 0.15) 0%, transparent 50%),
+        radial-gradient(ellipse at 100% 100%, rgba(255, 157, 0, 0.1) 0%, transparent 40%);
+      z-index: -1;
+    }
+    header {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      padding: 1.5rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      backdrop-filter: blur(20px);
+      background: rgba(0, 0, 0, 0.5);
+      border-bottom: 1px solid rgba(255, 107, 0, 0.2);
+      z-index: 100;
+    }
+    .logo {
+      font-family: var(--br-font-display);
+      font-size: 1.5rem;
+      font-weight: 800;
+      background: var(--br-gradient-enterprise);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-decoration: none;
+    }
+    nav a {
+      color: rgba(255, 255, 255, 0.7);
+      text-decoration: none;
+      margin-left: 2rem;
+      transition: color 0.2s;
+    }
+    nav a:hover { color: var(--br-warm-orange); }
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      padding: 8rem 2rem 4rem;
+    }
+    .badge {
+      background: rgba(255, 107, 0, 0.2);
+      color: var(--br-warm-orange);
+      padding: 0.5rem 1rem;
+      border-radius: 20px;
+      font-size: 0.875rem;
+      font-weight: 600;
+      margin-bottom: 2rem;
+      border: 1px solid rgba(255, 107, 0, 0.3);
+    }
+    .hero h1 {
+      font-family: var(--br-font-display);
+      font-size: clamp(3rem, 8vw, 5rem);
+      font-weight: 800;
+      margin-bottom: 1.5rem;
+      background: var(--br-gradient-enterprise);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .hero p {
+      font-size: 1.25rem;
+      color: rgba(255, 255, 255, 0.7);
+      max-width: 600px;
+      margin-bottom: 2.5rem;
+      line-height: 1.6;
+    }
+    .btn-primary {
+      background: var(--br-gradient-enterprise);
+      color: var(--br-black);
+      font-family: var(--br-font-display);
+      font-weight: 700;
+      padding: 1rem 2.5rem;
+      border-radius: 8px;
+      border: none;
+      text-decoration: none;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 0 40px rgba(255, 107, 0, 0.4);
+    }
+    .solutions {
+      padding: 6rem 2rem;
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+    .solutions h2 {
+      font-family: var(--br-font-display);
+      font-size: 2rem;
+      font-weight: 800;
+      margin-bottom: 3rem;
+      text-align: center;
+      color: var(--br-warm-orange);
+    }
+    .solution-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 2rem;
+    }
+    .solution {
+      background: rgba(255, 107, 0, 0.05);
+      border: 1px solid rgba(255, 107, 0, 0.2);
+      border-radius: 16px;
+      padding: 2rem;
+      transition: all 0.2s;
+    }
+    .solution:hover {
+      border-color: var(--br-warm-orange);
+      transform: translateY(-4px);
+    }
+    .solution h3 {
+      font-family: var(--br-font-display);
+      font-size: 1.25rem;
+      font-weight: 700;
+      margin-bottom: 0.75rem;
+      color: var(--br-white);
+    }
+    .solution p { color: rgba(255, 255, 255, 0.6); line-height: 1.6; }
+    .cta {
+      padding: 6rem 2rem;
+      text-align: center;
+      background: linear-gradient(180deg, transparent 0%, rgba(255, 107, 0, 0.1) 100%);
+    }
+    .cta h2 {
+      font-family: var(--br-font-display);
+      font-size: 2.5rem;
+      font-weight: 800;
+      margin-bottom: 1rem;
+    }
+    .cta p { color: rgba(255, 255, 255, 0.6); margin-bottom: 2rem; }
+    footer {
+      border-top: 1px solid rgba(255, 107, 0, 0.2);
+      padding: 3rem 2rem;
+      text-align: center;
+      color: rgba(255, 255, 255, 0.5);
+    }
+    footer a { color: var(--br-warm-orange); text-decoration: none; }
+    @media (max-width: 768px) {
+      .hero h1 { font-size: 2.5rem; }
+      nav { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="bg-mesh"></div>
+  <header>
+    <a href="/" class="logo">BlackRoad Inc</a>
+    <nav>
+      <a href="https://blackroad.io">Platform</a>
+      <a href="https://blackroadai.com">AI</a>
+      <a href="mailto:blackroad.systems@gmail.com">Contact</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="badge">Enterprise</div>
+      <h1>BlackRoad for Business</h1>
+      <p>Enterprise-grade AI and infrastructure solutions. Custom deployments, dedicated support, compliance-ready.</p>
+      <a href="mailto:blackroad.systems@gmail.com" class="btn-primary">Contact Sales →</a>
+    </section>
+
+    <section class="solutions">
+      <h2>Enterprise Solutions</h2>
+      <div class="solution-grid">
+        <div class="solution">
+          <h3>🏢 Private Cloud</h3>
+          <p>Dedicated infrastructure in your VPC or on-premises. Full control with BlackRoad's power.</p>
+        </div>
+        <div class="solution">
+          <h3>🤖 Custom AI</h3>
+          <p>Fine-tuned models for your domain. Train on your data, deploy to your infrastructure.</p>
+        </div>
+        <div class="solution">
+          <h3>🔒 Compliance</h3>
+          <p>SOC 2, HIPAA, GDPR ready. Enterprise security and audit trails built in.</p>
+        </div>
+        <div class="solution">
+          <h3>🛠️ Integration</h3>
+          <p>Connect to your existing systems. SSO, LDAP, custom APIs, and legacy support.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="cta">
+      <h2>Ready to transform your business?</h2>
+      <p>Let's discuss how BlackRoad can work for you.</p>
+      <a href="mailto:blackroad.systems@gmail.com" class="btn-primary">Get in Touch</a>
+    </section>
+  </main>
+
+  <footer>
+    <p>© 2025 BlackRoad Inc · Part of <a href="https://blackroad.io">BlackRoad OS</a></p>
+  </footer>
+</body>
+</html>

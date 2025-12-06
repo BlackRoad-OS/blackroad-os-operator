@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cece | BlackRoad AI Assistant</title>
+  <meta name="description" content="Meet Cece, your AI-powered assistant for BlackRoad OS. Chat, create, and command.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='40' fill='%23FF9D00'/></svg>">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Inter+Tight:wght@600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --br-sunrise: #FF9D00;
+      --br-hot-pink: #FF0066;
+      --br-vivid-purple: #7700FF;
+      --br-black: #000000;
+      --br-white: #FFFFFF;
+      --br-charcoal: #0D0D0D;
+      --br-gradient-cece: linear-gradient(135deg, #FF9D00 0%, #FF0066 100%);
+      --br-font-display: 'Inter Tight', sans-serif;
+      --br-font-body: 'Inter', sans-serif;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: var(--br-black);
+      color: var(--br-white);
+      font-family: var(--br-font-body);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    .bg-mesh {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background:
+        radial-gradient(ellipse at 50% 100%, rgba(255, 157, 0, 0.15) 0%, transparent 50%),
+        radial-gradient(ellipse at 0% 0%, rgba(255, 0, 102, 0.1) 0%, transparent 40%);
+      z-index: -1;
+    }
+    header {
+      padding: 1.5rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid rgba(255, 157, 0, 0.2);
+    }
+    .logo {
+      font-family: var(--br-font-display);
+      font-size: 1.5rem;
+      font-weight: 800;
+      background: var(--br-gradient-cece);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-decoration: none;
+    }
+    nav a {
+      color: rgba(255, 255, 255, 0.7);
+      text-decoration: none;
+      margin-left: 1.5rem;
+      font-size: 0.9rem;
+      transition: color 0.2s;
+    }
+    nav a:hover { color: var(--br-sunrise); }
+    .chat-container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      max-width: 800px;
+      margin: 0 auto;
+      width: 100%;
+      padding: 2rem;
+    }
+    .welcome {
+      text-align: center;
+      padding: 4rem 2rem;
+    }
+    .cece-avatar {
+      width: 100px;
+      height: 100px;
+      background: var(--br-gradient-cece);
+      border-radius: 50%;
+      margin: 0 auto 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2.5rem;
+      box-shadow: 0 0 60px rgba(255, 157, 0, 0.4);
+      animation: pulse 3s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); box-shadow: 0 0 60px rgba(255, 157, 0, 0.4); }
+      50% { transform: scale(1.05); box-shadow: 0 0 80px rgba(255, 157, 0, 0.6); }
+    }
+    .welcome h1 {
+      font-family: var(--br-font-display);
+      font-size: 2.5rem;
+      font-weight: 800;
+      margin-bottom: 0.5rem;
+      background: var(--br-gradient-cece);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .welcome p {
+      color: rgba(255, 255, 255, 0.6);
+      font-size: 1.1rem;
+      margin-bottom: 2rem;
+    }
+    .suggestions {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+      margin-top: 2rem;
+    }
+    .suggestion {
+      background: rgba(255, 157, 0, 0.1);
+      border: 1px solid rgba(255, 157, 0, 0.2);
+      border-radius: 12px;
+      padding: 1rem;
+      text-align: left;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .suggestion:hover {
+      border-color: var(--br-sunrise);
+      transform: translateY(-2px);
+    }
+    .suggestion-icon {
+      font-size: 1.5rem;
+      margin-bottom: 0.5rem;
+    }
+    .suggestion-text {
+      color: rgba(255, 255, 255, 0.8);
+      font-size: 0.9rem;
+    }
+    .input-area {
+      padding: 1.5rem;
+      border-top: 1px solid rgba(255, 157, 0, 0.2);
+      background: rgba(13, 13, 13, 0.8);
+    }
+    .input-wrapper {
+      max-width: 800px;
+      margin: 0 auto;
+      display: flex;
+      gap: 1rem;
+    }
+    .chat-input {
+      flex: 1;
+      background: var(--br-charcoal);
+      border: 1px solid rgba(255, 157, 0, 0.3);
+      border-radius: 12px;
+      padding: 1rem 1.5rem;
+      color: var(--br-white);
+      font-family: var(--br-font-body);
+      font-size: 1rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .chat-input:focus {
+      border-color: var(--br-sunrise);
+    }
+    .chat-input::placeholder {
+      color: rgba(255, 255, 255, 0.4);
+    }
+    .send-btn {
+      background: var(--br-gradient-cece);
+      border: none;
+      border-radius: 12px;
+      padding: 1rem 1.5rem;
+      color: var(--br-white);
+      font-family: var(--br-font-display);
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .send-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 0 30px rgba(255, 157, 0, 0.4);
+    }
+    @media (max-width: 768px) {
+      nav { display: none; }
+      .welcome h1 { font-size: 2rem; }
+      .suggestions { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="bg-mesh"></div>
+  <header>
+    <a href="/" class="logo">Cece</a>
+    <nav>
+      <a href="https://blackroad.io">BlackRoad</a>
+      <a href="https://blackroadai.com">AI</a>
+      <a href="https://app.blackroad.io/login">Sign In</a>
+    </nav>
+  </header>
+
+  <main class="chat-container">
+    <div class="welcome">
+      <div class="cece-avatar">🤖</div>
+      <h1>Hey, I'm Cece</h1>
+      <p>Your AI assistant for BlackRoad OS. How can I help you today?</p>
+
+      <div class="suggestions">
+        <div class="suggestion">
+          <div class="suggestion-icon">🚀</div>
+          <div class="suggestion-text">Deploy a new project to the edge</div>
+        </div>
+        <div class="suggestion">
+          <div class="suggestion-icon">📊</div>
+          <div class="suggestion-text">Check my infrastructure status</div>
+        </div>
+        <div class="suggestion">
+          <div class="suggestion-icon">🔐</div>
+          <div class="suggestion-text">Set up authentication for my app</div>
+        </div>
+        <div class="suggestion">
+          <div class="suggestion-icon">💡</div>
+          <div class="suggestion-text">What can BlackRoad do?</div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <div class="input-area">
+    <div class="input-wrapper">
+      <input type="text" class="chat-input" placeholder="Ask Cece anything..." />
+      <button class="send-btn">Send</button>
+    </div>
+  </div>
+</body>
+</html>

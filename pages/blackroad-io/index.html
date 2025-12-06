@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BlackRoad OS | The Operating System for Tomorrow</title>
+  <meta name="description" content="BlackRoad OS is an operating system for the future. We build transparent, trustworthy infrastructure that puts humans first.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='40' fill='%23FF0066'/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Inter+Tight:wght@600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --br-sunrise: #FF9D00;
+      --br-warm-orange: #FF6B00;
+      --br-hot-pink: #FF0066;
+      --br-electric-magenta: #FF006B;
+      --br-deep-magenta: #D600AA;
+      --br-vivid-purple: #7700FF;
+      --br-cyber-blue: #0066FF;
+      --br-black: #000000;
+      --br-charcoal: #0D0D0D;
+      --br-white: #FFFFFF;
+      --br-gradient-brand: linear-gradient(135deg, #FF9D00 0%, #FF6B00 25%, #FF0066 50%, #D600AA 75%, #7700FF 100%);
+      --br-gradient-os: linear-gradient(180deg, #FF0066 0%, #D600AA 33%, #7700FF 66%, #0066FF 100%);
+      --br-font-display: 'Inter Tight', -apple-system, sans-serif;
+      --br-font-body: 'Inter', -apple-system, sans-serif;
+      --br-font-mono: 'JetBrains Mono', monospace;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--br-black);
+      color: var(--br-white);
+      font-family: var(--br-font-body);
+      -webkit-font-smoothing: antialiased;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Animated gradient background */
+    .bg-gradient {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: radial-gradient(ellipse at 20% 20%, rgba(255, 0, 102, 0.15) 0%, transparent 50%),
+                  radial-gradient(ellipse at 80% 80%, rgba(119, 0, 255, 0.15) 0%, transparent 50%),
+                  radial-gradient(ellipse at 50% 50%, rgba(0, 102, 255, 0.08) 0%, transparent 70%);
+      z-index: -1;
+      animation: pulse 20s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.7; }
+    }
+
+    /* Header */
+    header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;
+      padding: 1.5rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      backdrop-filter: blur(20px);
+      background: rgba(0, 0, 0, 0.5);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .logo {
+      font-family: var(--br-font-display);
+      font-size: 1.5rem;
+      font-weight: 800;
+      background: var(--br-gradient-brand);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-decoration: none;
+    }
+    nav { display: flex; gap: 2rem; align-items: center; }
+    nav a {
+      color: rgba(255, 255, 255, 0.7);
+      text-decoration: none;
+      font-weight: 500;
+      transition: color 0.2s;
+    }
+    nav a:hover { color: var(--br-white); }
+
+    /* Hero */
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      padding: 8rem 2rem 4rem;
+    }
+    .hero h1 {
+      font-family: var(--br-font-display);
+      font-size: clamp(3rem, 10vw, 6rem);
+      font-weight: 800;
+      line-height: 1.1;
+      margin-bottom: 1.5rem;
+      background: var(--br-gradient-brand);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .hero p {
+      font-size: 1.25rem;
+      color: rgba(255, 255, 255, 0.7);
+      max-width: 600px;
+      margin-bottom: 2.5rem;
+      line-height: 1.6;
+    }
+    .hero-buttons {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .btn-primary {
+      background: var(--br-gradient-brand);
+      color: var(--br-black);
+      font-family: var(--br-font-display);
+      font-weight: 700;
+      padding: 1rem 2rem;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      text-decoration: none;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 0 40px rgba(255, 0, 102, 0.4);
+    }
+    .btn-secondary {
+      background: transparent;
+      color: var(--br-hot-pink);
+      font-family: var(--br-font-display);
+      font-weight: 600;
+      padding: 1rem 2rem;
+      border-radius: 8px;
+      border: 1px solid var(--br-hot-pink);
+      cursor: pointer;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+    .btn-secondary:hover {
+      background: var(--br-hot-pink);
+      color: var(--br-black);
+    }
+
+    /* Features */
+    .features {
+      padding: 6rem 2rem;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    .features h2 {
+      font-family: var(--br-font-display);
+      font-size: 2.5rem;
+      font-weight: 800;
+      text-align: center;
+      margin-bottom: 4rem;
+    }
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 2rem;
+    }
+    .feature-card {
+      background: rgba(13, 13, 13, 0.8);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 16px;
+      padding: 2rem;
+      transition: transform 0.2s, border-color 0.2s;
+    }
+    .feature-card:hover {
+      transform: translateY(-4px);
+      border-color: var(--br-hot-pink);
+    }
+    .feature-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      margin-bottom: 1rem;
+    }
+    .feature-card h3 {
+      font-family: var(--br-font-display);
+      font-size: 1.25rem;
+      font-weight: 700;
+      margin-bottom: 0.75rem;
+    }
+    .feature-card p {
+      color: rgba(255, 255, 255, 0.6);
+      line-height: 1.6;
+    }
+
+    /* Services */
+    .services {
+      padding: 6rem 2rem;
+      background: linear-gradient(180deg, transparent 0%, rgba(13, 13, 13, 0.5) 100%);
+    }
+    .services-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    .services h2 {
+      font-family: var(--br-font-display);
+      font-size: 2.5rem;
+      font-weight: 800;
+      text-align: center;
+      margin-bottom: 1rem;
+    }
+    .services .subtitle {
+      text-align: center;
+      color: rgba(255, 255, 255, 0.6);
+      margin-bottom: 4rem;
+    }
+    .service-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 1.5rem;
+    }
+    .service-card {
+      background: rgba(0, 0, 0, 0.4);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      padding: 1.5rem;
+      text-decoration: none;
+      color: inherit;
+      transition: all 0.2s;
+    }
+    .service-card:hover {
+      background: rgba(255, 0, 102, 0.1);
+      border-color: var(--br-hot-pink);
+      transform: translateY(-2px);
+    }
+    .service-card h4 {
+      font-family: var(--br-font-display);
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+    }
+    .service-card p {
+      font-size: 0.875rem;
+      color: rgba(255, 255, 255, 0.5);
+    }
+
+    /* CTA */
+    .cta {
+      padding: 8rem 2rem;
+      text-align: center;
+    }
+    .cta h2 {
+      font-family: var(--br-font-display);
+      font-size: 3rem;
+      font-weight: 800;
+      margin-bottom: 1.5rem;
+      background: var(--br-gradient-brand);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .cta p {
+      color: rgba(255, 255, 255, 0.6);
+      margin-bottom: 2rem;
+      max-width: 500px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    /* Footer */
+    footer {
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 4rem 2rem;
+    }
+    .footer-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 3rem;
+    }
+    .footer-brand {
+      font-family: var(--br-font-display);
+      font-size: 1.25rem;
+      font-weight: 800;
+      background: var(--br-gradient-brand);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 1rem;
+    }
+    .footer-tagline {
+      color: rgba(255, 255, 255, 0.5);
+      font-size: 0.875rem;
+    }
+    .footer-links h5 {
+      font-family: var(--br-font-display);
+      font-weight: 600;
+      margin-bottom: 1rem;
+      color: rgba(255, 255, 255, 0.7);
+    }
+    .footer-links a {
+      display: block;
+      color: rgba(255, 255, 255, 0.5);
+      text-decoration: none;
+      margin-bottom: 0.5rem;
+      font-size: 0.875rem;
+      transition: color 0.2s;
+    }
+    .footer-links a:hover { color: var(--br-white); }
+    .footer-bottom {
+      max-width: 1200px;
+      margin: 3rem auto 0;
+      padding-top: 2rem;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      text-align: center;
+      color: rgba(255, 255, 255, 0.4);
+      font-size: 0.875rem;
+    }
+
+    @media (max-width: 768px) {
+      header { padding: 1rem; }
+      nav { display: none; }
+      .hero h1 { font-size: 2.5rem; }
+      .hero p { font-size: 1rem; }
+      .hero-buttons { flex-direction: column; }
+      .features h2, .services h2 { font-size: 2rem; }
+      .cta h2 { font-size: 2rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="bg-gradient"></div>
+
+  <header>
+    <a href="/" class="logo">BlackRoad</a>
+    <nav>
+      <a href="#features">Features</a>
+      <a href="#services">Services</a>
+      <a href="https://docs.blackroad.io">Docs</a>
+      <a href="https://app.blackroad.io" class="btn-primary" style="padding: 0.5rem 1rem; font-size: 0.875rem;">Launch App</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero">
+      <h1>The Operating System for Tomorrow</h1>
+      <p>BlackRoad OS is transparent, trustworthy infrastructure that puts humans first. Build, deploy, and orchestrate with confidence.</p>
+      <div class="hero-buttons">
+        <a href="https://app.blackroad.io" class="btn-primary">Get Started</a>
+        <a href="https://docs.blackroad.io" class="btn-secondary">Documentation</a>
+      </div>
+    </section>
+
+    <section class="features" id="features">
+      <h2>Why BlackRoad?</h2>
+      <div class="feature-grid">
+        <div class="feature-card">
+          <div class="feature-icon" style="background: linear-gradient(135deg, #FF9D00, #FF6B00);">⚡</div>
+          <h3>Edge-First Architecture</h3>
+          <p>Deploy to 300+ locations worldwide with Cloudflare Workers. Your code runs at the edge, milliseconds from your users.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon" style="background: linear-gradient(135deg, #FF0066, #D600AA);">🔐</div>
+          <h3>Zero-Trust Security</h3>
+          <p>PS-SHA-∞ cryptographic verification ensures every action is authenticated, every deployment is verified.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon" style="background: linear-gradient(135deg, #7700FF, #0066FF);">🤖</div>
+          <h3>AI-Native Orchestration</h3>
+          <p>Cece, our AI assistant, helps you deploy, debug, and manage your infrastructure with natural language.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon" style="background: linear-gradient(135deg, #0066FF, #00CCFF);">📊</div>
+          <h3>Real-Time Observability</h3>
+          <p>Full telemetry, tracing, and logging across your entire stack. Know what's happening, when it happens.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="services" id="services">
+      <div class="services-inner">
+        <h2>Ecosystem</h2>
+        <p class="subtitle">A complete suite of tools for modern development</p>
+        <div class="service-grid">
+          <a href="https://api.blackroad.io" class="service-card">
+            <h4>API Gateway</h4>
+            <p>Unified API access with rate limiting and auth</p>
+          </a>
+          <a href="https://cece.blackroad.io" class="service-card">
+            <h4>Cece AI</h4>
+            <p>Your AI-powered infrastructure assistant</p>
+          </a>
+          <a href="https://status.blackroad.io" class="service-card">
+            <h4>Status</h4>
+            <p>Real-time system health monitoring</p>
+          </a>
+          <a href="https://billing.blackroad.io" class="service-card">
+            <h4>Billing</h4>
+            <p>Usage tracking and subscription management</p>
+          </a>
+          <a href="https://blackroadai.com" class="service-card">
+            <h4>BlackRoad AI</h4>
+            <p>Advanced AI capabilities and models</p>
+          </a>
+          <a href="https://lucidia.earth" class="service-card">
+            <h4>Lucidia</h4>
+            <p>Next-generation consciousness framework</p>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <section class="cta">
+      <h2>Ready to build?</h2>
+      <p>Join thousands of developers building on BlackRoad OS.</p>
+      <a href="https://app.blackroad.io" class="btn-primary">Start Building Free</a>
+    </section>
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+      <div>
+        <div class="footer-brand">BlackRoad OS</div>
+        <p class="footer-tagline">The road out is the road back.</p>
+      </div>
+      <div class="footer-links">
+        <h5>Products</h5>
+        <a href="https://api.blackroad.io">API Gateway</a>
+        <a href="https://cece.blackroad.io">Cece AI</a>
+        <a href="https://blackroadai.com">BlackRoad AI</a>
+        <a href="https://lucidia.earth">Lucidia</a>
+      </div>
+      <div class="footer-links">
+        <h5>Resources</h5>
+        <a href="https://docs.blackroad.io">Documentation</a>
+        <a href="https://status.blackroad.io">Status</a>
+        <a href="https://github.com/BlackRoad-OS">GitHub</a>
+      </div>
+      <div class="footer-links">
+        <h5>Company</h5>
+        <a href="/about">About</a>
+        <a href="/legal">Legal</a>
+        <a href="mailto:blackroad.systems@gmail.com">Contact</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>© 2025 BlackRoad OS. Built with ❤️ by Alexa Amundson.</p>
+    </div>
+  </footer>
+</body>
+</html>

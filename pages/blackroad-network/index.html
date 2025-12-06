@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BlackRoad Network | Decentralized Infrastructure</title>
+  <meta name="description" content="The decentralized network powering BlackRoad OS. Secure, distributed, unstoppable.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='40' fill='%230066FF'/></svg>">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Inter+Tight:wght@600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --br-sunrise: #FF9D00;
+      --br-hot-pink: #FF0066;
+      --br-vivid-purple: #7700FF;
+      --br-cyber-blue: #0066FF;
+      --br-black: #000000;
+      --br-white: #FFFFFF;
+      --br-gradient-network: linear-gradient(135deg, #0066FF 0%, #7700FF 50%, #0066FF 100%);
+      --br-font-display: 'Inter Tight', sans-serif;
+      --br-font-body: 'Inter', sans-serif;
+      --br-font-mono: 'JetBrains Mono', monospace;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: var(--br-black);
+      color: var(--br-white);
+      font-family: var(--br-font-body);
+      min-height: 100vh;
+    }
+    .bg-grid {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-image:
+        linear-gradient(rgba(0, 102, 255, 0.1) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 102, 255, 0.1) 1px, transparent 1px);
+      background-size: 50px 50px;
+      z-index: -2;
+    }
+    .bg-mesh {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background:
+        radial-gradient(ellipse at 20% 30%, rgba(0, 102, 255, 0.3) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 70%, rgba(119, 0, 255, 0.2) 0%, transparent 50%);
+      z-index: -1;
+    }
+    header {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      padding: 1.5rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      backdrop-filter: blur(20px);
+      background: rgba(0, 0, 0, 0.5);
+      border-bottom: 1px solid rgba(0, 102, 255, 0.2);
+      z-index: 100;
+    }
+    .logo {
+      font-family: var(--br-font-display);
+      font-size: 1.5rem;
+      font-weight: 800;
+      background: var(--br-gradient-network);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-decoration: none;
+    }
+    nav a {
+      color: rgba(255, 255, 255, 0.7);
+      text-decoration: none;
+      margin-left: 2rem;
+      transition: color 0.2s;
+    }
+    nav a:hover { color: var(--br-cyber-blue); }
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      padding: 8rem 2rem 4rem;
+    }
+    .badge {
+      background: rgba(0, 102, 255, 0.2);
+      color: var(--br-cyber-blue);
+      padding: 0.5rem 1rem;
+      border-radius: 20px;
+      font-size: 0.875rem;
+      font-weight: 600;
+      margin-bottom: 2rem;
+      border: 1px solid rgba(0, 102, 255, 0.3);
+      font-family: var(--br-font-mono);
+    }
+    .hero h1 {
+      font-family: var(--br-font-display);
+      font-size: clamp(3rem, 8vw, 5rem);
+      font-weight: 800;
+      margin-bottom: 1.5rem;
+      background: var(--br-gradient-network);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .hero p {
+      font-size: 1.25rem;
+      color: rgba(255, 255, 255, 0.7);
+      max-width: 600px;
+      margin-bottom: 2.5rem;
+      line-height: 1.6;
+    }
+    .stats {
+      display: flex;
+      gap: 3rem;
+      margin-bottom: 3rem;
+    }
+    .stat {
+      text-align: center;
+    }
+    .stat-value {
+      font-family: var(--br-font-display);
+      font-size: 2.5rem;
+      font-weight: 800;
+      color: var(--br-cyber-blue);
+    }
+    .stat-label {
+      font-size: 0.875rem;
+      color: rgba(255, 255, 255, 0.5);
+      margin-top: 0.25rem;
+    }
+    .btn-primary {
+      background: var(--br-gradient-network);
+      color: var(--br-white);
+      font-family: var(--br-font-display);
+      font-weight: 700;
+      padding: 1rem 2.5rem;
+      border-radius: 8px;
+      border: none;
+      text-decoration: none;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 0 40px rgba(0, 102, 255, 0.4);
+    }
+    .nodes {
+      padding: 6rem 2rem;
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+    .nodes h2 {
+      font-family: var(--br-font-display);
+      font-size: 2rem;
+      font-weight: 800;
+      margin-bottom: 2rem;
+      text-align: center;
+      color: var(--br-cyber-blue);
+    }
+    .node-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 2rem;
+    }
+    .node {
+      background: rgba(0, 102, 255, 0.05);
+      border: 1px solid rgba(0, 102, 255, 0.2);
+      border-radius: 16px;
+      padding: 2rem;
+      transition: all 0.2s;
+    }
+    .node:hover {
+      border-color: var(--br-cyber-blue);
+      box-shadow: 0 0 30px rgba(0, 102, 255, 0.2);
+    }
+    .node h3 {
+      font-family: var(--br-font-display);
+      font-size: 1.25rem;
+      font-weight: 700;
+      margin-bottom: 0.75rem;
+      color: var(--br-white);
+    }
+    .node p { color: rgba(255, 255, 255, 0.6); line-height: 1.6; }
+    .node-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-top: 1rem;
+      font-family: var(--br-font-mono);
+      font-size: 0.75rem;
+      color: #00FF88;
+    }
+    .node-status::before {
+      content: '';
+      width: 8px;
+      height: 8px;
+      background: #00FF88;
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+    footer {
+      border-top: 1px solid rgba(0, 102, 255, 0.2);
+      padding: 3rem 2rem;
+      text-align: center;
+      color: rgba(255, 255, 255, 0.5);
+    }
+    footer a { color: var(--br-cyber-blue); text-decoration: none; }
+    @media (max-width: 768px) {
+      .hero h1 { font-size: 2.5rem; }
+      nav { display: none; }
+      .stats { flex-direction: column; gap: 1.5rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="bg-grid"></div>
+  <div class="bg-mesh"></div>
+  <header>
+    <a href="/" class="logo">BlackRoad Network</a>
+    <nav>
+      <a href="https://blackroad.io">Platform</a>
+      <a href="https://docs.blackroad.io">Docs</a>
+      <a href="https://status.blackroad.io">Status</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="badge">// DECENTRALIZED INFRASTRUCTURE</div>
+      <h1>The Network Layer</h1>
+      <p>Distributed infrastructure powering BlackRoad OS. Edge-first, globally distributed, infinitely scalable.</p>
+      <div class="stats">
+        <div class="stat">
+          <div class="stat-value">275+</div>
+          <div class="stat-label">Edge Locations</div>
+        </div>
+        <div class="stat">
+          <div class="stat-value">99.99%</div>
+          <div class="stat-label">Uptime SLA</div>
+        </div>
+        <div class="stat">
+          <div class="stat-value">&lt;50ms</div>
+          <div class="stat-label">Global Latency</div>
+        </div>
+      </div>
+      <a href="https://blackroad.io" class="btn-primary">Explore Network →</a>
+    </section>
+
+    <section class="nodes">
+      <h2>Network Architecture</h2>
+      <div class="node-grid">
+        <div class="node">
+          <h3>🌐 Edge Workers</h3>
+          <p>Serverless compute at the edge. Your code runs in 275+ locations worldwide, milliseconds from your users.</p>
+          <div class="node-status">OPERATIONAL</div>
+        </div>
+        <div class="node">
+          <h3>🔐 Identity Mesh</h3>
+          <p>Decentralized identity verification. Cryptographic proof of authenticity without central authority.</p>
+          <div class="node-status">OPERATIONAL</div>
+        </div>
+        <div class="node">
+          <h3>📡 Message Bus</h3>
+          <p>Real-time event streaming between nodes. Pub/sub at global scale with guaranteed delivery.</p>
+          <div class="node-status">OPERATIONAL</div>
+        </div>
+        <div class="node">
+          <h3>💾 Distributed State</h3>
+          <p>Eventually consistent global storage. Read from nearest edge, replicate worldwide automatically.</p>
+          <div class="node-status">OPERATIONAL</div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <p>© 2025 BlackRoad Network · Part of <a href="https://blackroad.io">BlackRoad OS</a></p>
+  </footer>
+</body>
+</html>
