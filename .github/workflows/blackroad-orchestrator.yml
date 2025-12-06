@@ -57,7 +57,7 @@ jobs:
       pages_matrix: ${{ steps.pages.outputs.matrix }}
       domains_affected: ${{ steps.domains.outputs.affected }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
         with:
           fetch-depth: 0
 
@@ -153,9 +153,9 @@ jobs:
       fail-fast: false
       max-parallel: 5
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: ${{ env.NODE_VERSION }}
 
@@ -192,9 +192,9 @@ jobs:
         page: ${{ fromJson(needs.analyze.outputs.pages_matrix) }}
       fail-fast: false
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: ${{ env.NODE_VERSION }}
 
@@ -230,7 +230,7 @@ jobs:
     if: needs.analyze.outputs.deploy_railway == 'true'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
 
       - name: Install Railway CLI
         run: npm install -g @railway/cli
@@ -252,7 +252,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Trigger blackroad-os-web
-        uses: peter-evans/repository-dispatch@v3
+        uses: peter-evans/repository-dispatch@ff45666b9427631e3450c54a1bcbee4d9ff4d7c0 # v3
         with:
           token: ${{ secrets.CROSS_REPO_TOKEN }}
           repository: BlackRoad-OS/blackroad-os-web
@@ -261,7 +261,7 @@ jobs:
         continue-on-error: true
 
       - name: Trigger blackroad-os-api
-        uses: peter-evans/repository-dispatch@v3
+        uses: peter-evans/repository-dispatch@ff45666b9427631e3450c54a1bcbee4d9ff4d7c0 # v3
         with:
           token: ${{ secrets.CROSS_REPO_TOKEN }}
           repository: BlackRoad-OS/blackroad-os-api

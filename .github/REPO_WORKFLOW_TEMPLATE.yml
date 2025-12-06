@@ -24,7 +24,7 @@ jobs:
       deploy_type: ${{ steps.detect.outputs.type }}
       deploy_target: ${{ steps.detect.outputs.target }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
 
       - name: Detect Repo Type
         id: detect
@@ -57,9 +57,9 @@ jobs:
     needs: detect
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: '20'
 
@@ -116,7 +116,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Notify BlackRoad Orchestrator
-        uses: peter-evans/repository-dispatch@v3
+        uses: peter-evans/repository-dispatch@ff45666b9427631e3450c54a1bcbee4d9ff4d7c0 # v3
         with:
           token: ${{ secrets.CROSS_REPO_TOKEN }}
           repository: BlackRoad-OS/blackroad-os-operator
