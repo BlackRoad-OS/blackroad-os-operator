@@ -12,7 +12,7 @@ Run once:
 Continuous (refresh every 60s):
     python scripts/dynamic_config_refresh.py --interval 60
 
-This script intentionally avoids external dependencies so it can run inside
+This script only requires PyYAML as an external dependency so it can run inside
 Railway, GitHub Actions, or lightweight cron jobs.
 """
 
