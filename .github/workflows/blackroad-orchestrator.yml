@@ -94,16 +94,26 @@ jobs:
       - name: Build Worker Matrix
         id: workers
         run: |
-          WORKERS=$(ls -d workers/*/ 2>/dev/null | xargs -I{} basename {} | jq -R -s -c 'split("\n") | map(select(length > 0))')
+          # Only include workers that have wrangler.toml (deployable)
+          WORKERS=$(for d in workers/*/; do
+            if [ -f "${d}wrangler.toml" ]; then
+              basename "$d"
+            fi
+          done | jq -R -s -c 'split("\n") | map(select(length > 0))')
           echo "matrix=$WORKERS" >> $GITHUB_OUTPUT
-          echo "Workers: $WORKERS"
+          echo "Deployable workers: $WORKERS"
 
       - name: Build Pages Matrix
         id: pages
         run: |
-          PAGES=$(ls -d pages/*/ 2>/dev/null | xargs -I{} basename {} | jq -R -s -c 'split("\n") | map(select(length > 0))')
+          # Only include pages directories that have index.html or package.json
+          PAGES=$(for d in pages/*/; do
+            if [ -f "${d}index.html" ] || [ -f "${d}package.json" ]; then
+              basename "$d"
+            fi
+          done | jq -R -s -c 'split("\n") | map(select(length > 0))')
           echo "matrix=$PAGES" >> $GITHUB_OUTPUT
-          echo "Pages: $PAGES"
+          echo "Deployable pages: $PAGES"
 
       - name: Identify Affected Domains
         id: domains
@@ -227,7 +237,7 @@ jobs:
   deploy-railway:
     name: Deploy Railway
     needs: analyze
-    if: needs.analyze.outputs.deploy_railway == 'true'
+    if: needs.analyze.outputs.deploy_railway == 'true' && vars.RAILWAY_PROJECT_ID != ''
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
@@ -237,10 +247,22 @@ jobs:
 
       - name: Deploy to Railway
         run: |
-          railway link --environment production 2>/dev/null || true
-          railway up --detach
+          # Use project token if available, otherwise skip
+          if [ -z "$RAILWAY_TOKEN" ]; then
+            echo "⚠️ No Railway token configured, skipping Railway deployment"
+            echo "To enable: Add RAILWAY_TOKEN secret with project-specific token"
+            exit 0
+          fi
+
+          # Link to project if PROJECT_ID is set
+          if [ -n "${{ vars.RAILWAY_PROJECT_ID }}" ]; then
+            railway link "${{ vars.RAILWAY_PROJECT_ID }}" --environment production 2>/dev/null || true
+          fi
+
+          railway up --detach || echo "Railway deployment skipped (no project linked)"
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+        continue-on-error: true
 
   # ============================================================================
   # TRIGGER CROSS-REPO DEPLOYMENTS
