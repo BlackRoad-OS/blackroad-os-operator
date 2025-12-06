@@ -2,7 +2,7 @@
   "name": "BlackRoad OS Operator",
   "image": "mcr.microsoft.com/devcontainers/typescript-node:20",
   "features": {
-    "ghcr.io/devcontainers/features/pnpm:2": {}
+    "ghcr.io/devcontainers/features/pnpm:2": { "version": "8" }
   },
   "postCreateCommand": "pnpm install",
   "forwardPorts": [4000],
