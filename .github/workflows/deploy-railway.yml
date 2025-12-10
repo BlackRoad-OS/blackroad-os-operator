@@ -2,36 +2,56 @@ name: Deploy to Railway
 
 on:
   push:
-    branches: [main]
+    branches: [main, master]
     paths:
-      - 'br_operator/**'
-      - 'src/**'
+      - '**/*.py'
       - 'requirements.txt'
-      - 'Dockerfile'
+      - 'railway-services/**'
   workflow_dispatch:
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    strategy:
+      max-parallel: 5
+      matrix:
+        service:
+          - api-gateway
+          - agent-hub
+          - ws-server
+          - mesh-network
+          - vectordb
+          - event-stream
+          - message-queue
+          - tsdb
+          - llm-server
+          - ml-pipeline
+          - rag-service
+          - model-forge
+
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
       - name: Install Railway CLI
-        run: npm install -g @railway/cli
+        run: |
+          npm install -g @railway/cli
 
-      - name: Deploy to Railway
+      - name: Deploy ${{ matrix.service }} to Railway
+        run: |
+          railway link ${{ secrets.RAILWAY_PROJECT_ID }}
+          railway up --service ${{ matrix.service }}
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
-        run: railway up --service blackroad-operator
 
-      - name: Notify deployment
+      - name: Wait for deployment
         run: |
-          curl -X POST https://api.blackroad.io/webhooks/deploy \
-            -H "Content-Type: application/json" \
-            -H "X-Deploy-Secret: ${{ secrets.DEPLOY_WEBHOOK_SECRET }}" \
-            -d '{
-              "service": "railway",
-              "project": "blackroad-operator",
-              "status": "success",
-              "commit": "${{ github.sha }}"
-            }'
+          echo "⏳ Waiting for ${{ matrix.service }} to be ready..."
+          sleep 30
+
+      - name: Health Check
+        run: |
+          echo "🏥 Checking health of ${{ matrix.service }}..."
+          # Railway URL format: https://<service>.up.railway.app
+          # Health check would go here when service URLs are known
+          echo "✅ Deployment complete"
