@@ -13,6 +13,8 @@ import logger from './logger.js';
 
 const MAX_BUFFER_SIZE = 1000;
 const eventBuffer: DomainEvent[] = [];
+type EventSink = (event: DomainEvent) => void | Promise<void>;
+const eventSinks = new Set<EventSink>();
 
 /**
  * Emit a domain event
@@ -47,10 +49,32 @@ export function emit(
     '📡 event emitted'
   );
 
-  // TODO(op-next): Push to message queue or event stream for other services
-  // For now, just buffer in memory for /events endpoint
+  // Dispatch to registered sinks (e.g., message queues)
+  void dispatchToSinks(event);
 
   return event;
+}
+
+async function dispatchToSinks(event: DomainEvent): Promise<void> {
+  if (eventSinks.size === 0) return;
+
+  const deliveries = Array.from(eventSinks).map(async (sink) => {
+    try {
+      await sink(event);
+    } catch (error) {
+      logger.error(
+        {
+          eventId: event.id,
+          eventType: event.type,
+          sink: sink.name || 'anonymous',
+          error
+        },
+        '📡 event sink failed'
+      );
+    }
+  });
+
+  await Promise.allSettled(deliveries);
 }
 
 /**
@@ -74,6 +98,27 @@ export function clearEvents(): void {
  */
 export function getEventCount(): number {
   return eventBuffer.length;
+}
+
+/**
+ * Register an event sink to receive emitted events
+ */
+export function registerEventSink(sink: EventSink): void {
+  eventSinks.add(sink);
+}
+
+/**
+ * Remove a registered event sink
+ */
+export function removeEventSink(sink: EventSink): void {
+  eventSinks.delete(sink);
+}
+
+/**
+ * Clear all event sinks (useful in tests)
+ */
+export function clearEventSinks(): void {
+  eventSinks.clear();
 }
 
 // Convenience functions for common event types

@@ -12,16 +12,21 @@ import {
   emitWorkflowCompleted,
   emitWorkflowFailed,
   emitAgentRegistered,
-  emitAgentDeregistered
+  emitAgentDeregistered,
+  registerEventSink,
+  removeEventSink,
+  clearEventSinks
 } from '../src/utils/eventBus.js';
 
 describe('EventBus', () => {
   beforeEach(() => {
     clearEvents();
+    clearEventSinks();
   });
 
   afterEach(() => {
     clearEvents();
+    clearEventSinks();
   });
 
   describe('emit', () => {
@@ -79,6 +84,58 @@ describe('EventBus', () => {
       const events = getRecentEvents(1000);
       // First event should be from iteration 100 (0-indexed, so jobId: '100')
       expect(events[0].payload.jobId).toBe('100');
+    });
+  });
+
+  describe('event sinks', () => {
+    it('should notify registered sinks when events are emitted', async () => {
+      const received: string[] = [];
+      const sink = (event: { id: string }) => {
+        received.push(event.id);
+      };
+
+      registerEventSink(sink);
+
+      const event = emit('job.started', { jobId: 'sink-test' });
+
+      await new Promise((resolve) => setImmediate(resolve));
+
+      expect(received).toContain(event.id);
+    });
+
+    it('should continue notifying other sinks when one fails', async () => {
+      const received: string[] = [];
+
+      const failingSink = () => {
+        throw new Error('sink failed');
+      };
+
+      const successSink = (event: { id: string }) => {
+        received.push(event.id);
+      };
+
+      registerEventSink(failingSink);
+      registerEventSink(successSink);
+
+      const event = emit('job.started', { jobId: 'multi-sink' });
+
+      await new Promise((resolve) => setImmediate(resolve));
+
+      expect(received).toContain(event.id);
+    });
+
+    it('should support removing a sink', async () => {
+      const received: string[] = [];
+      const sink = (event: { id: string }) => received.push(event.id);
+
+      registerEventSink(sink);
+      removeEventSink(sink);
+
+      const event = emit('job.started', { jobId: 'remove-sink' });
+
+      await new Promise((resolve) => setImmediate(resolve));
+
+      expect(received).not.toContain(event.id);
     });
   });
 
