@@ -95,6 +95,9 @@ function main(): void {
     }
 
     if (options.dryRun) {
+      if (options.project) {
+        console.log('[dry-run] railway link --project', options.project);
+      }
       console.log('[dry-run] railway', deployArgs.join(' '));
       process.exit(0);
     }
