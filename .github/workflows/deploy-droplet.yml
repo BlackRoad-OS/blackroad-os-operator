@@ -1,78 +1,76 @@
-name: Deploy to DigitalOcean
+name: Deploy to DigitalOcean Droplet
 
 on:
   push:
-    branches: [main]
+    branches: [main, master]
     paths:
-      - 'scripts/deploy-*.sh'
-      - 'infra/pi/**'
+      - 'droplet-services/**'
+      - 'docker-compose.yaml'
+      - 'Dockerfile'
   workflow_dispatch:
-    inputs:
-      target:
-        description: 'Deployment target'
-        required: true
-        default: 'codex-infinity'
-        type: choice
-        options:
-          - codex-infinity
-          - lucidia-pi
-          - all
 
 jobs:
-  deploy-codex:
+  deploy:
     runs-on: ubuntu-latest
-    if: github.event.inputs.target == 'codex-infinity' || github.event.inputs.target == 'all' || github.event_name == 'push'
+
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      - name: Setup SSH
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.DROPLET_SSH_KEY }}" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -H 159.65.43.12 >> ~/.ssh/known_hosts
+      - name: Deploy to Droplet via SSH
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.DROPLET_IP }}
+          username: root
+          key: ${{ secrets.DROPLET_SSH_KEY }}
+          script: |
+            echo "🚀 Deploying to DigitalOcean Droplet..."
 
-      - name: Deploy to codex-infinity
-        run: |
-          ssh root@159.65.43.12 << 'EOF'
-            cd /opt/blackroad
-            git pull origin main
+            # Navigate to application directory
+            cd /opt/blackroad || exit 1
+
+            # Pull latest code
+            echo "📥 Pulling latest code..."
+            git fetch origin
+            git reset --hard origin/main
+
+            # Backup current state
+            echo "💾 Creating backup..."
+            docker-compose down
+            tar -czf backup_$(date +%Y%m%d_%H%M%S).tar.gz . || true
+
+            # Pull new images
+            echo "📦 Pulling Docker images..."
             docker-compose pull
-            docker-compose up -d
-            echo "Deployment complete at $(date)"
-          EOF
 
-      - name: Health check
+            # Build and restart services
+            echo "🔨 Building and starting services..."
+            docker-compose up -d --build
+
+            # Wait for services to start
+            echo "⏳ Waiting for services..."
+            sleep 15
+
+            # Health check
+            echo "🏥 Running health checks..."
+            docker-compose ps
+
+            # Test services
+            curl -f http://localhost:8000/health || echo "⚠️ Health check failed"
+
+            echo "✅ Deployment complete!"
+
+      - name: Verify Deployment
         run: |
-          sleep 10
-          curl -f https://codex.blackroad.io/health || exit 1
+          echo "🔍 Verifying deployment..."
+          curl -I https://codex.blackroad.io/health || echo "⚠️ External health check failed"
 
-  deploy-pi:
-    runs-on: ubuntu-latest
-    if: github.event.inputs.target == 'lucidia-pi' || github.event.inputs.target == 'all'
-    steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
-
-      - name: Deploy to Lucidia via Cloudflare Tunnel
+      - name: Notify on Success
+        if: success()
         run: |
-          curl -X POST https://lucidia.blackroad.io/deploy \
-            -H "Authorization: Bearer ${{ secrets.PI_DEPLOY_TOKEN }}" \
-            -H "Content-Type: application/json" \
-            -d '{"commit": "${{ github.sha }}", "branch": "main"}'
+          echo "✅ Droplet deployment successful!"
 
-  notify:
-    needs: [deploy-codex]
-    runs-on: ubuntu-latest
-    if: always()
-    steps:
-      - name: Notify BlackRoad API
+      - name: Notify on Failure
+        if: failure()
         run: |
-          curl -X POST https://api.blackroad.io/webhooks/deploy \
-            -H "Content-Type: application/json" \
-            -H "X-Deploy-Secret: ${{ secrets.DEPLOY_WEBHOOK_SECRET }}" \
-            -d '{
-              "service": "digitalocean",
-              "target": "${{ github.event.inputs.target || 'codex-infinity' }}",
-              "status": "${{ needs.deploy-codex.result }}",
-              "commit": "${{ github.sha }}"
-            }'
+          echo "❌ Droplet deployment failed!"
