@@ -74,7 +74,7 @@ async function dispatchToSinks(event: DomainEvent): Promise<void> {
     }
   });
 
-  await Promise.allSettled(deliveries);
+  await Promise.all(deliveries);
 }
 
 /**
