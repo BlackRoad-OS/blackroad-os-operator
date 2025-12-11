@@ -19,18 +19,33 @@ function parseArgs(argv: string[]): DeployOptions {
   for (let i = 0; i < argv.length; i += 1) {
     const arg = argv[i];
     switch (arg) {
-      case '--service':
-        options.service = argv[i + 1];
+      case '--service': {
+        const value = argv[i + 1];
+        if (!value || value.startsWith('--')) {
+          throw new Error('Missing value for --service flag');
+        }
+        options.service = value;
         i += 1;
         break;
-      case '--project':
-        options.project = argv[i + 1];
+      }
+      case '--project': {
+        const value = argv[i + 1];
+        if (!value || value.startsWith('--')) {
+          throw new Error('Missing value for --project flag');
+        }
+        options.project = value;
         i += 1;
         break;
-      case '--environment':
-        options.environment = argv[i + 1];
+      }
+      case '--environment': {
+        const value = argv[i + 1];
+        if (!value || value.startsWith('--')) {
+          throw new Error('Missing value for --environment flag');
+        }
+        options.environment = value;
         i += 1;
         break;
+      }
       case '--attach':
         options.detach = false;
         break;
@@ -95,6 +110,9 @@ function main(): void {
     }
 
     if (options.dryRun) {
+      if (options.project) {
+        console.log('[dry-run] railway link --project', options.project);
+      }
       console.log('[dry-run] railway', deployArgs.join(' '));
       process.exit(0);
     }
