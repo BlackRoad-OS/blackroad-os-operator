@@ -13,7 +13,7 @@ import logger from './logger.js';
 
 const MAX_BUFFER_SIZE = 1000;
 const eventBuffer: DomainEvent[] = [];
-type EventSink = (event: DomainEvent) => void | Promise<void>;
+export type EventSink = (event: DomainEvent) => void | Promise<void>;
 const eventSinks = new Set<EventSink>();
 
 /**
