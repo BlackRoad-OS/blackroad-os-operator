@@ -87,6 +87,17 @@ export class CircuitBreaker {
     this.failureCount++;
     this.lastFailureTime = Date.now();
 
+    // In half-open state, any failure should immediately reopen the circuit
+    if (this.state === 'half-open') {
+      logger.error(
+        { name: this.name, lastFailure: this.lastFailureTime },
+        '🚧 circuit breaker reopened after failed recovery attempt'
+      );
+      this.state = 'open';
+      this.failureCount = this.threshold; // mark as at threshold for observability
+      return;
+    }
+
     if (this.failureCount >= this.threshold) {
       logger.error(
         { name: this.name, failureCount: this.failureCount },

@@ -77,6 +77,29 @@ describe('CircuitBreaker', () => {
       expect(breaker.getState().failureCount).toBe(0);
     });
 
+    it('should immediately reopen when recovery attempt fails in half-open state', async () => {
+      const fn = vi.fn().mockRejectedValue(new Error('failure'));
+
+      // Trip the circuit
+      for (let i = 0; i < 3; i++) {
+        await expect(breaker.execute(fn)).rejects.toThrow();
+      }
+
+      expect(breaker.getState().state).toBe('open');
+
+      await new Promise(resolve => setTimeout(resolve, 1100));
+
+      // Half-open attempt fails - should immediately reopen
+      await expect(breaker.execute(fn)).rejects.toThrow('failure');
+      const state = breaker.getState();
+      expect(state.state).toBe('open');
+      expect(state.failureCount).toBe(3);
+
+      // Next call should be rejected without executing fn
+      await expect(breaker.execute(fn)).rejects.toThrow('Circuit breaker test-breaker is open');
+      expect(fn).toHaveBeenCalledTimes(4);
+    });
+
     it('should reset failure count on success', async () => {
       const fn = vi.fn()
         .mockRejectedValueOnce(new Error('failure'))
