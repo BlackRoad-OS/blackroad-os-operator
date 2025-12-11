@@ -20,12 +20,12 @@ export interface SandboxExecutionResult {
 const DEFAULT_TIMEOUT_MS = 2000;
 
 function buildContext(logs: string[]): vm.Context {
-  const sandboxConsole = {
+  const sandboxConsole = Object.freeze({
     log: (...args: unknown[]) => logs.push(args.map((arg) => String(arg)).join(' ')),
     error: (...args: unknown[]) => logs.push(args.map((arg) => String(arg)).join(' ')),
-  } satisfies Console;
+  } satisfies Console);
 
-  return vm.createContext({ console: sandboxConsole, Math, Date, JSON, Number, String, Boolean, Array });
+  return vm.createContext({ console: sandboxConsole });
 }
 
 function runJavascript(code: string, timeoutMs: number, logs: string[]): unknown {
