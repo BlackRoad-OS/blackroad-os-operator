@@ -1,0 +1,32 @@
+# BlackRoad Shellfish Worker
+# Secure terminal access and command execution proxy
+# @blackroad_name: BlackRoad Shellfish
+# @operator: cece.operator.v1
+
+name = "blackroad-shellfish"
+main = "src/index.ts"
+compatibility_date = "2024-12-02"
+compatibility_flags = ["nodejs_compat"]
+workers_dev = true
+
+[vars]
+ENVIRONMENT = "production"
+MAX_COMMAND_LENGTH = "10000"
+SESSION_TIMEOUT_MINUTES = "30"
+
+# Secrets (set via wrangler secret put):
+# - SHELLFISH_API_KEY
+# - SHELLFISH_SIGNING_SECRET
+
+# Routes
+routes = [
+  { pattern = "shell.blackroad.io/*", zone_name = "blackroad.io" }
+]
+
+# KV for session management
+[[kv_namespaces]]
+binding = "SESSIONS"
+id = "shellfish_sessions"
+
+[observability]
+enabled = true

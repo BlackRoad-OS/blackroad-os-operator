@@ -1,0 +1,496 @@
+# Shellfish Configuration
+# BlackRoad OS Terminal & Command Execution
+#
+# Secure terminal access, command execution, and shell automation
+#
+# @blackroad_name: BlackRoad Shellfish
+# @tier: Enterprise
+# @operator: cece.operator.v1
+
+version: "shellfish-v1"
+
+# ============================================
+# CONNECTION
+# ============================================
+
+connection:
+  api_key: "${SHELLFISH_API_KEY}"
+  api_url: "${SHELLFISH_API_URL}"
+  workspace_id: "${SHELLFISH_WORKSPACE_ID}"
+
+# ============================================
+# ENVIRONMENTS
+# ============================================
+
+environments:
+  # Production
+  production:
+    name: "Production"
+    access_level: restricted
+    approval_required: true
+
+    hosts:
+      - name: "api-prod-1"
+        host: "${PROD_API_HOST_1}"
+        user: deploy
+        key_ref: "PROD_SSH_KEY"
+
+      - name: "api-prod-2"
+        host: "${PROD_API_HOST_2}"
+        user: deploy
+        key_ref: "PROD_SSH_KEY"
+
+      - name: "worker-prod-1"
+        host: "${PROD_WORKER_HOST}"
+        user: deploy
+        key_ref: "PROD_SSH_KEY"
+
+    allowed_commands:
+      - "docker ps"
+      - "docker logs *"
+      - "docker stats"
+      - "systemctl status *"
+      - "tail -f /var/log/*"
+      - "df -h"
+      - "free -m"
+      - "uptime"
+
+    blocked_commands:
+      - "rm -rf"
+      - "dd if="
+      - "mkfs"
+      - "> /dev/"
+      - "shutdown"
+      - "reboot"
+
+  # Staging
+  staging:
+    name: "Staging"
+    access_level: team
+    approval_required: false
+
+    hosts:
+      - name: "api-staging"
+        host: "${STAGING_API_HOST}"
+        user: deploy
+        key_ref: "STAGING_SSH_KEY"
+
+      - name: "worker-staging"
+        host: "${STAGING_WORKER_HOST}"
+        user: deploy
+        key_ref: "STAGING_SSH_KEY"
+
+    allowed_commands:
+      - "*"  # All commands allowed in staging
+
+    blocked_commands:
+      - "rm -rf /"
+      - "dd if=/dev/zero"
+
+  # Development
+  development:
+    name: "Development"
+    access_level: all
+    approval_required: false
+
+    hosts:
+      - name: "dev-server"
+        host: "${DEV_HOST}"
+        user: dev
+        key_ref: "DEV_SSH_KEY"
+
+    allowed_commands:
+      - "*"
+
+# ============================================
+# TERMINAL PROFILES
+# ============================================
+
+profiles:
+  # Deployment profile
+  deploy:
+    name: "Deployment"
+    shell: bash
+    working_directory: /opt/blackroad
+    environment:
+      NODE_ENV: production
+      BR_ENV: production
+    startup_commands:
+      - "source /opt/blackroad/.env"
+      - "cd /opt/blackroad/current"
+
+  # Debugging profile
+  debug:
+    name: "Debug"
+    shell: bash
+    working_directory: /var/log
+    environment:
+      LOG_LEVEL: debug
+    startup_commands:
+      - "alias ll='ls -la'"
+      - "alias logs='tail -f /var/log/blackroad/*.log'"
+
+  # Database profile
+  database:
+    name: "Database"
+    shell: bash
+    working_directory: /opt/blackroad
+    environment:
+      PGHOST: "${DB_HOST}"
+      PGUSER: "${DB_USER}"
+    startup_commands:
+      - "export PGPASSWORD=$(cat /run/secrets/db_password)"
+
+# ============================================
+# COMMAND TEMPLATES
+# ============================================
+
+commands:
+  # Health check
+  health-check:
+    name: "Health Check"
+    description: "Check service health across all hosts"
+    command: |
+      echo "=== Service Health ==="
+      curl -s http://localhost:8080/health | jq .
+      echo ""
+      echo "=== Docker Status ==="
+      docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
+      echo ""
+      echo "=== System Resources ==="
+      free -h && echo "" && df -h /
+    environments:
+      - production
+      - staging
+
+  # Deploy service
+  deploy-service:
+    name: "Deploy Service"
+    description: "Deploy a service with zero-downtime"
+    parameters:
+      - name: service
+        type: string
+        required: true
+      - name: version
+        type: string
+        required: true
+    command: |
+      cd /opt/blackroad/current
+      echo "Deploying {{service}} version {{version}}..."
+      docker pull blackroad/{{service}}:{{version}}
+      docker-compose up -d --no-deps {{service}}
+      sleep 5
+      docker ps | grep {{service}}
+      curl -s http://localhost:8080/health
+    approval_required: true
+    environments:
+      - production
+
+  # View logs
+  view-logs:
+    name: "View Logs"
+    description: "Tail service logs"
+    parameters:
+      - name: service
+        type: string
+        required: true
+      - name: lines
+        type: number
+        default: 100
+    command: |
+      docker logs --tail {{lines}} -f {{service}}
+    environments:
+      - production
+      - staging
+      - development
+
+  # Database backup
+  db-backup:
+    name: "Database Backup"
+    description: "Create database backup"
+    command: |
+      BACKUP_FILE="backup_$(date +%Y%m%d_%H%M%S).sql.gz"
+      pg_dump | gzip > /backups/$BACKUP_FILE
+      echo "Backup created: $BACKUP_FILE"
+      ls -lh /backups/$BACKUP_FILE
+    approval_required: true
+    environments:
+      - production
+
+  # Rollback
+  rollback:
+    name: "Rollback Service"
+    description: "Rollback to previous version"
+    parameters:
+      - name: service
+        type: string
+        required: true
+    command: |
+      cd /opt/blackroad/current
+      PREV_IMAGE=$(docker inspect {{service}} --format='{{.Config.Image}}' | sed 's/:latest/:previous/')
+      echo "Rolling back {{service}} to $PREV_IMAGE"
+      docker-compose stop {{service}}
+      docker tag $(docker images -q blackroad/{{service}}:latest) blackroad/{{service}}:rollback
+      docker pull $PREV_IMAGE
+      docker tag $PREV_IMAGE blackroad/{{service}}:latest
+      docker-compose up -d {{service}}
+    approval_required: true
+    notify:
+      - slack:#incidents
+      - asana:incidents
+    environments:
+      - production
+
+# ============================================
+# SESSIONS
+# ============================================
+
+sessions:
+  # Session settings
+  settings:
+    timeout_minutes: 30
+    idle_timeout_minutes: 10
+    max_concurrent: 5
+    recording: true
+    audit_logging: true
+
+  # Session templates
+  templates:
+    - name: "Quick Debug"
+      profile: debug
+      timeout_minutes: 15
+
+    - name: "Deployment Session"
+      profile: deploy
+      timeout_minutes: 60
+      approval_required: true
+
+    - name: "Database Admin"
+      profile: database
+      timeout_minutes: 30
+      approval_required: true
+
+# ============================================
+# AUTOMATION
+# ============================================
+
+automation:
+  # Scheduled commands
+  scheduled:
+    - name: "Health Check"
+      command: health-check
+      schedule: "*/5 * * * *"  # Every 5 minutes
+      environments:
+        - production
+      on_failure:
+        notify:
+          - slack:#alerts
+          - pagerduty
+
+    - name: "Daily Backup"
+      command: db-backup
+      schedule: "0 2 * * *"  # 2am daily
+      environments:
+        - production
+      on_success:
+        notify:
+          - slack:#ops
+
+    - name: "Log Rotation"
+      command: |
+        find /var/log/blackroad -name "*.log" -mtime +7 -delete
+        echo "Old logs cleaned"
+      schedule: "0 3 * * 0"  # Sunday 3am
+      environments:
+        - production
+        - staging
+
+  # Event-triggered commands
+  triggers:
+    - name: "Auto-restart on OOM"
+      event: container_oom
+      command: |
+        docker restart {{container_name}}
+        echo "Restarted {{container_name}} after OOM"
+      notify:
+        - slack:#alerts
+
+    - name: "Scale on high CPU"
+      event: cpu_threshold
+      threshold: 80
+      duration_seconds: 300
+      command: |
+        echo "High CPU detected, scaling up..."
+        docker-compose up -d --scale worker=3
+
+# ============================================
+# INTEGRATIONS
+# ============================================
+
+integrations:
+  # Slack
+  slack:
+    enabled: true
+    channels:
+      alerts: "#alerts"
+      ops: "#ops"
+      deployments: "#deployments"
+
+    commands:
+      - trigger: "/shell health"
+        command: health-check
+        environments: [production]
+
+      - trigger: "/shell logs"
+        command: view-logs
+        environments: [staging]
+
+  # GitHub Actions
+  github_actions:
+    enabled: true
+    workflows:
+      - name: "deploy.yml"
+        commands:
+          - deploy-service
+          - rollback
+
+  # Asana
+  asana:
+    enabled: true
+    project: operator-deployments
+    create_tasks_on:
+      - deployment_started
+      - deployment_failed
+      - rollback_executed
+
+  # Linear
+  linear:
+    enabled: true
+    auto_link_incidents: true
+
+  # PagerDuty
+  pagerduty:
+    enabled: true
+    service_key: "${PAGERDUTY_SERVICE_KEY}"
+    escalation_policy: "${PAGERDUTY_ESCALATION_POLICY}"
+
+# ============================================
+# AUDIT & COMPLIANCE
+# ============================================
+
+audit:
+  # Logging
+  logging:
+    enabled: true
+    log_commands: true
+    log_output: true
+    retention_days: 90
+    storage: s3://blackroad-audit/shellfish/
+
+  # Recording
+  recording:
+    enabled: true
+    format: asciinema
+    storage: s3://blackroad-audit/sessions/
+
+  # Compliance
+  compliance:
+    soc2: true
+    hipaa: false
+    require_mfa: true
+    ip_allowlist:
+      - "10.0.0.0/8"
+      - "${OFFICE_IP_RANGE}"
+      - "${VPN_IP_RANGE}"
+
+# ============================================
+# ACCESS CONTROL
+# ============================================
+
+access:
+  # Roles
+  roles:
+    - name: admin
+      permissions:
+        - "*"
+      environments:
+        - production
+        - staging
+        - development
+
+    - name: developer
+      permissions:
+        - "view-logs"
+        - "health-check"
+      environments:
+        - staging
+        - development
+
+    - name: oncall
+      permissions:
+        - "view-logs"
+        - "health-check"
+        - "rollback"
+      environments:
+        - production
+        - staging
+      approval_bypass:
+        - rollback  # Can rollback without approval during incidents
+
+    - name: readonly
+      permissions:
+        - "view-logs"
+        - "health-check"
+      environments:
+        - staging
+
+  # Users
+  users:
+    - email: "cece@blackroad.io"
+      role: admin
+
+    - email: "ops-team@blackroad.io"
+      role: oncall
+
+    - email: "dev-team@blackroad.io"
+      role: developer
+
+# ============================================
+# NOTIFICATIONS
+# ============================================
+
+notifications:
+  channels:
+    slack:
+      webhook_url: "${SHELLFISH_SLACK_WEBHOOK}"
+
+    email:
+      smtp_host: "${SMTP_HOST}"
+      from: "shellfish@blackroad.io"
+
+    asana:
+      access_token: "${ASANA_ACCESS_TOKEN}"
+      project: operator-deployments
+
+  templates:
+    command_executed: |
+      :shell: Command executed on {{environment}}
+      *User:* {{user}}
+      *Command:* `{{command}}`
+      *Host:* {{host}}
+      *Status:* {{status}}
+
+    session_started: |
+      :computer: Shell session started
+      *User:* {{user}}
+      *Environment:* {{environment}}
+      *Host:* {{host}}
+
+    approval_required: |
+      :warning: Approval Required
+      *User:* {{user}} wants to run:
+      `{{command}}`
+      *Environment:* {{environment}}
+      *Host:* {{host}}
+
+      React with :white_check_mark: to approve or :x: to deny

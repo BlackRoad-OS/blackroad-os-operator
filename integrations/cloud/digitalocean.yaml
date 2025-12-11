@@ -1,0 +1,449 @@
+# DigitalOcean Configuration
+# BlackRoad OS Cloud Infrastructure
+#
+# Droplets, managed databases, spaces, and app platform
+#
+# @blackroad_name: BlackRoad DigitalOcean
+# @tier: Tier 1 - Active
+# @operator: cece.operator.v1
+
+version: "digitalocean-v1"
+
+# ============================================
+# CONNECTION
+# ============================================
+
+connection:
+  api_token: "${DO_API_TOKEN}"
+  base_url: "https://api.digitalocean.com/v2"
+  spaces_endpoint: "${DO_SPACES_ENDPOINT}"
+  spaces_key: "${DO_SPACES_KEY}"
+  spaces_secret: "${DO_SPACES_SECRET}"
+
+# ============================================
+# DROPLETS
+# ============================================
+
+droplets:
+  # Production API Server
+  api-prod:
+    name: "blackroad-api-prod"
+    region: nyc3
+    size: s-2vcpu-4gb
+    image: docker-20-04
+    monitoring: true
+    ipv6: true
+    private_networking: true
+    backups: true
+    tags:
+      - production
+      - api
+      - blackroad
+
+    user_data: |
+      #!/bin/bash
+      apt-get update
+      apt-get install -y docker.io docker-compose
+      systemctl enable docker
+      systemctl start docker
+
+    firewall:
+      inbound_rules:
+        - ports: "22"
+          sources:
+            addresses: ["${OFFICE_IP}", "${VPN_IP}"]
+        - ports: "80"
+          sources:
+            addresses: ["0.0.0.0/0"]
+        - ports: "443"
+          sources:
+            addresses: ["0.0.0.0/0"]
+        - ports: "8080"
+          sources:
+            addresses: ["${CLOUDFLARE_IPS}"]
+
+      outbound_rules:
+        - protocol: tcp
+          ports: "all"
+          destinations:
+            addresses: ["0.0.0.0/0"]
+
+  # Worker Server
+  worker-prod:
+    name: "blackroad-worker-prod"
+    region: nyc3
+    size: s-2vcpu-4gb
+    image: docker-20-04
+    monitoring: true
+    tags:
+      - production
+      - worker
+      - blackroad
+
+  # Staging Server
+  staging:
+    name: "blackroad-staging"
+    region: nyc3
+    size: s-1vcpu-2gb
+    image: docker-20-04
+    monitoring: true
+    tags:
+      - staging
+      - blackroad
+
+  # Codex Infinity (Special)
+  codex-infinity:
+    name: "codex-infinity"
+    region: nyc3
+    size: s-4vcpu-8gb
+    image: docker-20-04
+    monitoring: true
+    tags:
+      - special
+      - codex
+      - blackroad
+
+# ============================================
+# MANAGED DATABASES
+# ============================================
+
+databases:
+  # Production PostgreSQL
+  postgres-prod:
+    name: "blackroad-db-prod"
+    engine: pg
+    version: "15"
+    size: db-s-1vcpu-1gb
+    region: nyc3
+    num_nodes: 2  # Primary + standby for HA
+
+    connection_pools:
+      - name: api-pool
+        mode: transaction
+        size: 25
+        db: blackroad
+        user: api_user
+
+    firewall:
+      allow:
+        - droplet_ids: ["api-prod", "worker-prod"]
+
+    maintenance_window:
+      day: sunday
+      hour: "03:00"
+
+  # Production Redis
+  redis-prod:
+    name: "blackroad-redis-prod"
+    engine: redis
+    version: "7"
+    size: db-s-1vcpu-1gb
+    region: nyc3
+    num_nodes: 1
+    eviction_policy: allkeys-lru
+
+  # Staging Database
+  postgres-staging:
+    name: "blackroad-db-staging"
+    engine: pg
+    version: "15"
+    size: db-s-1vcpu-1gb
+    region: nyc3
+    num_nodes: 1
+
+# ============================================
+# SPACES (OBJECT STORAGE)
+# ============================================
+
+spaces:
+  # Uploads bucket
+  uploads:
+    name: "blackroad-uploads"
+    region: nyc3
+    acl: private
+
+    cors:
+      - allowed_origins: ["https://*.blackroad.io"]
+        allowed_methods: ["GET", "PUT", "POST"]
+        allowed_headers: ["*"]
+        max_age_seconds: 3600
+
+    lifecycle:
+      - prefix: "temp/"
+        expiration_days: 7
+      - prefix: "uploads/"
+        expiration_days: 365
+
+  # Backups bucket
+  backups:
+    name: "blackroad-backups"
+    region: nyc3
+    acl: private
+
+    lifecycle:
+      - prefix: "daily/"
+        expiration_days: 30
+      - prefix: "weekly/"
+        expiration_days: 90
+      - prefix: "monthly/"
+        expiration_days: 365
+
+  # Static assets
+  static:
+    name: "blackroad-static"
+    region: nyc3
+    acl: public-read
+    cdn:
+      enabled: true
+      ttl: 86400
+
+# ============================================
+# APP PLATFORM
+# ============================================
+
+app_platform:
+  # Operator API
+  operator:
+    name: "blackroad-operator"
+    region: nyc
+
+    services:
+      - name: api
+        git:
+          repo_clone_url: "https://github.com/BlackRoad-OS/blackroad-os-operator.git"
+          branch: main
+        dockerfile_path: Dockerfile
+        instance_count: 2
+        instance_size_slug: basic-xs
+
+        health_check:
+          http_path: /health
+
+        envs:
+          - key: PORT
+            value: "8080"
+          - key: NODE_ENV
+            value: production
+          - key: DATABASE_URL
+            scope: RUN_TIME
+            type: SECRET
+
+        routes:
+          - path: /
+
+    databases:
+      - engine: PG
+        name: db
+        production: true
+
+# ============================================
+# KUBERNETES (DOKS)
+# ============================================
+
+kubernetes:
+  # Production cluster
+  prod-cluster:
+    name: "blackroad-k8s-prod"
+    region: nyc3
+    version: "1.28"
+    ha: true
+
+    node_pools:
+      - name: default
+        size: s-2vcpu-4gb
+        count: 3
+        auto_scale: true
+        min_nodes: 2
+        max_nodes: 10
+        tags:
+          - default
+          - production
+
+      - name: workers
+        size: s-4vcpu-8gb
+        count: 2
+        auto_scale: true
+        min_nodes: 1
+        max_nodes: 5
+        tags:
+          - workers
+          - high-memory
+
+    maintenance_policy:
+      day: saturday
+      start_time: "04:00:00"
+
+# ============================================
+# MONITORING
+# ============================================
+
+monitoring:
+  # Uptime checks
+  uptime_checks:
+    - name: "API Health"
+      type: https
+      target: "https://api.blackroad.io/health"
+      regions: ["us_east", "us_west", "eu_west"]
+
+    - name: "Operator Health"
+      type: https
+      target: "https://operator.blackroad.io/health"
+      regions: ["us_east"]
+
+  # Alerts
+  alerts:
+    - name: "High CPU"
+      type: v1/insights/droplet/cpu
+      compare: greater_than
+      value: 80
+      window: 5m
+      tags: ["production"]
+
+    - name: "High Memory"
+      type: v1/insights/droplet/memory_utilization_percent
+      compare: greater_than
+      value: 85
+      window: 5m
+      tags: ["production"]
+
+    - name: "Disk Usage"
+      type: v1/insights/droplet/disk_utilization_percent
+      compare: greater_than
+      value: 90
+      window: 5m
+      tags: ["production"]
+
+    - name: "Droplet Down"
+      type: v1/insights/droplet/is_on
+      compare: equals
+      value: 0
+      window: 1m
+      tags: ["production"]
+
+  # Notification destinations
+  notifications:
+    - type: slack
+      webhook_url: "${SLACK_ALERTS_WEBHOOK}"
+
+    - type: email
+      emails:
+        - ops@blackroad.io
+
+# ============================================
+# DOMAINS
+# ============================================
+
+domains:
+  - name: blackroad.io
+    records:
+      - type: A
+        name: "@"
+        value: "${CLOUDFLARE_PROXY_IP}"
+        ttl: 3600
+
+      - type: A
+        name: api
+        value: "${API_DROPLET_IP}"
+        ttl: 300
+
+      - type: CNAME
+        name: www
+        value: blackroad.io.
+        ttl: 3600
+
+# ============================================
+# SSH KEYS
+# ============================================
+
+ssh_keys:
+  - name: deploy-key
+    public_key: "${DEPLOY_SSH_PUBLIC_KEY}"
+
+  - name: ops-team
+    public_key: "${OPS_SSH_PUBLIC_KEY}"
+
+# ============================================
+# PROJECTS
+# ============================================
+
+projects:
+  - name: "BlackRoad Production"
+    description: "Production infrastructure"
+    purpose: "Production services"
+    environment: production
+    resources:
+      - droplet:api-prod
+      - droplet:worker-prod
+      - database:postgres-prod
+      - database:redis-prod
+      - space:uploads
+      - space:backups
+
+  - name: "BlackRoad Staging"
+    description: "Staging and testing"
+    purpose: "Development"
+    environment: staging
+    resources:
+      - droplet:staging
+      - database:postgres-staging
+
+# ============================================
+# VPC
+# ============================================
+
+vpc:
+  - name: "blackroad-vpc"
+    description: "Private network for BlackRoad services"
+    region: nyc3
+    ip_range: "10.10.10.0/24"
+
+# ============================================
+# LOAD BALANCERS
+# ============================================
+
+load_balancers:
+  - name: "blackroad-lb"
+    region: nyc3
+    algorithm: round_robin
+    vpc_uuid: "${VPC_UUID}"
+
+    forwarding_rules:
+      - entry_protocol: https
+        entry_port: 443
+        target_protocol: http
+        target_port: 8080
+        certificate_id: "${SSL_CERT_ID}"
+        tls_passthrough: false
+
+    health_check:
+      protocol: http
+      port: 8080
+      path: /health
+      check_interval_seconds: 10
+      response_timeout_seconds: 5
+      healthy_threshold: 3
+      unhealthy_threshold: 3
+
+    droplet_ids:
+      - "${API_PROD_DROPLET_ID}"
+
+    sticky_sessions:
+      type: cookies
+      cookie_name: DO_LB
+      cookie_ttl_seconds: 300
+
+# ============================================
+# BILLING & BUDGET
+# ============================================
+
+billing:
+  budget:
+    monthly_limit: 500
+    alert_threshold: 80  # Alert at 80% of budget
+
+  alerts:
+    - email: billing@blackroad.io
+      threshold: 400
+
+    - slack: "#billing-alerts"
+      threshold: 450

@@ -1,0 +1,351 @@
+name: Sync Deployments to External Services
+
+on:
+  workflow_run:
+    workflows:
+      - "Deploy Multi-Cloud"
+      - "Deploy Railway"
+      - "Deploy Cloudflare Workers"
+      - "deploy"
+    types:
+      - completed
+  workflow_dispatch:
+    inputs:
+      deployment_service:
+        description: 'Service that was deployed'
+        required: true
+        type: string
+      deployment_environment:
+        description: 'Environment (production/staging)'
+        required: true
+        default: 'production'
+        type: choice
+        options:
+          - production
+          - staging
+      deployment_status:
+        description: 'Deployment status'
+        required: true
+        default: 'success'
+        type: choice
+        options:
+          - success
+          - failure
+          - rollback
+
+env:
+  ASANA_API_URL: "https://app.asana.com/api/1.0"
+  NOTION_API_URL: "https://api.notion.com/v1"
+  ASANA_WORKER_URL: "https://asana.blackroad.io"
+  SHELLFISH_WORKER_URL: "https://shell.blackroad.io"
+
+jobs:
+  # ============================================
+  # GATHER DEPLOYMENT INFO
+  # ============================================
+  gather-info:
+    name: Gather Deployment Info
+    runs-on: ubuntu-latest
+    outputs:
+      service: ${{ steps.info.outputs.service }}
+      environment: ${{ steps.info.outputs.environment }}
+      status: ${{ steps.info.outputs.status }}
+      commit_sha: ${{ steps.info.outputs.commit_sha }}
+      triggered_by: ${{ steps.info.outputs.triggered_by }}
+      timestamp: ${{ steps.info.outputs.timestamp }}
+    steps:
+      - name: Gather deployment info
+        id: info
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "service=${{ inputs.deployment_service }}" >> $GITHUB_OUTPUT
+            echo "environment=${{ inputs.deployment_environment }}" >> $GITHUB_OUTPUT
+            echo "status=${{ inputs.deployment_status }}" >> $GITHUB_OUTPUT
+          else
+            echo "service=${{ github.event.workflow_run.name }}" >> $GITHUB_OUTPUT
+            echo "environment=production" >> $GITHUB_OUTPUT
+            if [ "${{ github.event.workflow_run.conclusion }}" = "success" ]; then
+              echo "status=success" >> $GITHUB_OUTPUT
+            else
+              echo "status=failure" >> $GITHUB_OUTPUT
+            fi
+          fi
+          echo "commit_sha=${{ github.sha }}" >> $GITHUB_OUTPUT
+          echo "triggered_by=${{ github.actor }}" >> $GITHUB_OUTPUT
+          echo "timestamp=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> $GITHUB_OUTPUT
+
+  # ============================================
+  # SYNC TO ASANA
+  # ============================================
+  sync-asana:
+    name: Sync to Asana
+    runs-on: ubuntu-latest
+    needs: gather-info
+    if: always()
+    steps:
+      - name: Create/Update Asana Task
+        env:
+          ASANA_ACCESS_TOKEN: ${{ secrets.ASANA_ACCESS_TOKEN }}
+          ASANA_WORKSPACE_ID: ${{ secrets.ASANA_WORKSPACE_ID }}
+          ASANA_DEPLOYMENTS_PROJECT: ${{ secrets.ASANA_DEPLOYMENTS_PROJECT }}
+        run: |
+          # Determine section based on status
+          if [ "${{ needs.gather-info.outputs.status }}" = "success" ]; then
+            SECTION_NAME="Deployed"
+            TASK_PREFIX="[SUCCESS]"
+          elif [ "${{ needs.gather-info.outputs.status }}" = "failure" ]; then
+            SECTION_NAME="Failed"
+            TASK_PREFIX="[FAILED]"
+          else
+            SECTION_NAME="Rolled Back"
+            TASK_PREFIX="[ROLLBACK]"
+          fi
+
+          # Create task name
+          TASK_NAME="$TASK_PREFIX Deploy: ${{ needs.gather-info.outputs.service }} to ${{ needs.gather-info.outputs.environment }}"
+
+          # Create notes
+          NOTES=$(cat <<EOF
+          ## Deployment Details
+          - **Service:** ${{ needs.gather-info.outputs.service }}
+          - **Environment:** ${{ needs.gather-info.outputs.environment }}
+          - **Status:** ${{ needs.gather-info.outputs.status }}
+          - **Commit:** ${{ needs.gather-info.outputs.commit_sha }}
+          - **Triggered by:** ${{ needs.gather-info.outputs.triggered_by }}
+          - **Time:** ${{ needs.gather-info.outputs.timestamp }}
+          - **GitHub Run:** https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          EOF
+          )
+
+          # Create task via Asana API
+          curl -s -X POST "$ASANA_API_URL/tasks" \
+            -H "Authorization: Bearer $ASANA_ACCESS_TOKEN" \
+            -H "Content-Type: application/json" \
+            --data "{
+              \"data\": {
+                \"name\": \"$TASK_NAME\",
+                \"notes\": \"$NOTES\",
+                \"workspace\": \"$ASANA_WORKSPACE_ID\",
+                \"projects\": [\"$ASANA_DEPLOYMENTS_PROJECT\"],
+                \"completed\": $([ \"${{ needs.gather-info.outputs.status }}\" = \"success\" ] && echo \"true\" || echo \"false\")
+              }
+            }" | jq .
+
+          echo "Asana task created/updated successfully"
+
+      - name: Call Asana Worker Webhook
+        if: env.ASANA_WORKER_URL != ''
+        continue-on-error: true
+        run: |
+          curl -s -X POST "${{ env.ASANA_WORKER_URL }}/webhooks/deployment" \
+            -H "Content-Type: application/json" \
+            -H "X-API-Key: ${{ secrets.ASANA_WORKER_API_KEY }}" \
+            --data '{
+              "event": "deployment_completed",
+              "service": "${{ needs.gather-info.outputs.service }}",
+              "environment": "${{ needs.gather-info.outputs.environment }}",
+              "status": "${{ needs.gather-info.outputs.status }}",
+              "commit_sha": "${{ needs.gather-info.outputs.commit_sha }}",
+              "triggered_by": "${{ needs.gather-info.outputs.triggered_by }}"
+            }' | jq . || echo "Asana worker webhook failed (non-critical)"
+
+  # ============================================
+  # SYNC TO NOTION
+  # ============================================
+  sync-notion:
+    name: Sync to Notion
+    runs-on: ubuntu-latest
+    needs: gather-info
+    if: always()
+    steps:
+      - name: Create Notion Page
+        env:
+          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
+          NOTION_DEPLOYMENTS_DB: ${{ secrets.NOTION_DEPLOYMENTS_DATABASE_ID }}
+        run: |
+          # Status icon
+          if [ "${{ needs.gather-info.outputs.status }}" = "success" ]; then
+            STATUS_ICON="✅"
+            STATUS_COLOR="green"
+          elif [ "${{ needs.gather-info.outputs.status }}" = "failure" ]; then
+            STATUS_ICON="❌"
+            STATUS_COLOR="red"
+          else
+            STATUS_ICON="⏪"
+            STATUS_COLOR="yellow"
+          fi
+
+          # Create Notion database entry
+          curl -s -X POST "$NOTION_API_URL/pages" \
+            -H "Authorization: Bearer $NOTION_TOKEN" \
+            -H "Notion-Version: 2022-06-28" \
+            -H "Content-Type: application/json" \
+            --data "{
+              \"parent\": { \"database_id\": \"$NOTION_DEPLOYMENTS_DB\" },
+              \"icon\": { \"emoji\": \"$STATUS_ICON\" },
+              \"properties\": {
+                \"Name\": {
+                  \"title\": [{
+                    \"text\": { \"content\": \"Deploy: ${{ needs.gather-info.outputs.service }}\" }
+                  }]
+                },
+                \"Status\": {
+                  \"select\": { \"name\": \"${{ needs.gather-info.outputs.status }}\", \"color\": \"$STATUS_COLOR\" }
+                },
+                \"Environment\": {
+                  \"select\": { \"name\": \"${{ needs.gather-info.outputs.environment }}\" }
+                },
+                \"Service\": {
+                  \"rich_text\": [{
+                    \"text\": { \"content\": \"${{ needs.gather-info.outputs.service }}\" }
+                  }]
+                },
+                \"Commit\": {
+                  \"rich_text\": [{
+                    \"text\": { \"content\": \"${{ needs.gather-info.outputs.commit_sha }}\" }
+                  }]
+                },
+                \"Deployed By\": {
+                  \"rich_text\": [{
+                    \"text\": { \"content\": \"${{ needs.gather-info.outputs.triggered_by }}\" }
+                  }]
+                },
+                \"Timestamp\": {
+                  \"date\": { \"start\": \"${{ needs.gather-info.outputs.timestamp }}\" }
+                }
+              }
+            }" | jq .
+
+          echo "Notion page created successfully"
+
+  # ============================================
+  # SYNC TO LINEAR
+  # ============================================
+  sync-linear:
+    name: Sync to Linear
+    runs-on: ubuntu-latest
+    needs: gather-info
+    if: needs.gather-info.outputs.status == 'failure'
+    steps:
+      - name: Create Linear Issue for Failed Deploy
+        env:
+          LINEAR_API_KEY: ${{ secrets.LINEAR_API_KEY }}
+          LINEAR_TEAM_ID: ${{ secrets.LINEAR_INFRA_TEAM_ID }}
+        run: |
+          # Only create issue for failures
+          curl -s -X POST "https://api.linear.app/graphql" \
+            -H "Authorization: $LINEAR_API_KEY" \
+            -H "Content-Type: application/json" \
+            --data "{
+              \"query\": \"mutation { issueCreate(input: { teamId: \\\"$LINEAR_TEAM_ID\\\", title: \\\"[Deploy Failed] ${{ needs.gather-info.outputs.service }} - ${{ needs.gather-info.outputs.environment }}\\\", description: \\\"Deployment failed for ${{ needs.gather-info.outputs.service }} to ${{ needs.gather-info.outputs.environment }}\\n\\nCommit: ${{ needs.gather-info.outputs.commit_sha }}\\nTriggered by: ${{ needs.gather-info.outputs.triggered_by }}\\nTime: ${{ needs.gather-info.outputs.timestamp }}\\n\\nGitHub Run: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}\\\", priority: 1 }) { success issue { id identifier url } } }\"
+            }" | jq .
+
+          echo "Linear issue created for failed deployment"
+
+  # ============================================
+  # NOTIFY SLACK
+  # ============================================
+  notify-slack:
+    name: Notify Slack
+    runs-on: ubuntu-latest
+    needs: [gather-info, sync-asana, sync-notion]
+    if: always()
+    steps:
+      - name: Send Slack notification
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_DEPLOYMENTS_WEBHOOK }}
+        run: |
+          # Determine emoji and color
+          if [ "${{ needs.gather-info.outputs.status }}" = "success" ]; then
+            EMOJI=":white_check_mark:"
+            COLOR="good"
+          elif [ "${{ needs.gather-info.outputs.status }}" = "failure" ]; then
+            EMOJI=":x:"
+            COLOR="danger"
+          else
+            EMOJI=":rewind:"
+            COLOR="warning"
+          fi
+
+          curl -s -X POST "$SLACK_WEBHOOK_URL" \
+            -H "Content-Type: application/json" \
+            --data "{
+              \"attachments\": [{
+                \"color\": \"$COLOR\",
+                \"blocks\": [
+                  {
+                    \"type\": \"header\",
+                    \"text\": {
+                      \"type\": \"plain_text\",
+                      \"text\": \"$EMOJI Deployment: ${{ needs.gather-info.outputs.service }}\"
+                    }
+                  },
+                  {
+                    \"type\": \"section\",
+                    \"fields\": [
+                      { \"type\": \"mrkdwn\", \"text\": \"*Environment:*\n${{ needs.gather-info.outputs.environment }}\" },
+                      { \"type\": \"mrkdwn\", \"text\": \"*Status:*\n${{ needs.gather-info.outputs.status }}\" },
+                      { \"type\": \"mrkdwn\", \"text\": \"*Triggered by:*\n${{ needs.gather-info.outputs.triggered_by }}\" },
+                      { \"type\": \"mrkdwn\", \"text\": \"*Commit:*\n\`${{ needs.gather-info.outputs.commit_sha }}\`\" }
+                    ]
+                  },
+                  {
+                    \"type\": \"context\",
+                    \"elements\": [
+                      { \"type\": \"mrkdwn\", \"text\": \"Synced to Asana and Notion | <https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}|View Run>\" }
+                    ]
+                  }
+                ]
+              }]
+            }"
+
+          echo "Slack notification sent"
+
+  # ============================================
+  # UPDATE SHELLFISH AUDIT
+  # ============================================
+  update-shellfish:
+    name: Update Shellfish Audit
+    runs-on: ubuntu-latest
+    needs: gather-info
+    if: always()
+    continue-on-error: true
+    steps:
+      - name: Log deployment to Shellfish
+        run: |
+          curl -s -X POST "${{ env.SHELLFISH_WORKER_URL }}/audit" \
+            -H "Content-Type: application/json" \
+            -H "X-API-Key: ${{ secrets.SHELLFISH_API_KEY }}" \
+            --data '{
+              "event": "deployment",
+              "service": "${{ needs.gather-info.outputs.service }}",
+              "environment": "${{ needs.gather-info.outputs.environment }}",
+              "status": "${{ needs.gather-info.outputs.status }}",
+              "commit_sha": "${{ needs.gather-info.outputs.commit_sha }}",
+              "triggered_by": "${{ needs.gather-info.outputs.triggered_by }}",
+              "timestamp": "${{ needs.gather-info.outputs.timestamp }}",
+              "github_run": "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+            }' || echo "Shellfish audit logging failed (non-critical)"
+
+  # ============================================
+  # SUMMARY
+  # ============================================
+  summary:
+    name: Sync Summary
+    runs-on: ubuntu-latest
+    needs: [sync-asana, sync-notion, sync-linear, notify-slack, update-shellfish]
+    if: always()
+    steps:
+      - name: Generate Summary
+        run: |
+          echo "## Deployment Sync Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Service | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|---------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Asana | ${{ needs.sync-asana.result == 'success' && '✅' || '❌' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Notion | ${{ needs.sync-notion.result == 'success' && '✅' || '❌' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Linear | ${{ needs.sync-linear.result == 'success' && '✅' || needs.sync-linear.result == 'skipped' && '⏭️ (skipped)' || '❌' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Slack | ${{ needs.notify-slack.result == 'success' && '✅' || '❌' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Shellfish | ${{ needs.update-shellfish.result == 'success' && '✅' || '⚠️ (non-critical)' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "All deployment information has been synchronized to external services." >> $GITHUB_STEP_SUMMARY

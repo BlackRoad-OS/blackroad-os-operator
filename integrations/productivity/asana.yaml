@@ -1,0 +1,468 @@
+# Asana Configuration
+# BlackRoad OS Project Management & Task Tracking
+#
+# Team collaboration, project management, and sprint tracking
+#
+# @blackroad_name: BlackRoad Asana
+# @tier: Business
+# @operator: cece.operator.v1
+
+version: "asana-v1"
+
+# ============================================
+# CONNECTION
+# ============================================
+
+connection:
+  access_token: "${ASANA_ACCESS_TOKEN}"
+  workspace_id: "${ASANA_WORKSPACE_ID}"
+  base_url: "https://app.asana.com/api/1.0"
+
+# ============================================
+# WORKSPACE
+# ============================================
+
+workspace:
+  name: "BlackRoad"
+
+  # Organization settings
+  settings:
+    default_view: board
+    week_start: monday
+    timezone: "America/Los_Angeles"
+
+# ============================================
+# TEAMS
+# ============================================
+
+teams:
+  # Platform Engineering
+  platform:
+    name: "Platform Engineering"
+    description: "Core platform development and infrastructure"
+    visibility: organization
+
+  # Product
+  product:
+    name: "Product"
+    description: "Product management and roadmap"
+    visibility: organization
+
+  # Governance
+  governance:
+    name: "Governance & Compliance"
+    description: "Policy, compliance, and governance"
+    visibility: organization
+
+  # DevRel
+  devrel:
+    name: "Developer Relations"
+    description: "Documentation, community, and developer experience"
+    visibility: organization
+
+  # Operations
+  operations:
+    name: "Operations"
+    description: "DevOps, SRE, and infrastructure operations"
+    visibility: organization
+
+# ============================================
+# PROJECTS
+# ============================================
+
+projects:
+  # Operator Deployments
+  operator-deployments:
+    name: "Operator Deployments"
+    team: operations
+    color: "dark-blue"
+    layout: board
+    description: "Track deployment status across all services"
+
+    sections:
+      - name: "Pending"
+      - name: "Deploying"
+      - name: "Deployed"
+      - name: "Failed"
+      - name: "Rolled Back"
+
+    custom_fields:
+      - name: "Service"
+        type: enum
+        options:
+          - "api-gateway"
+          - "auth"
+          - "billing"
+          - "cece"
+          - "identity"
+          - "operator"
+          - "status"
+          - "router"
+          - "lucidia"
+          - "all-workers"
+
+      - name: "Environment"
+        type: enum
+        options:
+          - "production"
+          - "staging"
+          - "development"
+
+      - name: "Platform"
+        type: enum
+        options:
+          - "Railway"
+          - "Cloudflare"
+          - "DigitalOcean"
+          - "AWS"
+          - "GCP"
+          - "Vercel"
+
+      - name: "Commit SHA"
+        type: text
+
+      - name: "Deploy URL"
+        type: text
+
+  # Sprint Tracking
+  sprint-tracking:
+    name: "Sprint Board"
+    team: platform
+    color: "dark-green"
+    layout: board
+
+    sections:
+      - name: "Backlog"
+      - name: "This Sprint"
+      - name: "In Progress"
+      - name: "In Review"
+      - name: "Done"
+
+    custom_fields:
+      - name: "Story Points"
+        type: number
+
+      - name: "Priority"
+        type: enum
+        options:
+          - "P0 - Critical"
+          - "P1 - High"
+          - "P2 - Medium"
+          - "P3 - Low"
+
+      - name: "Type"
+        type: enum
+        options:
+          - "Feature"
+          - "Bug"
+          - "Tech Debt"
+          - "Documentation"
+          - "Infrastructure"
+
+  # Incidents
+  incidents:
+    name: "Incidents & On-Call"
+    team: operations
+    color: "dark-red"
+    layout: list
+
+    sections:
+      - name: "Active"
+      - name: "Investigating"
+      - name: "Mitigated"
+      - name: "Resolved"
+      - name: "Post-Mortem Needed"
+
+    custom_fields:
+      - name: "Severity"
+        type: enum
+        options:
+          - "SEV1 - Critical"
+          - "SEV2 - Major"
+          - "SEV3 - Minor"
+          - "SEV4 - Low"
+
+      - name: "Affected Services"
+        type: multi_enum
+        options:
+          - "API Gateway"
+          - "Auth"
+          - "Billing"
+          - "Database"
+          - "Workers"
+          - "All Services"
+
+      - name: "On-Call"
+        type: people
+
+  # Product Roadmap
+  roadmap:
+    name: "Product Roadmap"
+    team: product
+    color: "dark-purple"
+    layout: timeline
+
+    custom_fields:
+      - name: "Quarter"
+        type: enum
+        options:
+          - "Q1 2025"
+          - "Q2 2025"
+          - "Q3 2025"
+          - "Q4 2025"
+
+      - name: "Initiative"
+        type: enum
+        options:
+          - "Platform Core"
+          - "Lucidia"
+          - "Governance"
+          - "Edge"
+          - "Enterprise"
+
+      - name: "Status"
+        type: enum
+        options:
+          - "Planning"
+          - "In Progress"
+          - "Shipped"
+          - "Deferred"
+
+# ============================================
+# PORTFOLIOS
+# ============================================
+
+portfolios:
+  # Engineering Portfolio
+  engineering:
+    name: "Engineering Portfolio"
+    projects:
+      - sprint-tracking
+      - operator-deployments
+      - incidents
+
+  # Product Portfolio
+  product-portfolio:
+    name: "Product Portfolio"
+    projects:
+      - roadmap
+
+# ============================================
+# INTEGRATIONS
+# ============================================
+
+integrations:
+  # GitHub
+  github:
+    enabled: true
+    sync_issues: true
+    auto_link_commits: true
+    repositories:
+      - BlackRoad-OS/blackroad-os-operator
+      - BlackRoad-OS/blackroad-web
+      - BlackRoad-OS/lucidia
+
+  # Slack
+  slack:
+    enabled: true
+    workspace: "blackroad"
+    channels:
+      deployments: "#deployments"
+      incidents: "#incidents"
+      sprint: "#engineering"
+
+    notifications:
+      - project: operator-deployments
+        events: [task_completed, task_moved]
+        channel: "#deployments"
+
+      - project: incidents
+        events: [task_created, task_completed]
+        channel: "#incidents"
+
+  # Linear Sync (bidirectional)
+  linear:
+    enabled: true
+    sync_direction: bidirectional
+    mapping:
+      asana_project: sprint-tracking
+      linear_team: platform
+
+    field_mapping:
+      Status:
+        "Backlog": "Backlog"
+        "This Sprint": "Todo"
+        "In Progress": "In Progress"
+        "In Review": "In Review"
+        "Done": "Done"
+
+  # Notion
+  notion:
+    enabled: true
+    sync_to_database: "feature-specs"
+
+# ============================================
+# AUTOMATIONS
+# ============================================
+
+automations:
+  # Auto-create deployment tasks
+  deployment_tracking:
+    trigger: webhook
+    source: github_actions
+    action: create_task
+    project: operator-deployments
+    template: |
+      Service: {{service}}
+      Environment: {{environment}}
+      Commit: {{commit_sha}}
+      Status: Deploying
+
+  # Move to Done on successful deploy
+  deployment_complete:
+    trigger: webhook
+    source: deploy_webhook
+    condition:
+      status: success
+    action: move_task
+    to_section: "Deployed"
+
+  # Create incident on failure
+  deployment_failure:
+    trigger: webhook
+    source: deploy_webhook
+    condition:
+      status: failure
+    action: create_task
+    project: incidents
+    fields:
+      Severity: "SEV2 - Major"
+
+  # Sprint automation
+  sprint_start:
+    trigger: schedule
+    cron: "0 9 * * 1"  # Monday 9am
+    action: move_tasks
+    from_section: "This Sprint"
+    to_section: "In Progress"
+
+# ============================================
+# WEBHOOKS
+# ============================================
+
+webhooks:
+  # Incoming webhooks
+  incoming:
+    - name: "deployment-status"
+      url: "${ASANA_DEPLOYMENT_WEBHOOK_URL}"
+      events:
+        - deployment_started
+        - deployment_completed
+        - deployment_failed
+
+    - name: "github-issues"
+      url: "${ASANA_GITHUB_WEBHOOK_URL}"
+      events:
+        - issue_created
+        - issue_closed
+        - pr_merged
+
+  # Outgoing webhooks
+  outgoing:
+    - name: "task-updates"
+      target: "${OPERATOR_WEBHOOK_URL}"
+      events:
+        - task_created
+        - task_completed
+        - task_deleted
+      projects:
+        - operator-deployments
+        - incidents
+
+# ============================================
+# TEMPLATES
+# ============================================
+
+templates:
+  # Deployment task
+  deployment:
+    name: "Deployment: {{service}} to {{environment}}"
+    project: operator-deployments
+    section: "Pending"
+    fields:
+      Service: "{{service}}"
+      Environment: "{{environment}}"
+      Platform: "{{platform}}"
+      Commit SHA: "{{commit_sha}}"
+    notes: |
+      ## Deployment Details
+      - **Service:** {{service}}
+      - **Environment:** {{environment}}
+      - **Platform:** {{platform}}
+      - **Commit:** {{commit_sha}}
+      - **Triggered by:** {{triggered_by}}
+      - **Time:** {{timestamp}}
+
+  # Incident
+  incident:
+    name: "{{severity}}: {{title}}"
+    project: incidents
+    section: "Active"
+    fields:
+      Severity: "{{severity}}"
+    assignee: on-call
+    notes: |
+      ## Incident Details
+      **Reported:** {{timestamp}}
+      **Reporter:** {{reporter}}
+
+      ## Description
+      {{description}}
+
+      ## Impact
+      {{impact}}
+
+      ## Timeline
+      - {{timestamp}} - Incident reported
+
+  # Feature request
+  feature:
+    name: "[Feature] {{title}}"
+    project: sprint-tracking
+    section: "Backlog"
+    fields:
+      Type: "Feature"
+      Priority: "P2 - Medium"
+    notes: |
+      ## Overview
+      {{description}}
+
+      ## User Story
+      As a {{persona}}, I want to {{goal}} so that {{benefit}}.
+
+      ## Acceptance Criteria
+      - [ ]
+      - [ ]
+
+      ## Technical Notes
+      {{technical_notes}}
+
+# ============================================
+# API CONFIGURATION
+# ============================================
+
+api:
+  rate_limit:
+    requests_per_minute: 150
+    burst_limit: 50
+
+  retry:
+    max_attempts: 3
+    backoff_multiplier: 2
+    initial_delay_ms: 1000
+
+  caching:
+    enabled: true
+    ttl_seconds: 300
+    cache_projects: true
+    cache_custom_fields: true
