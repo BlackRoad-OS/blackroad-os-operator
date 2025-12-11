@@ -5,6 +5,28 @@
 
 **ROLE:** Operator Engine ⚙️🤖 – jobs, schedulers, background workers, and agent workflows for BlackRoad OS.
 
+## Railway deployment
+
+Use the bundled helper script to trigger a Railway deploy from your local environment or CI runner. The script wraps the Railway CLI, so make sure `railway` is installed and authenticated first.
+
+```bash
+# Deploy the operator service to production (detached by default)
+pnpm railway:deploy --service operator-ws --project blackroad-os-operator --environment production
+
+# Stream logs during deploy
+pnpm railway:deploy --service operator-ws --project blackroad-os-operator --environment production --attach
+
+# Dry-run to verify arguments without pushing
+pnpm railway:deploy --service operator-ws --project blackroad-os-operator --environment production --dry-run
+```
+
+Flags:
+- `--service` (required): Railway service name to deploy
+- `--project`: Project slug or ID to link before deploying
+- `--environment`: Railway environment to target (for multi-env projects)
+- `--attach`: Stream deployment output instead of detaching
+- `--dry-run`: Print the Railway command without executing it
+
 ## 🎯 MISSION
 
 Run the **behind-the-scenes automation** for BlackRoad OS:
