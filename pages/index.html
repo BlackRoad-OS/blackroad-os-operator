@@ -1,0 +1,874 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BlackRoad OS | Desktop Environment</title>
+  <meta name="description" content="The browser-based operating system. Every creative tool is a window. Lucidia orchestrates everything through conversation.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='40' fill='%23FF0066'/></svg>">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Inter+Tight:wght@600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --br-sunrise: #FF9D00;
+      --br-hot-pink: #FF0066;
+      --br-vivid-purple: #7700FF;
+      --br-cyber-blue: #0066FF;
+      --br-cyan: #00CCFF;
+      --br-green: #00FF88;
+      --br-black: #050508;
+      --br-surface: #0d0d12;
+      --br-surface-2: #16161f;
+      --br-surface-3: #1e1e2a;
+      --br-border: #2a2a3a;
+      --br-white: #FFFFFF;
+      --br-text-muted: #888899;
+      --br-font-display: 'Inter Tight', sans-serif;
+      --br-font-body: 'Inter', sans-serif;
+      --br-font-mono: 'JetBrains Mono', monospace;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body {
+      height: 100%;
+      overflow: hidden;
+      background: var(--br-black);
+      color: var(--br-white);
+      font-family: var(--br-font-body);
+    }
+
+    /* Starfield Background */
+    #starfield {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+    }
+
+    /* Desktop Container */
+    .desktop {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 48px;
+      z-index: 1;
+    }
+
+    /* Desktop Icons */
+    .desktop-icons {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .desktop-icon {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      padding: 10px;
+      border-radius: 8px;
+      transition: background 0.2s;
+      width: 80px;
+    }
+    .desktop-icon:hover { background: rgba(255, 255, 255, 0.05); }
+    .desktop-icon.selected { background: rgba(0, 102, 255, 0.2); }
+    .icon-image {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+    }
+    .icon-label {
+      font-size: 11px;
+      text-align: center;
+      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+    }
+
+    /* Window System */
+    .window {
+      position: absolute;
+      background: var(--br-surface);
+      border: 1px solid var(--br-border);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+      display: none;
+      flex-direction: column;
+      min-width: 400px;
+      min-height: 300px;
+    }
+    .window.open { display: flex; }
+    .window.maximized {
+      top: 0 !important;
+      left: 0 !important;
+      width: 100% !important;
+      height: 100% !important;
+      border-radius: 0;
+    }
+    .window.focused {
+      box-shadow: 0 20px 80px rgba(0, 102, 255, 0.2);
+      border-color: rgba(0, 102, 255, 0.3);
+    }
+    .window.minimized { display: none; }
+
+    .window-header {
+      display: flex;
+      align-items: center;
+      padding: 0 12px;
+      height: 40px;
+      background: var(--br-surface-2);
+      border-bottom: 1px solid var(--br-border);
+      cursor: grab;
+      user-select: none;
+    }
+    .window-header:active { cursor: grabbing; }
+    .window-controls {
+      display: flex;
+      gap: 8px;
+      margin-right: 12px;
+    }
+    .window-btn {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      border: none;
+      cursor: pointer;
+    }
+    .window-btn.close { background: #FF5F57; }
+    .window-btn.minimize { background: #FFBD2E; }
+    .window-btn.maximize { background: #28C840; }
+    .window-btn:hover { filter: brightness(1.2); }
+    .window-title {
+      flex: 1;
+      font-size: 13px;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .window-title-icon {
+      width: 18px;
+      height: 18px;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+    }
+
+    .window-body {
+      flex: 1;
+      overflow: hidden;
+      position: relative;
+    }
+    .window-body iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+      background: var(--br-black);
+    }
+
+    /* Resize Handle */
+    .resize-handle {
+      position: absolute;
+      right: 0;
+      bottom: 0;
+      width: 20px;
+      height: 20px;
+      cursor: nwse-resize;
+    }
+    .resize-handle::after {
+      content: '';
+      position: absolute;
+      right: 4px;
+      bottom: 4px;
+      width: 8px;
+      height: 8px;
+      border-right: 2px solid var(--br-border);
+      border-bottom: 2px solid var(--br-border);
+    }
+
+    /* Taskbar */
+    .taskbar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 48px;
+      background: rgba(13, 13, 18, 0.95);
+      backdrop-filter: blur(20px);
+      border-top: 1px solid var(--br-border);
+      display: flex;
+      align-items: center;
+      padding: 0 12px;
+      z-index: 1000;
+    }
+    .start-button {
+      width: 40px;
+      height: 40px;
+      background: linear-gradient(135deg, var(--br-hot-pink), var(--br-vivid-purple));
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-right: 12px;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .start-button:hover {
+      transform: scale(1.05);
+      box-shadow: 0 0 20px rgba(255, 0, 102, 0.4);
+    }
+    .start-button svg { width: 20px; height: 20px; }
+
+    .search-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--br-surface-2);
+      border: 1px solid var(--br-border);
+      border-radius: 8px;
+      padding: 0 12px;
+      height: 32px;
+      width: 280px;
+      margin-right: 16px;
+    }
+    .search-bar input {
+      flex: 1;
+      background: none;
+      border: none;
+      color: var(--br-white);
+      font-size: 13px;
+      outline: none;
+    }
+    .search-bar input::placeholder { color: var(--br-text-muted); }
+    .search-bar svg { color: var(--br-text-muted); width: 14px; height: 14px; }
+
+    .taskbar-apps {
+      flex: 1;
+      display: flex;
+      gap: 4px;
+      overflow-x: auto;
+    }
+    .taskbar-app {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 12px;
+      background: transparent;
+      border: none;
+      border-radius: 6px;
+      color: var(--br-white);
+      font-size: 12px;
+      cursor: pointer;
+      transition: background 0.2s;
+      white-space: nowrap;
+    }
+    .taskbar-app:hover { background: var(--br-surface-2); }
+    .taskbar-app.active {
+      background: var(--br-surface-3);
+      box-shadow: inset 0 -2px 0 var(--br-cyber-blue);
+    }
+    .taskbar-app-icon {
+      width: 20px;
+      height: 20px;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+    }
+
+    .taskbar-right {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .system-tray {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: var(--br-text-muted);
+      font-size: 12px;
+    }
+    .tray-icon {
+      width: 20px;
+      height: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+    .tray-icon:hover { color: var(--br-white); }
+    .clock {
+      font-family: var(--br-font-mono);
+      font-size: 12px;
+      color: var(--br-text-muted);
+    }
+
+    /* Start Menu */
+    .start-menu {
+      position: fixed;
+      bottom: 56px;
+      left: 8px;
+      width: 400px;
+      background: var(--br-surface);
+      border: 1px solid var(--br-border);
+      border-radius: 12px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+      display: none;
+      z-index: 1001;
+      overflow: hidden;
+    }
+    .start-menu.open { display: block; }
+    .start-menu-header {
+      padding: 16px;
+      border-bottom: 1px solid var(--br-border);
+    }
+    .start-menu-search {
+      width: 100%;
+      background: var(--br-surface-2);
+      border: 1px solid var(--br-border);
+      border-radius: 8px;
+      padding: 10px 14px;
+      color: var(--br-white);
+      font-size: 14px;
+      outline: none;
+    }
+    .start-menu-search::placeholder { color: var(--br-text-muted); }
+    .start-menu-section {
+      padding: 12px;
+    }
+    .start-menu-title {
+      font-size: 11px;
+      color: var(--br-text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 8px;
+      padding: 0 8px;
+    }
+    .start-menu-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 4px;
+    }
+    .start-menu-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      padding: 12px 8px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .start-menu-item:hover { background: var(--br-surface-2); }
+    .start-menu-item-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.25rem;
+    }
+    .start-menu-item-label {
+      font-size: 11px;
+      text-align: center;
+    }
+    .start-menu-list {
+      display: flex;
+      flex-direction: column;
+    }
+    .start-menu-list-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .start-menu-list-item:hover { background: var(--br-surface-2); }
+
+    /* Context Menu */
+    .context-menu {
+      position: fixed;
+      background: var(--br-surface);
+      border: 1px solid var(--br-border);
+      border-radius: 8px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+      min-width: 180px;
+      padding: 6px;
+      display: none;
+      z-index: 2000;
+    }
+    .context-menu.open { display: block; }
+    .context-menu-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-size: 13px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .context-menu-item:hover { background: var(--br-surface-2); }
+    .context-menu-divider {
+      height: 1px;
+      background: var(--br-border);
+      margin: 6px 0;
+    }
+
+    /* Loading overlay for iframes */
+    .window-loading {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: var(--br-black);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 10;
+    }
+    .window-loading.hidden { display: none; }
+    .loader {
+      width: 40px;
+      height: 40px;
+      border: 3px solid var(--br-border);
+      border-top-color: var(--br-hot-pink);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+  <canvas id="starfield"></canvas>
+
+  <div class="desktop" id="desktop">
+    <div class="desktop-icons">
+      <div class="desktop-icon" ondblclick="openWindow('lucidia')">
+        <div class="icon-image" style="background: linear-gradient(135deg, #00CCFF, #8855FF);">L</div>
+        <span class="icon-label">Lucidia AI</span>
+      </div>
+      <div class="desktop-icon" ondblclick="openWindow('studio')">
+        <div class="icon-image" style="background: linear-gradient(135deg, #8855FF, #FF55AA);">S</div>
+        <span class="icon-label">Studio</span>
+      </div>
+      <div class="desktop-icon" ondblclick="openWindow('network')">
+        <div class="icon-image" style="background: linear-gradient(135deg, #0066FF, #00CCFF);">N</div>
+        <span class="icon-label">Network</span>
+      </div>
+      <div class="desktop-icon" ondblclick="openWindow('quantum')">
+        <div class="icon-image" style="background: linear-gradient(135deg, #D600AA, #7700FF);">Q</div>
+        <span class="icon-label">Quantum</span>
+      </div>
+      <div class="desktop-icon" ondblclick="openWindow('ai')">
+        <div class="icon-image" style="background: linear-gradient(135deg, #7700FF, #0066FF);">AI</div>
+        <span class="icon-label">BlackRoad AI</span>
+      </div>
+      <div class="desktop-icon" ondblclick="openWindow('roadwork')">
+        <div class="icon-image" style="background: linear-gradient(135deg, #FF9D00, #FFDD00);">RW</div>
+        <span class="icon-label">RoadWork</span>
+      </div>
+    </div>
+
+    <!-- Windows will be created dynamically -->
+  </div>
+
+  <div class="taskbar">
+    <button class="start-button" onclick="toggleStartMenu()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+        <path d="M3 12h18M3 6h18M3 18h18"/>
+      </svg>
+    </button>
+
+    <div class="search-bar">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
+      </svg>
+      <input type="text" placeholder="Search apps, files, settings..." id="search-input">
+    </div>
+
+    <div class="taskbar-apps" id="taskbar-apps"></div>
+
+    <div class="taskbar-right">
+      <div class="system-tray">
+        <span class="tray-icon" title="Network">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M5 12.55a11 11 0 0 1 14.08 0M1.42 9a16 16 0 0 1 21.16 0M8.53 16.11a6 6 0 0 1 6.95 0M12 20h.01"/>
+          </svg>
+        </span>
+        <span class="tray-icon" title="Sound">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+            <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
+          </svg>
+        </span>
+      </div>
+      <div class="clock" id="clock">00:00</div>
+    </div>
+  </div>
+
+  <div class="start-menu" id="start-menu">
+    <div class="start-menu-header">
+      <input type="text" class="start-menu-search" placeholder="Type to search...">
+    </div>
+    <div class="start-menu-section">
+      <div class="start-menu-title">Pinned</div>
+      <div class="start-menu-grid">
+        <div class="start-menu-item" onclick="openWindow('lucidia'); toggleStartMenu();">
+          <div class="start-menu-item-icon" style="background: linear-gradient(135deg, #00CCFF, #8855FF);">L</div>
+          <span class="start-menu-item-label">Lucidia AI</span>
+        </div>
+        <div class="start-menu-item" onclick="openWindow('studio'); toggleStartMenu();">
+          <div class="start-menu-item-icon" style="background: linear-gradient(135deg, #8855FF, #FF55AA);">S</div>
+          <span class="start-menu-item-label">Studio</span>
+        </div>
+        <div class="start-menu-item" onclick="openWindow('network'); toggleStartMenu();">
+          <div class="start-menu-item-icon" style="background: linear-gradient(135deg, #0066FF, #00CCFF);">N</div>
+          <span class="start-menu-item-label">Network</span>
+        </div>
+        <div class="start-menu-item" onclick="openWindow('quantum'); toggleStartMenu();">
+          <div class="start-menu-item-icon" style="background: linear-gradient(135deg, #D600AA, #7700FF);">Q</div>
+          <span class="start-menu-item-label">Quantum</span>
+        </div>
+        <div class="start-menu-item" onclick="openWindow('ai'); toggleStartMenu();">
+          <div class="start-menu-item-icon" style="background: linear-gradient(135deg, #7700FF, #0066FF);">AI</div>
+          <span class="start-menu-item-label">BlackRoad AI</span>
+        </div>
+        <div class="start-menu-item" onclick="openWindow('roadwork'); toggleStartMenu();">
+          <div class="start-menu-item-icon" style="background: linear-gradient(135deg, #FF9D00, #FFDD00);">RW</div>
+          <span class="start-menu-item-label">RoadWork</span>
+        </div>
+        <div class="start-menu-item" onclick="alert('Coming soon!')">
+          <div class="start-menu-item-icon" style="background: linear-gradient(135deg, #FF9D00, #FF0066);">M</div>
+          <span class="start-menu-item-label">Music</span>
+        </div>
+        <div class="start-menu-item" onclick="alert('Coming soon!')">
+          <div class="start-menu-item-icon" style="background: linear-gradient(135deg, #00FF88, #00CCFF);">R</div>
+          <span class="start-menu-item-label">RoadChain</span>
+        </div>
+        <div class="start-menu-item" onclick="alert('Coming soon!')">
+          <div class="start-menu-item-icon" style="background: linear-gradient(135deg, #FF5555, #FF9D00);">MK</div>
+          <span class="start-menu-item-label">Marketplace</span>
+        </div>
+      </div>
+    </div>
+    <div class="start-menu-section" style="border-top: 1px solid var(--br-border);">
+      <div class="start-menu-title">Recent</div>
+      <div class="start-menu-list">
+        <div class="start-menu-list-item" onclick="openWindow('lucidia'); toggleStartMenu();">
+          <span style="font-size: 14px;">L</span>
+          <span>Lucidia conversation - 5 min ago</span>
+        </div>
+        <div class="start-menu-list-item" onclick="openWindow('studio'); toggleStartMenu();">
+          <span style="font-size: 14px;">S</span>
+          <span>Project: Space Shooter - 1 hour ago</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="context-menu" id="context-menu">
+    <div class="context-menu-item" onclick="refreshDesktop()">Refresh</div>
+    <div class="context-menu-divider"></div>
+    <div class="context-menu-item" onclick="openWindow('lucidia')">New Lucidia Chat</div>
+    <div class="context-menu-item" onclick="openWindow('studio')">New Studio Project</div>
+    <div class="context-menu-divider"></div>
+    <div class="context-menu-item">Display Settings</div>
+    <div class="context-menu-item">Personalize</div>
+  </div>
+
+  <script>
+    // Starfield
+    const canvas = document.getElementById('starfield');
+    const ctx = canvas.getContext('2d');
+    const stars = [];
+
+    function resize() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    resize();
+    window.addEventListener('resize', resize);
+
+    class Star {
+      constructor() {
+        this.reset();
+      }
+      reset() {
+        this.x = Math.random() * canvas.width;
+        this.y = Math.random() * canvas.height;
+        this.z = Math.random() * 2;
+        this.size = Math.random() * 1.5;
+        this.speed = 0.02 + Math.random() * 0.03;
+        this.twinkle = Math.random() * Math.PI * 2;
+      }
+      update() {
+        this.twinkle += 0.02;
+        this.z -= this.speed;
+        if (this.z <= 0) this.reset();
+      }
+      draw() {
+        const opacity = (0.3 + Math.sin(this.twinkle) * 0.3) * this.z;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.size * this.z, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(255, 255, 255, ${opacity})`;
+        ctx.fill();
+      }
+    }
+
+    for (let i = 0; i < 200; i++) stars.push(new Star());
+
+    function animateStars() {
+      ctx.fillStyle = 'rgba(5, 5, 8, 0.3)';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      stars.forEach(s => { s.update(); s.draw(); });
+      requestAnimationFrame(animateStars);
+    }
+    animateStars();
+
+    // Window Management
+    const apps = {
+      lucidia: { title: 'Lucidia AI', icon: 'L', color: 'linear-gradient(135deg, #00CCFF, #8855FF)', url: '/lucidia-earth/' },
+      studio: { title: 'Lucidia Studio', icon: 'S', color: 'linear-gradient(135deg, #8855FF, #FF55AA)', url: '/lucidia-studio/' },
+      network: { title: 'BlackRoad Network', icon: 'N', color: 'linear-gradient(135deg, #0066FF, #00CCFF)', url: '/blackroad-network/' },
+      quantum: { title: 'BlackRoad Quantum', icon: 'Q', color: 'linear-gradient(135deg, #D600AA, #7700FF)', url: '/blackroadquantum/' },
+      ai: { title: 'BlackRoad AI', icon: 'AI', color: 'linear-gradient(135deg, #7700FF, #0066FF)', url: '/blackroadai/' },
+      roadwork: { title: 'RoadWork', icon: 'RW', color: 'linear-gradient(135deg, #FF9D00, #FFDD00)', url: '/roadwork/' },
+    };
+
+    const openWindows = {};
+    let zIndex = 100;
+    let dragState = null;
+    let resizeState = null;
+
+    function openWindow(appId) {
+      if (openWindows[appId]) {
+        focusWindow(appId);
+        if (openWindows[appId].minimized) {
+          openWindows[appId].minimized = false;
+          openWindows[appId].element.classList.remove('minimized');
+        }
+        return;
+      }
+
+      const app = apps[appId];
+      const desktop = document.getElementById('desktop');
+
+      const windowEl = document.createElement('div');
+      windowEl.className = 'window open focused';
+      windowEl.id = `window-${appId}`;
+      windowEl.style.cssText = `
+        left: ${100 + Object.keys(openWindows).length * 30}px;
+        top: ${50 + Object.keys(openWindows).length * 30}px;
+        width: 900px;
+        height: 600px;
+        z-index: ${++zIndex};
+      `;
+
+      windowEl.innerHTML = `
+        <div class="window-header" onmousedown="startDrag(event, '${appId}')">
+          <div class="window-controls">
+            <button class="window-btn close" onclick="closeWindow('${appId}')"></button>
+            <button class="window-btn minimize" onclick="minimizeWindow('${appId}')"></button>
+            <button class="window-btn maximize" onclick="maximizeWindow('${appId}')"></button>
+          </div>
+          <div class="window-title">
+            <div class="window-title-icon" style="background: ${app.color};">${app.icon}</div>
+            ${app.title}
+          </div>
+        </div>
+        <div class="window-body">
+          <div class="window-loading" id="loading-${appId}">
+            <div class="loader"></div>
+          </div>
+          <iframe src="${app.url}" onload="document.getElementById('loading-${appId}').classList.add('hidden')"></iframe>
+        </div>
+        <div class="resize-handle" onmousedown="startResize(event, '${appId}')"></div>
+      `;
+
+      windowEl.onmousedown = () => focusWindow(appId);
+      desktop.appendChild(windowEl);
+
+      openWindows[appId] = {
+        element: windowEl,
+        minimized: false,
+        maximized: false
+      };
+
+      updateTaskbar();
+    }
+
+    function closeWindow(appId) {
+      const win = openWindows[appId];
+      if (win) {
+        win.element.remove();
+        delete openWindows[appId];
+        updateTaskbar();
+      }
+    }
+
+    function minimizeWindow(appId) {
+      const win = openWindows[appId];
+      if (win) {
+        win.minimized = true;
+        win.element.classList.add('minimized');
+      }
+    }
+
+    function maximizeWindow(appId) {
+      const win = openWindows[appId];
+      if (win) {
+        win.maximized = !win.maximized;
+        win.element.classList.toggle('maximized');
+      }
+    }
+
+    function focusWindow(appId) {
+      Object.values(openWindows).forEach(w => w.element.classList.remove('focused'));
+      const win = openWindows[appId];
+      if (win) {
+        win.element.classList.add('focused');
+        win.element.style.zIndex = ++zIndex;
+      }
+      updateTaskbar();
+    }
+
+    // Drag & Resize
+    function startDrag(e, appId) {
+      if (e.target.closest('.window-controls')) return;
+      const win = openWindows[appId];
+      if (win.maximized) return;
+
+      dragState = {
+        appId,
+        startX: e.clientX,
+        startY: e.clientY,
+        startLeft: win.element.offsetLeft,
+        startTop: win.element.offsetTop
+      };
+    }
+
+    function startResize(e, appId) {
+      e.stopPropagation();
+      const win = openWindows[appId];
+      if (win.maximized) return;
+
+      resizeState = {
+        appId,
+        startX: e.clientX,
+        startY: e.clientY,
+        startWidth: win.element.offsetWidth,
+        startHeight: win.element.offsetHeight
+      };
+    }
+
+    document.addEventListener('mousemove', (e) => {
+      if (dragState) {
+        const win = openWindows[dragState.appId];
+        win.element.style.left = dragState.startLeft + (e.clientX - dragState.startX) + 'px';
+        win.element.style.top = Math.max(0, dragState.startTop + (e.clientY - dragState.startY)) + 'px';
+      }
+      if (resizeState) {
+        const win = openWindows[resizeState.appId];
+        win.element.style.width = Math.max(400, resizeState.startWidth + (e.clientX - resizeState.startX)) + 'px';
+        win.element.style.height = Math.max(300, resizeState.startHeight + (e.clientY - resizeState.startY)) + 'px';
+      }
+    });
+
+    document.addEventListener('mouseup', () => {
+      dragState = null;
+      resizeState = null;
+    });
+
+    // Taskbar
+    function updateTaskbar() {
+      const container = document.getElementById('taskbar-apps');
+      container.innerHTML = Object.entries(openWindows).map(([id, win]) => {
+        const app = apps[id];
+        const isFocused = win.element.classList.contains('focused') && !win.minimized;
+        return `
+          <button class="taskbar-app ${isFocused ? 'active' : ''}" onclick="toggleWindow('${id}')">
+            <div class="taskbar-app-icon" style="background: ${app.color};">${app.icon}</div>
+            ${app.title}
+          </button>
+        `;
+      }).join('');
+    }
+
+    function toggleWindow(appId) {
+      const win = openWindows[appId];
+      if (!win) return;
+
+      if (win.minimized) {
+        win.minimized = false;
+        win.element.classList.remove('minimized');
+        focusWindow(appId);
+      } else if (win.element.classList.contains('focused')) {
+        minimizeWindow(appId);
+      } else {
+        focusWindow(appId);
+      }
+    }
+
+    // Start Menu
+    function toggleStartMenu() {
+      document.getElementById('start-menu').classList.toggle('open');
+    }
+
+    // Context Menu
+    document.addEventListener('contextmenu', (e) => {
+      if (e.target.closest('.window') || e.target.closest('.taskbar') || e.target.closest('.start-menu')) return;
+      e.preventDefault();
+      const menu = document.getElementById('context-menu');
+      menu.style.left = e.clientX + 'px';
+      menu.style.top = e.clientY + 'px';
+      menu.classList.add('open');
+    });
+
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('.context-menu')) {
+        document.getElementById('context-menu').classList.remove('open');
+      }
+      if (!e.target.closest('.start-menu') && !e.target.closest('.start-button')) {
+        document.getElementById('start-menu').classList.remove('open');
+      }
+    });
+
+    function refreshDesktop() {
+      location.reload();
+    }
+
+    // Clock
+    function updateClock() {
+      const now = new Date();
+      document.getElementById('clock').textContent = now.toLocaleTimeString('en-US', {
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    }
+    updateClock();
+    setInterval(updateClock, 1000);
+
+    // Open Lucidia on load
+    setTimeout(() => openWindow('lucidia'), 500);
+  </script>
+</body>
+</html>

@@ -5,7 +5,11 @@
 name = "blackroadai-router"
 main = "src/index.js"
 compatibility_date = "2024-12-02"
-workers_dev = true
+
+routes = [
+  { pattern = "blackroadai.com/*", zone_name = "blackroadai.com" },
+  { pattern = "www.blackroadai.com/*", zone_name = "blackroadai.com" }
+]
 
 [vars]
 ENVIRONMENT = "production"

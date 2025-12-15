@@ -1,0 +1,30 @@
+# BlackRoad Domain Router
+# Routes all domains to their correct landing pages
+
+name = "blackroad-domain-router"
+main = "src/index.js"
+compatibility_date = "2024-01-01"
+
+# Route all primary domains through this worker
+routes = [
+  { pattern = "blackroad.io/*", zone_name = "blackroad.io" },
+  { pattern = "www.blackroad.io/*", zone_name = "blackroad.io" },
+  { pattern = "blackroadai.com/*", zone_name = "blackroadai.com" },
+  { pattern = "www.blackroadai.com/*", zone_name = "blackroadai.com" },
+  { pattern = "blackroad.network/*", zone_name = "blackroad.network" },
+  { pattern = "blackroadquantum.com/*", zone_name = "blackroadquantum.com" },
+  { pattern = "lucidia.earth/*", zone_name = "lucidia.earth" },
+  { pattern = "lucidia.studio/*", zone_name = "lucidia.studio" },
+  { pattern = "blackroad.me/*", zone_name = "blackroad.me" },
+  { pattern = "blackroadinc.us/*", zone_name = "blackroadinc.us" },
+  { pattern = "app.blackroad.io/*", zone_name = "blackroad.io" },
+  { pattern = "docs.blackroad.io/*", zone_name = "blackroad.io" },
+  { pattern = "console.blackroad.io/*", zone_name = "blackroad.io" },
+  { pattern = "dashboard.blackroad.io/*", zone_name = "blackroad.io" },
+  { pattern = "brand.blackroad.io/*", zone_name = "blackroad.io" },
+  { pattern = "hello.blackroad.io/*", zone_name = "blackroad.io" },
+  { pattern = "portals.blackroad.io/*", zone_name = "blackroad.io" },
+]
+
+[vars]
+PAGES_ORIGIN = "https://blackroad-os-web.pages.dev"

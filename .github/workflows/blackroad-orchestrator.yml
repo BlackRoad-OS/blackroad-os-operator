@@ -190,7 +190,7 @@ jobs:
           exit 1
 
   # ============================================================================
-  # DEPLOY CLOUDFLARE PAGES
+  # DEPLOY CLOUDFLARE PAGES WITH CUSTOM DOMAINS
   # ============================================================================
   deploy-pages:
     name: Deploy Pages
@@ -208,11 +208,14 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
 
+      - name: Install dependencies
+        run: |
+          npm install -g wrangler
+          pip install pyyaml 2>/dev/null || true
+
       - name: Build & Deploy ${{ matrix.page }}
         working-directory: pages/${{ matrix.page }}
         run: |
-          npm install -g wrangler
-
           # Install and build if package.json exists
           if [ -f "package.json" ]; then
             npm ci --prefer-offline --no-audit 2>/dev/null || npm install
@@ -230,6 +233,43 @@ jobs:
           PROJECT="blackroad-${{ matrix.page }}"
           wrangler pages project create "$PROJECT" --production-branch main 2>/dev/null || true
           wrangler pages deploy "$OUTPUT" --project-name="$PROJECT" --branch=main
+
+      - name: Configure Custom Domains
+        env:
+          CF_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CF_ACCOUNT_ID: ${{ env.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          PAGE="${{ matrix.page }}"
+          PROJECT="blackroad-$PAGE"
+
+          # Domain mapping (inline for reliability)
+          declare -A DOMAIN_MAP
+          DOMAIN_MAP["blackroad-io"]="blackroad.io"
+          DOMAIN_MAP["blackroadai"]="blackroadai.com"
+          DOMAIN_MAP["blackroad-network"]="blackroad.network"
+          DOMAIN_MAP["blackroadquantum"]="blackroadquantum.com"
+          DOMAIN_MAP["lucidia-earth"]="lucidia.earth"
+          DOMAIN_MAP["lucidia-studio"]="lucidia.studio"
+          DOMAIN_MAP["blackroad-me"]="blackroad.me"
+          DOMAIN_MAP["blackroadinc"]="blackroadinc.us"
+          DOMAIN_MAP["app"]="app.blackroad.io"
+          DOMAIN_MAP["cece"]="cece.blackroad.io"
+          DOMAIN_MAP["docs"]="docs.blackroad.io"
+          DOMAIN_MAP["status"]="status.blackroad.io"
+          DOMAIN_MAP["console"]="console.blackroad.io"
+          DOMAIN_MAP["dashboard"]="dashboard.blackroad.io"
+          DOMAIN_MAP["brands"]="brand.blackroad.io"
+          DOMAIN_MAP["hello"]="hello.blackroad.io"
+
+          DOMAIN="${DOMAIN_MAP[$PAGE]}"
+
+          if [ -n "$DOMAIN" ]; then
+            echo "Adding custom domain: $DOMAIN to $PROJECT"
+            curl -sX POST "https://api.cloudflare.com/client/v4/accounts/$CF_ACCOUNT_ID/pages/projects/$PROJECT/domains" \
+              -H "Authorization: Bearer $CF_API_TOKEN" \
+              -H "Content-Type: application/json" \
+              -d "{\"name\":\"$DOMAIN\"}" || true
+          fi
 
   # ============================================================================
   # DEPLOY RAILWAY BACKEND

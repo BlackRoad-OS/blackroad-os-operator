@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Lucidia Studio | Creative Intelligence Workspace</title>
-  <meta name="description" content="The creative workspace powered by ambient AI. Design, develop, and deploy with Lucidia.">
+  <title>Lucidia Studio | Creative Workspace</title>
+  <meta name="description" content="AI-powered creative workspace. Design, code, and deploy with ambient intelligence.">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='40' fill='%238855FF'/></svg>">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Inter+Tight:wght@600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <style>
@@ -12,329 +12,786 @@
       --studio-violet: #8855FF;
       --studio-pink: #FF55AA;
       --studio-cyan: #00CCFF;
-      --br-black: #000000;
+      --br-black: #0a0a0a;
+      --br-surface: #111111;
+      --br-surface-2: #1a1a1a;
+      --br-surface-3: #222222;
+      --br-border: #2a2a2a;
       --br-white: #FFFFFF;
+      --br-text-muted: #888888;
       --br-gradient-studio: linear-gradient(135deg, #8855FF 0%, #FF55AA 50%, #00CCFF 100%);
       --br-font-display: 'Inter Tight', sans-serif;
       --br-font-body: 'Inter', sans-serif;
       --br-font-mono: 'JetBrains Mono', monospace;
     }
     * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { height: 100%; overflow: hidden; }
     body {
       background: var(--br-black);
       color: var(--br-white);
       font-family: var(--br-font-body);
-      min-height: 100vh;
-    }
-    .studio-bg {
-      position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background:
-        radial-gradient(ellipse at 30% 20%, rgba(136, 85, 255, 0.2) 0%, transparent 50%),
-        radial-gradient(ellipse at 70% 80%, rgba(255, 85, 170, 0.15) 0%, transparent 50%),
-        radial-gradient(ellipse at 90% 10%, rgba(0, 204, 255, 0.1) 0%, transparent 40%);
-      z-index: -1;
-    }
-    header {
-      position: fixed;
-      top: 0; left: 0; right: 0;
-      padding: 1.5rem 2rem;
       display: flex;
-      justify-content: space-between;
+      flex-direction: column;
+    }
+
+    /* Header */
+    header {
+      height: 48px;
+      background: var(--br-surface);
+      border-bottom: 1px solid var(--br-border);
+      display: flex;
       align-items: center;
-      backdrop-filter: blur(20px);
-      background: rgba(0, 0, 0, 0.5);
-      border-bottom: 1px solid rgba(136, 85, 255, 0.2);
-      z-index: 100;
+      padding: 0 1rem;
+      gap: 1rem;
+      flex-shrink: 0;
     }
     .logo {
       font-family: var(--br-font-display);
-      font-size: 1.5rem;
-      font-weight: 800;
-      background: var(--br-gradient-studio);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      text-decoration: none;
-    }
-    nav a {
-      color: rgba(255, 255, 255, 0.7);
-      text-decoration: none;
-      margin-left: 2rem;
-      transition: color 0.2s;
-    }
-    nav a:hover { color: var(--studio-violet); }
-    .hero {
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      text-align: center;
-      padding: 8rem 2rem 4rem;
-    }
-    .studio-icon {
-      width: 80px;
-      height: 80px;
-      margin-bottom: 2rem;
-      position: relative;
-    }
-    .studio-icon::before {
-      content: '';
-      position: absolute;
-      top: 0; left: 0;
-      width: 100%;
-      height: 100%;
-      background: var(--br-gradient-studio);
-      border-radius: 20px;
-      transform: rotate(45deg);
-    }
-    .studio-icon::after {
-      content: '◆';
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      font-size: 2rem;
-      color: var(--br-black);
-    }
-    .badge {
-      background: rgba(136, 85, 255, 0.2);
-      color: var(--studio-violet);
-      padding: 0.5rem 1rem;
-      border-radius: 20px;
-      font-size: 0.875rem;
-      font-weight: 600;
-      margin-bottom: 2rem;
-      border: 1px solid rgba(136, 85, 255, 0.3);
-    }
-    .hero h1 {
-      font-family: var(--br-font-display);
-      font-size: clamp(3rem, 8vw, 5rem);
-      font-weight: 800;
-      margin-bottom: 1.5rem;
-      background: var(--br-gradient-studio);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-    .hero p {
-      font-size: 1.25rem;
-      color: rgba(255, 255, 255, 0.7);
-      max-width: 600px;
-      margin-bottom: 2.5rem;
-      line-height: 1.6;
-    }
-    .btn-group {
-      display: flex;
-      gap: 1rem;
-      flex-wrap: wrap;
-      justify-content: center;
-    }
-    .btn-primary {
-      background: var(--br-gradient-studio);
-      color: var(--br-white);
-      font-family: var(--br-font-display);
+      font-size: 1rem;
       font-weight: 700;
-      padding: 1rem 2rem;
-      border-radius: 8px;
-      border: none;
-      text-decoration: none;
-      transition: transform 0.2s, box-shadow 0.2s;
+      background: var(--br-gradient-studio);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
     }
-    .btn-primary:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 0 40px rgba(136, 85, 255, 0.4);
+    .toolbar {
+      display: flex;
+      gap: 0.25rem;
+      padding: 0 0.5rem;
+      border-left: 1px solid var(--br-border);
+      border-right: 1px solid var(--br-border);
     }
-    .btn-secondary {
+    .tool-btn {
+      width: 32px;
+      height: 32px;
       background: transparent;
-      color: var(--studio-violet);
-      font-family: var(--br-font-display);
-      font-weight: 700;
-      padding: 1rem 2rem;
-      border-radius: 8px;
-      border: 1px solid var(--studio-violet);
-      text-decoration: none;
+      border: none;
+      border-radius: 6px;
+      color: var(--br-text-muted);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       transition: all 0.2s;
     }
-    .btn-secondary:hover {
-      background: var(--studio-violet);
+    .tool-btn:hover { background: var(--br-surface-2); color: var(--br-white); }
+    .tool-btn.active { background: var(--studio-violet); color: var(--br-white); }
+    .header-spacer { flex: 1; }
+    .header-actions {
+      display: flex;
+      gap: 0.5rem;
+    }
+    .action-btn {
+      padding: 0.375rem 0.75rem;
+      background: var(--br-surface-2);
+      border: 1px solid var(--br-border);
+      border-radius: 6px;
+      color: var(--br-text-muted);
+      font-size: 0.75rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .action-btn:hover { border-color: var(--studio-violet); color: var(--br-white); }
+    .action-btn.primary {
+      background: var(--br-gradient-studio);
+      border: none;
       color: var(--br-white);
     }
-    .tools {
-      padding: 6rem 2rem;
-      max-width: 1200px;
-      margin: 0 auto;
-    }
-    .tools h2 {
-      font-family: var(--br-font-display);
-      font-size: 2rem;
-      font-weight: 800;
-      margin-bottom: 3rem;
-      text-align: center;
-      background: var(--br-gradient-studio);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-    .tool-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-      gap: 2rem;
-    }
-    .tool {
-      background: rgba(136, 85, 255, 0.05);
-      border: 1px solid rgba(136, 85, 255, 0.2);
-      border-radius: 16px;
-      padding: 2rem;
-      transition: all 0.3s;
-    }
-    .tool:hover {
-      border-color: var(--studio-violet);
-      transform: translateY(-4px);
-      box-shadow: 0 20px 40px rgba(136, 85, 255, 0.15);
-    }
-    .tool-header {
+
+    /* Main Layout */
+    .workspace {
+      flex: 1;
       display: flex;
-      align-items: center;
-      gap: 1rem;
-      margin-bottom: 1rem;
+      overflow: hidden;
     }
-    .tool-icon {
-      width: 48px;
-      height: 48px;
-      background: var(--br-gradient-studio);
-      border-radius: 12px;
+
+    /* Left Panel - File Tree */
+    .file-panel {
+      width: 240px;
+      background: var(--br-surface);
+      border-right: 1px solid var(--br-border);
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+    }
+    .panel-header {
+      padding: 0.75rem 1rem;
+      font-size: 0.6875rem;
+      font-weight: 600;
+      color: var(--br-text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      border-bottom: 1px solid var(--br-border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .panel-actions {
+      display: flex;
+      gap: 0.25rem;
+    }
+    .icon-btn {
+      width: 20px;
+      height: 20px;
+      background: transparent;
+      border: none;
+      border-radius: 4px;
+      color: var(--br-text-muted);
+      cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 1.5rem;
-    }
-    .tool h3 {
-      font-family: var(--br-font-display);
-      font-size: 1.25rem;
-      font-weight: 700;
-      color: var(--br-white);
-    }
-    .tool p { color: rgba(255, 255, 255, 0.6); line-height: 1.6; }
-    .tool-tag {
-      display: inline-block;
-      margin-top: 1rem;
-      padding: 0.25rem 0.75rem;
-      background: rgba(136, 85, 255, 0.2);
-      border-radius: 20px;
       font-size: 0.75rem;
+    }
+    .icon-btn:hover { background: var(--br-surface-2); color: var(--br-white); }
+    .file-tree {
+      flex: 1;
+      overflow-y: auto;
+      padding: 0.5rem;
+    }
+    .file-item {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.375rem 0.5rem;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.8125rem;
+      transition: background 0.2s;
+    }
+    .file-item:hover { background: var(--br-surface-2); }
+    .file-item.active { background: rgba(136, 85, 255, 0.15); }
+    .file-icon { font-size: 0.875rem; }
+    .file-name { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .folder-children {
+      margin-left: 1rem;
+      border-left: 1px solid var(--br-border);
+      padding-left: 0.5rem;
+    }
+
+    /* Editor Area */
+    .editor-area {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+    .tabs {
+      display: flex;
+      background: var(--br-surface);
+      border-bottom: 1px solid var(--br-border);
+      overflow-x: auto;
+    }
+    .tab {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.625rem 1rem;
+      font-size: 0.8125rem;
+      color: var(--br-text-muted);
+      border-right: 1px solid var(--br-border);
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .tab:hover { background: var(--br-surface-2); }
+    .tab.active {
+      background: var(--br-black);
+      color: var(--br-white);
+      border-bottom: 2px solid var(--studio-violet);
+    }
+    .tab-close {
+      width: 16px;
+      height: 16px;
+      background: transparent;
+      border: none;
+      border-radius: 4px;
+      color: var(--br-text-muted);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+    }
+    .tab-close:hover { background: var(--br-surface-2); color: var(--br-white); }
+
+    .editor-content {
+      flex: 1;
+      display: flex;
+      overflow: hidden;
+    }
+    .code-editor {
+      flex: 1;
+      background: var(--br-black);
+      overflow: auto;
+      position: relative;
+    }
+    .line-numbers {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 50px;
+      padding: 1rem 0.5rem;
+      text-align: right;
       font-family: var(--br-font-mono);
-      color: var(--studio-violet);
+      font-size: 0.8125rem;
+      color: var(--br-text-muted);
+      user-select: none;
+      background: var(--br-surface);
+      border-right: 1px solid var(--br-border);
     }
-    .cta {
-      padding: 6rem 2rem;
-      text-align: center;
-      background: linear-gradient(180deg, transparent 0%, rgba(136, 85, 255, 0.1) 100%);
+    .code-content {
+      padding: 1rem 1rem 1rem 70px;
+      font-family: var(--br-font-mono);
+      font-size: 0.875rem;
+      line-height: 1.6;
+      white-space: pre;
+      min-height: 100%;
     }
-    .cta h2 {
-      font-family: var(--br-font-display);
-      font-size: 2.5rem;
-      font-weight: 800;
-      margin-bottom: 1rem;
+    .code-keyword { color: #FF79C6; }
+    .code-string { color: #F1FA8C; }
+    .code-comment { color: #6272A4; }
+    .code-function { color: #50FA7B; }
+    .code-type { color: #8BE9FD; }
+    .code-number { color: #BD93F9; }
+
+    /* AI Panel */
+    .ai-panel {
+      width: 320px;
+      background: var(--br-surface);
+      border-left: 1px solid var(--br-border);
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
     }
-    .cta p { color: rgba(255, 255, 255, 0.6); margin-bottom: 2rem; }
-    footer {
-      border-top: 1px solid rgba(136, 85, 255, 0.2);
-      padding: 3rem 2rem;
-      text-align: center;
-      color: rgba(255, 255, 255, 0.5);
+    .ai-header {
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid var(--br-border);
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
     }
-    footer a { color: var(--studio-violet); text-decoration: none; }
+    .ai-avatar {
+      width: 28px;
+      height: 28px;
+      background: var(--br-gradient-studio);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.875rem;
+    }
+    .ai-title {
+      font-size: 0.875rem;
+      font-weight: 600;
+    }
+    .ai-status {
+      font-size: 0.6875rem;
+      color: var(--br-text-muted);
+    }
+    .ai-messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+    .ai-message {
+      background: var(--br-surface-2);
+      border-radius: 10px;
+      padding: 0.75rem;
+    }
+    .ai-message.user {
+      background: rgba(136, 85, 255, 0.1);
+      margin-left: 1rem;
+    }
+    .ai-message-text {
+      font-size: 0.8125rem;
+      line-height: 1.5;
+    }
+    .ai-suggestion {
+      background: var(--br-surface-2);
+      border: 1px solid var(--br-border);
+      border-radius: 8px;
+      padding: 0.625rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .ai-suggestion:hover {
+      border-color: var(--studio-violet);
+    }
+    .ai-suggestion-title {
+      font-size: 0.75rem;
+      font-weight: 500;
+      margin-bottom: 0.25rem;
+    }
+    .ai-suggestion-text {
+      font-size: 0.6875rem;
+      color: var(--br-text-muted);
+    }
+    .ai-input-area {
+      padding: 0.75rem;
+      border-top: 1px solid var(--br-border);
+    }
+    .ai-input-wrapper {
+      display: flex;
+      gap: 0.5rem;
+    }
+    .ai-input {
+      flex: 1;
+      background: var(--br-black);
+      border: 1px solid var(--br-border);
+      border-radius: 8px;
+      padding: 0.625rem 0.75rem;
+      color: var(--br-white);
+      font-size: 0.8125rem;
+      font-family: var(--br-font-body);
+    }
+    .ai-input:focus {
+      outline: none;
+      border-color: var(--studio-violet);
+    }
+    .ai-send {
+      width: 36px;
+      height: 36px;
+      background: var(--br-gradient-studio);
+      border: none;
+      border-radius: 8px;
+      color: var(--br-white);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .ai-send:hover {
+      box-shadow: 0 0 15px rgba(136, 85, 255, 0.4);
+    }
+
+    /* Bottom Panel */
+    .bottom-panel {
+      height: 200px;
+      background: var(--br-surface);
+      border-top: 1px solid var(--br-border);
+      display: flex;
+      flex-direction: column;
+    }
+    .bottom-tabs {
+      display: flex;
+      border-bottom: 1px solid var(--br-border);
+    }
+    .bottom-tab {
+      padding: 0.5rem 1rem;
+      font-size: 0.75rem;
+      color: var(--br-text-muted);
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+    }
+    .bottom-tab:hover { color: var(--br-white); }
+    .bottom-tab.active {
+      color: var(--br-white);
+      border-bottom-color: var(--studio-violet);
+    }
+    .terminal {
+      flex: 1;
+      padding: 0.75rem;
+      font-family: var(--br-font-mono);
+      font-size: 0.8125rem;
+      overflow-y: auto;
+    }
+    .terminal-line {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 0.25rem;
+    }
+    .terminal-prompt { color: var(--studio-cyan); }
+    .terminal-output { color: var(--br-text-muted); }
+    .terminal-success { color: #00FF88; }
+    .terminal-error { color: #FF5555; }
+
+    /* Resizers */
+    .resizer {
+      width: 4px;
+      cursor: col-resize;
+      background: transparent;
+      transition: background 0.2s;
+    }
+    .resizer:hover { background: var(--studio-violet); }
+
+    @media (max-width: 1024px) {
+      .ai-panel { display: none; }
+    }
     @media (max-width: 768px) {
-      .hero h1 { font-size: 2.5rem; }
-      nav { display: none; }
-      .btn-group { flex-direction: column; }
+      .file-panel { display: none; }
     }
   </style>
 </head>
 <body>
-  <div class="studio-bg"></div>
   <header>
-    <a href="/" class="logo">Lucidia Studio</a>
-    <nav>
-      <a href="https://lucidia.earth">Lucidia</a>
-      <a href="https://blackroad.io">BlackRoad</a>
-      <a href="https://docs.blackroad.io">Docs</a>
-    </nav>
+    <div class="logo">Lucidia Studio</div>
+    <div class="toolbar">
+      <button class="tool-btn" title="Select"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3l7.07 16.97 2.51-7.39 7.39-2.51L3 3z"/></svg></button>
+      <button class="tool-btn active" title="Code"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg></button>
+      <button class="tool-btn" title="Design"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/></svg></button>
+      <button class="tool-btn" title="Preview"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/><path d="M22 12c-2.667 4.667-6 7-10 7s-7.333-2.333-10-7c2.667-4.667 6-7 10-7s7.333 2.333 10 7"/></svg></button>
+    </div>
+    <div class="header-spacer"></div>
+    <div class="header-actions">
+      <button class="action-btn" onclick="runBuild()">Build</button>
+      <button class="action-btn primary" onclick="deploy()">Deploy</button>
+    </div>
   </header>
 
-  <main>
-    <section class="hero">
-      <div class="badge">✨ Creative Intelligence</div>
-      <h1>Your AI-Powered Studio</h1>
-      <p>Design, develop, and deploy with ambient intelligence. Lucidia Studio is where creativity meets capability.</p>
-      <div class="btn-group">
-        <a href="https://app.blackroad.io" class="btn-primary">Open Studio →</a>
-        <a href="https://lucidia.earth" class="btn-secondary">Learn About Lucidia</a>
-      </div>
-    </section>
-
-    <section class="tools">
-      <h2>Creative Tools</h2>
-      <div class="tool-grid">
-        <div class="tool">
-          <div class="tool-header">
-            <div class="tool-icon">🎨</div>
-            <h3>Design Canvas</h3>
-          </div>
-          <p>AI-assisted design tools that understand your aesthetic. Generate variations, suggest improvements, maintain consistency.</p>
-          <span class="tool-tag">DESIGN</span>
-        </div>
-        <div class="tool">
-          <div class="tool-header">
-            <div class="tool-icon">💻</div>
-            <h3>Code Editor</h3>
-          </div>
-          <p>Intelligent code completion that understands your project architecture. Write less, ship more, maintain quality.</p>
-          <span class="tool-tag">DEVELOP</span>
-        </div>
-        <div class="tool">
-          <div class="tool-header">
-            <div class="tool-icon">🚀</div>
-            <h3>Deploy Pipeline</h3>
-          </div>
-          <p>One-click deployment to BlackRoad's global edge network. From idea to production in minutes.</p>
-          <span class="tool-tag">DEPLOY</span>
-        </div>
-        <div class="tool">
-          <div class="tool-header">
-            <div class="tool-icon">🤝</div>
-            <h3>Collaborate</h3>
-          </div>
-          <p>Real-time collaboration with AI mediation. Share context, not confusion. Work together, seamlessly.</p>
-          <span class="tool-tag">TEAM</span>
-        </div>
-        <div class="tool">
-          <div class="tool-header">
-            <div class="tool-icon">📊</div>
-            <h3>Analytics</h3>
-          </div>
-          <p>Understand how your creations perform. AI-powered insights that surface what matters.</p>
-          <span class="tool-tag">MEASURE</span>
-        </div>
-        <div class="tool">
-          <div class="tool-header">
-            <div class="tool-icon">🔧</div>
-            <h3>Integrations</h3>
-          </div>
-          <p>Connect to everything. Figma, GitHub, Slack, and hundreds more. Your tools, unified.</p>
-          <span class="tool-tag">CONNECT</span>
+  <div class="workspace">
+    <aside class="file-panel">
+      <div class="panel-header">
+        <span>Explorer</span>
+        <div class="panel-actions">
+          <button class="icon-btn" title="New File">+</button>
+          <button class="icon-btn" title="Refresh">↻</button>
         </div>
       </div>
-    </section>
+      <div class="file-tree" id="file-tree"></div>
+    </aside>
 
-    <section class="cta">
-      <h2>Start creating today.</h2>
-      <p>Free to start. Scale when you're ready.</p>
-      <a href="https://app.blackroad.io" class="btn-primary">Open Lucidia Studio</a>
-    </section>
-  </main>
+    <div class="editor-area">
+      <div class="tabs" id="tabs"></div>
+      <div class="editor-content">
+        <div class="code-editor">
+          <div class="line-numbers" id="line-numbers"></div>
+          <pre class="code-content" id="code-content" contenteditable="true" spellcheck="false"></pre>
+        </div>
+      </div>
+    </div>
 
-  <footer>
-    <p>© 2025 Lucidia Studio · Powered by <a href="https://blackroad.io">BlackRoad OS</a></p>
-  </footer>
+    <aside class="ai-panel">
+      <div class="ai-header">
+        <div class="ai-avatar">L</div>
+        <div>
+          <div class="ai-title">Lucidia</div>
+          <div class="ai-status">Watching your code</div>
+        </div>
+      </div>
+      <div class="ai-messages" id="ai-messages">
+        <div class="ai-message">
+          <div class="ai-message-text">I noticed you're working on a React component. Need help with hooks or state management?</div>
+        </div>
+        <div class="ai-suggestion" onclick="applySuggestion('optimize')">
+          <div class="ai-suggestion-title">Optimize Performance</div>
+          <div class="ai-suggestion-text">Add useMemo to prevent unnecessary re-renders</div>
+        </div>
+        <div class="ai-suggestion" onclick="applySuggestion('types')">
+          <div class="ai-suggestion-title">Add TypeScript Types</div>
+          <div class="ai-suggestion-text">Generate interface for component props</div>
+        </div>
+      </div>
+      <div class="ai-input-area">
+        <div class="ai-input-wrapper">
+          <input class="ai-input" id="ai-input" placeholder="Ask Lucidia..." onkeydown="handleAiInput(event)">
+          <button class="ai-send" onclick="sendAiMessage()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M22 2L11 13M22 2L15 22L11 13M22 2L2 9L11 13"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </aside>
+  </div>
+
+  <div class="bottom-panel">
+    <div class="bottom-tabs">
+      <div class="bottom-tab active">Terminal</div>
+      <div class="bottom-tab">Problems</div>
+      <div class="bottom-tab">Output</div>
+      <div class="bottom-tab">Debug</div>
+    </div>
+    <div class="terminal" id="terminal">
+      <div class="terminal-line">
+        <span class="terminal-prompt">~/project $</span>
+        <span class="terminal-output">npm run dev</span>
+      </div>
+      <div class="terminal-line">
+        <span class="terminal-success">✓ Ready in 1.2s</span>
+      </div>
+      <div class="terminal-line">
+        <span class="terminal-output">➜ Local: http://localhost:3000</span>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // File structure
+    const files = {
+      'src': {
+        type: 'folder',
+        children: {
+          'components': {
+            type: 'folder',
+            children: {
+              'Button.tsx': { type: 'file', icon: '📄', content: `import React from 'react';
+
+interface ButtonProps {
+  children: React.ReactNode;
+  variant?: 'primary' | 'secondary';
+  onClick?: () => void;
+}
+
+export function Button({
+  children,
+  variant = 'primary',
+  onClick
+}: ButtonProps) {
+  return (
+    <button
+      className={\`btn btn-\${variant}\`}
+      onClick={onClick}
+    >
+      {children}
+    </button>
+  );
+}` },
+              'Card.tsx': { type: 'file', icon: '📄', content: `import React from 'react';
+
+export function Card({ title, children }) {
+  return (
+    <div className="card">
+      <h3>{title}</h3>
+      {children}
+    </div>
+  );
+}` }
+            }
+          },
+          'App.tsx': { type: 'file', icon: '⚛️', content: `import { Button } from './components/Button';
+import { Card } from './components/Card';
+
+export default function App() {
+  return (
+    <main>
+      <Card title="Welcome">
+        <p>Build something amazing.</p>
+        <Button onClick={() => console.log('clicked')}>
+          Get Started
+        </Button>
+      </Card>
+    </main>
+  );
+}` },
+          'index.css': { type: 'file', icon: '🎨', content: `:root {
+  --primary: #8855FF;
+  --bg: #0a0a0a;
+  --text: #ffffff;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Inter', sans-serif;
+}
+
+.btn {
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 600;
+}
+
+.btn-primary {
+  background: var(--primary);
+  color: white;
+}` }
+        }
+      },
+      'package.json': { type: 'file', icon: '📦', content: `{
+  "name": "my-project",
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "deploy": "blackroad deploy"
+  }
+}` },
+      'README.md': { type: 'file', icon: '📝', content: `# My Project
+
+Built with Lucidia Studio.
+
+## Getting Started
+
+\`\`\`bash
+npm install
+npm run dev
+\`\`\`` }
+    };
+
+    let openTabs = [];
+    let activeTab = null;
+
+    // Render file tree
+    function renderFileTree(structure, container, path = '') {
+      Object.entries(structure).forEach(([name, item]) => {
+        const fullPath = path ? `${path}/${name}` : name;
+        const el = document.createElement('div');
+
+        if (item.type === 'folder') {
+          el.innerHTML = `
+            <div class="file-item" onclick="toggleFolder(this)">
+              <span class="file-icon">📁</span>
+              <span class="file-name">${name}</span>
+            </div>
+            <div class="folder-children" id="folder-${fullPath.replace(/\//g, '-')}"></div>
+          `;
+          container.appendChild(el);
+          renderFileTree(item.children, el.querySelector('.folder-children'), fullPath);
+        } else {
+          el.className = 'file-item';
+          el.setAttribute('data-path', fullPath);
+          el.innerHTML = `
+            <span class="file-icon">${item.icon || '📄'}</span>
+            <span class="file-name">${name}</span>
+          `;
+          el.onclick = () => openFile(fullPath, item);
+          container.appendChild(el);
+        }
+      });
+    }
+
+    function toggleFolder(el) {
+      const children = el.nextElementSibling;
+      children.style.display = children.style.display === 'none' ? 'block' : 'none';
+      const icon = el.querySelector('.file-icon');
+      icon.textContent = children.style.display === 'none' ? '📁' : '📂';
+    }
+
+    function openFile(path, file) {
+      // Update file tree selection
+      document.querySelectorAll('.file-item').forEach(el => el.classList.remove('active'));
+      document.querySelector(`[data-path="${path}"]`)?.classList.add('active');
+
+      // Add tab if not exists
+      if (!openTabs.includes(path)) {
+        openTabs.push(path);
+      }
+      activeTab = path;
+      renderTabs();
+      renderCode(file.content);
+    }
+
+    function renderTabs() {
+      const container = document.getElementById('tabs');
+      container.innerHTML = openTabs.map(path => {
+        const name = path.split('/').pop();
+        return `
+          <div class="tab ${path === activeTab ? 'active' : ''}" onclick="switchTab('${path}')">
+            <span>${name}</span>
+            <button class="tab-close" onclick="closeTab('${path}', event)">×</button>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function switchTab(path) {
+      activeTab = path;
+      const file = getFileByPath(path);
+      if (file) {
+        renderCode(file.content);
+      }
+      renderTabs();
+    }
+
+    function closeTab(path, e) {
+      e.stopPropagation();
+      openTabs = openTabs.filter(p => p !== path);
+      if (activeTab === path) {
+        activeTab = openTabs[openTabs.length - 1] || null;
+        if (activeTab) {
+          const file = getFileByPath(activeTab);
+          if (file) renderCode(file.content);
+        }
+      }
+      renderTabs();
+    }
+
+    function getFileByPath(path) {
+      const parts = path.split('/');
+      let current = files;
+      for (const part of parts) {
+        if (current[part]) {
+          current = current[part].children || current[part];
+        } else {
+          return null;
+        }
+      }
+      return current;
+    }
+
+    function renderCode(content) {
+      const lines = content.split('\n');
+      document.getElementById('line-numbers').innerHTML = lines.map((_, i) => i + 1).join('<br>');
+
+      // Basic syntax highlighting
+      const highlighted = content
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/(\/\/.*$)/gm, '<span class="code-comment">$1</span>')
+        .replace(/(".*?"|'.*?'|`.*?`)/g, '<span class="code-string">$1</span>')
+        .replace(/\b(import|export|from|const|let|var|function|return|if|else|interface|type|async|await|default)\b/g, '<span class="code-keyword">$1</span>')
+        .replace(/\b(React|useState|useEffect|useMemo)\b/g, '<span class="code-type">$1</span>')
+        .replace(/\b(\d+)\b/g, '<span class="code-number">$1</span>');
+
+      document.getElementById('code-content').innerHTML = highlighted;
+    }
+
+    // AI functionality
+    function handleAiInput(e) {
+      if (e.key === 'Enter') sendAiMessage();
+    }
+
+    function sendAiMessage() {
+      const input = document.getElementById('ai-input');
+      const text = input.value.trim();
+      if (!text) return;
+
+      const messages = document.getElementById('ai-messages');
+      messages.innerHTML += `<div class="ai-message user"><div class="ai-message-text">${text}</div></div>`;
+      input.value = '';
+
+      setTimeout(() => {
+        const responses = [
+          "I can help with that. Let me analyze the code structure...",
+          "Good question! Here's what I suggest based on your current file...",
+          "I've detected a potential optimization. Would you like me to apply it?",
+        ];
+        messages.innerHTML += `<div class="ai-message"><div class="ai-message-text">${responses[Math.floor(Math.random() * responses.length)]}</div></div>`;
+        messages.scrollTop = messages.scrollHeight;
+      }, 1000);
+    }
+
+    function applySuggestion(type) {
+      const messages = document.getElementById('ai-messages');
+      messages.innerHTML += `<div class="ai-message"><div class="ai-message-text">Applying ${type} suggestion to your code...</div></div>`;
+      addTerminalLine('Lucidia: Code updated with ' + type + ' improvements', 'success');
+    }
+
+    // Terminal
+    function addTerminalLine(text, type = 'output') {
+      const terminal = document.getElementById('terminal');
+      terminal.innerHTML += `<div class="terminal-line"><span class="terminal-${type}">${text}</span></div>`;
+      terminal.scrollTop = terminal.scrollHeight;
+    }
+
+    function runBuild() {
+      addTerminalLine('~/project $ npm run build', 'output');
+      setTimeout(() => addTerminalLine('Building...', 'output'), 300);
+      setTimeout(() => addTerminalLine('✓ Build complete in 2.4s', 'success'), 1500);
+    }
+
+    function deploy() {
+      addTerminalLine('~/project $ blackroad deploy', 'output');
+      setTimeout(() => addTerminalLine('Deploying to BlackRoad Network...', 'output'), 300);
+      setTimeout(() => addTerminalLine('✓ Deployed to https://my-project.blackroad.io', 'success'), 2000);
+    }
+
+    // Initialize
+    renderFileTree(files, document.getElementById('file-tree'));
+    openFile('src/App.tsx', files.src.children['App.tsx']);
+  </script>
 </body>
 </html>

@@ -1,0 +1,117 @@
+# Page to Domain Mapping
+# Each subdirectory in pages/ maps to specific domains
+# The orchestrator uses this to configure custom domains after deployment
+
+pages:
+  # Main BlackRoad
+  blackroad-io:
+    project: blackroad-main
+    domains:
+      - blackroad.io
+      - www.blackroad.io
+
+  # BlackRoad AI
+  blackroadai:
+    project: blackroad-ai
+    domains:
+      - blackroadai.com
+      - www.blackroadai.com
+
+  # BlackRoad Network
+  blackroad-network:
+    project: blackroad-network
+    domains:
+      - blackroad.network
+
+  # BlackRoad Quantum
+  blackroadquantum:
+    project: blackroad-quantum
+    domains:
+      - blackroadquantum.com
+      - blackroadquantum.net
+      - blackroadquantum.info
+      - blackroadquantum.shop
+      - blackroadquantum.store
+
+  # Lucidia
+  lucidia-earth:
+    project: lucidia-earth
+    domains:
+      - lucidia.earth
+
+  lucidia-studio:
+    project: lucidia-studio
+    domains:
+      - lucidia.studio
+
+  # Identity
+  blackroad-me:
+    project: blackroad-me
+    domains:
+      - blackroad.me
+
+  # Enterprise
+  blackroadinc:
+    project: blackroad-inc
+    domains:
+      - blackroadinc.us
+
+  # App/Dashboard
+  app:
+    project: blackroad-app
+    domains:
+      - app.blackroad.io
+
+  # Cece Chat
+  cece:
+    project: blackroad-cece-web
+    domains:
+      - cece.blackroad.io
+
+  # Documentation
+  docs:
+    project: blackroad-docs
+    domains:
+      - docs.blackroad.io
+
+  # Status
+  status:
+    project: blackroad-status-web
+    domains:
+      - status.blackroad.io
+
+  # Console
+  console:
+    project: blackroad-console
+    domains:
+      - console.blackroad.io
+
+  # Dashboard
+  dashboard:
+    project: blackroad-dashboard
+    domains:
+      - dashboard.blackroad.io
+
+  # Brands
+  brands:
+    project: blackroad-brands
+    domains:
+      - brand.blackroad.io
+
+  # Hello/Landing
+  hello:
+    project: blackroad-hello
+    domains:
+      - hello.blackroad.io
+
+  # Unified portal
+  unified:
+    project: blackroad-unified
+    domains:
+      - unified.blackroad.io
+
+  # Portals
+  portals-unified:
+    project: blackroad-portals
+    domains:
+      - portals.blackroad.io

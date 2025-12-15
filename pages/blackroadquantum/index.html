@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>BlackRoad Quantum | Post-Quantum Cryptography</title>
-  <meta name="description" content="Quantum-resistant security for the next computing era. Future-proof your infrastructure today.">
+  <meta name="description" content="Interactive quantum cryptography visualizer. Explore post-quantum algorithms and quantum-resistant security.">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='40' fill='%23D600AA'/></svg>">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Inter+Tight:wght@600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <style>
@@ -12,290 +12,843 @@
       --br-deep-magenta: #D600AA;
       --br-vivid-purple: #7700FF;
       --br-cyber-blue: #0066FF;
-      --br-black: #000000;
+      --br-cyan: #00CCFF;
+      --br-green: #00FF88;
+      --br-black: #030306;
+      --br-surface: #0a0a12;
+      --br-surface-2: #12121f;
+      --br-border: #1f1f35;
       --br-white: #FFFFFF;
+      --br-text-muted: #8888cc;
       --br-gradient-quantum: linear-gradient(135deg, #D600AA 0%, #7700FF 50%, #0066FF 100%);
       --br-font-display: 'Inter Tight', sans-serif;
       --br-font-body: 'Inter', sans-serif;
       --br-font-mono: 'JetBrains Mono', monospace;
     }
     * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { height: 100%; overflow: hidden; }
     body {
       background: var(--br-black);
       color: var(--br-white);
       font-family: var(--br-font-body);
-      min-height: 100vh;
-      overflow-x: hidden;
     }
-    .quantum-bg {
+
+    /* 3D Canvas */
+    #quantum-canvas {
       position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background:
-        radial-gradient(ellipse at 50% 50%, rgba(214, 0, 170, 0.15) 0%, transparent 50%),
-        radial-gradient(ellipse at 20% 80%, rgba(119, 0, 255, 0.1) 0%, transparent 40%),
-        radial-gradient(ellipse at 80% 20%, rgba(0, 102, 255, 0.1) 0%, transparent 40%);
-      z-index: -1;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
     }
-    .particles {
+
+    /* UI Layer */
+    .ui-layer {
       position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
-      overflow: hidden;
-      z-index: -1;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 10;
+      display: flex;
+      flex-direction: column;
+      pointer-events: none;
     }
-    .particle {
-      position: absolute;
-      width: 4px;
-      height: 4px;
-      background: var(--br-deep-magenta);
-      border-radius: 50%;
-      animation: float 20s infinite linear;
-      opacity: 0.5;
-    }
-    .particle:nth-child(2n) { background: var(--br-vivid-purple); animation-duration: 25s; }
-    .particle:nth-child(3n) { background: var(--br-cyber-blue); animation-duration: 30s; }
-    @keyframes float {
-      0% { transform: translateY(100vh) rotate(0deg); opacity: 0; }
-      10% { opacity: 0.5; }
-      90% { opacity: 0.5; }
-      100% { transform: translateY(-100vh) rotate(720deg); opacity: 0; }
-    }
+    .ui-layer > * { pointer-events: auto; }
+
+    /* Header */
     header {
-      position: fixed;
-      top: 0; left: 0; right: 0;
-      padding: 1.5rem 2rem;
+      padding: 1rem 1.5rem;
       display: flex;
       justify-content: space-between;
       align-items: center;
+      background: rgba(3, 3, 6, 0.8);
       backdrop-filter: blur(20px);
-      background: rgba(0, 0, 0, 0.5);
-      border-bottom: 1px solid rgba(214, 0, 170, 0.2);
-      z-index: 100;
+      border-bottom: 1px solid var(--br-border);
     }
     .logo {
       font-family: var(--br-font-display);
-      font-size: 1.5rem;
-      font-weight: 800;
-      background: var(--br-gradient-quantum);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      text-decoration: none;
-    }
-    nav a {
-      color: rgba(255, 255, 255, 0.7);
-      text-decoration: none;
-      margin-left: 2rem;
-      transition: color 0.2s;
-    }
-    nav a:hover { color: var(--br-deep-magenta); }
-    .hero {
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      text-align: center;
-      padding: 8rem 2rem 4rem;
-    }
-    .quantum-symbol {
-      width: 120px;
-      height: 120px;
-      margin-bottom: 2rem;
-      position: relative;
-    }
-    .quantum-symbol::before,
-    .quantum-symbol::after {
-      content: '';
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      width: 100%;
-      height: 100%;
-      border: 2px solid var(--br-deep-magenta);
-      border-radius: 50%;
-      transform: translate(-50%, -50%);
-      animation: orbit 8s linear infinite;
-    }
-    .quantum-symbol::after {
-      width: 80%;
-      height: 80%;
-      border-color: var(--br-vivid-purple);
-      animation-direction: reverse;
-      animation-duration: 6s;
-    }
-    .quantum-symbol .core {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      width: 20px;
-      height: 20px;
-      background: var(--br-gradient-quantum);
-      border-radius: 50%;
-      transform: translate(-50%, -50%);
-      box-shadow: 0 0 30px rgba(214, 0, 170, 0.8);
-    }
-    @keyframes orbit {
-      0% { transform: translate(-50%, -50%) rotateX(60deg) rotateZ(0deg); }
-      100% { transform: translate(-50%, -50%) rotateX(60deg) rotateZ(360deg); }
-    }
-    .hero h1 {
-      font-family: var(--br-font-display);
-      font-size: clamp(3rem, 8vw, 5rem);
-      font-weight: 800;
-      margin-bottom: 1.5rem;
-      background: var(--br-gradient-quantum);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-    .hero p {
       font-size: 1.25rem;
-      color: rgba(255, 255, 255, 0.7);
-      max-width: 600px;
-      margin-bottom: 2.5rem;
-      line-height: 1.6;
+      font-weight: 800;
+      background: var(--br-gradient-quantum);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-decoration: none;
     }
-    .badge {
-      background: rgba(214, 0, 170, 0.2);
-      color: var(--br-deep-magenta);
+    .header-badge {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
       padding: 0.5rem 1rem;
-      border-radius: 20px;
-      font-size: 0.875rem;
-      font-weight: 600;
-      margin-bottom: 2rem;
+      background: rgba(214, 0, 170, 0.1);
       border: 1px solid rgba(214, 0, 170, 0.3);
+      border-radius: 20px;
+      font-size: 0.75rem;
       font-family: var(--br-font-mono);
     }
-    .btn-primary {
-      background: var(--br-gradient-quantum);
-      color: var(--br-white);
-      font-family: var(--br-font-display);
-      font-weight: 700;
-      padding: 1rem 2.5rem;
-      border-radius: 8px;
-      border: none;
-      text-decoration: none;
-      transition: transform 0.2s, box-shadow 0.2s;
+    .header-actions {
+      display: flex;
+      gap: 0.5rem;
     }
-    .btn-primary:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 0 40px rgba(214, 0, 170, 0.4);
-    }
-    .features {
-      padding: 6rem 2rem;
-      max-width: 1000px;
-      margin: 0 auto;
-    }
-    .feature-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 2rem;
-    }
-    .feature {
-      background: rgba(214, 0, 170, 0.05);
-      border: 1px solid rgba(214, 0, 170, 0.2);
-      border-radius: 16px;
-      padding: 2rem;
+    .header-btn {
+      padding: 0.5rem 1rem;
+      background: var(--br-surface-2);
+      border: 1px solid var(--br-border);
+      border-radius: 6px;
+      color: var(--br-text-muted);
+      font-size: 0.8125rem;
+      cursor: pointer;
       transition: all 0.2s;
     }
-    .feature:hover {
+    .header-btn:hover {
       border-color: var(--br-deep-magenta);
-      box-shadow: 0 0 30px rgba(214, 0, 170, 0.2);
+      color: var(--br-white);
     }
-    .feature h3 {
-      font-family: var(--br-font-display);
-      font-size: 1.25rem;
-      font-weight: 700;
+    .header-btn.primary {
+      background: var(--br-gradient-quantum);
+      border: none;
+      color: var(--br-white);
+    }
+
+    /* Main Layout */
+    .main-content {
+      flex: 1;
+      display: flex;
+      pointer-events: none;
+    }
+
+    /* Left Panel - Algorithms */
+    .algo-panel {
+      width: 320px;
+      background: rgba(10, 10, 18, 0.9);
+      backdrop-filter: blur(20px);
+      border-right: 1px solid var(--br-border);
+      display: flex;
+      flex-direction: column;
+      pointer-events: auto;
+    }
+    .panel-header {
+      padding: 1rem;
+      border-bottom: 1px solid var(--br-border);
+    }
+    .panel-title {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--br-text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .algo-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 0.75rem;
+    }
+    .algo-item {
+      background: var(--br-surface-2);
+      border: 1px solid var(--br-border);
+      border-radius: 12px;
+      padding: 1rem;
       margin-bottom: 0.75rem;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    .algo-item:hover {
+      border-color: var(--br-deep-magenta);
+      box-shadow: 0 0 30px rgba(214, 0, 170, 0.15);
+    }
+    .algo-item.active {
+      border-color: var(--br-deep-magenta);
+      background: rgba(214, 0, 170, 0.05);
+    }
+    .algo-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 0.75rem;
+    }
+    .algo-name {
+      font-size: 1rem;
+      font-weight: 600;
+    }
+    .algo-badge {
+      padding: 0.25rem 0.5rem;
+      background: rgba(214, 0, 170, 0.2);
+      border-radius: 4px;
+      font-size: 0.625rem;
+      font-weight: 600;
       color: var(--br-deep-magenta);
     }
-    .feature p { color: rgba(255, 255, 255, 0.6); line-height: 1.6; }
-    .cta {
-      padding: 6rem 2rem;
+    .algo-desc {
+      font-size: 0.8125rem;
+      color: var(--br-text-muted);
+      margin-bottom: 0.75rem;
+      line-height: 1.5;
+    }
+    .algo-stats {
+      display: flex;
+      gap: 1rem;
+    }
+    .algo-stat {
+      flex: 1;
+    }
+    .algo-stat-value {
+      font-family: var(--br-font-mono);
+      font-size: 0.875rem;
+      color: var(--br-deep-magenta);
+    }
+    .algo-stat-label {
+      font-size: 0.625rem;
+      color: var(--br-text-muted);
+    }
+
+    /* Center Visualization */
+    .viz-controls {
+      position: fixed;
+      bottom: 2rem;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 0.75rem;
+      align-items: center;
+      background: rgba(10, 10, 18, 0.9);
+      backdrop-filter: blur(20px);
+      border: 1px solid var(--br-border);
+      border-radius: 16px;
+      padding: 0.75rem 1rem;
+      pointer-events: auto;
+    }
+    .viz-btn {
+      width: 44px;
+      height: 44px;
+      background: var(--br-surface-2);
+      border: 1px solid var(--br-border);
+      border-radius: 10px;
+      color: var(--br-text-muted);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+    .viz-btn:hover {
+      border-color: var(--br-deep-magenta);
+      color: var(--br-white);
+    }
+    .viz-btn.active {
+      background: var(--br-gradient-quantum);
+      border: none;
+      color: var(--br-white);
+    }
+    .viz-slider {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+      padding: 0 0.5rem;
+    }
+    .viz-slider-label {
+      font-size: 0.625rem;
+      color: var(--br-text-muted);
+    }
+    .viz-slider input {
+      width: 120px;
+      height: 4px;
+      -webkit-appearance: none;
+      background: var(--br-border);
+      border-radius: 2px;
+      outline: none;
+    }
+    .viz-slider input::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 14px;
+      height: 14px;
+      background: var(--br-deep-magenta);
+      border-radius: 50%;
+      cursor: pointer;
+    }
+
+    /* Right Panel - Analysis */
+    .analysis-panel {
+      width: 340px;
+      background: rgba(10, 10, 18, 0.9);
+      backdrop-filter: blur(20px);
+      border-left: 1px solid var(--br-border);
+      display: flex;
+      flex-direction: column;
+      pointer-events: auto;
+    }
+    .analysis-section {
+      padding: 1rem;
+      border-bottom: 1px solid var(--br-border);
+    }
+    .security-meter {
+      margin-top: 0.75rem;
+    }
+    .meter-bar {
+      height: 8px;
+      background: var(--br-border);
+      border-radius: 4px;
+      overflow: hidden;
+      margin-bottom: 0.5rem;
+    }
+    .meter-fill {
+      height: 100%;
+      background: var(--br-gradient-quantum);
+      border-radius: 4px;
+      transition: width 0.5s;
+    }
+    .meter-labels {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.625rem;
+      color: var(--br-text-muted);
+    }
+
+    /* Comparison Grid */
+    .comparison-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.75rem;
+      margin-top: 0.75rem;
+    }
+    .comparison-card {
+      background: var(--br-surface-2);
+      border-radius: 8px;
+      padding: 0.75rem;
+    }
+    .comparison-label {
+      font-size: 0.625rem;
+      color: var(--br-text-muted);
+      margin-bottom: 0.25rem;
+    }
+    .comparison-value {
+      font-family: var(--br-font-mono);
+      font-size: 1rem;
+      font-weight: 600;
+    }
+    .comparison-value.classical { color: var(--br-text-muted); }
+    .comparison-value.quantum { color: var(--br-deep-magenta); }
+    .comparison-value.pq { color: var(--br-green); }
+
+    /* Key Generation Visualizer */
+    .keygen-viz {
+      background: var(--br-surface-2);
+      border-radius: 8px;
+      padding: 0.75rem;
+      margin-top: 0.75rem;
+    }
+    .keygen-header {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 0.5rem;
+    }
+    .keygen-title {
+      font-size: 0.75rem;
+      font-weight: 500;
+    }
+    .keygen-status {
+      font-size: 0.625rem;
+      color: var(--br-green);
+    }
+    .keygen-grid {
+      display: grid;
+      grid-template-columns: repeat(16, 1fr);
+      gap: 2px;
+    }
+    .keygen-cell {
+      aspect-ratio: 1;
+      background: var(--br-border);
+      border-radius: 2px;
+      transition: background 0.1s;
+    }
+    .keygen-cell.active {
+      background: var(--br-deep-magenta);
+      box-shadow: 0 0 5px var(--br-deep-magenta);
+    }
+
+    /* Lattice Visualization */
+    .lattice-info {
+      background: var(--br-surface-2);
+      border-radius: 8px;
+      padding: 0.75rem;
+      margin-top: 0.75rem;
+    }
+    .lattice-stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.5rem;
+      margin-top: 0.5rem;
+    }
+    .lattice-stat {
       text-align: center;
-      background: linear-gradient(180deg, transparent 0%, rgba(214, 0, 170, 0.1) 100%);
     }
-    .cta h2 {
-      font-family: var(--br-font-display);
-      font-size: 2.5rem;
-      font-weight: 800;
-      margin-bottom: 1rem;
+    .lattice-stat-value {
+      font-family: var(--br-font-mono);
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: var(--br-cyan);
     }
-    .cta p { color: rgba(255, 255, 255, 0.6); margin-bottom: 2rem; }
-    footer {
-      border-top: 1px solid rgba(214, 0, 170, 0.2);
-      padding: 3rem 2rem;
-      text-align: center;
-      color: rgba(255, 255, 255, 0.5);
+    .lattice-stat-label {
+      font-size: 0.625rem;
+      color: var(--br-text-muted);
     }
-    footer a { color: var(--br-deep-magenta); text-decoration: none; }
+
+    @media (max-width: 1200px) {
+      .analysis-panel { display: none; }
+    }
     @media (max-width: 768px) {
-      .hero h1 { font-size: 2.5rem; }
-      nav { display: none; }
+      .algo-panel { display: none; }
     }
   </style>
 </head>
 <body>
-  <div class="quantum-bg"></div>
-  <div class="particles">
-    <div class="particle" style="left: 10%; animation-delay: 0s;"></div>
-    <div class="particle" style="left: 20%; animation-delay: 2s;"></div>
-    <div class="particle" style="left: 30%; animation-delay: 4s;"></div>
-    <div class="particle" style="left: 40%; animation-delay: 1s;"></div>
-    <div class="particle" style="left: 50%; animation-delay: 3s;"></div>
-    <div class="particle" style="left: 60%; animation-delay: 5s;"></div>
-    <div class="particle" style="left: 70%; animation-delay: 2s;"></div>
-    <div class="particle" style="left: 80%; animation-delay: 4s;"></div>
-    <div class="particle" style="left: 90%; animation-delay: 1s;"></div>
+  <canvas id="quantum-canvas"></canvas>
+
+  <div class="ui-layer">
+    <header>
+      <a href="/" class="logo">BlackRoad Quantum</a>
+      <div class="header-badge">
+        <span style="color: var(--br-green);">NIST Approved</span>
+        Post-Quantum Cryptography
+      </div>
+      <div class="header-actions">
+        <button class="header-btn" onclick="window.location.href='https://docs.blackroad.io'">Documentation</button>
+        <button class="header-btn primary" onclick="runDemo()">Run Demo</button>
+      </div>
+    </header>
+
+    <div class="main-content">
+      <aside class="algo-panel">
+        <div class="panel-header">
+          <div class="panel-title">Post-Quantum Algorithms</div>
+        </div>
+        <div class="algo-list" id="algo-list"></div>
+      </aside>
+
+      <aside class="analysis-panel">
+        <div class="analysis-section">
+          <div class="panel-title">Security Analysis</div>
+          <div class="security-meter">
+            <div class="meter-bar">
+              <div class="meter-fill" id="security-fill" style="width: 95%"></div>
+            </div>
+            <div class="meter-labels">
+              <span>Classical</span>
+              <span>Quantum Safe</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="analysis-section">
+          <div class="panel-title">Attack Complexity</div>
+          <div class="comparison-grid">
+            <div class="comparison-card">
+              <div class="comparison-label">Classical Computer</div>
+              <div class="comparison-value classical" id="classical-time">2^128 ops</div>
+            </div>
+            <div class="comparison-card">
+              <div class="comparison-label">Quantum Computer</div>
+              <div class="comparison-value quantum" id="quantum-time">2^64 ops</div>
+            </div>
+            <div class="comparison-card">
+              <div class="comparison-label">Post-Quantum</div>
+              <div class="comparison-value pq" id="pq-time">2^128 ops</div>
+            </div>
+            <div class="comparison-card">
+              <div class="comparison-label">Security Level</div>
+              <div class="comparison-value pq" id="security-level">Level 3</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="analysis-section">
+          <div class="panel-title">Key Generation</div>
+          <div class="keygen-viz">
+            <div class="keygen-header">
+              <span class="keygen-title">Lattice Points</span>
+              <span class="keygen-status" id="keygen-status">Generating...</span>
+            </div>
+            <div class="keygen-grid" id="keygen-grid"></div>
+          </div>
+        </div>
+
+        <div class="analysis-section">
+          <div class="panel-title">Lattice Parameters</div>
+          <div class="lattice-info">
+            <div class="lattice-stats">
+              <div class="lattice-stat">
+                <div class="lattice-stat-value" id="lattice-n">1024</div>
+                <div class="lattice-stat-label">Dimension (n)</div>
+              </div>
+              <div class="lattice-stat">
+                <div class="lattice-stat-value" id="lattice-q">3329</div>
+                <div class="lattice-stat-label">Modulus (q)</div>
+              </div>
+              <div class="lattice-stat">
+                <div class="lattice-stat-value" id="lattice-k">3</div>
+                <div class="lattice-stat-label">Rank (k)</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </aside>
+    </div>
+
+    <div class="viz-controls">
+      <button class="viz-btn active" onclick="setVizMode('lattice')" title="Lattice View">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/>
+          <circle cx="5" cy="12" r="1"/><circle cx="19" cy="12" r="1"/>
+          <circle cx="5" cy="5" r="1"/><circle cx="19" cy="5" r="1"/>
+          <circle cx="5" cy="19" r="1"/><circle cx="19" cy="19" r="1"/>
+        </svg>
+      </button>
+      <button class="viz-btn" onclick="setVizMode('orbit')" title="Orbital View">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/><ellipse cx="12" cy="12" rx="10" ry="4"/>
+        </svg>
+      </button>
+      <button class="viz-btn" onclick="setVizMode('wave')" title="Wave Function">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M2 12s3-4 5-4 4 8 6 8 4-8 6-8 3 4 3 4"/>
+        </svg>
+      </button>
+      <div class="viz-slider">
+        <span class="viz-slider-label">Complexity</span>
+        <input type="range" min="1" max="5" value="3" id="complexity-slider" oninput="setComplexity(this.value)">
+      </div>
+      <div class="viz-slider">
+        <span class="viz-slider-label">Speed</span>
+        <input type="range" min="1" max="10" value="5" id="speed-slider" oninput="setSpeed(this.value)">
+      </div>
+    </div>
   </div>
-  <header>
-    <a href="/" class="logo">BlackRoad Quantum</a>
-    <nav>
-      <a href="https://blackroad.io">Platform</a>
-      <a href="https://docs.blackroad.io">Docs</a>
-      <a href="https://blackroadai.com">AI</a>
-    </nav>
-  </header>
 
-  <main>
-    <section class="hero">
-      <div class="quantum-symbol">
-        <div class="core"></div>
-      </div>
-      <div class="badge">🔮 POST-QUANTUM SECURITY</div>
-      <h1>Quantum-Ready</h1>
-      <p>Future-proof cryptography for the post-quantum era. Protect your data against tomorrow's threats, today.</p>
-      <a href="https://blackroad.io" class="btn-primary">Learn More →</a>
-    </section>
+  <script>
+    // Quantum Visualization
+    const canvas = document.getElementById('quantum-canvas');
+    const ctx = canvas.getContext('2d');
 
-    <section class="features">
-      <div class="feature-grid">
-        <div class="feature">
-          <h3>🛡️ Lattice-Based Encryption</h3>
-          <p>CRYSTALS-Kyber and CRYSTALS-Dilithium implementations. NIST-approved post-quantum algorithms.</p>
-        </div>
-        <div class="feature">
-          <h3>🔐 Hybrid Mode</h3>
-          <p>Classical + post-quantum encryption in parallel. Backward compatible, forward secure.</p>
-        </div>
-        <div class="feature">
-          <h3>⚡ Hardware Acceleration</h3>
-          <p>Optimized for modern CPUs with AVX-512. Near-classical performance with quantum resistance.</p>
-        </div>
-        <div class="feature">
-          <h3>🌐 Zero-Knowledge Proofs</h3>
-          <p>Quantum-safe ZK protocols for privacy-preserving verification. Prove without revealing.</p>
-        </div>
-      </div>
-    </section>
+    function resize() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    resize();
+    window.addEventListener('resize', resize);
 
-    <section class="cta">
-      <h2>The quantum era is coming.</h2>
-      <p>Start migrating your cryptography today.</p>
-      <a href="https://blackroad.io" class="btn-primary">Get Started</a>
-    </section>
-  </main>
+    // Visualization state
+    let vizMode = 'lattice';
+    let complexity = 3;
+    let speed = 5;
+    let time = 0;
 
-  <footer>
-    <p>© 2025 BlackRoad Quantum · Part of <a href="https://blackroad.io">BlackRoad OS</a></p>
-  </footer>
+    // Algorithms data
+    const algorithms = [
+      {
+        id: 'kyber',
+        name: 'CRYSTALS-Kyber',
+        type: 'KEM',
+        desc: 'Key encapsulation mechanism based on Module-LWE problem',
+        keySize: '1568',
+        security: 'Level 3',
+        n: 1024, q: 3329, k: 3
+      },
+      {
+        id: 'dilithium',
+        name: 'CRYSTALS-Dilithium',
+        type: 'DSA',
+        desc: 'Digital signature based on Module-LWE and Module-SIS',
+        keySize: '2420',
+        security: 'Level 3',
+        n: 1024, q: 8380417, k: 6
+      },
+      {
+        id: 'sphincs',
+        name: 'SPHINCS+',
+        type: 'DSA',
+        desc: 'Stateless hash-based signature scheme',
+        keySize: '64',
+        security: 'Level 5',
+        n: 256, q: 0, k: 0
+      },
+      {
+        id: 'falcon',
+        name: 'Falcon',
+        type: 'DSA',
+        desc: 'Fast-Fourier lattice-based compact signatures over NTRU',
+        keySize: '1793',
+        security: 'Level 5',
+        n: 1024, q: 12289, k: 1
+      }
+    ];
+
+    let activeAlgo = algorithms[0];
+
+    // Render algorithm list
+    function renderAlgoList() {
+      const container = document.getElementById('algo-list');
+      container.innerHTML = algorithms.map(algo => `
+        <div class="algo-item ${algo.id === activeAlgo.id ? 'active' : ''}" onclick="selectAlgo('${algo.id}')">
+          <div class="algo-header">
+            <span class="algo-name">${algo.name}</span>
+            <span class="algo-badge">${algo.type}</span>
+          </div>
+          <div class="algo-desc">${algo.desc}</div>
+          <div class="algo-stats">
+            <div class="algo-stat">
+              <div class="algo-stat-value">${algo.keySize} B</div>
+              <div class="algo-stat-label">Key Size</div>
+            </div>
+            <div class="algo-stat">
+              <div class="algo-stat-value">${algo.security}</div>
+              <div class="algo-stat-label">Security</div>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+    renderAlgoList();
+
+    function selectAlgo(id) {
+      activeAlgo = algorithms.find(a => a.id === id);
+      renderAlgoList();
+      updateAnalysis();
+    }
+
+    function updateAnalysis() {
+      document.getElementById('lattice-n').textContent = activeAlgo.n;
+      document.getElementById('lattice-q').textContent = activeAlgo.q || 'N/A';
+      document.getElementById('lattice-k').textContent = activeAlgo.k || 'N/A';
+      document.getElementById('security-level').textContent = activeAlgo.security;
+
+      const level = parseInt(activeAlgo.security.replace('Level ', ''));
+      document.getElementById('security-fill').style.width = (level / 5 * 100) + '%';
+    }
+
+    // Key generation animation
+    const keygenCells = 256;
+    let keygenActive = [];
+
+    function initKeygen() {
+      const grid = document.getElementById('keygen-grid');
+      grid.innerHTML = Array(keygenCells).fill(0).map((_, i) =>
+        `<div class="keygen-cell" id="keygen-${i}"></div>`
+      ).join('');
+    }
+    initKeygen();
+
+    function animateKeygen() {
+      // Randomly activate cells
+      const newActive = [];
+      for (let i = 0; i < 20; i++) {
+        newActive.push(Math.floor(Math.random() * keygenCells));
+      }
+
+      // Clear old
+      keygenActive.forEach(i => {
+        const cell = document.getElementById(`keygen-${i}`);
+        if (cell) cell.classList.remove('active');
+      });
+
+      // Activate new
+      newActive.forEach(i => {
+        const cell = document.getElementById(`keygen-${i}`);
+        if (cell) cell.classList.add('active');
+      });
+
+      keygenActive = newActive;
+    }
+    setInterval(animateKeygen, 100);
+
+    // 3D Lattice visualization
+    const particles = [];
+    const connections = [];
+
+    class QuantumParticle {
+      constructor(x, y, z) {
+        this.x = x;
+        this.y = y;
+        this.z = z;
+        this.origX = x;
+        this.origY = y;
+        this.origZ = z;
+        this.phase = Math.random() * Math.PI * 2;
+        this.size = 2 + Math.random() * 2;
+        this.color = `hsl(${280 + Math.random() * 60}, 100%, 60%)`;
+      }
+
+      update() {
+        const t = time * speed * 0.01;
+
+        if (vizMode === 'lattice') {
+          this.x = this.origX + Math.sin(t + this.phase) * 5;
+          this.y = this.origY + Math.cos(t + this.phase * 0.7) * 5;
+          this.z = this.origZ + Math.sin(t * 0.5 + this.phase) * 10;
+        } else if (vizMode === 'orbit') {
+          const angle = t + this.phase;
+          const radius = 100 + this.origZ * 0.5;
+          this.x = canvas.width / 2 + Math.cos(angle) * radius;
+          this.y = canvas.height / 2 + Math.sin(angle) * radius * 0.5;
+          this.z = Math.sin(angle * 2) * 50;
+        } else if (vizMode === 'wave') {
+          this.x = this.origX;
+          this.y = canvas.height / 2 + Math.sin(t + this.origX * 0.02) * 100;
+          this.z = Math.cos(t + this.origX * 0.01) * 50;
+        }
+      }
+
+      project() {
+        const perspective = 500;
+        const scale = perspective / (perspective + this.z);
+        return {
+          x: canvas.width / 2 + (this.x - canvas.width / 2) * scale,
+          y: canvas.height / 2 + (this.y - canvas.height / 2) * scale,
+          scale
+        };
+      }
+
+      draw() {
+        const p = this.project();
+
+        // Glow
+        const gradient = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, this.size * 4 * p.scale);
+        gradient.addColorStop(0, this.color + '80');
+        gradient.addColorStop(1, 'transparent');
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, this.size * 4 * p.scale, 0, Math.PI * 2);
+        ctx.fillStyle = gradient;
+        ctx.fill();
+
+        // Core
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, this.size * p.scale, 0, Math.PI * 2);
+        ctx.fillStyle = this.color;
+        ctx.fill();
+      }
+    }
+
+    // Create lattice
+    function createLattice() {
+      particles.length = 0;
+      const gridSize = 4 + complexity * 2;
+      const spacing = 60;
+      const offsetX = canvas.width / 2 - (gridSize * spacing) / 2;
+      const offsetY = canvas.height / 2 - (gridSize * spacing) / 2;
+
+      for (let x = 0; x < gridSize; x++) {
+        for (let y = 0; y < gridSize; y++) {
+          for (let z = 0; z < 3; z++) {
+            particles.push(new QuantumParticle(
+              offsetX + x * spacing,
+              offsetY + y * spacing,
+              (z - 1) * spacing
+            ));
+          }
+        }
+      }
+    }
+    createLattice();
+
+    function drawConnections() {
+      const maxDist = 80;
+
+      for (let i = 0; i < particles.length; i++) {
+        const p1 = particles[i];
+        const proj1 = p1.project();
+
+        for (let j = i + 1; j < particles.length; j++) {
+          const p2 = particles[j];
+          const dist = Math.hypot(p1.x - p2.x, p1.y - p2.y, p1.z - p2.z);
+
+          if (dist < maxDist) {
+            const proj2 = p2.project();
+            const opacity = (1 - dist / maxDist) * 0.3;
+
+            ctx.beginPath();
+            ctx.moveTo(proj1.x, proj1.y);
+            ctx.lineTo(proj2.x, proj2.y);
+
+            const gradient = ctx.createLinearGradient(proj1.x, proj1.y, proj2.x, proj2.y);
+            gradient.addColorStop(0, `rgba(214, 0, 170, ${opacity})`);
+            gradient.addColorStop(0.5, `rgba(119, 0, 255, ${opacity})`);
+            gradient.addColorStop(1, `rgba(0, 102, 255, ${opacity})`);
+
+            ctx.strokeStyle = gradient;
+            ctx.lineWidth = 1;
+            ctx.stroke();
+          }
+        }
+      }
+    }
+
+    // Quantum wave effect
+    function drawQuantumWave() {
+      const centerX = canvas.width / 2;
+      const centerY = canvas.height / 2;
+      const t = time * speed * 0.02;
+
+      for (let i = 0; i < 5; i++) {
+        const radius = 100 + i * 50 + Math.sin(t + i) * 20;
+
+        ctx.beginPath();
+        ctx.ellipse(centerX, centerY, radius, radius * 0.4, 0, 0, Math.PI * 2);
+        ctx.strokeStyle = `rgba(214, 0, 170, ${0.3 - i * 0.05})`;
+        ctx.lineWidth = 2;
+        ctx.stroke();
+      }
+    }
+
+    function animate() {
+      ctx.fillStyle = 'rgba(3, 3, 6, 0.1)';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      time++;
+
+      drawQuantumWave();
+      drawConnections();
+
+      // Sort by z for proper depth
+      particles.sort((a, b) => b.z - a.z);
+
+      particles.forEach(p => {
+        p.update();
+        p.draw();
+      });
+
+      requestAnimationFrame(animate);
+    }
+    animate();
+
+    // Controls
+    function setVizMode(mode) {
+      vizMode = mode;
+      document.querySelectorAll('.viz-btn').forEach(btn => btn.classList.remove('active'));
+      event.currentTarget.classList.add('active');
+    }
+
+    function setComplexity(value) {
+      complexity = parseInt(value);
+      createLattice();
+    }
+
+    function setSpeed(value) {
+      speed = parseInt(value);
+    }
+
+    function runDemo() {
+      // Simulate key generation demo
+      const status = document.getElementById('keygen-status');
+      status.textContent = 'Generating...';
+      status.style.color = 'var(--br-deep-magenta)';
+
+      setTimeout(() => {
+        status.textContent = 'Key Pair Ready';
+        status.style.color = 'var(--br-green)';
+      }, 2000);
+    }
+
+    // Initial analysis update
+    updateAnalysis();
+  </script>
 </body>
 </html>

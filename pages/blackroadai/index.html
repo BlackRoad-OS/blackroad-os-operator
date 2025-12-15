@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>BlackRoad AI | Intelligence Infrastructure</title>
-  <meta name="description" content="Enterprise AI infrastructure for the next generation. Build, deploy, and scale AI applications with BlackRoad.">
+  <title>BlackRoad AI | Intelligence Console</title>
+  <meta name="description" content="Enterprise AI infrastructure console. Chat with Cece, deploy agents, monitor AI workloads.">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='40' fill='%237700FF'/></svg>">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Inter+Tight:wght@600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <style>
@@ -13,205 +13,780 @@
       --br-hot-pink: #FF0066;
       --br-vivid-purple: #7700FF;
       --br-cyber-blue: #0066FF;
-      --br-black: #000000;
+      --br-black: #0a0a0a;
+      --br-surface: #111111;
+      --br-surface-2: #1a1a1a;
+      --br-border: #2a2a2a;
       --br-white: #FFFFFF;
+      --br-text-muted: #888888;
       --br-gradient-ai: linear-gradient(135deg, #7700FF 0%, #0066FF 50%, #00CCFF 100%);
       --br-font-display: 'Inter Tight', sans-serif;
       --br-font-body: 'Inter', sans-serif;
+      --br-font-mono: 'JetBrains Mono', monospace;
     }
     * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { height: 100%; }
     body {
       background: var(--br-black);
       color: var(--br-white);
       font-family: var(--br-font-body);
-      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
     }
-    .bg-mesh {
-      position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background:
-        radial-gradient(ellipse at 30% 20%, rgba(119, 0, 255, 0.2) 0%, transparent 50%),
-        radial-gradient(ellipse at 70% 80%, rgba(0, 102, 255, 0.2) 0%, transparent 50%);
-      z-index: -1;
-    }
+
+    /* Header */
     header {
-      position: fixed;
-      top: 0; left: 0; right: 0;
-      padding: 1.5rem 2rem;
+      padding: 1rem 1.5rem;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      backdrop-filter: blur(20px);
-      background: rgba(0, 0, 0, 0.5);
-      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-      z-index: 100;
+      background: var(--br-surface);
+      border-bottom: 1px solid var(--br-border);
+      flex-shrink: 0;
     }
     .logo {
       font-family: var(--br-font-display);
-      font-size: 1.5rem;
+      font-size: 1.25rem;
       font-weight: 800;
       background: var(--br-gradient-ai);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
     }
-    nav a {
-      color: rgba(255, 255, 255, 0.7);
-      text-decoration: none;
-      margin-left: 2rem;
-      transition: color 0.2s;
+    .logo-icon {
+      width: 32px;
+      height: 32px;
+      background: var(--br-gradient-ai);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1rem;
     }
-    nav a:hover { color: var(--br-white); }
-    .hero {
-      min-height: 100vh;
+    .header-actions {
+      display: flex;
+      gap: 0.5rem;
+    }
+    .header-btn {
+      padding: 0.5rem 1rem;
+      background: var(--br-surface-2);
+      border: 1px solid var(--br-border);
+      border-radius: 6px;
+      color: var(--br-text-muted);
+      font-size: 0.875rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .header-btn:hover {
+      border-color: var(--br-vivid-purple);
+      color: var(--br-white);
+    }
+    .header-btn.primary {
+      background: var(--br-gradient-ai);
+      border: none;
+      color: var(--br-white);
+    }
+
+    /* Main Layout */
+    .app-container {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    /* Sidebar */
+    .sidebar {
+      width: 260px;
+      background: var(--br-surface);
+      border-right: 1px solid var(--br-border);
       display: flex;
       flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      text-align: center;
-      padding: 8rem 2rem 4rem;
+      flex-shrink: 0;
     }
-    .badge {
-      background: rgba(119, 0, 255, 0.2);
-      color: var(--br-vivid-purple);
-      padding: 0.5rem 1rem;
-      border-radius: 20px;
-      font-size: 0.875rem;
+    .sidebar-section {
+      padding: 1rem;
+      border-bottom: 1px solid var(--br-border);
+    }
+    .sidebar-title {
+      font-size: 0.75rem;
       font-weight: 600;
-      margin-bottom: 2rem;
-      border: 1px solid rgba(119, 0, 255, 0.3);
+      color: var(--br-text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.75rem;
     }
-    .hero h1 {
-      font-family: var(--br-font-display);
-      font-size: clamp(3rem, 8vw, 5rem);
-      font-weight: 800;
-      margin-bottom: 1.5rem;
-      background: var(--br-gradient-ai);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
+    .agent-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
     }
-    .hero p {
+    .agent-item {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.625rem 0.75rem;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .agent-item:hover { background: var(--br-surface-2); }
+    .agent-item.active { background: rgba(119, 0, 255, 0.15); }
+    .agent-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1rem;
+      flex-shrink: 0;
+    }
+    .agent-info {
+      flex: 1;
+      min-width: 0;
+    }
+    .agent-name {
+      font-size: 0.875rem;
+      font-weight: 500;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .agent-status {
+      font-size: 0.75rem;
+      color: var(--br-text-muted);
+    }
+    .status-dot {
+      display: inline-block;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      margin-right: 4px;
+    }
+    .status-dot.online { background: #00FF88; }
+    .status-dot.busy { background: #FF9D00; }
+    .status-dot.offline { background: #FF0066; }
+
+    /* Metrics */
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.5rem;
+    }
+    .metric-card {
+      background: var(--br-surface-2);
+      border-radius: 8px;
+      padding: 0.75rem;
+    }
+    .metric-value {
+      font-family: var(--br-font-mono);
       font-size: 1.25rem;
-      color: rgba(255, 255, 255, 0.7);
-      max-width: 600px;
-      margin-bottom: 2.5rem;
+      font-weight: 600;
+      color: var(--br-vivid-purple);
+    }
+    .metric-label {
+      font-size: 0.7rem;
+      color: var(--br-text-muted);
+      margin-top: 0.25rem;
+    }
+
+    /* Chat Area */
+    .chat-container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      background: var(--br-black);
+    }
+    .chat-header {
+      padding: 1rem 1.5rem;
+      border-bottom: 1px solid var(--br-border);
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    .chat-header-avatar {
+      width: 40px;
+      height: 40px;
+      background: var(--br-gradient-ai);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.25rem;
+    }
+    .chat-header-info h2 {
+      font-size: 1rem;
+      font-weight: 600;
+    }
+    .chat-header-info p {
+      font-size: 0.75rem;
+      color: var(--br-text-muted);
+    }
+
+    .chat-messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+    .message {
+      display: flex;
+      gap: 1rem;
+      max-width: 80%;
+    }
+    .message.assistant { align-self: flex-start; }
+    .message.user { align-self: flex-end; flex-direction: row-reverse; }
+    .message-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1rem;
+      flex-shrink: 0;
+    }
+    .message.assistant .message-avatar { background: var(--br-gradient-ai); }
+    .message.user .message-avatar { background: var(--br-surface-2); }
+    .message-content {
+      background: var(--br-surface);
+      border-radius: 12px;
+      padding: 1rem;
+      border: 1px solid var(--br-border);
+    }
+    .message.user .message-content {
+      background: rgba(119, 0, 255, 0.1);
+      border-color: rgba(119, 0, 255, 0.2);
+    }
+    .message-text {
+      font-size: 0.9375rem;
       line-height: 1.6;
     }
-    .btn-primary {
-      background: var(--br-gradient-ai);
+    .message-time {
+      font-size: 0.75rem;
+      color: var(--br-text-muted);
+      margin-top: 0.5rem;
+    }
+    .typing-indicator {
+      display: flex;
+      gap: 4px;
+      padding: 0.5rem;
+    }
+    .typing-indicator span {
+      width: 8px;
+      height: 8px;
+      background: var(--br-vivid-purple);
+      border-radius: 50%;
+      animation: typing 1.4s infinite ease-in-out;
+    }
+    .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+    .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes typing {
+      0%, 100% { transform: translateY(0); opacity: 0.4; }
+      50% { transform: translateY(-4px); opacity: 1; }
+    }
+
+    /* Input Area */
+    .chat-input-container {
+      padding: 1rem 1.5rem;
+      border-top: 1px solid var(--br-border);
+      background: var(--br-surface);
+    }
+    .chat-input-wrapper {
+      display: flex;
+      gap: 0.75rem;
+      align-items: flex-end;
+    }
+    .chat-input {
+      flex: 1;
+      background: var(--br-black);
+      border: 1px solid var(--br-border);
+      border-radius: 12px;
+      padding: 0.875rem 1rem;
       color: var(--br-white);
-      font-family: var(--br-font-display);
-      font-weight: 700;
-      padding: 1rem 2.5rem;
-      border-radius: 8px;
+      font-family: var(--br-font-body);
+      font-size: 0.9375rem;
+      resize: none;
+      min-height: 48px;
+      max-height: 200px;
+    }
+    .chat-input:focus {
+      outline: none;
+      border-color: var(--br-vivid-purple);
+    }
+    .chat-input::placeholder { color: var(--br-text-muted); }
+    .send-btn {
+      width: 48px;
+      height: 48px;
+      background: var(--br-gradient-ai);
       border: none;
-      text-decoration: none;
+      border-radius: 12px;
+      color: var(--br-white);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       transition: transform 0.2s, box-shadow 0.2s;
     }
-    .btn-primary:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 0 40px rgba(119, 0, 255, 0.4);
+    .send-btn:hover {
+      transform: scale(1.05);
+      box-shadow: 0 0 20px rgba(119, 0, 255, 0.4);
     }
-    .features {
-      padding: 6rem 2rem;
-      max-width: 1000px;
-      margin: 0 auto;
+    .send-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
     }
-    .feature-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 2rem;
+
+    /* Code Block */
+    .code-block {
+      background: var(--br-black);
+      border: 1px solid var(--br-border);
+      border-radius: 8px;
+      margin-top: 0.75rem;
+      overflow: hidden;
     }
-    .feature {
-      background: rgba(13, 13, 13, 0.8);
-      border: 1px solid rgba(119, 0, 255, 0.2);
-      border-radius: 16px;
-      padding: 2rem;
-      transition: border-color 0.2s;
+    .code-header {
+      display: flex;
+      justify-content: space-between;
+      padding: 0.5rem 0.75rem;
+      background: var(--br-surface-2);
+      font-size: 0.75rem;
+      color: var(--br-text-muted);
     }
-    .feature:hover { border-color: var(--br-vivid-purple); }
-    .feature h3 {
-      font-family: var(--br-font-display);
-      font-size: 1.25rem;
-      font-weight: 700;
+    .code-content {
+      padding: 0.75rem;
+      font-family: var(--br-font-mono);
+      font-size: 0.8125rem;
+      overflow-x: auto;
+    }
+
+    /* Right Panel */
+    .right-panel {
+      width: 300px;
+      background: var(--br-surface);
+      border-left: 1px solid var(--br-border);
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+    }
+    .panel-header {
+      padding: 1rem;
+      border-bottom: 1px solid var(--br-border);
+      font-weight: 600;
+      font-size: 0.875rem;
+    }
+    .panel-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 1rem;
+    }
+    .context-item {
+      background: var(--br-surface-2);
+      border-radius: 8px;
+      padding: 0.75rem;
       margin-bottom: 0.75rem;
-      color: var(--br-vivid-purple);
     }
-    .feature p { color: rgba(255, 255, 255, 0.6); line-height: 1.6; }
-    .cta {
-      padding: 6rem 2rem;
-      text-align: center;
-      background: linear-gradient(180deg, transparent 0%, rgba(119, 0, 255, 0.1) 100%);
+    .context-item-header {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.8125rem;
+      font-weight: 500;
+      margin-bottom: 0.5rem;
     }
-    .cta h2 {
-      font-family: var(--br-font-display);
-      font-size: 2.5rem;
-      font-weight: 800;
+    .context-item-content {
+      font-size: 0.75rem;
+      color: var(--br-text-muted);
+      font-family: var(--br-font-mono);
+    }
+
+    /* Live Chart */
+    .live-chart {
+      background: var(--br-surface-2);
+      border-radius: 8px;
+      padding: 1rem;
       margin-bottom: 1rem;
     }
-    .cta p { color: rgba(255, 255, 255, 0.6); margin-bottom: 2rem; }
-    footer {
-      border-top: 1px solid rgba(255, 255, 255, 0.1);
-      padding: 3rem 2rem;
-      text-align: center;
-      color: rgba(255, 255, 255, 0.5);
+    .chart-header {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 0.75rem;
     }
-    footer a { color: var(--br-vivid-purple); text-decoration: none; }
+    .chart-title {
+      font-size: 0.75rem;
+      color: var(--br-text-muted);
+    }
+    .chart-value {
+      font-family: var(--br-font-mono);
+      font-size: 0.875rem;
+      color: var(--br-vivid-purple);
+    }
+    .chart-bars {
+      display: flex;
+      align-items: flex-end;
+      gap: 3px;
+      height: 60px;
+    }
+    .chart-bar {
+      flex: 1;
+      background: var(--br-gradient-ai);
+      border-radius: 2px;
+      transition: height 0.3s ease;
+    }
+
+    @media (max-width: 1024px) {
+      .right-panel { display: none; }
+    }
     @media (max-width: 768px) {
-      .hero h1 { font-size: 2.5rem; }
-      nav { display: none; }
+      .sidebar { display: none; }
     }
   </style>
 </head>
 <body>
-  <div class="bg-mesh"></div>
   <header>
-    <a href="/" class="logo">BlackRoad AI</a>
-    <nav>
-      <a href="https://blackroad.io">Platform</a>
-      <a href="https://docs.blackroad.io">Docs</a>
-      <a href="https://cece.blackroad.io">Try Cece</a>
-    </nav>
+    <a href="/" class="logo">
+      <span class="logo-icon">AI</span>
+      BlackRoad AI
+    </a>
+    <div class="header-actions">
+      <button class="header-btn" onclick="window.location.href='https://docs.blackroad.io'">Docs</button>
+      <button class="header-btn" onclick="window.location.href='https://blackroad.io'">Platform</button>
+      <button class="header-btn primary">Deploy Agent</button>
+    </div>
   </header>
 
-  <main>
-    <section class="hero">
-      <div class="badge">🧠 Intelligence Infrastructure</div>
-      <h1>AI That Scales With You</h1>
-      <p>Enterprise-grade AI infrastructure for building, deploying, and scaling intelligent applications. From LLMs to agents, we've got you covered.</p>
-      <a href="https://cece.blackroad.io" class="btn-primary">Meet Cece AI →</a>
-    </section>
-
-    <section class="features">
-      <div class="feature-grid">
-        <div class="feature">
-          <h3>🤖 AI Agents</h3>
-          <p>Autonomous agents that can reason, plan, and execute complex tasks. Built on the latest foundation models.</p>
-        </div>
-        <div class="feature">
-          <h3>🔗 Model Gateway</h3>
-          <p>Unified API for OpenAI, Anthropic, and open-source models. Switch providers without changing code.</p>
-        </div>
-        <div class="feature">
-          <h3>📊 Observability</h3>
-          <p>Full tracing and monitoring for AI workloads. Track costs, latency, and quality metrics.</p>
-        </div>
-        <div class="feature">
-          <h3>🛡️ Safety First</h3>
-          <p>Built-in guardrails, content filtering, and audit logging. Enterprise compliance out of the box.</p>
+  <div class="app-container">
+    <aside class="sidebar">
+      <div class="sidebar-section">
+        <div class="sidebar-title">AI Agents</div>
+        <div class="agent-list">
+          <div class="agent-item active" onclick="selectAgent('cece')">
+            <div class="agent-avatar" style="background: linear-gradient(135deg, #00CCFF, #7700FF);">C</div>
+            <div class="agent-info">
+              <div class="agent-name">Cece</div>
+              <div class="agent-status"><span class="status-dot online"></span>Active</div>
+            </div>
+          </div>
+          <div class="agent-item" onclick="selectAgent('analyst')">
+            <div class="agent-avatar" style="background: linear-gradient(135deg, #FF9D00, #FF0066);">A</div>
+            <div class="agent-info">
+              <div class="agent-name">Analyst</div>
+              <div class="agent-status"><span class="status-dot online"></span>Ready</div>
+            </div>
+          </div>
+          <div class="agent-item" onclick="selectAgent('coder')">
+            <div class="agent-avatar" style="background: linear-gradient(135deg, #7700FF, #0066FF);">D</div>
+            <div class="agent-info">
+              <div class="agent-name">Dev Agent</div>
+              <div class="agent-status"><span class="status-dot busy"></span>Processing</div>
+            </div>
+          </div>
+          <div class="agent-item" onclick="selectAgent('reviewer')">
+            <div class="agent-avatar" style="background: linear-gradient(135deg, #00FF88, #00CCFF);">R</div>
+            <div class="agent-info">
+              <div class="agent-name">Reviewer</div>
+              <div class="agent-status"><span class="status-dot online"></span>Ready</div>
+            </div>
+          </div>
         </div>
       </div>
-    </section>
 
-    <section class="cta">
-      <h2>Ready to build intelligent apps?</h2>
-      <p>Start with our free tier. Scale when you need to.</p>
-      <a href="https://app.blackroad.io" class="btn-primary">Get Started Free</a>
-    </section>
-  </main>
+      <div class="sidebar-section">
+        <div class="sidebar-title">Usage This Hour</div>
+        <div class="metrics-grid">
+          <div class="metric-card">
+            <div class="metric-value" id="token-count">24.3k</div>
+            <div class="metric-label">Tokens</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-value" id="request-count">156</div>
+            <div class="metric-label">Requests</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-value" id="latency">142ms</div>
+            <div class="metric-label">Avg Latency</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-value" id="cost">$0.47</div>
+            <div class="metric-label">Cost</div>
+          </div>
+        </div>
+      </div>
+    </aside>
 
-  <footer>
-    <p>© 2025 BlackRoad AI · Part of <a href="https://blackroad.io">BlackRoad OS</a></p>
-  </footer>
+    <main class="chat-container">
+      <div class="chat-header">
+        <div class="chat-header-avatar">C</div>
+        <div class="chat-header-info">
+          <h2>Cece</h2>
+          <p>BlackRoad AI Assistant - Claude 3.5 Sonnet</p>
+        </div>
+      </div>
+
+      <div class="chat-messages" id="chat-messages">
+        <div class="message assistant">
+          <div class="message-avatar">C</div>
+          <div class="message-content">
+            <div class="message-text">
+              Hello! I'm Cece, your BlackRoad AI assistant. I can help you with code, deployments, agent orchestration, and any questions about the platform.
+              <br><br>
+              What would you like to work on today?
+            </div>
+            <div class="message-time">Just now</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="chat-input-container">
+        <div class="chat-input-wrapper">
+          <textarea
+            class="chat-input"
+            id="chat-input"
+            placeholder="Message Cece..."
+            rows="1"
+            onkeydown="handleKeyDown(event)"
+          ></textarea>
+          <button class="send-btn" id="send-btn" onclick="sendMessage()">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M22 2L11 13M22 2L15 22L11 13M22 2L2 9L11 13"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </main>
+
+    <aside class="right-panel">
+      <div class="panel-header">Live Metrics</div>
+      <div class="panel-content">
+        <div class="live-chart">
+          <div class="chart-header">
+            <span class="chart-title">Requests/min</span>
+            <span class="chart-value" id="rpm-value">23</span>
+          </div>
+          <div class="chart-bars" id="chart-bars"></div>
+        </div>
+
+        <div class="live-chart">
+          <div class="chart-header">
+            <span class="chart-title">Token Usage</span>
+            <span class="chart-value" id="tpm-value">4.2k</span>
+          </div>
+          <div class="chart-bars" id="token-bars"></div>
+        </div>
+
+        <div class="sidebar-title" style="margin-top: 1rem;">Context</div>
+        <div class="context-item">
+          <div class="context-item-header">
+            <span>Active Model</span>
+          </div>
+          <div class="context-item-content">claude-3-5-sonnet-20241022</div>
+        </div>
+        <div class="context-item">
+          <div class="context-item-header">
+            <span>Session ID</span>
+          </div>
+          <div class="context-item-content" id="session-id">sess_abc123...</div>
+        </div>
+        <div class="context-item">
+          <div class="context-item-header">
+            <span>Conversation</span>
+          </div>
+          <div class="context-item-content" id="msg-count">1 message, 847 tokens</div>
+        </div>
+      </div>
+    </aside>
+  </div>
+
+  <script>
+    // Initialize charts
+    const chartBars = document.getElementById('chart-bars');
+    const tokenBars = document.getElementById('token-bars');
+    const chartData = Array(20).fill(0).map(() => Math.random() * 100);
+    const tokenData = Array(20).fill(0).map(() => Math.random() * 100);
+
+    function renderCharts() {
+      chartBars.innerHTML = chartData.map(h => `<div class="chart-bar" style="height: ${h}%"></div>`).join('');
+      tokenBars.innerHTML = tokenData.map(h => `<div class="chart-bar" style="height: ${h}%"></div>`).join('');
+    }
+    renderCharts();
+
+    // Live data simulation
+    function updateMetrics() {
+      // Update chart data
+      chartData.shift();
+      chartData.push(Math.random() * 100);
+      tokenData.shift();
+      tokenData.push(Math.random() * 100);
+      renderCharts();
+
+      // Update metrics
+      const tokens = Math.floor(20000 + Math.random() * 10000);
+      const requests = Math.floor(140 + Math.random() * 40);
+      const latency = Math.floor(120 + Math.random() * 60);
+      const cost = (0.35 + Math.random() * 0.3).toFixed(2);
+
+      document.getElementById('token-count').textContent = (tokens / 1000).toFixed(1) + 'k';
+      document.getElementById('request-count').textContent = requests;
+      document.getElementById('latency').textContent = latency + 'ms';
+      document.getElementById('cost').textContent = '$' + cost;
+      document.getElementById('rpm-value').textContent = Math.floor(20 + Math.random() * 10);
+      document.getElementById('tpm-value').textContent = (3 + Math.random() * 2).toFixed(1) + 'k';
+    }
+    setInterval(updateMetrics, 2000);
+
+    // Generate session ID
+    document.getElementById('session-id').textContent = 'sess_' + Math.random().toString(36).substr(2, 9);
+
+    // Chat functionality
+    let messageCount = 1;
+    let tokenCount = 847;
+
+    const responses = [
+      {
+        text: "I can help you deploy that. Let me check the current infrastructure status...\n\nHere's what I found:\n- 3 workers active in production\n- Average latency: 142ms\n- All services healthy\n\nWould you like me to proceed with the deployment?",
+        code: null
+      },
+      {
+        text: "Here's a quick example of how to integrate the BlackRoad AI SDK:",
+        code: {
+          lang: "typescript",
+          content: `import { BlackRoadAI } from '@blackroad/ai-sdk';
+
+const client = new BlackRoadAI({
+  apiKey: process.env.BLACKROAD_API_KEY,
+});
+
+const response = await client.chat({
+  model: 'claude-3-5-sonnet',
+  messages: [{ role: 'user', content: 'Hello!' }]
+});`
+        }
+      },
+      {
+        text: "I've analyzed your request. The agent orchestration system is ready. You can use the following configuration to set up multi-agent workflows:",
+        code: {
+          lang: "yaml",
+          content: `agents:
+  - name: analyst
+    model: claude-3-5-sonnet
+    role: "Data analysis and insights"
+  - name: coder
+    model: claude-3-5-sonnet
+    role: "Code generation and review"
+
+workflow:
+  - step: analyze
+    agent: analyst
+  - step: implement
+    agent: coder
+    depends_on: analyze`
+        }
+      }
+    ];
+
+    function handleKeyDown(e) {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendMessage();
+      }
+    }
+
+    function sendMessage() {
+      const input = document.getElementById('chat-input');
+      const text = input.value.trim();
+      if (!text) return;
+
+      const messages = document.getElementById('chat-messages');
+
+      // Add user message
+      const userMsg = document.createElement('div');
+      userMsg.className = 'message user';
+      userMsg.innerHTML = `
+        <div class="message-avatar">You</div>
+        <div class="message-content">
+          <div class="message-text">${escapeHtml(text)}</div>
+          <div class="message-time">Just now</div>
+        </div>
+      `;
+      messages.appendChild(userMsg);
+      input.value = '';
+
+      // Add typing indicator
+      const typing = document.createElement('div');
+      typing.className = 'message assistant';
+      typing.id = 'typing';
+      typing.innerHTML = `
+        <div class="message-avatar">C</div>
+        <div class="message-content">
+          <div class="typing-indicator">
+            <span></span><span></span><span></span>
+          </div>
+        </div>
+      `;
+      messages.appendChild(typing);
+      messages.scrollTop = messages.scrollHeight;
+
+      // Simulate response
+      setTimeout(() => {
+        typing.remove();
+        const response = responses[Math.floor(Math.random() * responses.length)];
+
+        const assistantMsg = document.createElement('div');
+        assistantMsg.className = 'message assistant';
+
+        let codeBlock = '';
+        if (response.code) {
+          codeBlock = `
+            <div class="code-block">
+              <div class="code-header">
+                <span>${response.code.lang}</span>
+                <span style="cursor: pointer;" onclick="copyCode(this)">Copy</span>
+              </div>
+              <pre class="code-content">${escapeHtml(response.code.content)}</pre>
+            </div>
+          `;
+        }
+
+        assistantMsg.innerHTML = `
+          <div class="message-avatar">C</div>
+          <div class="message-content">
+            <div class="message-text">${response.text.replace(/\n/g, '<br>')}${codeBlock}</div>
+            <div class="message-time">Just now</div>
+          </div>
+        `;
+        messages.appendChild(assistantMsg);
+        messages.scrollTop = messages.scrollHeight;
+
+        // Update counters
+        messageCount += 2;
+        tokenCount += Math.floor(200 + Math.random() * 300);
+        document.getElementById('msg-count').textContent = `${messageCount} messages, ${tokenCount.toLocaleString()} tokens`;
+      }, 1500 + Math.random() * 1000);
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    function copyCode(el) {
+      const code = el.parentElement.nextElementSibling.textContent;
+      navigator.clipboard.writeText(code);
+      el.textContent = 'Copied!';
+      setTimeout(() => el.textContent = 'Copy', 2000);
+    }
+
+    function selectAgent(name) {
+      document.querySelectorAll('.agent-item').forEach(el => el.classList.remove('active'));
+      event.currentTarget.classList.add('active');
+    }
+  </script>
 </body>
 </html>

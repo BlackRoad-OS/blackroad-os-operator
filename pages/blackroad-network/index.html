@@ -3,280 +3,817 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>BlackRoad Network | Decentralized Infrastructure</title>
-  <meta name="description" content="The decentralized network powering BlackRoad OS. Secure, distributed, unstoppable.">
+  <title>BlackRoad Network | Live Infrastructure</title>
+  <meta name="description" content="Real-time global network visualization. Monitor edge nodes, traffic, and infrastructure health.">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='40' fill='%230066FF'/></svg>">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Inter+Tight:wght@600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <style>
     :root {
-      --br-sunrise: #FF9D00;
-      --br-hot-pink: #FF0066;
-      --br-vivid-purple: #7700FF;
       --br-cyber-blue: #0066FF;
-      --br-black: #000000;
+      --br-vivid-purple: #7700FF;
+      --br-cyan: #00CCFF;
+      --br-green: #00FF88;
+      --br-orange: #FF9D00;
+      --br-red: #FF5555;
+      --br-black: #050508;
+      --br-surface: #0a0a10;
+      --br-surface-2: #12121a;
+      --br-border: #1a1a28;
       --br-white: #FFFFFF;
-      --br-gradient-network: linear-gradient(135deg, #0066FF 0%, #7700FF 50%, #0066FF 100%);
+      --br-text-muted: #6666aa;
+      --br-gradient-network: linear-gradient(135deg, #0066FF 0%, #7700FF 50%, #00CCFF 100%);
       --br-font-display: 'Inter Tight', sans-serif;
       --br-font-body: 'Inter', sans-serif;
       --br-font-mono: 'JetBrains Mono', monospace;
     }
     * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { height: 100%; overflow: hidden; }
     body {
       background: var(--br-black);
       color: var(--br-white);
       font-family: var(--br-font-body);
-      min-height: 100vh;
     }
-    .bg-grid {
+
+    /* 3D Canvas */
+    #network-canvas {
       position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background-image:
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+    }
+
+    /* Grid Overlay */
+    .grid-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background:
+        linear-gradient(rgba(0, 102, 255, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 102, 255, 0.03) 1px, transparent 1px);
+      background-size: 50px 50px;
+      perspective: 1000px;
+      z-index: 1;
+      pointer-events: none;
+    }
+    .grid-floor {
+      position: absolute;
+      bottom: 0;
+      left: -50%;
+      width: 200%;
+      height: 60%;
+      background:
         linear-gradient(rgba(0, 102, 255, 0.1) 1px, transparent 1px),
         linear-gradient(90deg, rgba(0, 102, 255, 0.1) 1px, transparent 1px);
-      background-size: 50px 50px;
-      z-index: -2;
+      background-size: 80px 80px;
+      transform: rotateX(70deg);
+      transform-origin: bottom center;
     }
-    .bg-mesh {
+
+    /* UI Layer */
+    .ui-layer {
       position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background:
-        radial-gradient(ellipse at 20% 30%, rgba(0, 102, 255, 0.3) 0%, transparent 50%),
-        radial-gradient(ellipse at 80% 70%, rgba(119, 0, 255, 0.2) 0%, transparent 50%);
-      z-index: -1;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 10;
+      display: flex;
+      flex-direction: column;
+      pointer-events: none;
     }
+    .ui-layer > * { pointer-events: auto; }
+
+    /* Header */
     header {
-      position: fixed;
-      top: 0; left: 0; right: 0;
-      padding: 1.5rem 2rem;
+      padding: 1rem 1.5rem;
       display: flex;
       justify-content: space-between;
       align-items: center;
+      background: rgba(5, 5, 8, 0.8);
       backdrop-filter: blur(20px);
-      background: rgba(0, 0, 0, 0.5);
-      border-bottom: 1px solid rgba(0, 102, 255, 0.2);
-      z-index: 100;
+      border-bottom: 1px solid var(--br-border);
     }
     .logo {
       font-family: var(--br-font-display);
-      font-size: 1.5rem;
+      font-size: 1.25rem;
       font-weight: 800;
       background: var(--br-gradient-network);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       text-decoration: none;
     }
-    nav a {
-      color: rgba(255, 255, 255, 0.7);
-      text-decoration: none;
-      margin-left: 2rem;
-      transition: color 0.2s;
-    }
-    nav a:hover { color: var(--br-cyber-blue); }
-    .hero {
-      min-height: 100vh;
+    .header-status {
       display: flex;
-      flex-direction: column;
-      justify-content: center;
       align-items: center;
-      text-align: center;
-      padding: 8rem 2rem 4rem;
+      gap: 1.5rem;
     }
-    .badge {
-      background: rgba(0, 102, 255, 0.2);
-      color: var(--br-cyber-blue);
-      padding: 0.5rem 1rem;
-      border-radius: 20px;
-      font-size: 0.875rem;
-      font-weight: 600;
-      margin-bottom: 2rem;
-      border: 1px solid rgba(0, 102, 255, 0.3);
-      font-family: var(--br-font-mono);
-    }
-    .hero h1 {
-      font-family: var(--br-font-display);
-      font-size: clamp(3rem, 8vw, 5rem);
-      font-weight: 800;
-      margin-bottom: 1.5rem;
-      background: var(--br-gradient-network);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-    .hero p {
-      font-size: 1.25rem;
-      color: rgba(255, 255, 255, 0.7);
-      max-width: 600px;
-      margin-bottom: 2.5rem;
-      line-height: 1.6;
-    }
-    .stats {
+    .status-item {
       display: flex;
-      gap: 3rem;
-      margin-bottom: 3rem;
-    }
-    .stat {
-      text-align: center;
-    }
-    .stat-value {
-      font-family: var(--br-font-display);
-      font-size: 2.5rem;
-      font-weight: 800;
-      color: var(--br-cyber-blue);
-    }
-    .stat-label {
-      font-size: 0.875rem;
-      color: rgba(255, 255, 255, 0.5);
-      margin-top: 0.25rem;
-    }
-    .btn-primary {
-      background: var(--br-gradient-network);
-      color: var(--br-white);
-      font-family: var(--br-font-display);
-      font-weight: 700;
-      padding: 1rem 2.5rem;
-      border-radius: 8px;
-      border: none;
-      text-decoration: none;
-      transition: transform 0.2s, box-shadow 0.2s;
-    }
-    .btn-primary:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 0 40px rgba(0, 102, 255, 0.4);
-    }
-    .nodes {
-      padding: 6rem 2rem;
-      max-width: 1000px;
-      margin: 0 auto;
-    }
-    .nodes h2 {
-      font-family: var(--br-font-display);
-      font-size: 2rem;
-      font-weight: 800;
-      margin-bottom: 2rem;
-      text-align: center;
-      color: var(--br-cyber-blue);
-    }
-    .node-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 2rem;
-    }
-    .node {
-      background: rgba(0, 102, 255, 0.05);
-      border: 1px solid rgba(0, 102, 255, 0.2);
-      border-radius: 16px;
-      padding: 2rem;
-      transition: all 0.2s;
-    }
-    .node:hover {
-      border-color: var(--br-cyber-blue);
-      box-shadow: 0 0 30px rgba(0, 102, 255, 0.2);
-    }
-    .node h3 {
-      font-family: var(--br-font-display);
-      font-size: 1.25rem;
-      font-weight: 700;
-      margin-bottom: 0.75rem;
-      color: var(--br-white);
-    }
-    .node p { color: rgba(255, 255, 255, 0.6); line-height: 1.6; }
-    .node-status {
-      display: inline-flex;
       align-items: center;
       gap: 0.5rem;
-      margin-top: 1rem;
-      font-family: var(--br-font-mono);
-      font-size: 0.75rem;
-      color: #00FF88;
+      font-size: 0.8125rem;
     }
-    .node-status::before {
-      content: '';
+    .status-dot {
       width: 8px;
       height: 8px;
-      background: #00FF88;
       border-radius: 50%;
+      background: var(--br-green);
+      box-shadow: 0 0 10px var(--br-green);
       animation: pulse 2s infinite;
     }
     @keyframes pulse {
       0%, 100% { opacity: 1; }
       50% { opacity: 0.5; }
     }
-    footer {
-      border-top: 1px solid rgba(0, 102, 255, 0.2);
-      padding: 3rem 2rem;
-      text-align: center;
-      color: rgba(255, 255, 255, 0.5);
+    .status-value {
+      font-family: var(--br-font-mono);
+      color: var(--br-cyan);
     }
-    footer a { color: var(--br-cyber-blue); text-decoration: none; }
+
+    /* Main Content */
+    .main-content {
+      flex: 1;
+      display: flex;
+      pointer-events: none;
+    }
+
+    /* Left Panel - Nodes */
+    .nodes-panel {
+      width: 300px;
+      background: rgba(10, 10, 16, 0.9);
+      backdrop-filter: blur(20px);
+      border-right: 1px solid var(--br-border);
+      display: flex;
+      flex-direction: column;
+      pointer-events: auto;
+    }
+    .panel-header {
+      padding: 1rem;
+      border-bottom: 1px solid var(--br-border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .panel-title {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--br-text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .node-count {
+      font-family: var(--br-font-mono);
+      font-size: 0.875rem;
+      color: var(--br-cyber-blue);
+    }
+    .nodes-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 0.5rem;
+    }
+    .node-item {
+      background: var(--br-surface-2);
+      border: 1px solid var(--br-border);
+      border-radius: 8px;
+      padding: 0.75rem;
+      margin-bottom: 0.5rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .node-item:hover {
+      border-color: var(--br-cyber-blue);
+      box-shadow: 0 0 20px rgba(0, 102, 255, 0.1);
+    }
+    .node-item.active {
+      border-color: var(--br-cyan);
+      background: rgba(0, 204, 255, 0.05);
+    }
+    .node-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.5rem;
+    }
+    .node-name {
+      font-size: 0.875rem;
+      font-weight: 600;
+    }
+    .node-status {
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+      font-size: 0.6875rem;
+      color: var(--br-green);
+    }
+    .node-status-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: currentColor;
+    }
+    .node-metrics {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.5rem;
+    }
+    .node-metric {
+      text-align: center;
+    }
+    .node-metric-value {
+      font-family: var(--br-font-mono);
+      font-size: 0.75rem;
+      color: var(--br-cyan);
+    }
+    .node-metric-label {
+      font-size: 0.625rem;
+      color: var(--br-text-muted);
+    }
+
+    /* Center - 3D View Controls */
+    .view-controls {
+      position: fixed;
+      bottom: 2rem;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 0.5rem;
+      background: rgba(10, 10, 16, 0.9);
+      backdrop-filter: blur(20px);
+      border: 1px solid var(--br-border);
+      border-radius: 12px;
+      padding: 0.5rem;
+      pointer-events: auto;
+    }
+    .view-btn {
+      padding: 0.5rem 1rem;
+      background: transparent;
+      border: none;
+      border-radius: 8px;
+      color: var(--br-text-muted);
+      font-size: 0.8125rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .view-btn:hover { color: var(--br-white); }
+    .view-btn.active {
+      background: var(--br-cyber-blue);
+      color: var(--br-white);
+    }
+
+    /* Right Panel - Stats */
+    .stats-panel {
+      width: 320px;
+      background: rgba(10, 10, 16, 0.9);
+      backdrop-filter: blur(20px);
+      border-left: 1px solid var(--br-border);
+      display: flex;
+      flex-direction: column;
+      pointer-events: auto;
+    }
+    .stats-section {
+      padding: 1rem;
+      border-bottom: 1px solid var(--br-border);
+    }
+    .stats-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.75rem;
+    }
+    .stat-card {
+      background: var(--br-surface-2);
+      border-radius: 8px;
+      padding: 0.75rem;
+    }
+    .stat-value {
+      font-family: var(--br-font-mono);
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: var(--br-cyber-blue);
+    }
+    .stat-label {
+      font-size: 0.6875rem;
+      color: var(--br-text-muted);
+      margin-top: 0.25rem;
+    }
+    .stat-trend {
+      font-size: 0.625rem;
+      color: var(--br-green);
+      margin-top: 0.25rem;
+    }
+
+    /* Traffic Chart */
+    .traffic-chart {
+      background: var(--br-surface-2);
+      border-radius: 8px;
+      padding: 0.75rem;
+    }
+    .chart-header {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 0.5rem;
+    }
+    .chart-title {
+      font-size: 0.75rem;
+      color: var(--br-text-muted);
+    }
+    .chart-value {
+      font-family: var(--br-font-mono);
+      font-size: 0.875rem;
+      color: var(--br-cyan);
+    }
+    .chart-area {
+      height: 80px;
+      display: flex;
+      align-items: flex-end;
+      gap: 2px;
+    }
+    .chart-bar {
+      flex: 1;
+      background: linear-gradient(to top, var(--br-cyber-blue), var(--br-cyan));
+      border-radius: 2px 2px 0 0;
+      transition: height 0.3s;
+    }
+
+    /* Activity Log */
+    .activity-log {
+      flex: 1;
+      overflow-y: auto;
+      padding: 0.75rem;
+    }
+    .log-item {
+      display: flex;
+      gap: 0.75rem;
+      padding: 0.5rem 0;
+      border-bottom: 1px solid var(--br-border);
+      font-size: 0.75rem;
+    }
+    .log-time {
+      font-family: var(--br-font-mono);
+      color: var(--br-text-muted);
+      white-space: nowrap;
+    }
+    .log-message { flex: 1; }
+    .log-type {
+      padding: 0.125rem 0.375rem;
+      border-radius: 4px;
+      font-size: 0.625rem;
+      font-weight: 600;
+    }
+    .log-type.info { background: rgba(0, 102, 255, 0.2); color: var(--br-cyber-blue); }
+    .log-type.success { background: rgba(0, 255, 136, 0.2); color: var(--br-green); }
+    .log-type.warning { background: rgba(255, 157, 0, 0.2); color: var(--br-orange); }
+
+    /* Floating Info */
+    .node-tooltip {
+      position: fixed;
+      background: rgba(10, 10, 16, 0.95);
+      backdrop-filter: blur(10px);
+      border: 1px solid var(--br-border);
+      border-radius: 8px;
+      padding: 0.75rem;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.2s;
+      z-index: 100;
+    }
+    .node-tooltip.visible { opacity: 1; }
+
+    @media (max-width: 1200px) {
+      .stats-panel { display: none; }
+    }
     @media (max-width: 768px) {
-      .hero h1 { font-size: 2.5rem; }
-      nav { display: none; }
-      .stats { flex-direction: column; gap: 1.5rem; }
+      .nodes-panel { display: none; }
     }
   </style>
 </head>
 <body>
-  <div class="bg-grid"></div>
-  <div class="bg-mesh"></div>
-  <header>
-    <a href="/" class="logo">BlackRoad Network</a>
-    <nav>
-      <a href="https://blackroad.io">Platform</a>
-      <a href="https://docs.blackroad.io">Docs</a>
-      <a href="https://status.blackroad.io">Status</a>
-    </nav>
-  </header>
+  <canvas id="network-canvas"></canvas>
+  <div class="grid-overlay">
+    <div class="grid-floor"></div>
+  </div>
 
-  <main>
-    <section class="hero">
-      <div class="badge">// DECENTRALIZED INFRASTRUCTURE</div>
-      <h1>The Network Layer</h1>
-      <p>Distributed infrastructure powering BlackRoad OS. Edge-first, globally distributed, infinitely scalable.</p>
-      <div class="stats">
-        <div class="stat">
-          <div class="stat-value">275+</div>
-          <div class="stat-label">Edge Locations</div>
+  <div class="ui-layer">
+    <header>
+      <a href="/" class="logo">BlackRoad Network</a>
+      <div class="header-status">
+        <div class="status-item">
+          <span class="status-dot"></span>
+          <span>All Systems Operational</span>
         </div>
-        <div class="stat">
-          <div class="stat-value">99.99%</div>
-          <div class="stat-label">Uptime SLA</div>
+        <div class="status-item">
+          <span>Nodes:</span>
+          <span class="status-value" id="total-nodes">275</span>
         </div>
-        <div class="stat">
-          <div class="stat-value">&lt;50ms</div>
-          <div class="stat-label">Global Latency</div>
+        <div class="status-item">
+          <span>Traffic:</span>
+          <span class="status-value" id="total-traffic">2.4TB/s</span>
+        </div>
+        <div class="status-item">
+          <span>Latency:</span>
+          <span class="status-value" id="avg-latency">24ms</span>
         </div>
       </div>
-      <a href="https://blackroad.io" class="btn-primary">Explore Network →</a>
-    </section>
+    </header>
 
-    <section class="nodes">
-      <h2>Network Architecture</h2>
-      <div class="node-grid">
-        <div class="node">
-          <h3>🌐 Edge Workers</h3>
-          <p>Serverless compute at the edge. Your code runs in 275+ locations worldwide, milliseconds from your users.</p>
-          <div class="node-status">OPERATIONAL</div>
+    <div class="main-content">
+      <aside class="nodes-panel">
+        <div class="panel-header">
+          <span class="panel-title">Edge Nodes</span>
+          <span class="node-count" id="active-nodes">275 Active</span>
         </div>
-        <div class="node">
-          <h3>🔐 Identity Mesh</h3>
-          <p>Decentralized identity verification. Cryptographic proof of authenticity without central authority.</p>
-          <div class="node-status">OPERATIONAL</div>
-        </div>
-        <div class="node">
-          <h3>📡 Message Bus</h3>
-          <p>Real-time event streaming between nodes. Pub/sub at global scale with guaranteed delivery.</p>
-          <div class="node-status">OPERATIONAL</div>
-        </div>
-        <div class="node">
-          <h3>💾 Distributed State</h3>
-          <p>Eventually consistent global storage. Read from nearest edge, replicate worldwide automatically.</p>
-          <div class="node-status">OPERATIONAL</div>
-        </div>
-      </div>
-    </section>
-  </main>
+        <div class="nodes-list" id="nodes-list"></div>
+      </aside>
 
-  <footer>
-    <p>© 2025 BlackRoad Network · Part of <a href="https://blackroad.io">BlackRoad OS</a></p>
-  </footer>
+      <aside class="stats-panel">
+        <div class="stats-section">
+          <div class="panel-title" style="margin-bottom: 0.75rem;">Global Metrics</div>
+          <div class="stats-grid">
+            <div class="stat-card">
+              <div class="stat-value" id="requests-sec">847K</div>
+              <div class="stat-label">Requests/sec</div>
+              <div class="stat-trend">↑ 12% from avg</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-value" id="uptime">99.99%</div>
+              <div class="stat-label">Uptime</div>
+              <div class="stat-trend">30 day average</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-value" id="cache-hit">94.2%</div>
+              <div class="stat-label">Cache Hit</div>
+              <div class="stat-trend">↑ 2.1% today</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-value" id="error-rate">0.01%</div>
+              <div class="stat-label">Error Rate</div>
+              <div class="stat-trend" style="color: var(--br-green);">Normal</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="stats-section">
+          <div class="traffic-chart">
+            <div class="chart-header">
+              <span class="chart-title">Traffic (last hour)</span>
+              <span class="chart-value" id="current-traffic">2.4 TB/s</span>
+            </div>
+            <div class="chart-area" id="traffic-chart"></div>
+          </div>
+        </div>
+
+        <div class="stats-section" style="flex: 1; display: flex; flex-direction: column; border-bottom: none;">
+          <div class="panel-title" style="margin-bottom: 0.5rem;">Activity Log</div>
+          <div class="activity-log" id="activity-log"></div>
+        </div>
+      </aside>
+    </div>
+
+    <div class="view-controls">
+      <button class="view-btn active" onclick="setView('globe')">Globe</button>
+      <button class="view-btn" onclick="setView('map')">Map</button>
+      <button class="view-btn" onclick="setView('graph')">Graph</button>
+      <button class="view-btn" onclick="setView('mesh')">Mesh</button>
+    </div>
+  </div>
+
+  <div class="node-tooltip" id="tooltip"></div>
+
+  <script>
+    // 3D Network Visualization
+    const canvas = document.getElementById('network-canvas');
+    const ctx = canvas.getContext('2d');
+
+    function resize() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    resize();
+    window.addEventListener('resize', resize);
+
+    // Nodes data
+    const nodes = [];
+    const connections = [];
+    const nodeCount = 50;
+
+    // Node regions
+    const regions = [
+      { name: 'US East', x: 0.25, y: 0.35, color: '#0066FF' },
+      { name: 'US West', x: 0.15, y: 0.40, color: '#00CCFF' },
+      { name: 'EU West', x: 0.45, y: 0.30, color: '#7700FF' },
+      { name: 'EU Central', x: 0.50, y: 0.32, color: '#8855FF' },
+      { name: 'Asia Pacific', x: 0.75, y: 0.45, color: '#00FF88' },
+      { name: 'Asia East', x: 0.80, y: 0.35, color: '#00CCFF' },
+    ];
+
+    class Node {
+      constructor(region, index) {
+        this.region = region;
+        this.id = `${region.name.replace(/\s/g, '-').toLowerCase()}-${index}`;
+        this.name = `${region.name} #${index + 1}`;
+        this.x = (region.x + (Math.random() - 0.5) * 0.15) * canvas.width;
+        this.y = (region.y + (Math.random() - 0.5) * 0.15) * canvas.height;
+        this.z = Math.random() * 100;
+        this.targetX = this.x;
+        this.targetY = this.y;
+        this.size = 4 + Math.random() * 4;
+        this.color = region.color;
+        this.latency = Math.floor(10 + Math.random() * 50);
+        this.requests = Math.floor(1000 + Math.random() * 50000);
+        this.uptime = (99 + Math.random()).toFixed(2);
+        this.active = true;
+        this.pulse = Math.random() * Math.PI * 2;
+      }
+
+      update() {
+        // Gentle floating motion
+        this.pulse += 0.02;
+        const floatY = Math.sin(this.pulse) * 2;
+        this.y = this.targetY + floatY;
+
+        // Handle resize
+        this.targetX = (this.region.x + (Math.random() - 0.5) * 0.01) * canvas.width;
+        this.targetY = (this.region.y + (Math.random() - 0.5) * 0.01) * canvas.height;
+        this.x += (this.targetX - this.x) * 0.01;
+      }
+
+      draw() {
+        // Glow effect
+        const gradient = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, this.size * 4);
+        gradient.addColorStop(0, this.color + '40');
+        gradient.addColorStop(1, 'transparent');
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.size * 4, 0, Math.PI * 2);
+        ctx.fillStyle = gradient;
+        ctx.fill();
+
+        // Core
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+        ctx.fillStyle = this.color;
+        ctx.fill();
+
+        // Pulse ring
+        const pulseSize = this.size + Math.sin(this.pulse) * 3;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, pulseSize + 2, 0, Math.PI * 2);
+        ctx.strokeStyle = this.color + '60';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+      }
+    }
+
+    // Create nodes
+    regions.forEach((region, ri) => {
+      const count = 6 + Math.floor(Math.random() * 6);
+      for (let i = 0; i < count; i++) {
+        nodes.push(new Node(region, ri * 10 + i));
+      }
+    });
+
+    // Create connections
+    function createConnections() {
+      connections.length = 0;
+      for (let i = 0; i < nodes.length; i++) {
+        // Connect to 2-4 nearby nodes
+        const nearby = nodes
+          .map((n, j) => ({ node: n, index: j, dist: Math.hypot(n.x - nodes[i].x, n.y - nodes[i].y) }))
+          .filter(n => n.index !== i && n.dist < 300)
+          .sort((a, b) => a.dist - b.dist)
+          .slice(0, 3);
+
+        nearby.forEach(n => {
+          if (!connections.find(c =>
+            (c.a === i && c.b === n.index) ||
+            (c.a === n.index && c.b === i)
+          )) {
+            connections.push({
+              a: i,
+              b: n.index,
+              active: Math.random() > 0.3,
+              traffic: Math.random()
+            });
+          }
+        });
+      }
+    }
+    createConnections();
+
+    // Data packets animation
+    const packets = [];
+
+    function spawnPacket() {
+      if (connections.length === 0) return;
+      const conn = connections[Math.floor(Math.random() * connections.length)];
+      if (!conn.active) return;
+
+      const reverse = Math.random() > 0.5;
+      packets.push({
+        conn,
+        progress: 0,
+        reverse,
+        speed: 0.01 + Math.random() * 0.02
+      });
+    }
+
+    setInterval(spawnPacket, 100);
+
+    function drawConnections() {
+      connections.forEach(conn => {
+        const a = nodes[conn.a];
+        const b = nodes[conn.b];
+
+        // Connection line
+        const gradient = ctx.createLinearGradient(a.x, a.y, b.x, b.y);
+        gradient.addColorStop(0, a.color + '30');
+        gradient.addColorStop(0.5, '#0066FF20');
+        gradient.addColorStop(1, b.color + '30');
+
+        ctx.beginPath();
+        ctx.moveTo(a.x, a.y);
+        ctx.lineTo(b.x, b.y);
+        ctx.strokeStyle = gradient;
+        ctx.lineWidth = conn.active ? 1 : 0.5;
+        ctx.stroke();
+      });
+
+      // Draw packets
+      packets.forEach((p, i) => {
+        p.progress += p.speed;
+        if (p.progress >= 1) {
+          packets.splice(i, 1);
+          return;
+        }
+
+        const a = nodes[p.conn.a];
+        const b = nodes[p.conn.b];
+        const t = p.reverse ? 1 - p.progress : p.progress;
+        const x = a.x + (b.x - a.x) * t;
+        const y = a.y + (b.y - a.y) * t;
+
+        ctx.beginPath();
+        ctx.arc(x, y, 2, 0, Math.PI * 2);
+        ctx.fillStyle = '#00CCFF';
+        ctx.fill();
+
+        // Trail
+        const trail = 0.1;
+        for (let j = 1; j <= 3; j++) {
+          const tt = t - trail * j * (p.reverse ? -1 : 1);
+          if (tt < 0 || tt > 1) continue;
+          const tx = a.x + (b.x - a.x) * tt;
+          const ty = a.y + (b.y - a.y) * tt;
+          ctx.beginPath();
+          ctx.arc(tx, ty, 2 - j * 0.5, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(0, 204, 255, ${0.5 - j * 0.15})`;
+          ctx.fill();
+        }
+      });
+    }
+
+    function animate() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      drawConnections();
+      nodes.forEach(node => {
+        node.update();
+        node.draw();
+      });
+
+      requestAnimationFrame(animate);
+    }
+    animate();
+
+    // Render nodes list
+    function renderNodesList() {
+      const container = document.getElementById('nodes-list');
+      container.innerHTML = nodes.slice(0, 15).map(node => `
+        <div class="node-item" onclick="selectNode('${node.id}')">
+          <div class="node-header">
+            <span class="node-name">${node.name}</span>
+            <span class="node-status">
+              <span class="node-status-dot"></span>
+              Active
+            </span>
+          </div>
+          <div class="node-metrics">
+            <div class="node-metric">
+              <div class="node-metric-value">${node.latency}ms</div>
+              <div class="node-metric-label">Latency</div>
+            </div>
+            <div class="node-metric">
+              <div class="node-metric-value">${(node.requests / 1000).toFixed(1)}k</div>
+              <div class="node-metric-label">Req/s</div>
+            </div>
+            <div class="node-metric">
+              <div class="node-metric-value">${node.uptime}%</div>
+              <div class="node-metric-label">Uptime</div>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+    renderNodesList();
+
+    // Traffic chart
+    const trafficData = Array(30).fill(0).map(() => 30 + Math.random() * 70);
+
+    function renderTrafficChart() {
+      const container = document.getElementById('traffic-chart');
+      container.innerHTML = trafficData.map(h => `<div class="chart-bar" style="height: ${h}%"></div>`).join('');
+    }
+    renderTrafficChart();
+
+    // Activity log
+    const activities = [
+      { time: '00:01:23', type: 'info', message: 'New node deployed in EU-West' },
+      { time: '00:00:45', type: 'success', message: 'Traffic spike handled successfully' },
+      { time: '00:00:12', type: 'info', message: 'Cache invalidation completed' },
+      { time: '23:59:58', type: 'success', message: 'SSL certificates renewed' },
+      { time: '23:59:30', type: 'warning', message: 'High latency detected in APAC' },
+    ];
+
+    function renderActivityLog() {
+      const container = document.getElementById('activity-log');
+      container.innerHTML = activities.map(a => `
+        <div class="log-item">
+          <span class="log-time">${a.time}</span>
+          <span class="log-message">${a.message}</span>
+          <span class="log-type ${a.type}">${a.type.toUpperCase()}</span>
+        </div>
+      `).join('');
+    }
+    renderActivityLog();
+
+    // Live updates
+    function updateMetrics() {
+      // Traffic chart
+      trafficData.shift();
+      trafficData.push(30 + Math.random() * 70);
+      renderTrafficChart();
+
+      // Stats
+      document.getElementById('requests-sec').textContent = Math.floor(800 + Math.random() * 100) + 'K';
+      document.getElementById('current-traffic').textContent = (2 + Math.random() * 0.8).toFixed(1) + ' TB/s';
+      document.getElementById('total-traffic').textContent = (2 + Math.random() * 0.8).toFixed(1) + 'TB/s';
+      document.getElementById('avg-latency').textContent = Math.floor(20 + Math.random() * 10) + 'ms';
+
+      // Random activity
+      if (Math.random() > 0.7) {
+        const newActivities = [
+          { type: 'info', message: 'Health check passed for all nodes' },
+          { type: 'success', message: 'Auto-scaling triggered in US-East' },
+          { type: 'info', message: 'DDoS mitigation rules updated' },
+          { type: 'success', message: 'New edge location activated' },
+        ];
+        const activity = newActivities[Math.floor(Math.random() * newActivities.length)];
+        const now = new Date();
+        activities.unshift({
+          time: now.toTimeString().slice(0, 8),
+          ...activity
+        });
+        activities.pop();
+        renderActivityLog();
+      }
+    }
+    setInterval(updateMetrics, 2000);
+
+    // View controls
+    function setView(view) {
+      document.querySelectorAll('.view-btn').forEach(btn => btn.classList.remove('active'));
+      event.target.classList.add('active');
+      // Different views would change the 3D perspective
+    }
+
+    function selectNode(id) {
+      document.querySelectorAll('.node-item').forEach(el => el.classList.remove('active'));
+      event.currentTarget.classList.add('active');
+    }
+
+    // Mouse interaction
+    canvas.addEventListener('mousemove', (e) => {
+      const tooltip = document.getElementById('tooltip');
+      const closest = nodes.find(n => Math.hypot(n.x - e.clientX, n.y - e.clientY) < 20);
+
+      if (closest) {
+        tooltip.innerHTML = `
+          <div style="font-weight: 600; margin-bottom: 0.5rem;">${closest.name}</div>
+          <div style="font-size: 0.75rem; color: var(--br-text-muted);">
+            Latency: <span style="color: var(--br-cyan)">${closest.latency}ms</span><br>
+            Requests: <span style="color: var(--br-cyan)">${closest.requests.toLocaleString()}/s</span><br>
+            Uptime: <span style="color: var(--br-green)">${closest.uptime}%</span>
+          </div>
+        `;
+        tooltip.style.left = e.clientX + 15 + 'px';
+        tooltip.style.top = e.clientY + 15 + 'px';
+        tooltip.classList.add('visible');
+      } else {
+        tooltip.classList.remove('visible');
+      }
+    });
+  </script>
 </body>
 </html>

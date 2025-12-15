@@ -1,0 +1,880 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RoadWork | Adaptive Learning Platform</title>
+  <meta name="description" content="Learn through teaching. Adaptive tutoring that connects to all your tools. Earn RoadCoin for genuine comprehension.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='40' fill='%23FF9D00'/></svg>">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Inter+Tight:wght@600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --rw-orange: #FF9D00;
+      --rw-yellow: #FFDD00;
+      --rw-green: #00FF88;
+      --rw-blue: #0066FF;
+      --rw-purple: #7700FF;
+      --br-black: #0a0a0a;
+      --br-surface: #111111;
+      --br-surface-2: #1a1a1a;
+      --br-surface-3: #222222;
+      --br-border: #2a2a2a;
+      --br-white: #FFFFFF;
+      --br-text-muted: #888888;
+      --br-gradient-rw: linear-gradient(135deg, #FF9D00 0%, #FFDD00 50%, #00FF88 100%);
+      --br-font-display: 'Inter Tight', sans-serif;
+      --br-font-body: 'Inter', sans-serif;
+      --br-font-mono: 'JetBrains Mono', monospace;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { height: 100%; overflow: hidden; }
+    body {
+      background: var(--br-black);
+      color: var(--br-white);
+      font-family: var(--br-font-body);
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Header */
+    header {
+      height: 56px;
+      background: var(--br-surface);
+      border-bottom: 1px solid var(--br-border);
+      display: flex;
+      align-items: center;
+      padding: 0 1rem;
+      gap: 1rem;
+      flex-shrink: 0;
+    }
+    .logo {
+      font-family: var(--br-font-display);
+      font-size: 1.25rem;
+      font-weight: 800;
+      background: var(--br-gradient-rw);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .streak-badge {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.375rem 0.75rem;
+      background: rgba(255, 157, 0, 0.1);
+      border: 1px solid rgba(255, 157, 0, 0.3);
+      border-radius: 20px;
+      font-size: 0.8125rem;
+    }
+    .streak-fire { font-size: 1rem; }
+    .streak-count {
+      font-family: var(--br-font-mono);
+      color: var(--rw-orange);
+    }
+    .header-spacer { flex: 1; }
+    .roadcoin-badge {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.375rem 0.75rem;
+      background: rgba(0, 255, 136, 0.1);
+      border: 1px solid rgba(0, 255, 136, 0.3);
+      border-radius: 20px;
+      font-size: 0.8125rem;
+    }
+    .roadcoin-icon {
+      width: 18px;
+      height: 18px;
+      background: var(--rw-green);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.6875rem;
+      color: var(--br-black);
+      font-weight: 700;
+    }
+    .roadcoin-amount {
+      font-family: var(--br-font-mono);
+      color: var(--rw-green);
+    }
+    .profile-btn {
+      width: 36px;
+      height: 36px;
+      background: var(--br-surface-2);
+      border: 1px solid var(--br-border);
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.875rem;
+    }
+
+    /* Main Layout */
+    .main-container {
+      flex: 1;
+      display: flex;
+      overflow: hidden;
+    }
+
+    /* Sidebar */
+    .sidebar {
+      width: 280px;
+      background: var(--br-surface);
+      border-right: 1px solid var(--br-border);
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+    }
+    .sidebar-section {
+      padding: 1rem;
+      border-bottom: 1px solid var(--br-border);
+    }
+    .sidebar-title {
+      font-size: 0.6875rem;
+      font-weight: 600;
+      color: var(--br-text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.75rem;
+    }
+    .course-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    .course-item {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.75rem;
+      background: var(--br-surface-2);
+      border: 1px solid var(--br-border);
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .course-item:hover { border-color: var(--rw-orange); }
+    .course-item.active {
+      border-color: var(--rw-orange);
+      background: rgba(255, 157, 0, 0.05);
+    }
+    .course-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.25rem;
+    }
+    .course-info { flex: 1; }
+    .course-name {
+      font-size: 0.875rem;
+      font-weight: 500;
+      margin-bottom: 0.25rem;
+    }
+    .course-progress {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .progress-bar {
+      flex: 1;
+      height: 4px;
+      background: var(--br-border);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      background: var(--br-gradient-rw);
+      border-radius: 2px;
+    }
+    .progress-text {
+      font-size: 0.6875rem;
+      color: var(--br-text-muted);
+    }
+
+    /* Skills Panel */
+    .skills-panel {
+      flex: 1;
+      overflow-y: auto;
+      padding: 0.75rem;
+    }
+    .skill-tree {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    .skill-node {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.625rem 0.75rem;
+      background: var(--br-surface-2);
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .skill-node:hover { background: var(--br-surface-3); }
+    .skill-node.completed { opacity: 0.6; }
+    .skill-node.current { border: 1px solid var(--rw-orange); }
+    .skill-icon {
+      width: 24px;
+      height: 24px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+    }
+    .skill-icon.locked { background: var(--br-border); }
+    .skill-icon.unlocked { background: var(--rw-orange); color: var(--br-black); }
+    .skill-icon.completed { background: var(--rw-green); color: var(--br-black); }
+    .skill-name {
+      flex: 1;
+      font-size: 0.8125rem;
+    }
+    .skill-xp {
+      font-size: 0.6875rem;
+      color: var(--br-text-muted);
+    }
+
+    /* Lesson Area */
+    .lesson-area {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .lesson-header {
+      padding: 1rem 1.5rem;
+      border-bottom: 1px solid var(--br-border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .lesson-title {
+      font-size: 1.25rem;
+      font-weight: 600;
+    }
+    .lesson-meta {
+      display: flex;
+      gap: 1rem;
+      color: var(--br-text-muted);
+      font-size: 0.8125rem;
+    }
+
+    .lesson-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 1.5rem;
+    }
+    .lesson-card {
+      background: var(--br-surface);
+      border: 1px solid var(--br-border);
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+    .lesson-card h3 {
+      font-size: 1rem;
+      margin-bottom: 1rem;
+    }
+    .lesson-card p {
+      color: var(--br-text-muted);
+      line-height: 1.7;
+      margin-bottom: 1rem;
+    }
+    .lesson-card ul {
+      color: var(--br-text-muted);
+      line-height: 1.7;
+      padding-left: 1.25rem;
+      margin-bottom: 1rem;
+    }
+
+    /* Interactive Elements */
+    .interactive-block {
+      background: var(--br-surface-2);
+      border: 1px solid var(--br-border);
+      border-radius: 10px;
+      padding: 1rem;
+      margin: 1rem 0;
+    }
+    .interactive-header {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 0.75rem;
+      font-size: 0.8125rem;
+      color: var(--rw-orange);
+    }
+    .code-block {
+      background: var(--br-black);
+      border-radius: 8px;
+      padding: 1rem;
+      font-family: var(--br-font-mono);
+      font-size: 0.8125rem;
+      overflow-x: auto;
+    }
+    .code-keyword { color: #FF79C6; }
+    .code-string { color: #F1FA8C; }
+    .code-comment { color: #6272A4; }
+    .code-function { color: #50FA7B; }
+
+    /* Teach Back Section */
+    .teachback-section {
+      background: linear-gradient(135deg, rgba(255, 157, 0, 0.05), rgba(0, 255, 136, 0.05));
+      border: 1px solid var(--rw-orange);
+      border-radius: 12px;
+      padding: 1.5rem;
+    }
+    .teachback-header {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+    }
+    .teachback-icon {
+      width: 40px;
+      height: 40px;
+      background: var(--rw-orange);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.25rem;
+    }
+    .teachback-title {
+      font-size: 1rem;
+      font-weight: 600;
+    }
+    .teachback-subtitle {
+      font-size: 0.8125rem;
+      color: var(--br-text-muted);
+    }
+    .teachback-prompt {
+      background: var(--br-surface-2);
+      border-radius: 10px;
+      padding: 1rem;
+      margin-bottom: 1rem;
+    }
+    .teachback-prompt p {
+      font-size: 0.9375rem;
+      color: var(--br-white);
+      margin: 0;
+    }
+    .teachback-input {
+      width: 100%;
+      background: var(--br-black);
+      border: 1px solid var(--br-border);
+      border-radius: 10px;
+      padding: 1rem;
+      color: var(--br-white);
+      font-family: var(--br-font-body);
+      font-size: 0.9375rem;
+      min-height: 120px;
+      resize: vertical;
+      margin-bottom: 1rem;
+    }
+    .teachback-input:focus {
+      outline: none;
+      border-color: var(--rw-orange);
+    }
+    .teachback-input::placeholder { color: var(--br-text-muted); }
+    .teachback-actions {
+      display: flex;
+      gap: 0.75rem;
+    }
+    .teachback-btn {
+      padding: 0.75rem 1.5rem;
+      background: var(--rw-orange);
+      border: none;
+      border-radius: 8px;
+      color: var(--br-black);
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .teachback-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 15px rgba(255, 157, 0, 0.3);
+    }
+    .teachback-btn.secondary {
+      background: var(--br-surface-2);
+      border: 1px solid var(--br-border);
+      color: var(--br-white);
+    }
+    .teachback-btn.secondary:hover {
+      border-color: var(--rw-orange);
+      box-shadow: none;
+    }
+
+    /* AI Feedback Panel */
+    .ai-feedback {
+      background: var(--br-surface);
+      border: 1px solid var(--br-border);
+      border-radius: 12px;
+      padding: 1rem;
+      margin-top: 1rem;
+      display: none;
+    }
+    .ai-feedback.visible { display: block; }
+    .ai-feedback-header {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 0.75rem;
+    }
+    .ai-avatar {
+      width: 32px;
+      height: 32px;
+      background: linear-gradient(135deg, #00CCFF, #8855FF);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.875rem;
+    }
+    .ai-name {
+      font-weight: 500;
+      font-size: 0.875rem;
+    }
+    .ai-feedback-content {
+      font-size: 0.9375rem;
+      line-height: 1.6;
+    }
+    .feedback-score {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-top: 1rem;
+      padding-top: 1rem;
+      border-top: 1px solid var(--br-border);
+    }
+    .score-label {
+      font-size: 0.8125rem;
+      color: var(--br-text-muted);
+    }
+    .score-value {
+      font-family: var(--br-font-mono);
+      font-weight: 600;
+      color: var(--rw-green);
+    }
+    .score-coins {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 0.375rem;
+      color: var(--rw-green);
+      font-family: var(--br-font-mono);
+      font-size: 0.875rem;
+    }
+
+    /* Right Panel - Connected Apps */
+    .connected-panel {
+      width: 280px;
+      background: var(--br-surface);
+      border-left: 1px solid var(--br-border);
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+    }
+    .connected-header {
+      padding: 1rem;
+      border-bottom: 1px solid var(--br-border);
+    }
+    .connected-title {
+      font-size: 0.875rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+    }
+    .connected-desc {
+      font-size: 0.75rem;
+      color: var(--br-text-muted);
+    }
+    .connected-apps {
+      padding: 0.75rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    .connected-app {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.75rem;
+      background: var(--br-surface-2);
+      border: 1px solid var(--br-border);
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .connected-app:hover {
+      border-color: var(--rw-orange);
+    }
+    .connected-app.active {
+      border-color: var(--rw-green);
+      background: rgba(0, 255, 136, 0.05);
+    }
+    .connected-app-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.875rem;
+    }
+    .connected-app-info { flex: 1; }
+    .connected-app-name {
+      font-size: 0.8125rem;
+      font-weight: 500;
+    }
+    .connected-app-status {
+      font-size: 0.6875rem;
+      color: var(--br-text-muted);
+    }
+    .connected-app-status.synced { color: var(--rw-green); }
+
+    /* Project DNA Memory */
+    .memory-section {
+      padding: 1rem;
+      border-top: 1px solid var(--br-border);
+    }
+    .memory-title {
+      font-size: 0.6875rem;
+      font-weight: 600;
+      color: var(--br-text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.75rem;
+    }
+    .memory-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.75rem;
+      padding: 0.75rem;
+      background: var(--br-surface-2);
+      border-radius: 8px;
+      margin-bottom: 0.5rem;
+    }
+    .memory-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      margin-top: 0.25rem;
+      flex-shrink: 0;
+    }
+    .memory-dot.struggle { background: var(--rw-orange); }
+    .memory-dot.mastered { background: var(--rw-green); }
+    .memory-text {
+      font-size: 0.75rem;
+      color: var(--br-text-muted);
+    }
+
+    @media (max-width: 1200px) {
+      .connected-panel { display: none; }
+    }
+    @media (max-width: 768px) {
+      .sidebar { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo">RoadWork</div>
+    <div class="streak-badge">
+      <span class="streak-fire">🔥</span>
+      <span class="streak-count" id="streak-count">7 day streak</span>
+    </div>
+    <div class="header-spacer"></div>
+    <div class="roadcoin-badge">
+      <span class="roadcoin-icon">R</span>
+      <span class="roadcoin-amount" id="roadcoin-amount">2,450</span>
+    </div>
+    <button class="profile-btn">A</button>
+  </header>
+
+  <div class="main-container">
+    <aside class="sidebar">
+      <div class="sidebar-section">
+        <div class="sidebar-title">Your Courses</div>
+        <div class="course-list">
+          <div class="course-item active" onclick="selectCourse('js')">
+            <div class="course-icon" style="background: linear-gradient(135deg, #FFDD00, #FF9D00);">JS</div>
+            <div class="course-info">
+              <div class="course-name">JavaScript Fundamentals</div>
+              <div class="course-progress">
+                <div class="progress-bar"><div class="progress-fill" style="width: 65%"></div></div>
+                <span class="progress-text">65%</span>
+              </div>
+            </div>
+          </div>
+          <div class="course-item" onclick="selectCourse('react')">
+            <div class="course-icon" style="background: linear-gradient(135deg, #00CCFF, #0066FF);">Re</div>
+            <div class="course-info">
+              <div class="course-name">React Development</div>
+              <div class="course-progress">
+                <div class="progress-bar"><div class="progress-fill" style="width: 30%"></div></div>
+                <span class="progress-text">30%</span>
+              </div>
+            </div>
+          </div>
+          <div class="course-item" onclick="selectCourse('music')">
+            <div class="course-icon" style="background: linear-gradient(135deg, #FF55AA, #7700FF);">🎵</div>
+            <div class="course-info">
+              <div class="course-name">Music Theory</div>
+              <div class="course-progress">
+                <div class="progress-bar"><div class="progress-fill" style="width: 15%"></div></div>
+                <span class="progress-text">15%</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="skills-panel">
+        <div class="sidebar-title">Skill Tree</div>
+        <div class="skill-tree" id="skill-tree">
+          <div class="skill-node completed">
+            <span class="skill-icon completed">✓</span>
+            <span class="skill-name">Variables & Types</span>
+            <span class="skill-xp">150 XP</span>
+          </div>
+          <div class="skill-node completed">
+            <span class="skill-icon completed">✓</span>
+            <span class="skill-name">Functions Basics</span>
+            <span class="skill-xp">200 XP</span>
+          </div>
+          <div class="skill-node current">
+            <span class="skill-icon unlocked">!</span>
+            <span class="skill-name">Closures</span>
+            <span class="skill-xp">300 XP</span>
+          </div>
+          <div class="skill-node">
+            <span class="skill-icon locked">🔒</span>
+            <span class="skill-name">Async/Await</span>
+            <span class="skill-xp">350 XP</span>
+          </div>
+          <div class="skill-node">
+            <span class="skill-icon locked">🔒</span>
+            <span class="skill-name">Promises Deep Dive</span>
+            <span class="skill-xp">400 XP</span>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <main class="lesson-area">
+      <div class="lesson-header">
+        <div>
+          <div class="lesson-title">Understanding Closures</div>
+          <div class="lesson-meta">
+            <span>Lesson 3 of 8</span>
+            <span>~15 min</span>
+            <span>+300 XP</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="lesson-content">
+        <div class="lesson-card">
+          <h3>What is a Closure?</h3>
+          <p>A closure is a function that has access to its outer function's variables even after the outer function has returned. This happens because the inner function "closes over" those variables, keeping them alive in memory.</p>
+          <p>Think of it like a backpack: when a function is created inside another function, it carries a backpack containing all the variables from its parent scope. Even when it leaves home (the outer function returns), it still has access to everything in that backpack.</p>
+        </div>
+
+        <div class="lesson-card">
+          <h3>Why Does This Matter?</h3>
+          <ul>
+            <li><strong>Data Privacy:</strong> Create private variables that can't be accessed from outside</li>
+            <li><strong>State Preservation:</strong> Remember values between function calls</li>
+            <li><strong>Callbacks:</strong> Essential for event handlers and async operations</li>
+          </ul>
+        </div>
+
+        <div class="interactive-block">
+          <div class="interactive-header">
+            <span>💻</span>
+            <span>Live Example</span>
+          </div>
+          <div class="code-block">
+<span class="code-keyword">function</span> <span class="code-function">createCounter</span>() {
+  <span class="code-keyword">let</span> count = <span class="code-string">0</span>; <span class="code-comment">// Private variable</span>
+
+  <span class="code-keyword">return</span> <span class="code-keyword">function</span>() {
+    count++;
+    <span class="code-keyword">return</span> count;
+  };
+}
+
+<span class="code-keyword">const</span> counter = <span class="code-function">createCounter</span>();
+console.<span class="code-function">log</span>(counter()); <span class="code-comment">// 1</span>
+console.<span class="code-function">log</span>(counter()); <span class="code-comment">// 2</span>
+console.<span class="code-function">log</span>(counter()); <span class="code-comment">// 3</span>
+          </div>
+        </div>
+
+        <div class="lesson-card">
+          <h3>The Key Insight</h3>
+          <p>The inner function remembers <code>count</code> even though <code>createCounter()</code> has already finished running. This is the closure in action—the inner function "closed over" the <code>count</code> variable.</p>
+        </div>
+
+        <div class="teachback-section">
+          <div class="teachback-header">
+            <div class="teachback-icon">📖</div>
+            <div>
+              <div class="teachback-title">Teach It Back</div>
+              <div class="teachback-subtitle">Explain closures to Lucidia in your own words to earn RoadCoin</div>
+            </div>
+          </div>
+
+          <div class="teachback-prompt">
+            <p>In your own words, explain: Why does the <code>counter</code> function remember the value of <code>count</code> between calls?</p>
+          </div>
+
+          <textarea class="teachback-input" id="teachback-input" placeholder="Write your explanation here... The best way to learn is to teach!"></textarea>
+
+          <div class="teachback-actions">
+            <button class="teachback-btn" onclick="submitTeachback()">Submit Explanation</button>
+            <button class="teachback-btn secondary" onclick="askLucidia()">Ask Lucidia for Help</button>
+          </div>
+
+          <div class="ai-feedback" id="ai-feedback">
+            <div class="ai-feedback-header">
+              <div class="ai-avatar">L</div>
+              <span class="ai-name">Lucidia</span>
+            </div>
+            <div class="ai-feedback-content" id="feedback-content">
+              Great explanation! You correctly identified that the inner function maintains a reference to variables in its outer scope.
+              <br><br>
+              <strong>What you got right:</strong> The "backpack" metaphor is spot-on—the function carries its scope with it.
+              <br><br>
+              <strong>To strengthen your understanding:</strong> Can you think of a real-world example where you'd use this pattern? Hint: Think about click handlers that need to remember which button was clicked.
+            </div>
+            <div class="feedback-score">
+              <span class="score-label">Comprehension Score:</span>
+              <span class="score-value" id="score-value">87%</span>
+              <span class="score-coins">
+                <span class="roadcoin-icon">R</span>
+                +26 RoadCoin
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <aside class="connected-panel">
+      <div class="connected-header">
+        <div class="connected-title">Connected Windows</div>
+        <div class="connected-desc">Learning syncs with your other apps</div>
+      </div>
+
+      <div class="connected-apps">
+        <div class="connected-app active">
+          <div class="connected-app-icon" style="background: linear-gradient(135deg, #00CCFF, #8855FF);">L</div>
+          <div class="connected-app-info">
+            <div class="connected-app-name">Lucidia AI</div>
+            <div class="connected-app-status synced">Synced - Ready to help</div>
+          </div>
+        </div>
+        <div class="connected-app">
+          <div class="connected-app-icon" style="background: linear-gradient(135deg, #8855FF, #FF55AA);">S</div>
+          <div class="connected-app-info">
+            <div class="connected-app-name">Studio</div>
+            <div class="connected-app-status">Open for live examples</div>
+          </div>
+        </div>
+        <div class="connected-app">
+          <div class="connected-app-icon" style="background: linear-gradient(135deg, #FF9D00, #FF0066);">M</div>
+          <div class="connected-app-info">
+            <div class="connected-app-name">Music Studio</div>
+            <div class="connected-app-status">For music theory lessons</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="memory-section">
+        <div class="memory-title">Project DNA Memory</div>
+        <div class="memory-item">
+          <div class="memory-dot struggle"></div>
+          <div class="memory-text">
+            <strong>3 days ago:</strong> Struggled with callback syntax. Reinforcing before async lessons.
+          </div>
+        </div>
+        <div class="memory-item">
+          <div class="memory-dot mastered"></div>
+          <div class="memory-text">
+            <strong>Last week:</strong> Mastered array methods after teach-back session.
+          </div>
+        </div>
+        <div class="memory-item">
+          <div class="memory-dot struggle"></div>
+          <div class="memory-text">
+            <strong>2 weeks ago:</strong> "this" keyword confusion. Will revisit in closures context.
+          </div>
+        </div>
+      </div>
+    </aside>
+  </div>
+
+  <script>
+    // Teachback functionality
+    function submitTeachback() {
+      const input = document.getElementById('teachback-input');
+      const text = input.value.trim();
+
+      if (text.length < 20) {
+        alert('Please write a more detailed explanation (at least a few sentences)');
+        return;
+      }
+
+      // Show loading state
+      const btn = event.target;
+      btn.textContent = 'Analyzing...';
+      btn.disabled = true;
+
+      // Simulate AI analysis
+      setTimeout(() => {
+        const feedback = document.getElementById('ai-feedback');
+        feedback.classList.add('visible');
+
+        // Calculate score based on key concepts
+        let score = 60;
+        if (text.toLowerCase().includes('scope')) score += 10;
+        if (text.toLowerCase().includes('variable') || text.toLowerCase().includes('remember')) score += 10;
+        if (text.toLowerCase().includes('outer') || text.toLowerCase().includes('parent')) score += 10;
+        if (text.toLowerCase().includes('memory') || text.toLowerCase().includes('alive')) score += 10;
+        score = Math.min(score, 95);
+
+        document.getElementById('score-value').textContent = score + '%';
+
+        // Update RoadCoin
+        const coins = Math.floor(score * 0.3);
+        const currentCoins = parseInt(document.getElementById('roadcoin-amount').textContent.replace(',', ''));
+        document.getElementById('roadcoin-amount').textContent = (currentCoins + coins).toLocaleString();
+
+        btn.textContent = 'Submitted!';
+        btn.style.background = 'var(--rw-green)';
+
+        // Scroll to feedback
+        feedback.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 2000);
+    }
+
+    function askLucidia() {
+      // In the real implementation, this would open the Lucidia window
+      // and send context about the current lesson
+      alert('Opening Lucidia AI window with lesson context...\n\nIn the full Desktop OS, this opens Lucidia alongside your lesson so you can ask questions while learning.');
+    }
+
+    function selectCourse(courseId) {
+      document.querySelectorAll('.course-item').forEach(el => el.classList.remove('active'));
+      event.currentTarget.classList.add('active');
+    }
+  </script>
+</body>
+</html>

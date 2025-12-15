@@ -3,274 +3,784 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Lucidia | Ambient Intelligence</title>
-  <meta name="description" content="Ambient AI that understands context, anticipates needs, and enhances human capability.">
+  <title>Lucidia | Ambient Intelligence Experience</title>
+  <meta name="description" content="Experience ambient AI. Lucidia understands context, anticipates needs, and flows with your work.">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='40' fill='%2300CCFF'/></svg>">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Inter+Tight:wght@600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Inter+Tight:wght@600;700;800&display=swap" rel="stylesheet">
   <style>
     :root {
       --lucidia-cyan: #00CCFF;
       --lucidia-teal: #00AA99;
       --lucidia-violet: #8855FF;
-      --br-black: #000000;
+      --lucidia-glow: rgba(0, 204, 255, 0.3);
+      --br-black: #050508;
+      --br-surface: #0a0a0f;
+      --br-surface-2: #101018;
+      --br-border: #1a1a25;
       --br-white: #FFFFFF;
+      --br-text-muted: #666680;
       --br-gradient-lucidia: linear-gradient(135deg, #00CCFF 0%, #00AA99 50%, #8855FF 100%);
       --br-font-display: 'Inter Tight', sans-serif;
       --br-font-body: 'Inter', sans-serif;
     }
     * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { height: 100%; overflow: hidden; }
     body {
       background: var(--br-black);
       color: var(--br-white);
       font-family: var(--br-font-body);
-      min-height: 100vh;
+      font-weight: 300;
     }
-    .ambient-bg {
+
+    /* Canvas Background */
+    #ambient-canvas {
       position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background:
-        radial-gradient(ellipse at 50% 0%, rgba(0, 204, 255, 0.2) 0%, transparent 50%),
-        radial-gradient(ellipse at 0% 100%, rgba(0, 170, 153, 0.15) 0%, transparent 40%),
-        radial-gradient(ellipse at 100% 100%, rgba(136, 85, 255, 0.15) 0%, transparent 40%);
-      z-index: -1;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
     }
-    header {
+
+    /* Orb */
+    .orb-container {
       position: fixed;
-      top: 0; left: 0; right: 0;
-      padding: 1.5rem 2rem;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      backdrop-filter: blur(20px);
-      background: rgba(0, 0, 0, 0.5);
-      border-bottom: 1px solid rgba(0, 204, 255, 0.2);
-      z-index: 100;
-    }
-    .logo {
-      font-family: var(--br-font-display);
-      font-size: 1.75rem;
-      font-weight: 800;
-      background: var(--br-gradient-lucidia);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      text-decoration: none;
-    }
-    nav a {
-      color: rgba(255, 255, 255, 0.7);
-      text-decoration: none;
-      margin-left: 2rem;
-      transition: color 0.2s;
-    }
-    nav a:hover { color: var(--lucidia-cyan); }
-    .hero {
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      text-align: center;
-      padding: 8rem 2rem 4rem;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 1;
+      pointer-events: none;
     }
     .orb {
       width: 200px;
       height: 200px;
-      margin-bottom: 3rem;
       position: relative;
+      transition: transform 0.5s ease;
     }
-    .orb-inner {
+    .orb-core {
       position: absolute;
       top: 50%;
       left: 50%;
-      width: 100px;
-      height: 100px;
+      width: 80px;
+      height: 80px;
       background: var(--br-gradient-lucidia);
       border-radius: 50%;
       transform: translate(-50%, -50%);
       box-shadow:
-        0 0 60px rgba(0, 204, 255, 0.5),
-        0 0 120px rgba(0, 204, 255, 0.3);
-      animation: pulse 4s ease-in-out infinite;
+        0 0 60px var(--lucidia-glow),
+        0 0 120px var(--lucidia-glow),
+        inset 0 0 30px rgba(255, 255, 255, 0.2);
+      animation: breathe 4s ease-in-out infinite;
     }
     .orb-ring {
       position: absolute;
       top: 50%;
       left: 50%;
-      width: 180px;
-      height: 180px;
-      border: 1px solid rgba(0, 204, 255, 0.3);
+      border: 1px solid;
       border-radius: 50%;
       transform: translate(-50%, -50%);
-      animation: expand 4s ease-in-out infinite;
+      animation: ripple 4s ease-out infinite;
     }
-    .orb-ring:nth-child(2) { animation-delay: 1s; }
-    .orb-ring:nth-child(3) { animation-delay: 2s; }
-    @keyframes pulse {
+    .orb-ring:nth-child(2) { width: 120px; height: 120px; border-color: rgba(0, 204, 255, 0.4); }
+    .orb-ring:nth-child(3) { width: 160px; height: 160px; border-color: rgba(0, 204, 255, 0.2); animation-delay: 1s; }
+    .orb-ring:nth-child(4) { width: 200px; height: 200px; border-color: rgba(0, 204, 255, 0.1); animation-delay: 2s; }
+    @keyframes breathe {
       0%, 100% { transform: translate(-50%, -50%) scale(1); }
       50% { transform: translate(-50%, -50%) scale(1.1); }
     }
-    @keyframes expand {
-      0% { transform: translate(-50%, -50%) scale(0.5); opacity: 1; }
+    @keyframes ripple {
+      0% { transform: translate(-50%, -50%) scale(0.8); opacity: 1; }
       100% { transform: translate(-50%, -50%) scale(1.5); opacity: 0; }
     }
-    .hero h1 {
+
+    /* States */
+    .orb.listening .orb-core {
+      animation: listening 1s ease-in-out infinite;
+      box-shadow:
+        0 0 80px var(--lucidia-glow),
+        0 0 160px var(--lucidia-glow),
+        inset 0 0 40px rgba(255, 255, 255, 0.3);
+    }
+    @keyframes listening {
+      0%, 100% { transform: translate(-50%, -50%) scale(1); }
+      50% { transform: translate(-50%, -50%) scale(1.15); }
+    }
+    .orb.thinking .orb-core {
+      animation: thinking 0.5s ease-in-out infinite;
+    }
+    @keyframes thinking {
+      0%, 100% { transform: translate(-50%, -50%) scale(1) rotate(0deg); }
+      25% { transform: translate(-50%, -50%) scale(1.05) rotate(90deg); }
+      50% { transform: translate(-50%, -50%) scale(1) rotate(180deg); }
+      75% { transform: translate(-50%, -50%) scale(1.05) rotate(270deg); }
+    }
+
+    /* UI Overlay */
+    .ui-layer {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 10;
+      display: flex;
+      flex-direction: column;
+      pointer-events: none;
+    }
+    .ui-layer > * { pointer-events: auto; }
+
+    /* Header */
+    header {
+      padding: 1.5rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .logo {
       font-family: var(--br-font-display);
-      font-size: clamp(3rem, 10vw, 6rem);
-      font-weight: 800;
-      margin-bottom: 1.5rem;
+      font-size: 1.5rem;
+      font-weight: 700;
       background: var(--br-gradient-lucidia);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
-    }
-    .hero p {
-      font-size: 1.25rem;
-      color: rgba(255, 255, 255, 0.7);
-      max-width: 600px;
-      margin-bottom: 2.5rem;
-      line-height: 1.6;
-    }
-    .hero .subtitle {
-      font-size: 1rem;
-      color: rgba(0, 204, 255, 0.8);
-      font-family: var(--br-font-display);
-      font-weight: 600;
-      margin-bottom: 3rem;
-    }
-    .btn-primary {
-      background: var(--br-gradient-lucidia);
-      color: var(--br-black);
-      font-family: var(--br-font-display);
-      font-weight: 700;
-      padding: 1rem 2.5rem;
-      border-radius: 50px;
-      border: none;
       text-decoration: none;
+    }
+    .header-status {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.875rem;
+      color: var(--br-text-muted);
+    }
+    .status-indicator {
+      width: 8px;
+      height: 8px;
+      background: var(--lucidia-cyan);
+      border-radius: 50%;
+      box-shadow: 0 0 10px var(--lucidia-cyan);
+      animation: pulse 2s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    /* Center Content */
+    .center-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      padding: 2rem;
+      pointer-events: none;
+    }
+    .lucidia-message {
+      max-width: 600px;
+      margin-top: 140px;
+      opacity: 0;
+      transform: translateY(10px);
+      transition: all 0.5s ease;
+    }
+    .lucidia-message.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .lucidia-message p {
+      font-size: 1.5rem;
+      font-weight: 300;
+      line-height: 1.6;
+      color: rgba(255, 255, 255, 0.9);
+    }
+    .lucidia-message .context {
+      font-size: 0.875rem;
+      color: var(--br-text-muted);
+      margin-top: 1rem;
+    }
+
+    /* Input Area */
+    .input-container {
+      padding: 2rem;
+      display: flex;
+      justify-content: center;
+    }
+    .input-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      background: var(--br-surface);
+      border: 1px solid var(--br-border);
+      border-radius: 100px;
+      padding: 0.5rem 0.5rem 0.5rem 1.5rem;
+      width: 100%;
+      max-width: 600px;
+      transition: all 0.3s ease;
+    }
+    .input-wrapper:focus-within {
+      border-color: var(--lucidia-cyan);
+      box-shadow: 0 0 30px rgba(0, 204, 255, 0.1);
+    }
+    .input-field {
+      flex: 1;
+      background: none;
+      border: none;
+      color: var(--br-white);
+      font-family: var(--br-font-body);
+      font-size: 1rem;
+      font-weight: 300;
+      outline: none;
+    }
+    .input-field::placeholder {
+      color: var(--br-text-muted);
+    }
+    .input-btn {
+      width: 44px;
+      height: 44px;
+      background: var(--br-gradient-lucidia);
+      border: none;
+      border-radius: 50%;
+      color: var(--br-black);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       transition: transform 0.2s, box-shadow 0.2s;
     }
-    .btn-primary:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 0 40px rgba(0, 204, 255, 0.4);
+    .input-btn:hover {
+      transform: scale(1.05);
+      box-shadow: 0 0 20px var(--lucidia-glow);
     }
-    .capabilities {
-      padding: 6rem 2rem;
-      max-width: 1000px;
-      margin: 0 auto;
+    .voice-btn {
+      width: 44px;
+      height: 44px;
+      background: var(--br-surface-2);
+      border: 1px solid var(--br-border);
+      border-radius: 50%;
+      color: var(--br-text-muted);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
     }
-    .capability-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 2rem;
-    }
-    .capability {
-      background: rgba(0, 204, 255, 0.05);
-      border: 1px solid rgba(0, 204, 255, 0.2);
-      border-radius: 24px;
-      padding: 2rem;
-      transition: all 0.3s;
-    }
-    .capability:hover {
+    .voice-btn:hover {
       border-color: var(--lucidia-cyan);
-      transform: translateY(-4px);
-      box-shadow: 0 20px 40px rgba(0, 204, 255, 0.15);
-    }
-    .capability h3 {
-      font-family: var(--br-font-display);
-      font-size: 1.25rem;
-      font-weight: 700;
-      margin-bottom: 0.75rem;
       color: var(--lucidia-cyan);
     }
-    .capability p { color: rgba(255, 255, 255, 0.6); line-height: 1.6; }
-    .philosophy {
-      padding: 6rem 2rem;
-      text-align: center;
-      background: linear-gradient(180deg, transparent 0%, rgba(0, 204, 255, 0.05) 100%);
+    .voice-btn.active {
+      background: var(--lucidia-cyan);
+      border-color: var(--lucidia-cyan);
+      color: var(--br-black);
+      animation: pulse 1s ease-in-out infinite;
     }
-    .philosophy blockquote {
-      font-family: var(--br-font-display);
-      font-size: clamp(1.5rem, 4vw, 2.5rem);
-      font-weight: 600;
-      font-style: italic;
-      color: rgba(255, 255, 255, 0.9);
-      max-width: 800px;
-      margin: 0 auto;
-      line-height: 1.4;
+
+    /* Context Cards */
+    .context-panel {
+      position: fixed;
+      bottom: 120px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 0.75rem;
+      z-index: 20;
     }
-    .philosophy cite {
-      display: block;
-      margin-top: 1.5rem;
+    .context-card {
+      background: var(--br-surface);
+      border: 1px solid var(--br-border);
+      border-radius: 12px;
+      padding: 0.75rem 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.8125rem;
+      color: var(--br-text-muted);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .context-card:hover {
+      border-color: var(--lucidia-cyan);
+      color: var(--br-white);
+    }
+    .context-card.active {
+      border-color: var(--lucidia-cyan);
+      background: rgba(0, 204, 255, 0.05);
+      color: var(--lucidia-cyan);
+    }
+    .context-icon {
       font-size: 1rem;
-      font-style: normal;
-      color: var(--lucidia-cyan);
     }
-    footer {
-      border-top: 1px solid rgba(0, 204, 255, 0.2);
-      padding: 3rem 2rem;
-      text-align: center;
-      color: rgba(255, 255, 255, 0.5);
+
+    /* Side Panels */
+    .side-panel {
+      position: fixed;
+      top: 80px;
+      bottom: 150px;
+      width: 280px;
+      background: var(--br-surface);
+      border: 1px solid var(--br-border);
+      border-radius: 16px;
+      padding: 1rem;
+      opacity: 0;
+      transform: translateX(-20px);
+      transition: all 0.3s ease;
+      pointer-events: auto;
+      overflow-y: auto;
     }
-    footer a { color: var(--lucidia-cyan); text-decoration: none; }
+    .side-panel.left { left: 2rem; }
+    .side-panel.right { right: 2rem; transform: translateX(20px); }
+    .side-panel.visible {
+      opacity: 1;
+      transform: translateX(0);
+    }
+    .panel-title {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--br-text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 1rem;
+    }
+    .insight-item {
+      background: var(--br-surface-2);
+      border-radius: 10px;
+      padding: 0.875rem;
+      margin-bottom: 0.75rem;
+    }
+    .insight-header {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.8125rem;
+      font-weight: 500;
+      margin-bottom: 0.5rem;
+    }
+    .insight-content {
+      font-size: 0.75rem;
+      color: var(--br-text-muted);
+      line-height: 1.5;
+    }
+    .activity-item {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.625rem 0;
+      border-bottom: 1px solid var(--br-border);
+    }
+    .activity-item:last-child { border-bottom: none; }
+    .activity-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--lucidia-cyan);
+    }
+    .activity-text {
+      font-size: 0.8125rem;
+      flex: 1;
+    }
+    .activity-time {
+      font-size: 0.6875rem;
+      color: var(--br-text-muted);
+    }
+
+    /* Ambient Suggestions */
+    .suggestions {
+      position: fixed;
+      bottom: 180px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 0.5rem;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    .suggestions.visible { opacity: 1; }
+    .suggestion {
+      background: var(--br-surface);
+      border: 1px solid var(--br-border);
+      border-radius: 20px;
+      padding: 0.5rem 1rem;
+      font-size: 0.8125rem;
+      color: var(--br-text-muted);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .suggestion:hover {
+      border-color: var(--lucidia-cyan);
+      color: var(--br-white);
+    }
+
     @media (max-width: 768px) {
-      .hero h1 { font-size: 3rem; }
-      nav { display: none; }
+      .side-panel { display: none; }
+      .context-panel { flex-wrap: wrap; padding: 0 1rem; }
     }
   </style>
 </head>
 <body>
-  <div class="ambient-bg"></div>
-  <header>
-    <a href="/" class="logo">Lucidia</a>
-    <nav>
-      <a href="https://lucidia.studio">Studio</a>
-      <a href="https://blackroad.io">BlackRoad</a>
-      <a href="https://blackroadai.com">AI</a>
-    </nav>
-  </header>
+  <canvas id="ambient-canvas"></canvas>
 
-  <main>
-    <section class="hero">
-      <div class="orb">
-        <div class="orb-ring"></div>
-        <div class="orb-ring"></div>
-        <div class="orb-ring"></div>
-        <div class="orb-inner"></div>
+  <div class="orb-container">
+    <div class="orb" id="orb">
+      <div class="orb-ring"></div>
+      <div class="orb-ring"></div>
+      <div class="orb-ring"></div>
+      <div class="orb-core"></div>
+    </div>
+  </div>
+
+  <div class="ui-layer">
+    <header>
+      <a href="/" class="logo">Lucidia</a>
+      <div class="header-status">
+        <span class="status-indicator"></span>
+        <span id="status-text">Ambient Mode</span>
       </div>
-      <h1>Lucidia</h1>
-      <p class="subtitle">Ambient Intelligence</p>
-      <p>AI that flows with you. Understands context, anticipates needs, amplifies human capability without demanding attention.</p>
-      <a href="https://lucidia.studio" class="btn-primary">Experience Lucidia →</a>
-    </section>
+    </header>
 
-    <section class="capabilities">
-      <div class="capability-grid">
-        <div class="capability">
-          <h3>🌊 Contextual Flow</h3>
-          <p>Lucidia observes patterns in your work, learning when to assist and when to stay silent. Intelligence that respects your focus.</p>
-        </div>
-        <div class="capability">
-          <h3>🎯 Intent Recognition</h3>
-          <p>Understands what you're trying to accomplish, not just what you say. Bridges the gap between thought and action.</p>
-        </div>
-        <div class="capability">
-          <h3>🔮 Predictive Assistance</h3>
-          <p>Anticipates your next move. Prepares resources, surfaces relevant information, removes friction before you notice it.</p>
-        </div>
-        <div class="capability">
-          <h3>🌐 Seamless Integration</h3>
-          <p>Works across all your tools and platforms. One intelligence, infinite touchpoints, zero context switching.</p>
-        </div>
+    <div class="center-content">
+      <div class="lucidia-message visible" id="message">
+        <p id="message-text">Hello. I'm here when you need me.</p>
+        <div class="context" id="message-context">Observing context...</div>
       </div>
-    </section>
+    </div>
 
-    <section class="philosophy">
-      <blockquote>
-        "The best AI is invisible. It doesn't interrupt—it enables."
-      </blockquote>
-      <cite>— The Lucidia Principle</cite>
-    </section>
-  </main>
+    <div class="suggestions" id="suggestions">
+      <div class="suggestion" onclick="useSuggestion('What can you help me with?')">What can you help me with?</div>
+      <div class="suggestion" onclick="useSuggestion('Show me insights')">Show insights</div>
+      <div class="suggestion" onclick="useSuggestion('Open workspace')">Open workspace</div>
+    </div>
 
-  <footer>
-    <p>© 2025 Lucidia · A <a href="https://blackroad.io">BlackRoad OS</a> Experience</p>
-  </footer>
+    <div class="context-panel">
+      <div class="context-card active" onclick="setContext('focus')">
+        <span class="context-icon">🎯</span>
+        <span>Focus</span>
+      </div>
+      <div class="context-card" onclick="setContext('creative')">
+        <span class="context-icon">✨</span>
+        <span>Creative</span>
+      </div>
+      <div class="context-card" onclick="setContext('research')">
+        <span class="context-icon">🔍</span>
+        <span>Research</span>
+      </div>
+      <div class="context-card" onclick="setContext('ambient')">
+        <span class="context-icon">🌊</span>
+        <span>Ambient</span>
+      </div>
+    </div>
+
+    <div class="input-container">
+      <div class="input-wrapper">
+        <input
+          type="text"
+          class="input-field"
+          id="input-field"
+          placeholder="Speak or type..."
+          onkeydown="handleKeyDown(event)"
+          onfocus="onInputFocus()"
+          onblur="onInputBlur()"
+        >
+        <button class="voice-btn" id="voice-btn" onclick="toggleVoice()">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+            <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+            <line x1="12" y1="19" x2="12" y2="23"/>
+            <line x1="8" y1="23" x2="16" y2="23"/>
+          </svg>
+        </button>
+        <button class="input-btn" onclick="sendMessage()">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M22 2L11 13M22 2L15 22L11 13M22 2L2 9L11 13"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="side-panel left" id="insights-panel">
+    <div class="panel-title">Insights</div>
+    <div class="insight-item">
+      <div class="insight-header">
+        <span>📊</span>
+        <span>Pattern Detected</span>
+      </div>
+      <div class="insight-content">You tend to be most productive between 9-11am. Consider scheduling deep work during this window.</div>
+    </div>
+    <div class="insight-item">
+      <div class="insight-header">
+        <span>💡</span>
+        <span>Suggestion</span>
+      </div>
+      <div class="insight-content">Based on your recent queries, you might find the BlackRoad documentation on agent orchestration useful.</div>
+    </div>
+    <div class="insight-item">
+      <div class="insight-header">
+        <span>🔗</span>
+        <span>Connection</span>
+      </div>
+      <div class="insight-content">The task you started yesterday is 73% similar to a completed project. Want to reference it?</div>
+    </div>
+  </div>
+
+  <div class="side-panel right" id="activity-panel">
+    <div class="panel-title">Recent Activity</div>
+    <div class="activity-item">
+      <div class="activity-dot"></div>
+      <div class="activity-text">Deployed to production</div>
+      <div class="activity-time">2m ago</div>
+    </div>
+    <div class="activity-item">
+      <div class="activity-dot" style="background: #00AA99;"></div>
+      <div class="activity-text">Code review completed</div>
+      <div class="activity-time">15m ago</div>
+    </div>
+    <div class="activity-item">
+      <div class="activity-dot" style="background: #8855FF;"></div>
+      <div class="activity-text">Agent workflow saved</div>
+      <div class="activity-time">1h ago</div>
+    </div>
+    <div class="activity-item">
+      <div class="activity-dot" style="background: #FF9D00;"></div>
+      <div class="activity-text">New insight available</div>
+      <div class="activity-time">2h ago</div>
+    </div>
+  </div>
+
+  <script>
+    // Ambient Canvas Animation
+    const canvas = document.getElementById('ambient-canvas');
+    const ctx = canvas.getContext('2d');
+
+    function resize() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    resize();
+    window.addEventListener('resize', resize);
+
+    // Particles
+    const particles = [];
+    const particleCount = 50;
+
+    class Particle {
+      constructor() {
+        this.reset();
+      }
+      reset() {
+        this.x = Math.random() * canvas.width;
+        this.y = Math.random() * canvas.height;
+        this.vx = (Math.random() - 0.5) * 0.3;
+        this.vy = (Math.random() - 0.5) * 0.3;
+        this.size = Math.random() * 2 + 1;
+        this.alpha = Math.random() * 0.3 + 0.1;
+        this.color = ['#00CCFF', '#00AA99', '#8855FF'][Math.floor(Math.random() * 3)];
+      }
+      update() {
+        this.x += this.vx;
+        this.y += this.vy;
+        if (this.x < 0 || this.x > canvas.width) this.vx *= -1;
+        if (this.y < 0 || this.y > canvas.height) this.vy *= -1;
+      }
+      draw() {
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+        ctx.fillStyle = this.color;
+        ctx.globalAlpha = this.alpha;
+        ctx.fill();
+        ctx.globalAlpha = 1;
+      }
+    }
+
+    for (let i = 0; i < particleCount; i++) {
+      particles.push(new Particle());
+    }
+
+    // Draw connections
+    function drawConnections() {
+      for (let i = 0; i < particles.length; i++) {
+        for (let j = i + 1; j < particles.length; j++) {
+          const dx = particles[i].x - particles[j].x;
+          const dy = particles[i].y - particles[j].y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          if (dist < 150) {
+            ctx.beginPath();
+            ctx.moveTo(particles[i].x, particles[i].y);
+            ctx.lineTo(particles[j].x, particles[j].y);
+            ctx.strokeStyle = `rgba(0, 204, 255, ${0.1 * (1 - dist / 150)})`;
+            ctx.stroke();
+          }
+        }
+      }
+    }
+
+    function animate() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      particles.forEach(p => {
+        p.update();
+        p.draw();
+      });
+      drawConnections();
+      requestAnimationFrame(animate);
+    }
+    animate();
+
+    // Orb interaction
+    const orb = document.getElementById('orb');
+    const messageEl = document.getElementById('message');
+    const messageText = document.getElementById('message-text');
+    const messageContext = document.getElementById('message-context');
+    const statusText = document.getElementById('status-text');
+    const suggestions = document.getElementById('suggestions');
+    const insightsPanel = document.getElementById('insights-panel');
+    const activityPanel = document.getElementById('activity-panel');
+
+    // Follow mouse gently
+    let targetX = 0, targetY = 0;
+    let currentX = 0, currentY = 0;
+
+    document.addEventListener('mousemove', (e) => {
+      const centerX = window.innerWidth / 2;
+      const centerY = window.innerHeight / 2;
+      targetX = (e.clientX - centerX) * 0.02;
+      targetY = (e.clientY - centerY) * 0.02;
+    });
+
+    function updateOrbPosition() {
+      currentX += (targetX - currentX) * 0.05;
+      currentY += (targetY - currentY) * 0.05;
+      orb.style.transform = `translate(${currentX}px, ${currentY}px)`;
+      requestAnimationFrame(updateOrbPosition);
+    }
+    updateOrbPosition();
+
+    // Messages
+    const ambientMessages = [
+      { text: "I notice you've been focused for a while. Take a breath when you're ready.", context: "Observing your flow state" },
+      { text: "Your recent work shows interesting patterns. Would you like me to share insights?", context: "Pattern recognition active" },
+      { text: "The current context suggests you might need documentation. It's ready when you are.", context: "Anticipating your needs" },
+      { text: "Hello. I'm here when you need me.", context: "Ambient mode" },
+    ];
+
+    let currentMessage = 0;
+    function cycleMessages() {
+      messageEl.classList.remove('visible');
+      setTimeout(() => {
+        const msg = ambientMessages[currentMessage];
+        messageText.textContent = msg.text;
+        messageContext.textContent = msg.context;
+        messageEl.classList.add('visible');
+        currentMessage = (currentMessage + 1) % ambientMessages.length;
+      }, 500);
+    }
+    setInterval(cycleMessages, 8000);
+
+    // Input handling
+    function onInputFocus() {
+      orb.classList.add('listening');
+      statusText.textContent = 'Listening...';
+      suggestions.classList.add('visible');
+      insightsPanel.classList.add('visible');
+      activityPanel.classList.add('visible');
+    }
+
+    function onInputBlur() {
+      setTimeout(() => {
+        orb.classList.remove('listening');
+        statusText.textContent = 'Ambient Mode';
+        suggestions.classList.remove('visible');
+      }, 200);
+    }
+
+    function handleKeyDown(e) {
+      if (e.key === 'Enter') {
+        sendMessage();
+      }
+    }
+
+    function sendMessage() {
+      const input = document.getElementById('input-field');
+      const text = input.value.trim();
+      if (!text) return;
+
+      orb.classList.remove('listening');
+      orb.classList.add('thinking');
+      statusText.textContent = 'Processing...';
+
+      messageEl.classList.remove('visible');
+      setTimeout(() => {
+        messageText.textContent = "I understand. Let me help you with that...";
+        messageContext.textContent = "Processing your request";
+        messageEl.classList.add('visible');
+      }, 500);
+
+      input.value = '';
+
+      // Simulate response
+      setTimeout(() => {
+        orb.classList.remove('thinking');
+        statusText.textContent = 'Ambient Mode';
+        messageEl.classList.remove('visible');
+        setTimeout(() => {
+          const responses = [
+            { text: "I've found what you're looking for. Opening the relevant resources now.", context: "Context-aware response" },
+            { text: "Based on your question, I've prepared a summary. Would you like the details?", context: "Summarizing information" },
+            { text: "I can help with that. I've identified three approaches - which interests you most?", context: "Offering options" },
+          ];
+          const response = responses[Math.floor(Math.random() * responses.length)];
+          messageText.textContent = response.text;
+          messageContext.textContent = response.context;
+          messageEl.classList.add('visible');
+        }, 500);
+      }, 2000);
+    }
+
+    function useSuggestion(text) {
+      document.getElementById('input-field').value = text;
+      sendMessage();
+    }
+
+    // Context switching
+    function setContext(mode) {
+      document.querySelectorAll('.context-card').forEach(c => c.classList.remove('active'));
+      event.currentTarget.classList.add('active');
+
+      const modes = {
+        focus: { text: "Focus mode activated. I'll minimize distractions.", context: "Deep work mode" },
+        creative: { text: "Creative mode. Let's explore ideas freely.", context: "Ideation mode" },
+        research: { text: "Research mode. I'll help you find and synthesize information.", context: "Discovery mode" },
+        ambient: { text: "Ambient mode. I'm here in the background.", context: "Passive assistance" },
+      };
+
+      messageEl.classList.remove('visible');
+      setTimeout(() => {
+        messageText.textContent = modes[mode].text;
+        messageContext.textContent = modes[mode].context;
+        messageEl.classList.add('visible');
+      }, 300);
+    }
+
+    // Voice toggle
+    let voiceActive = false;
+    function toggleVoice() {
+      voiceActive = !voiceActive;
+      const btn = document.getElementById('voice-btn');
+      if (voiceActive) {
+        btn.classList.add('active');
+        orb.classList.add('listening');
+        statusText.textContent = 'Voice active';
+        messageText.textContent = "I'm listening...";
+        messageContext.textContent = "Voice input active";
+      } else {
+        btn.classList.remove('active');
+        orb.classList.remove('listening');
+        statusText.textContent = 'Ambient Mode';
+      }
+    }
+
+    // Show suggestions on load after delay
+    setTimeout(() => {
+      suggestions.classList.add('visible');
+    }, 3000);
+  </script>
 </body>
 </html>
