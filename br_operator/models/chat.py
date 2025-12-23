@@ -15,7 +15,7 @@ from __future__ import annotations
 
 from typing import Any, Dict, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class ChatRequest(BaseModel):
@@ -87,10 +87,8 @@ class ChatResponse(BaseModel):
     trace: ChatTrace = Field(..., description="Request trace metadata (capability layer)")
     identity: Optional[ChatIdentity] = Field(None, description="Agent identity (identity layer)")
 
-    # Use Dict for __sovereignty to avoid Pydantic issues with dunder names
-    # The field contains the SovereigntyStamp data
-    class Config:
-        extra = "allow"  # Allow __sovereignty as extra field
+    # Pydantic v2 configuration using ConfigDict
+    model_config = ConfigDict(extra="allow")  # Allow __sovereignty as extra field
 
 
 class LLMHealthResponse(BaseModel):

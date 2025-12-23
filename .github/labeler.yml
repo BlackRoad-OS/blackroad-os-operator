@@ -1,0 +1,61 @@
+# Auto-labeler configuration for PRs
+
+# Python code changes
+"lang:python":
+  - changed-files:
+    - any-glob-to-any-file: ['**/*.py', 'requirements.txt', 'pyproject.toml']
+
+# TypeScript/JavaScript changes
+"lang:typescript":
+  - changed-files:
+    - any-glob-to-any-file: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx', 'package.json', 'tsconfig.json']
+
+# Test changes
+"tests":
+  - changed-files:
+    - any-glob-to-any-file: ['tests/**/*', '**/*.test.*', '**/*.spec.*']
+
+# Documentation changes
+"documentation":
+  - changed-files:
+    - any-glob-to-any-file: ['**/*.md', 'docs/**/*', '*.md']
+
+# Configuration changes
+"config":
+  - changed-files:
+    - any-glob-to-any-file: ['**/*.yaml', '**/*.yml', '**/*.json', '**/*.toml', '.github/**/*']
+
+# Operator core changes
+"operator:core":
+  - changed-files:
+    - any-glob-to-any-file: ['br_operator/**/*.py']
+
+# Agent catalog changes
+"agent-catalog":
+  - changed-files:
+    - any-glob-to-any-file: ['agent-catalog/**/*', 'br_operator/catalog.py']
+
+# Policy engine changes
+"policy-engine":
+  - changed-files:
+    - any-glob-to-any-file: ['config/policies.*.yaml', 'br_operator/policy_engine.py']
+
+# Deployment changes
+"deployment":
+  - changed-files:
+    - any-glob-to-any-file: ['railway.toml', 'Dockerfile', '.github/workflows/deploy.yml', 'br_operator/deploy_service.py']
+
+# Dependencies
+"dependencies":
+  - changed-files:
+    - any-glob-to-any-file: ['requirements.txt', 'package.json', 'package-lock.json', 'pnpm-lock.yaml']
+
+# Security
+"security":
+  - changed-files:
+    - any-glob-to-any-file: ['br_operator/ps_sha_infinity.py', 'br_operator/secrets.py', '**/secrets*.py']
+
+# Breaking changes (based on file patterns)
+"breaking-change":
+  - changed-files:
+    - any-glob-to-any-file: ['br_operator/models/**/*', 'br_operator/main.py']

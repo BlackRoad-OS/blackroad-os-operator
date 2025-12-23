@@ -15,6 +15,7 @@ Grade | Dimension | Object     | Ontological Role
 import math
 import cmath
 import numpy as np
+import pytest
 from typing import List, Tuple, Dict, Optional
 from dataclasses import dataclass
 
@@ -364,7 +365,8 @@ def discover_invariants(mv: Multivector) -> Dict:
     return results
 
 
-def test_rotor_conservation(angle: float) -> Dict:
+@pytest.mark.parametrize("angle", [0, math.pi/4, math.pi/2, math.pi])
+def test_rotor_conservation(angle: float) -> None:
     """
     Rotors preserve magnitude: |R*v*R†| = |v|
     """
@@ -376,12 +378,8 @@ def test_rotor_conservation(angle: float) -> Dict:
     rotated = transformation_operator(v, (1.0, 0.0, 0.0), angle)
     rotated_norm = rotated.norm()
 
-    return {
-        'original_norm': v_norm,
-        'rotated_norm': rotated_norm,
-        'norm_preserved': abs(v_norm - rotated_norm) < 1e-10,
-        'angle': angle
-    }
+    # Assert norm is preserved
+    assert abs(v_norm - rotated_norm) < 1e-10, f"Norm not preserved at angle {angle}"
 
 
 # =============================================================================

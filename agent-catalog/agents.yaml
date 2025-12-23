@@ -63,6 +63,7 @@ translation_key_standard:
 # 🤖 AGENTS
 # =============================================================================
 
+agents:
 - id: echo-agent
   name: Echo Agent
   description: Simple echo service for testing.
