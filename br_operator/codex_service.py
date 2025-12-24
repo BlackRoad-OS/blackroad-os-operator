@@ -105,14 +105,10 @@ class CodexService:
         """
         pantheon = self.load_pantheon()
         
-        # Search through all lineages
-        for lineage_data in pantheon.get("agents", []):
-            for agent in lineage_data.get("members", []):
-                if agent.get("name", "").lower() == agent_name.lower():
-                    return {
-                        **agent,
-                        "lineage": lineage_data.get("lineage"),
-                    }
+        # Search through agents list
+        for agent in pantheon.get("agents", []):
+            if agent.get("name", "").lower() == agent_name.lower():
+                return agent
         
         return None
 
@@ -126,16 +122,15 @@ class CodexService:
         pantheon = self.load_pantheon()
         agents = []
         
-        for lineage_data in pantheon.get("agents", []):
-            lineage = lineage_data.get("lineage")
-            for agent in lineage_data.get("members", []):
-                agents.append({
-                    "name": agent.get("name"),
-                    "lineage": lineage,
-                    "epithet": agent.get("epithet"),
-                    "domains": agent.get("domains", []),
-                    "color": agent.get("color"),
-                })
+        for agent in pantheon.get("agents", []):
+            agents.append({
+                "name": agent.get("name"),
+                "lineage": agent.get("lineage"),
+                "epithet": agent.get("epithet"),
+                "domains": agent.get("domains", []),
+                "color": agent.get("color"),
+                "tone": agent.get("tone"),
+            })
         
         return agents
 
