@@ -412,30 +412,28 @@ const server = http.createServer(async (req, res) => {
     const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
     try {
       const response = await fetch(`${SANDBOX_URL}/health`, { signal: controller.signal });
-      clearTimeout(timeoutId);
       const body = await response.text();
 
       return json(res, {
         service: 'blackroad-gateway',
         sandbox: {
-          target: SANDBOX_URL,
           status: response.ok ? 'reachable' : 'unreachable',
           httpStatus: response.status,
           message: body.slice(0, 200)
         }
       }, response.ok ? 200 : 502);
     } catch (err) {
-      clearTimeout(timeoutId);
       // Log the detailed error internally
       console.error('Sandbox connectivity error:', err);
       return json(res, {
         service: 'blackroad-gateway',
         sandbox: {
-          target: SANDBOX_URL,
           status: 'unreachable',
           error: 'Failed to reach sandbox service'
         }
       }, 502);
+    } finally {
+      clearTimeout(timeoutId);
     }
   }
 
