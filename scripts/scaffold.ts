@@ -57,7 +57,7 @@ function createSchedulerTemplate(name: string): ScaffoldTemplate {
 
   return {
     filename: join('src', 'schedulers', `${kebabName}.scheduler.ts`),
-    contents: `import { schedule } from 'node-cron';\n\nimport logger from '../utils/logger.js';\n\nexport function start${pascalName}(): void {\n  // Runs every minute by default; adjust to your cadence.\n  const task = schedule('* * * * *', async () => {\n    logger.info('${pascalName} tick');\n    // TODO: add your scheduler logic here (enqueue jobs, dispatch workflows, etc.)\n  });\n\n  logger.info('${pascalName} scheduler started');\n\n  return task;\n}\n`
+    contents: `import { schedule, type ScheduledTask } from 'node-cron';\n\nimport logger from '../utils/logger.js';\n\nexport function start${pascalName}(): ScheduledTask {\n  // Runs every minute by default; adjust to your cadence.\n  const task = schedule('* * * * *', async () => {\n    logger.info('${pascalName} tick');\n    // TODO: add your scheduler logic here (enqueue jobs, dispatch workflows, etc.)\n  });\n\n  logger.info('${pascalName} scheduler started');\n\n  return task;\n}\n`
   };
 }
 
