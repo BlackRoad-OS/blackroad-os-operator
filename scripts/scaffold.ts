@@ -37,7 +37,7 @@ function createJobTemplate(name: string): ScaffoldTemplate {
 
   return {
     filename: join('src', 'jobs', `${queueConst}.job.ts`),
-    contents: `import { Worker } from 'bullmq';\n\nimport { connection, getQueue } from '../queues/index.js';\nimport logger from '../utils/logger.js';\n\nconst QUEUE_NAME = '${queueConst}';\n\nexport function register${pascalName || 'New'}JobProcessor(): Worker {\n  const worker = new Worker(\n    QUEUE_NAME,\n    async (job) => {\n      logger.info({ jobId: job.id, payload: job.data }, '${pascalName || 'New'} job received');\n      // TODO: implement business logic for the ${queueConst} queue\n    },\n    { connection }\n  );\n\n  worker.on('failed', (job, error) => {\n    logger.error({ jobId: job?.id, error }, '${pascalName || 'New'} job failed');\n  });\n\n  return worker;\n}\n\nexport async function enqueue${pascalName || 'New'}Job(payload: Record<string, unknown>): Promise<string> {\n  const queue = getQueue(QUEUE_NAME);\n  const job = await queue.add(QUEUE_NAME, payload, { attempts: 3 });\n\n  return job.id ?? `${queueConst}-job-id`;\n}\n`
+    contents: `import { Worker } from 'bullmq';\n\nimport { connection, getQueue } from '../queues/index.js';\nimport logger from '../utils/logger.js';\n\nconst QUEUE_NAME = '${queueConst}';\n\nexport function register${pascalName || 'New'}JobProcessor(): Worker {\n  const worker = new Worker(\n    QUEUE_NAME,\n    async (job) => {\n      logger.info({ jobId: job.id, payload: job.data }, '${pascalName || 'New'} job received');\n      // TODO: implement business logic for the ${queueConst} queue\n    },\n    { connection }\n  );\n\n  worker.on('failed', (job, error) => {\n    logger.error({ jobId: job?.id, error }, '${pascalName || 'New'} job failed');\n  });\n\n  return worker;\n}\n\nexport async function enqueue${pascalName || 'New'}Job(payload: Record<string, unknown>): Promise<string> {\n  const queue = getQueue(QUEUE_NAME);\n  const job = await queue.add(QUEUE_NAME, payload, { attempts: 3 });\n\n  return job.id!;\n}\n`
   };
 }
 
@@ -57,7 +57,7 @@ function createSchedulerTemplate(name: string): ScaffoldTemplate {
 
   return {
     filename: join('src', 'schedulers', `${kebabName}.scheduler.ts`),
-    contents: `import cron from 'node-cron';\n\nimport logger from '../utils/logger.js';\n\nexport function start${pascalName}(): void {\n  // Runs every minute by default; adjust to your cadence.\n  cron.schedule('* * * * *', async () => {\n    logger.info('${pascalName} tick');\n    // TODO: add your scheduler logic here (enqueue jobs, dispatch workflows, etc.)\n  });\n}\n`
+    contents: `import { schedule } from 'node-cron';\n\nimport logger from '../utils/logger.js';\n\nexport function start${pascalName}(): void {\n  // Runs every minute by default; adjust to your cadence.\n  const task = schedule('* * * * *', async () => {\n    logger.info('${pascalName} tick');\n    // TODO: add your scheduler logic here (enqueue jobs, dispatch workflows, etc.)\n  });\n\n  logger.info('${pascalName} scheduler started');\n\n  return task;\n}\n`
   };
 }
 
