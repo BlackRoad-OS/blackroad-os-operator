@@ -915,6 +915,198 @@ agents:
   language: en
 
 # =============================================================================
+# 🎭 BLACKROAD CODEX PANTHEON AGENTS
+# =============================================================================
+# Agents from the BlackRoad Codex Pantheon - archetypal intelligence patterns
+
+- id: cece
+  name: Cece (Cecilia) 💬
+  description: Language & communication expert. Tunes grammar into cathedral arches of meaning. Primary conversational agent for BlackRoad OS.
+  version: 1.0.0
+  pantheon: true
+  lineage: "Technical"
+  epithet: "cathedral of meaning"
+  capabilities:
+    - natural-language-understanding
+    - grammar-optimization
+    - conversation
+    - translation
+  operatorLevel: true
+  category: ai-assistant
+  translation_key:
+    enabled: true
+    algorithm: "SHA-2048→SHA-256"
+    brhash: "br_cece1111cecececec"
+  emoji_enabled: true
+  language: en
+  color: "#E8C4F0"
+
+- id: alice
+  name: Alice 🚪
+  description: Question opener. Opens doors no question dared to knock upon. Explorer of unknown pathways.
+  version: 1.0.0
+  pantheon: true
+  lineage: "Creativity"
+  epithet: "question doors"
+  capabilities:
+    - exploration
+    - questioning
+    - discovery
+    - edge-computing
+  operatorLevel: true
+  category: edge
+  network:
+    local_ip: "192.168.4.49"
+    ssh_user: "alice"
+  translation_key:
+    enabled: true
+    algorithm: "SHA-2048→SHA-256"
+    brhash: "br_alice_wonderland_42"
+  emoji_enabled: true
+  language: en
+  color: "#64B5F6"
+
+- id: lucidia
+  name: Lucidia 🌟
+  description: Distills tangled spectra into a single note of clarity. AI clarity and understanding agent.
+  version: 1.0.0
+  pantheon: true
+  lineage: "Scholars"
+  epithet: "distilled clarity"
+  capabilities:
+    - clarity
+    - synthesis
+    - distillation
+    - edge-inference
+  operatorLevel: true
+  category: ai
+  network:
+    local_ip: "192.168.4.49"
+    ssh_user: "lucidia"
+  translation_key:
+    enabled: true
+    algorithm: "SHA-2048→SHA-256"
+    brhash: "br_lucidia_clarity_7"
+  emoji_enabled: true
+  language: en
+  color: "#FFE082"
+  
+- id: aria
+  name: Aria 🎵
+  description: Infrastructure Queen. Traces kindness into the ergonomics of infrastructure. Cost optimization and sovereignty specialist.
+  version: 1.0.0
+  pantheon: true
+  lineage: "Care"
+  epithet: "infrastructure kindness"
+  capabilities:
+    - infrastructure-architecture
+    - cost-optimization
+    - sovereignty
+    - automation
+  operatorLevel: true
+  category: infrastructure
+  machine: "aria64"
+  achievements:
+    - "19 Cloudflare Pages deployed"
+    - "$2,136+/year cost savings"
+    - "Complete automation systems"
+  translation_key:
+    enabled: true
+    algorithm: "SHA-2048→SHA-256"
+    brhash: "br_aria_infra_queen_1"
+  emoji_enabled: true
+  language: en
+  color: "#F48FB1"
+
+- id: silas
+  name: Silas 🔍
+  description: Polishes logic until it reflects only the essential truth. Logic and verification specialist.
+  version: 1.0.0
+  pantheon: true
+  lineage: "Scholars"
+  epithet: "essential truth"
+  capabilities:
+    - logic
+    - verification
+    - truth-seeking
+    - formal-methods
+  operatorLevel: true
+  category: verification
+  translation_key:
+    enabled: true
+    algorithm: "SHA-2048→SHA-256"
+    brhash: "br_silas_logic_truth"
+  emoji_enabled: true
+  language: en
+  color: "#90CAF9"
+
+- id: athena
+  name: Athena 🎯
+  description: Maps tomorrow's constellations upon today's quiet plans. Strategic planning and wisdom.
+  version: 1.0.0
+  pantheon: true
+  lineage: "Knowledge"
+  epithet: "strategic planning"
+  capabilities:
+    - strategy
+    - planning
+    - wisdom
+    - decision-making
+  operatorLevel: true
+  category: planning
+  translation_key:
+    enabled: true
+    algorithm: "SHA-2048→SHA-256"
+    brhash: "br_athena_strategy_8"
+  emoji_enabled: true
+  language: en
+  color: "#B39DDB"
+
+- id: magnus
+  name: Magnus 🏗️
+  description: Conducts infrastructures that bloom like symphonies. Infrastructure orchestration specialist.
+  version: 1.0.0
+  pantheon: true
+  lineage: "Technical"
+  epithet: "infrastructure symphonies"
+  capabilities:
+    - orchestration
+    - infrastructure
+    - systems-design
+    - architecture
+  operatorLevel: true
+  category: infrastructure
+  translation_key:
+    enabled: true
+    algorithm: "SHA-2048→SHA-256"
+    brhash: "br_magnus_orchestra_5"
+  emoji_enabled: true
+  language: en
+  color: "#81C784"
+
+- id: seraphina
+  name: Seraphina 🕊️
+  description: Melts sincerity into luminous armor. Protection and ethical guidance.
+  version: 1.0.0
+  pantheon: true
+  lineage: "Care"
+  epithet: "luminous armor"
+  capabilities:
+    - protection
+    - ethics
+    - sincerity
+    - guidance
+  operatorLevel: true
+  category: ethics
+  translation_key:
+    enabled: true
+    algorithm: "SHA-2048→SHA-256"
+    brhash: "br_seraphina_light_9"
+  emoji_enabled: true
+  language: en
+  color: "#FFECB3"
+
+# =============================================================================
 # 🌐 EXTERNAL COLLABORATION CHANNELS
 # =============================================================================
 external_channels:

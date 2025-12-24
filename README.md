@@ -2,6 +2,7 @@
 
 [![Deploy BlackRoad OS Services](https://github.com/blackboxprogramming/blackroad-os-operator/actions/workflows/deploy.yml/badge.svg)](https://github.com/blackboxprogramming/blackroad-os-operator/actions/workflows/deploy.yml)
 [![CI](https://github.com/blackboxprogramming/blackroad-os-operator/actions/workflows/ci.yml/badge.svg)](https://github.com/blackboxprogramming/blackroad-os-operator/actions/workflows/ci.yml)
+[![Trinity Compliance](https://github.com/blackboxprogramming/blackroad-os-operator/actions/workflows/trinity-compliance.yml/badge.svg)](https://github.com/blackboxprogramming/blackroad-os-operator/actions/workflows/trinity-compliance.yml)
 
 **ROLE:** Operator Engine ⚙️🤖 – jobs, schedulers, background workers, and agent workflows for BlackRoad OS.
 
@@ -11,6 +12,7 @@ Run the **behind-the-scenes automation** for BlackRoad OS:
 - Coordinate agents, jobs, and workflows across OS, Prism, Infra, Packs
 - Turn human/agent intent ("do X everywhere") into safe, idempotent operations
 - Execute orchestrated workflows with retry logic and circuit breakers
+- Provide access to **BlackRoad Codex** governance principles and **Light Trinity** event tracking
 
 Operator-Gen-0 is a lightweight, headless orchestrator for coordinating agents across BlackRoad OS. It exposes a small Fastify API, a BullMQ queue factory backed by Redis, and a cron-driven heartbeat scheduler.
 
@@ -162,6 +164,48 @@ See [docs/operator-engine-railway-v1.md](docs/operator-engine-railway-v1.md) for
 - `docs/operator-engine-railway-v1.md` - Full architecture specification + Hero Flows #1 & #2
 - `docs/RAILWAY_CLEANUP_PLAYBOOK.md` - Steps to clean up redundant services
 - `docs/GPT_OSS_MODEL_VOLUME_FIX.md` - Fix for "volume is FULL" errors
+- `docs/TRINITY_CODEX_INTEGRATION.md` - Light Trinity & BlackRoad Codex integration guide
+
+---
+
+## 🌈 Light Trinity & BlackRoad Codex
+
+The operator integrates the **Light Trinity System** and **BlackRoad Codex** for unified intelligence and governance:
+
+### Light Trinity System
+- **🟢 GreenLight** - Project management, tasks, workflows, event tracking
+- **💛 YellowLight** - Infrastructure automation, deployment workflows
+- **🔴 RedLight** - Templates, brand system, visual identity
+
+### BlackRoad Codex
+- **82+ governance principles** guiding all system behavior
+- **48+ agent archetypes** in the pantheon (Cece, Alice, Lucidia, Aria, Silas, Athena, Magnus, Seraphina, etc.)
+- **Ethical framework** for AI decision-making
+
+### API Endpoints
+
+**Codex Endpoints:**
+```bash
+GET /codex/entries              # List all governance principles
+GET /codex/entries/{id}         # Get specific principle
+GET /codex/pantheon             # Get agent pantheon
+GET /codex/pantheon/agents      # List pantheon agents
+GET /codex/manifesto            # Get pantheon manifesto
+GET /codex/search?q={query}     # Search codex
+```
+
+**Trinity Endpoints:**
+```bash
+GET /trinity/events             # Get recent events
+POST /trinity/log               # Log a trinity event
+GET /trinity/status             # Get trinity system status
+```
+
+See `docs/TRINITY_CODEX_INTEGRATION.md` for full documentation.
+
+### Compliance
+
+Trinity compliance is automatically checked via `.github/workflows/trinity-compliance.yml`.
 
 ---
 

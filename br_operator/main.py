@@ -14,6 +14,8 @@ from .catalog import AgentCatalog
 from .versioning import get_git_sha
 from .llm_service import generate_chat_response, check_llm_health, check_rag_health
 from .memory_service import get_memory_service
+from .codex_service import get_codex_service
+from .trinity_service import get_trinity_service, TrinityLight
 from .models import (
     ChatRequest,
     ChatResponse,
@@ -84,6 +86,10 @@ def create_app(catalog_path: Path | None = None, enable_watch: bool = True) -> F
         # Load governance services
         policy_engine = await get_policy_engine()
         ledger_service = await get_ledger_service()
+
+        # Initialize Trinity logging
+        trinity = get_trinity_service()
+        trinity.log_operator_started(operator_version)
 
         watch_task = None
         if enable_watch:
@@ -1018,6 +1024,154 @@ def create_app(catalog_path: Path | None = None, enable_watch: bool = True) -> F
             "connected_agents": agent_count,
             "agents": agent_summary,
             "summary": f"{agent_count}/{len(expected_agents)} agents online",
+        }
+
+    # ============================================
+    # CODEX: BlackRoad Governance Principles
+    # ============================================
+
+    @app.get("/codex/entries")
+    async def list_codex_entries() -> Dict[str, Any]:
+        """List all codex governance entries."""
+        codex = get_codex_service()
+        entries = codex.list_entries()
+        
+        return {
+            "entries": entries,
+            "total": len(entries),
+        }
+
+    @app.get("/codex/entries/{entry_id}")
+    async def get_codex_entry(entry_id: str) -> Dict[str, Any]:
+        """Get a specific codex entry."""
+        codex = get_codex_service()
+        entry = codex.load_entry(entry_id)
+        
+        if not entry:
+            raise HTTPException(status_code=404, detail=f"Codex entry '{entry_id}' not found")
+        
+        # Log codex access via Trinity
+        trinity = get_trinity_service()
+        trinity.log_codex_access(entry_id, "operator")
+        
+        return entry
+
+    @app.get("/codex/pantheon")
+    async def get_pantheon() -> Dict[str, Any]:
+        """Get the BlackRoad agent pantheon."""
+        codex = get_codex_service()
+        pantheon = codex.load_pantheon()
+        
+        return pantheon
+
+    @app.get("/codex/pantheon/agents")
+    async def list_pantheon_agents() -> Dict[str, Any]:
+        """List all agents in the pantheon."""
+        codex = get_codex_service()
+        agents = codex.list_pantheon_agents()
+        
+        return {
+            "agents": agents,
+            "total": len(agents),
+        }
+
+    @app.get("/codex/pantheon/agents/{agent_name}")
+    async def get_pantheon_agent(agent_name: str) -> Dict[str, Any]:
+        """Get a specific agent from the pantheon."""
+        codex = get_codex_service()
+        agent = codex.get_agent_archetype(agent_name)
+        
+        if not agent:
+            raise HTTPException(status_code=404, detail=f"Agent '{agent_name}' not found in pantheon")
+        
+        return agent
+
+    @app.get("/codex/manifesto")
+    async def get_manifesto() -> Dict[str, str]:
+        """Get the codex pantheon manifesto."""
+        codex = get_codex_service()
+        manifesto = codex.load_manifesto()
+        
+        return {
+            "manifesto": manifesto,
+        }
+
+    @app.get("/codex/search")
+    async def search_codex(q: str = Query(..., description="Search query")) -> Dict[str, Any]:
+        """Search codex entries by content."""
+        codex = get_codex_service()
+        results = codex.search_entries(q)
+        
+        return {
+            "query": q,
+            "results": results,
+            "total": len(results),
+        }
+
+    # ============================================
+    # TRINITY: Light Trinity Event System
+    # ============================================
+
+    @app.get("/trinity/events")
+    async def get_trinity_events(
+        light: Optional[str] = Query(None, description="Filter by light (greenlight, yellowlight, redlight)"),
+        limit: int = Query(100, ge=1, le=1000),
+    ) -> Dict[str, Any]:
+        """Get recent Trinity events."""
+        trinity = get_trinity_service()
+        
+        light_enum = None
+        if light:
+            try:
+                light_enum = TrinityLight(light)
+            except ValueError:
+                raise HTTPException(status_code=400, detail=f"Invalid light: {light}. Must be greenlight, yellowlight, or redlight")
+        
+        events = trinity.get_recent_events(light=light_enum, limit=limit)
+        
+        return {
+            "events": events,
+            "total": len(events),
+            "light": light,
+        }
+
+    @app.post("/trinity/log")
+    async def log_trinity_event(
+        light: str,
+        event_type: str,
+        message: str,
+        metadata: Optional[Dict[str, Any]] = None,
+    ) -> Dict[str, Any]:
+        """Log a Trinity event."""
+        trinity = get_trinity_service()
+        
+        try:
+            light_enum = TrinityLight(light)
+        except ValueError:
+            raise HTTPException(status_code=400, detail=f"Invalid light: {light}. Must be greenlight, yellowlight, or redlight")
+        
+        if light_enum == TrinityLight.GREEN:
+            event = trinity.log_greenlight_event(event_type, message, **(metadata or {}))
+        elif light_enum == TrinityLight.YELLOW:
+            event = trinity.log_yellowlight_event(event_type, message, **(metadata or {}))
+        else:  # RED
+            event = trinity.log_redlight_event(event_type, message, **(metadata or {}))
+        
+        return event.to_dict()
+
+    @app.get("/trinity/status")
+    async def trinity_status() -> Dict[str, Any]:
+        """Get Trinity system status."""
+        trinity = get_trinity_service()
+        
+        return {
+            "trinity_path": str(trinity.trinity_path),
+            "lights": {
+                "greenlight": trinity.greenlight_path.exists(),
+                "yellowlight": trinity.yellowlight_path.exists(),
+                "redlight": trinity.redlight_path.exists(),
+            },
+            "total_events": len(trinity.events),
         }
 
     return app
