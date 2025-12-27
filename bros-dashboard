@@ -1,0 +1,164 @@
+#!/bin/bash
+# Master dashboard - all ecosystem info at a glance
+
+CACHE_FILE="$HOME/.blackroad-cache/repos.json"
+
+# Colors
+CYAN='\033[0;36m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+RED='\033[0;31m'
+MAGENTA='\033[0;35m'
+BLUE='\033[0;34m'
+NC='\033[0m'
+BOLD='\033[1m'
+
+clear
+
+echo -e "${CYAN}${BOLD}"
+cat << 'BANNER'
+╔════════════════════════════════════════════════════════════════════╗
+║                                                                    ║
+║         ██████╗ ██╗      █████╗  ██████╗██╗  ██╗██████╗  ██████╗  ║
+║         ██╔══██╗██║     ██╔══██╗██╔════╝██║ ██╔╝██╔══██╗██╔═══██╗ ║
+║         ██████╔╝██║     ███████║██║     █████╔╝ ██████╔╝██║   ██║ ║
+║         ██╔══██╗██║     ██╔══██║██║     ██╔═██╗ ██╔══██╗██║   ██║ ║
+║         ██████╔╝███████╗██║  ██║╚██████╗██║  ██╗██║  ██║╚██████╔╝ ║
+║         ╚═════╝ ╚══════╝╚═╝  ╚═╝ ╚═════╝╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝  ║
+║                                                                    ║
+║                    ECOSYSTEM COMMAND CENTER                        ║
+║                                                                    ║
+╚════════════════════════════════════════════════════════════════════╝
+BANNER
+echo -e "${NC}"
+
+# Get data
+repos=$(cat "$CACHE_FILE" 2>/dev/null)
+if [ -z "$repos" ]; then
+    echo -e "${RED}Cache not found. Run: bros refresh${NC}"
+    exit 1
+fi
+
+total=$(echo "$repos" | jq 'length')
+
+# Quick stats
+echo -e "${GREEN}${BOLD}📊 ECOSYSTEM AT A GLANCE${NC}"
+echo ""
+
+# Repositories
+echo -e "${CYAN}Repositories:${NC}"
+echo -e "  Total: ${BOLD}$total${NC} across 5 organizations"
+html_count=$(echo "$repos" | jq '[.[] | select(.primaryLanguage.name == "HTML")] | length')
+py_count=$(echo "$repos" | jq '[.[] | select(.primaryLanguage.name == "Python")] | length')
+ts_count=$(echo "$repos" | jq '[.[] | select(.primaryLanguage.name == "TypeScript")] | length')
+echo -e "  HTML: $html_count | Python: $py_count | TypeScript: $ts_count"
+
+# Categories
+echo ""
+echo -e "${CYAN}Categories:${NC}"
+agent_count=$(echo "$repos" | jq -r '[.[] | select(.description != null) | select(.description | ascii_downcase | test("ai|agent|llm"))] | length')
+infra_count=$(echo "$repos" | jq -r '[.[] | select(.description != null) | select(.description | ascii_downcase | test("infra|deploy|cloud"))] | length')
+dash_count=$(echo "$repos" | jq -r '[.[] | select(.description != null) | select(.description | ascii_downcase | test("dashboard|ui|console"))] | length')
+echo -e "  AI/Agents: ${YELLOW}$agent_count${NC} | Infrastructure: ${YELLOW}$infra_count${NC} | Dashboards: ${YELLOW}$dash_count${NC}"
+
+# Recent activity
+echo ""
+echo -e "${CYAN}Recent Activity (Last 24 Hours):${NC}"
+cutoff=$(date -u -v-1d "+%Y-%m-%dT%H:%M:%SZ" 2>/dev/null || date -u -d '1 day ago' "+%Y-%m-%dT%H:%M:%SZ")
+recent=$(echo "$repos" | jq -r --arg cutoff "$cutoff" '[.[] | select(.pushedAt > $cutoff)] | length')
+echo -e "  ${GREEN}$recent${NC} repositories updated"
+
+# Top 3 recent
+echo "$repos" | jq -r 'sort_by(.pushedAt) | reverse | .[:3] | .[] | "    → \(.name)"'
+
+echo ""
+echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+echo ""
+
+# Tools menu
+echo -e "${GREEN}${BOLD}🛠️  AVAILABLE TOOLS${NC}"
+echo ""
+
+echo -e "${BLUE}Core CLI:${NC}"
+echo -e "  ${YELLOW}bros${NC}               17 commands for repo management"
+echo -e "  ${YELLOW}bros-interactive${NC}   Full-screen TUI explorer"
+
+echo ""
+echo -e "${BLUE}Analytics:${NC}"
+echo -e "  ${YELLOW}bros-analyze${NC}       Deep ecosystem analytics"
+echo -e "  ${YELLOW}bros-graph${NC}         Visual charts and graphs"
+
+echo ""
+echo -e "${BLUE}Operations:${NC}"
+echo -e "  ${YELLOW}bros-deploy${NC}        Deploy to Railway/Cloudflare"
+echo -e "  ${YELLOW}bros-sync${NC}          Sync local repos with remote"
+echo -e "  ${YELLOW}bros-workflow${NC}      Git workflow automation (branches, PRs, merges)"
+
+echo ""
+echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+echo ""
+
+# Quick actions
+echo -e "${GREEN}${BOLD}⚡ QUICK ACTIONS${NC}"
+echo ""
+
+echo -e "  ${CYAN}[1]${NC} Search repos"
+echo -e "  ${CYAN}[2]${NC} Browse by language"
+echo -e "  ${CYAN}[3]${NC} Recent activity (last 10)"
+echo -e "  ${CYAN}[4]${NC} Analytics dashboard"
+echo -e "  ${CYAN}[5]${NC} Interactive explorer"
+echo -e "  ${CYAN}[6]${NC} Deployment status"
+echo -e "  ${CYAN}[7]${NC} Sync status"
+echo -e "  ${CYAN}[8]${NC} Git workflow wizard"
+echo -e "  ${CYAN}[r]${NC} Refresh cache"
+echo -e "  ${CYAN}[q]${NC} Quit"
+
+echo ""
+echo -ne "${GREEN}${BOLD}Choose an action:${NC} "
+read -r choice
+
+echo ""
+
+case "$choice" in
+    1)
+        echo -ne "${CYAN}Search for:${NC} "
+        read -r query
+        bros search "$query"
+        ;;
+    2)
+        bros lang
+        ;;
+    3)
+        bros recent 10
+        ;;
+    4)
+        bros-analyze all
+        ;;
+    5)
+        bros-interactive
+        ;;
+    6)
+        bros-deploy status
+        ;;
+    7)
+        bros-sync status
+        ;;
+    8)
+        bros-workflow wizard
+        ;;
+    r)
+        bros refresh
+        ;;
+    q)
+        echo -e "${GREEN}Later! ✨${NC}"
+        exit 0
+        ;;
+    *)
+        echo -e "${YELLOW}Unknown option. Run again to see menu.${NC}"
+        ;;
+esac
+
+echo ""
+echo -e "${BLUE}Press Enter to return to dashboard...${NC}"
+read
+exec "$0"

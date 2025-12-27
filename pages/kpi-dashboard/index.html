@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BlackRoad OS - KPI Dashboard</title>
+    <style>
+        :root {
+            --bg-primary: #0a0a0a;
+            --bg-secondary: #1a1a1a;
+            --bg-card: #2a2a2a;
+            --text-primary: #ffffff;
+            --text-secondary: #a0a0a0;
+            --accent-orange: #FF9D00;
+            --accent-pink: #FF0066;
+            --accent-purple: #7700FF;
+            --accent-blue: #0066FF;
+            --accent-green: #00ff88;
+            --border: #3a3a3a;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 40px 20px;
+            background: linear-gradient(135deg, var(--accent-orange), var(--accent-pink), var(--accent-purple), var(--accent-blue));
+            border-radius: 16px;
+        }
+
+        h1 {
+            font-size: 3em;
+            font-weight: 700;
+            margin-bottom: 10px;
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+
+        .subtitle {
+            font-size: 1.2em;
+            color: rgba(255,255,255,0.9);
+        }
+
+        .metadata {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .metadata-card {
+            background: var(--bg-card);
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+        }
+
+        .metadata-card h3 {
+            font-size: 0.9em;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .metadata-card p {
+            font-size: 1.1em;
+            font-family: 'Courier New', monospace;
+            color: var(--accent-green);
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .metric-card {
+            background: var(--bg-card);
+            padding: 30px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .metric-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(255, 157, 0, 0.2);
+        }
+
+        .metric-card h2 {
+            font-size: 1.2em;
+            margin-bottom: 20px;
+            color: var(--accent-orange);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .metric-value {
+            font-size: 3em;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 10px;
+        }
+
+        .metric-label {
+            font-size: 0.9em;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .sub-metrics {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border);
+        }
+
+        .sub-metric {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+
+        .sub-metric-label {
+            color: var(--text-secondary);
+        }
+
+        .sub-metric-value {
+            font-weight: 600;
+            color: var(--accent-blue);
+        }
+
+        .section-title {
+            font-size: 2em;
+            margin: 40px 0 20px;
+            color: var(--accent-pink);
+            border-bottom: 2px solid var(--accent-pink);
+            padding-bottom: 10px;
+        }
+
+        .progress-bar {
+            height: 8px;
+            background: var(--bg-secondary);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent-orange), var(--accent-pink));
+            transition: width 0.3s;
+        }
+
+        .verification-badge {
+            background: var(--bg-secondary);
+            padding: 15px 20px;
+            border-radius: 8px;
+            border-left: 4px solid var(--accent-green);
+            margin-top: 30px;
+        }
+
+        .verification-badge strong {
+            color: var(--accent-green);
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 60px;
+            padding: 20px;
+            color: var(--text-secondary);
+            font-size: 0.9em;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            font-size: 1.2em;
+            color: var(--accent-blue);
+        }
+
+        .error {
+            background: rgba(255, 0, 102, 0.1);
+            border: 1px solid var(--accent-pink);
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            color: var(--accent-pink);
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2em;
+            }
+
+            .metrics-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .metadata {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🖤 BlackRoad OS</h1>
+            <p class="subtitle">KPI Dashboard & Metrics Verification System</p>
+        </header>
+
+        <div id="loading" class="loading">
+            Loading metrics data...
+        </div>
+
+        <div id="error" class="error" style="display: none;"></div>
+
+        <div id="content" style="display: none;">
+            <!-- Metadata Section -->
+            <div class="metadata">
+                <div class="metadata-card">
+                    <h3>Last Updated</h3>
+                    <p id="timestamp">--</p>
+                </div>
+                <div class="metadata-card">
+                    <h3>Audit Date</h3>
+                    <p id="audit-date">--</p>
+                </div>
+                <div class="metadata-card">
+                    <h3>Verification Hash</h3>
+                    <p id="verification-hash">--</p>
+                </div>
+                <div class="metadata-card">
+                    <h3>Protocol</h3>
+                    <p id="protocol">PS-SHA-∞</p>
+                </div>
+            </div>
+
+            <!-- Code Metrics -->
+            <h2 class="section-title">📊 Code Metrics</h2>
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <h2>💻 Lines of Code</h2>
+                    <div class="metric-value" id="total-loc">0</div>
+                    <div class="metric-label">Total LOC</div>
+                    <div class="sub-metrics">
+                        <div class="sub-metric">
+                            <span class="sub-metric-label">Python</span>
+                            <span class="sub-metric-value" id="python-loc">0</span>
+                        </div>
+                        <div class="sub-metric">
+                            <span class="sub-metric-label">TypeScript</span>
+                            <span class="sub-metric-value" id="typescript-loc">0</span>
+                        </div>
+                        <div class="sub-metric">
+                            <span class="sub-metric-label">JavaScript</span>
+                            <span class="sub-metric-value" id="javascript-loc">0</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="metric-card">
+                    <h2>📁 Total Files</h2>
+                    <div class="metric-value" id="total-files">0</div>
+                    <div class="metric-label">Code Files</div>
+                    <div class="sub-metrics">
+                        <div class="sub-metric">
+                            <span class="sub-metric-label">Python</span>
+                            <span class="sub-metric-value" id="python-files">0</span>
+                        </div>
+                        <div class="sub-metric">
+                            <span class="sub-metric-label">TypeScript</span>
+                            <span class="sub-metric-value" id="typescript-files">0</span>
+                        </div>
+                        <div class="sub-metric">
+                            <span class="sub-metric-label">JavaScript</span>
+                            <span class="sub-metric-value" id="javascript-files">0</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="metric-card">
+                    <h2>🔄 Git Commits</h2>
+                    <div class="metric-value" id="total-commits">0</div>
+                    <div class="metric-label">Total Commits</div>
+                </div>
+
+                <div class="metric-card">
+                    <h2>👥 Contributors</h2>
+                    <div class="metric-value" id="contributors">0</div>
+                    <div class="metric-label">Unique Contributors</div>
+                </div>
+            </div>
+
+            <!-- Infrastructure Metrics -->
+            <h2 class="section-title">☁️ Infrastructure</h2>
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <h2>⚡ Cloudflare Workers</h2>
+                    <div class="metric-value" id="cf-workers">0</div>
+                    <div class="metric-label">Edge Workers</div>
+                </div>
+
+                <div class="metric-card">
+                    <h2>📄 Cloudflare Pages</h2>
+                    <div class="metric-value" id="cf-pages">0</div>
+                    <div class="metric-label">Static Sites</div>
+                </div>
+
+                <div class="metric-card">
+                    <h2>🌐 Cloudflare Zones</h2>
+                    <div class="metric-value" id="cf-zones">0</div>
+                    <div class="metric-label">DNS Zones</div>
+                    <div class="sub-metrics">
+                        <div class="sub-metric">
+                            <span class="sub-metric-label">KV Stores</span>
+                            <span class="sub-metric-value" id="cf-kv">0</span>
+                        </div>
+                        <div class="sub-metric">
+                            <span class="sub-metric-label">D1 Databases</span>
+                            <span class="sub-metric-value" id="cf-d1">0</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="metric-card">
+                    <h2>🔧 CI/CD Workflows</h2>
+                    <div class="metric-value" id="workflows">0</div>
+                    <div class="metric-label">GitHub Actions</div>
+                </div>
+
+                <div class="metric-card">
+                    <h2>🐳 Docker Containers</h2>
+                    <div class="metric-value" id="docker">0</div>
+                    <div class="metric-label">Dockerfiles</div>
+                </div>
+
+                <div class="metric-card">
+                    <h2>🏗️ Infrastructure as Code</h2>
+                    <div class="metric-value" id="terraform">0</div>
+                    <div class="metric-label">Terraform Modules</div>
+                    <div class="sub-metrics">
+                        <div class="sub-metric">
+                            <span class="sub-metric-label">K8s Configs</span>
+                            <span class="sub-metric-value" id="k8s">0</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Agent & API Metrics -->
+            <h2 class="section-title">🤖 Agents & APIs</h2>
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <h2>🤖 Total Agents</h2>
+                    <div class="metric-value" id="total-agents">0</div>
+                    <div class="metric-label">Autonomous Agents</div>
+                    <div class="sub-metrics">
+                        <div class="sub-metric">
+                            <span class="sub-metric-label">Operator-Level</span>
+                            <span class="sub-metric-value" id="operator-agents">0</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="metric-card">
+                    <h2>🔌 API Routes</h2>
+                    <div class="metric-value" id="total-api">0</div>
+                    <div class="metric-label">Total Endpoints</div>
+                    <div class="sub-metrics">
+                        <div class="sub-metric">
+                            <span class="sub-metric-label">Python (FastAPI)</span>
+                            <span class="sub-metric-value" id="python-api">0</span>
+                        </div>
+                        <div class="sub-metric">
+                            <span class="sub-metric-label">TypeScript (Express)</span>
+                            <span class="sub-metric-value" id="typescript-api">0</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="metric-card">
+                    <h2>🔗 API Domains</h2>
+                    <div class="metric-value" id="api-domains">0</div>
+                    <div class="metric-label">Integration Domains</div>
+                </div>
+
+                <div class="metric-card">
+                    <h2>🔧 Integrations</h2>
+                    <div class="metric-value" id="integrations">0</div>
+                    <div class="metric-label">Service Integrations</div>
+                </div>
+            </div>
+
+            <!-- GitHub Metrics -->
+            <h2 class="section-title">🐙 GitHub</h2>
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <h2>🏢 Organizations</h2>
+                    <div class="metric-value" id="gh-orgs">0</div>
+                    <div class="metric-label">Total Organizations</div>
+                </div>
+
+                <div class="metric-card">
+                    <h2>📦 Repositories</h2>
+                    <div class="metric-value" id="gh-repos">0</div>
+                    <div class="metric-label">Total Repositories</div>
+                </div>
+            </div>
+
+            <!-- Verification Badge -->
+            <div class="verification-badge">
+                <strong>🔐 Cryptographic Verification:</strong> All metrics are verified using PS-SHA-∞ (256-step infinite cascade hashing) protocol. Hash: <code id="hash-code">--</code>
+            </div>
+        </div>
+
+        <footer>
+            <p><strong>BlackRoad OS</strong> • KPI Dashboard v1.0.0</p>
+            <p>Source of Truth: GitHub (BlackRoad-OS) + Cloudflare</p>
+            <p>Auto-refreshes every 60 seconds</p>
+        </footer>
+    </div>
+
+    <script>
+        // Fetch and display metrics data
+        async function loadMetrics() {
+            try {
+                const response = await fetch('/metrics/data/latest.json');
+                if (!response.ok) throw new Error('Failed to load metrics');
+
+                const data = await response.json();
+
+                // Hide loading, show content
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('content').style.display = 'block';
+
+                // Update metadata
+                document.getElementById('timestamp').textContent = new Date(data.metadata.timestamp).toLocaleString();
+                document.getElementById('audit-date').textContent = data.metadata.audit_date;
+                document.getElementById('verification-hash').textContent = data.metadata.verification_hash.substring(0, 16) + '...';
+                document.getElementById('hash-code').textContent = data.metadata.verification_hash.substring(0, 16) + '...';
+
+                // Code metrics
+                document.getElementById('total-loc').textContent = data.code.total_loc.toLocaleString();
+                document.getElementById('total-files').textContent = data.code.total_files.toLocaleString();
+                document.getElementById('total-commits').textContent = data.code.total_commits.toLocaleString();
+                document.getElementById('contributors').textContent = data.code.contributors.toLocaleString();
+
+                // Language breakdowns
+                document.getElementById('python-loc').textContent = data.code.by_language.python.loc.toLocaleString();
+                document.getElementById('typescript-loc').textContent = data.code.by_language.typescript.loc.toLocaleString();
+                document.getElementById('javascript-loc').textContent = data.code.by_language.javascript.loc.toLocaleString();
+                document.getElementById('python-files').textContent = data.code.by_language.python.files.toLocaleString();
+                document.getElementById('typescript-files').textContent = data.code.by_language.typescript.files.toLocaleString();
+                document.getElementById('javascript-files').textContent = data.code.by_language.javascript.files.toLocaleString();
+
+                // Infrastructure
+                document.getElementById('cf-workers').textContent = data.infrastructure.cloudflare.workers;
+                document.getElementById('cf-pages').textContent = data.infrastructure.cloudflare.pages;
+                document.getElementById('cf-zones').textContent = data.infrastructure.cloudflare.zones;
+                document.getElementById('cf-kv').textContent = data.infrastructure.cloudflare.kv_stores;
+                document.getElementById('cf-d1').textContent = data.infrastructure.cloudflare.d1_databases;
+                document.getElementById('workflows').textContent = data.infrastructure.devops.workflows;
+                document.getElementById('docker').textContent = data.infrastructure.devops.docker_containers;
+                document.getElementById('terraform').textContent = data.infrastructure.devops.terraform_modules;
+                document.getElementById('k8s').textContent = data.infrastructure.devops.k8s_configs;
+                document.getElementById('integrations').textContent = data.infrastructure.integrations;
+
+                // Agents & API
+                document.getElementById('total-agents').textContent = data.agents.total;
+                document.getElementById('operator-agents').textContent = data.agents.operator_level;
+                document.getElementById('total-api').textContent = data.api.total_routes.toLocaleString();
+                document.getElementById('python-api').textContent = data.api.python_routes.toLocaleString();
+                document.getElementById('typescript-api').textContent = data.api.typescript_routes.toLocaleString();
+                document.getElementById('api-domains').textContent = data.api.api_domains;
+
+                // GitHub
+                document.getElementById('gh-orgs').textContent = data.github.organizations;
+                document.getElementById('gh-repos').textContent = data.github.total_repos;
+
+            } catch (error) {
+                console.error('Error loading metrics:', error);
+                document.getElementById('loading').style.display = 'none';
+                const errorDiv = document.getElementById('error');
+                errorDiv.textContent = `Error: ${error.message}. Make sure to run 'python3 scripts/collect-kpi-data.py' first.`;
+                errorDiv.style.display = 'block';
+            }
+        }
+
+        // Load on page load
+        loadMetrics();
+
+        // Auto-refresh every 60 seconds
+        setInterval(loadMetrics, 60000);
+    </script>
+</body>
+</html>

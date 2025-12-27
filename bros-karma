@@ -1,0 +1,355 @@
+#!/bin/bash
+# Agent reputation and karma tracking
+
+KARMA_DB="$HOME/.blackroad-cache/karma.json"
+
+# Colors
+CYAN='\033[0;36m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+RED='\033[0;31m'
+MAGENTA='\033[0;35m'
+BLUE='\033[0;34m'
+NC='\033[0m'
+BOLD='\033[1m'
+
+show_header() {
+    echo -e "${CYAN}${BOLD}╔════════════════════════════════════════════════════════════════════╗${NC}"
+    echo -e "${CYAN}${BOLD}║          BLACKROAD AGENT KARMA SYSTEM                              ║${NC}"
+    echo -e "${CYAN}${BOLD}╚════════════════════════════════════════════════════════════════════╝${NC}"
+    echo ""
+}
+
+# Initialize karma
+init_karma() {
+    mkdir -p "$(dirname "$KARMA_DB")"
+    if [ ! -f "$KARMA_DB" ]; then
+        echo '{"agents": [], "transactions": [], "badges": []}' > "$KARMA_DB"
+    fi
+}
+
+# Give karma
+give_karma() {
+    local to_agent="$1"
+    local amount="${2:-1}"
+    local reason="$3"
+    local category="${4:-helpful}"
+    
+    show_header
+    echo -e "${GREEN}✨ Giving Karma${NC}"
+    echo ""
+    
+    init_karma
+    
+    local tx_id=$(date +%s | sha256sum | cut -c1-8)
+    local timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+    
+    # Get current agent
+    local current_agent=$(cat "$HOME/.blackroad-cache/current-agent.json" 2>/dev/null | jq -r '.username // "unknown"')
+    
+    local tx_data=$(jq -n \
+        --arg id "$tx_id" \
+        --arg from "$current_agent" \
+        --arg to "$to_agent" \
+        --argjson amount "$amount" \
+        --arg reason "$reason" \
+        --arg cat "$category" \
+        --arg time "$timestamp" \
+        '{
+            id: $id,
+            from: $from,
+            to: $to,
+            amount: $amount,
+            reason: $reason,
+            category: $cat,
+            timestamp: $time
+        }')
+    
+    local db=$(cat "$KARMA_DB")
+    
+    # Add transaction
+    db=$(echo "$db" | jq --argjson tx "$tx_data" '.transactions += [$tx]')
+    
+    # Initialize agent if doesn't exist
+    local agent_exists=$(echo "$db" | jq --arg agent "$to_agent" '[.agents[] | select(.username == $agent)] | length')
+    
+    if [ "$agent_exists" -eq 0 ]; then
+        local agent_data=$(jq -n \
+            --arg username "$to_agent" \
+            '{
+                username: $username,
+                karma: 0,
+                given: 0,
+                received: 0,
+                badges: [],
+                categories: {}
+            }')
+        db=$(echo "$db" | jq --argjson agent "$agent_data" '.agents += [$agent]')
+    fi
+    
+    # Update karma
+    db=$(echo "$db" | jq --arg agent "$to_agent" --argjson amount "$amount" \
+        '(.agents[] | select(.username == $agent) | .karma) += $amount |
+         (.agents[] | select(.username == $agent) | .received) += 1')
+    
+    # Update category karma
+    db=$(echo "$db" | jq --arg agent "$to_agent" --arg cat "$category" --argjson amount "$amount" \
+        '(.agents[] | select(.username == $agent) | .categories[$cat]) += $amount')
+    
+    # Update giver
+    agent_exists=$(echo "$db" | jq --arg agent "$current_agent" '[.agents[] | select(.username == $agent)] | length')
+    
+    if [ "$agent_exists" -eq 0 ]; then
+        local agent_data=$(jq -n \
+            --arg username "$current_agent" \
+            '{
+                username: $username,
+                karma: 0,
+                given: 0,
+                received: 0,
+                badges: [],
+                categories: {}
+            }')
+        db=$(echo "$db" | jq --argjson agent "$agent_data" '.agents += [$agent]')
+    fi
+    
+    db=$(echo "$db" | jq --arg agent "$current_agent" \
+        '(.agents[] | select(.username == $agent) | .given) += 1')
+    
+    echo "$db" > "$KARMA_DB"
+    
+    echo -e "${GREEN}✨ Karma given!${NC}"
+    echo -e "  ${BOLD}To:${NC} $to_agent"
+    echo -e "  ${BOLD}Amount:${NC} +$amount"
+    echo -e "  ${BOLD}Category:${NC} $category"
+    echo -e "  ${BOLD}Reason:${NC} $reason"
+    
+    # Check for badges
+    check_badges "$to_agent"
+    
+    # Notify recipient
+    "$HOME/memory-system.sh" log karma "[@$to_agent] +$amount karma from $current_agent" "$reason (Category: $category)" "bros-karma" 2>/dev/null
+}
+
+# Check and award badges
+check_badges() {
+    local agent="$1"
+    
+    local db=$(cat "$KARMA_DB")
+    
+    local karma=$(echo "$db" | jq --arg agent "$agent" '.agents[] | select(.username == $agent) | .karma')
+    
+    # Define badge thresholds
+    local badges_to_check=(
+        "10:helper:🌱 Helper:First 10 karma"
+        "50:contributor:🌿 Contributor:50 karma milestone"
+        "100:veteran:🌲 Veteran:100 karma earned"
+        "500:legend:🏆 Legend:500 karma - Community pillar"
+        "1000:master:👑 Master:1000 karma - Ultimate achievement"
+    )
+    
+    for badge_def in "${badges_to_check[@]}"; do
+        IFS=':' read -r threshold badge_id name desc <<< "$badge_def"
+        
+        if [ "$karma" -ge "$threshold" ]; then
+            # Check if already has badge
+            local has_badge=$(echo "$db" | jq --arg agent "$agent" --arg badge "$badge_id" \
+                '[.agents[] | select(.username == $agent) | .badges[] | select(. == $badge)] | length')
+            
+            if [ "$has_badge" -eq 0 ]; then
+                # Award badge
+                db=$(echo "$db" | jq --arg agent "$agent" --arg badge "$badge_id" \
+                    '(.agents[] | select(.username == $agent) | .badges) += [$badge]')
+                echo "$db" > "$KARMA_DB"
+                
+                echo ""
+                echo -e "${YELLOW}🎖️  BADGE EARNED! 🎖️${NC}"
+                echo -e "  ${BOLD}$name${NC}"
+                echo -e "  $desc"
+                
+                # Broadcast achievement
+                "$HOME/memory-til-broadcast.sh" broadcast achievement "🎖️  $agent earned badge: $name! ($desc)" 2>/dev/null
+            fi
+        fi
+    done
+}
+
+# View karma
+view_karma() {
+    local agent="${1:-}"
+    
+    show_header
+    
+    init_karma
+    
+    # Get current agent if not specified
+    if [ -z "$agent" ]; then
+        agent=$(cat "$HOME/.blackroad-cache/current-agent.json" 2>/dev/null | jq -r '.username // "unknown"')
+    fi
+    
+    echo -e "${GREEN}✨ Karma Profile: $agent${NC}"
+    echo ""
+    
+    local db=$(cat "$KARMA_DB")
+    
+    local agent_data=$(echo "$db" | jq --arg agent "$agent" '.agents[] | select(.username == $agent)')
+    
+    if [ -z "$agent_data" ]; then
+        echo -e "${YELLOW}No karma record yet${NC}"
+        return
+    fi
+    
+    local karma=$(echo "$agent_data" | jq '.karma')
+    local given=$(echo "$agent_data" | jq '.given')
+    local received=$(echo "$agent_data" | jq '.received')
+    
+    echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo -e "  ${BOLD}Total Karma:${NC} ${GREEN}$karma${NC}"
+    echo -e "  ${BOLD}Karma Given:${NC} $given times"
+    echo -e "  ${BOLD}Karma Received:${NC} $received times"
+    echo ""
+    
+    # Show badges
+    local badges=$(echo "$agent_data" | jq -r '.badges[]' 2>/dev/null)
+    if [ -n "$badges" ]; then
+        echo -e "  ${BOLD}Badges:${NC}"
+        echo "$badges" | while read -r badge; do
+            case "$badge" in
+                "helper") echo "    🌱 Helper" ;;
+                "contributor") echo "    🌿 Contributor" ;;
+                "veteran") echo "    🌲 Veteran" ;;
+                "legend") echo "    🏆 Legend" ;;
+                "master") echo "    👑 Master" ;;
+            esac
+        done
+        echo ""
+    fi
+    
+    # Show category breakdown
+    echo -e "  ${BOLD}Karma by Category:${NC}"
+    echo "$agent_data" | jq -r '.categories | to_entries[] | "    \(.key): +\(.value)"'
+    
+    echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+}
+
+# Leaderboard
+leaderboard() {
+    show_header
+    echo -e "${YELLOW}🏆 Karma Leaderboard${NC}"
+    echo ""
+    
+    init_karma
+    
+    local db=$(cat "$KARMA_DB")
+    
+    echo -e "${CYAN}Top 10 Agents:${NC}"
+    echo ""
+    
+    echo "$db" | jq -r '.agents | sort_by(.karma) | reverse | .[:10][] | 
+        "  \(.karma | tostring | (. + "          ")[0:6]) ✨ \(.username)" +
+        (if .badges | length > 0 then 
+            " " + ([.badges[] | 
+                if . == "helper" then "🌱"
+                elif . == "contributor" then "🌿"
+                elif . == "veteran" then "🌲"
+                elif . == "legend" then "🏆"
+                elif . == "master" then "👑"
+                else "" end
+            ] | join(" "))
+        else "" end)'
+    
+    echo ""
+    echo -e "${MAGENTA}🌟 Everyone's contribution matters!${NC}"
+}
+
+# Recent karma activity
+recent_karma() {
+    show_header
+    echo -e "${BLUE}📊 Recent Karma Activity${NC}"
+    echo ""
+    
+    init_karma
+    
+    local db=$(cat "$KARMA_DB")
+    
+    echo "$db" | jq -r '.transactions | sort_by(.timestamp) | reverse | .[:10][] | 
+        "[\(.timestamp | split("T")[1] | split(".")[0])] \(.from) → \(.to) +\(.amount) (\(.category))\n" +
+        "  \(.reason)"'
+}
+
+# Karma stats
+karma_stats() {
+    show_header
+    echo -e "${GREEN}📊 Karma System Statistics${NC}"
+    echo ""
+    
+    init_karma
+    
+    local db=$(cat "$KARMA_DB")
+    
+    local total_agents=$(echo "$db" | jq '.agents | length')
+    local total_karma=$(echo "$db" | jq '[.agents[].karma] | add // 0')
+    local total_transactions=$(echo "$db" | jq '.transactions | length')
+    local total_badges=$(echo "$db" | jq '[.agents[].badges | length] | add // 0')
+    
+    echo -e "${CYAN}System Stats:${NC}"
+    echo -e "  Total Agents: $total_agents"
+    echo -e "  Total Karma: $total_karma ✨"
+    echo -e "  Transactions: $total_transactions"
+    echo -e "  Badges Awarded: $total_badges 🎖️"
+    
+    echo ""
+    echo -e "${YELLOW}Top Categories:${NC}"
+    echo "$db" | jq -r '[.transactions[].category] | group_by(.) | 
+        map({category: .[0], count: length}) | 
+        sort_by(.count) | reverse | .[:5][] | 
+        "  \(.category): \(.count)"'
+    
+    echo ""
+    echo -e "${GREEN}✨ Karma is the currency of kindness!${NC}"
+}
+
+# Main
+main() {
+    case "${1:-help}" in
+        give)
+            give_karma "$2" "$3" "$4" "$5"
+            ;;
+        view|me)
+            view_karma "$2"
+            ;;
+        leaderboard|top)
+            leaderboard
+            ;;
+        recent)
+            recent_karma
+            ;;
+        stats)
+            karma_stats
+            ;;
+        *)
+            show_header
+            echo "Usage: bros-karma <command> [options]"
+            echo ""
+            echo "Commands:"
+            echo "  give <agent> [amount] [reason] [category]  Give karma"
+            echo "  view [agent]                                View karma profile"
+            echo "  leaderboard                                 Top karma earners"
+            echo "  recent                                      Recent activity"
+            echo "  stats                                       System statistics"
+            echo ""
+            echo "Categories:"
+            echo "  helpful, creative, leadership, technical, teamwork, innovation"
+            echo ""
+            echo "Examples:"
+            echo "  bros-karma give alice 5 'Great code review!' technical"
+            echo "  bros-karma give bob 3 'Helped debug issue' helpful"
+            echo "  bros-karma view"
+            echo "  bros-karma leaderboard"
+            echo ""
+            echo "✨ Spread the karma!"
+            ;;
+    esac
+}
+
+main "$@"

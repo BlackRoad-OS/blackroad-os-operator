@@ -1,0 +1,216 @@
+#!/bin/bash
+# Advanced analytics for BlackRoad ecosystem
+
+CACHE_FILE="$HOME/.blackroad-cache/repos.json"
+
+# Colors
+CYAN='\033[0;36m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+RED='\033[0;31m'
+MAGENTA='\033[0;35m'
+BLUE='\033[0;34m'
+NC='\033[0m'
+BOLD='\033[1m'
+
+show_header() {
+    echo -e "${CYAN}${BOLD}╔════════════════════════════════════════════════════════════════════╗${NC}"
+    echo -e "${CYAN}${BOLD}║          BLACKROAD ECOSYSTEM - DEEP ANALYTICS                      ║${NC}"
+    echo -e "${CYAN}${BOLD}╚════════════════════════════════════════════════════════════════════╝${NC}"
+    echo ""
+}
+
+# Language distribution analysis
+analyze_languages() {
+    show_header
+    echo -e "${GREEN}${BOLD}📊 Language Distribution Analysis${NC}"
+    echo ""
+
+    local repos=$(cat "$CACHE_FILE")
+
+    echo -e "${CYAN}Full Breakdown:${NC}"
+    echo "$repos" | jq -r '[.[] | .primaryLanguage.name // "Unknown"] | group_by(.) | map({lang: .[0], count: length, pct: ((length * 100.0) / ('$(echo "$repos" | jq 'length')'))}) | sort_by(.count) | reverse | .[]' | \
+    jq -r '"  \(.lang): \(.count) repos (\(.pct | floor)%)"'
+
+    echo ""
+    echo -e "${YELLOW}Most Active Languages:${NC}"
+    echo "$repos" | jq -r 'group_by(.primaryLanguage.name // "Unknown") | map({lang: .[0].primaryLanguage.name // "Unknown", count: length, repos: [.[] | select(.pushedAt != null) | .name] | .[0:3]}) | sort_by(.count) | reverse | .[:5]' | \
+    jq -r '.[] | "  \(.lang) (\(.count) repos):\n    → " + (.repos | join(", "))'
+
+    echo ""
+}
+
+# Activity heatmap
+analyze_activity() {
+    show_header
+    echo -e "${GREEN}${BOLD}📈 Repository Activity Heatmap${NC}"
+    echo ""
+
+    local repos=$(cat "$CACHE_FILE")
+
+    echo -e "${CYAN}Last 7 Days Activity:${NC}"
+
+    # Group by date
+    echo "$repos" | jq -r '[.[] | select(.pushedAt != null) | {date: (.pushedAt | split("T")[0]), name: .name}] | group_by(.date) | map({date: .[0].date, count: length, repos: [.[] | .name] | .[0:5]}) | sort_by(.date) | reverse | .[:7]' | \
+    jq -r '.[] | "\(.date): \(.count) updates\n  → " + (.repos | join(", ")) + if (.count > 5) then " ..." else "" end'
+
+    echo ""
+    echo -e "${YELLOW}Most Active Period:${NC}"
+    echo "$repos" | jq -r '[.[] | select(.pushedAt != null) | .pushedAt | split("T")[0]] | group_by(.) | map({date: .[0], count: length}) | sort_by(.count) | reverse | .[0]' | \
+    jq -r '"  \(.date) had \(.count) repository updates"'
+
+    echo ""
+}
+
+# Organization breakdown
+analyze_orgs() {
+    show_header
+    echo -e "${GREEN}${BOLD}🏢 Organization Analysis${NC}"
+    echo ""
+
+    local orgs=("BlackRoad-OS" "BlackRoad-AI" "BlackRoad-Cloud" "BlackRoad-Labs" "BlackRoad-Foundation")
+
+    for org in "${orgs[@]}"; do
+        echo -e "${CYAN}$org:${NC}"
+
+        local total=$(gh repo list "$org" --limit 1000 --json name 2>/dev/null | jq 'length')
+        local langs=$(gh repo list "$org" --limit 1000 --json primaryLanguage 2>/dev/null | jq -r '[.[] | .primaryLanguage.name // "Unknown"] | group_by(.) | map({lang: .[0], count: length}) | sort_by(.count) | reverse | .[:3] | .[] | "    \(.lang): \(.count)"')
+
+        echo "  Total: $total repos"
+        echo "$langs"
+        echo ""
+    done
+}
+
+# Complexity analysis (by description length, etc)
+analyze_complexity() {
+    show_header
+    echo -e "${GREEN}${BOLD}🔬 Repository Complexity Indicators${NC}"
+    echo ""
+
+    local repos=$(cat "$CACHE_FILE")
+
+    echo -e "${CYAN}Longest Descriptions (Likely Complex Projects):${NC}"
+    echo "$repos" | jq -r '[.[] | select(.description != null) | {name: .name, len: (.description | length), desc: .description}] | sort_by(.len) | reverse | .[:5]' | \
+    jq -r '.[] | "  \(.name) (\(.len) chars)\n    → \(.desc[0:100])..." + "\n"'
+
+    echo ""
+    echo -e "${YELLOW}Projects with Keywords:${NC}"
+
+    # Enterprise/Large scale
+    local enterprise=$(echo "$repos" | jq -r '[.[] | select(.description != null) | select(.description | ascii_downcase | test("enterprise|crm|erp|full"))] | length')
+    echo "  Enterprise/ERP/CRM: $enterprise repos"
+
+    # AI/Agent
+    local ai=$(echo "$repos" | jq -r '[.[] | select(.description != null) | select(.description | ascii_downcase | test("ai|agent|llm|model"))] | length')
+    echo "  AI/Agent/LLM: $ai repos"
+
+    # Infrastructure
+    local infra=$(echo "$repos" | jq -r '[.[] | select(.description != null) | select(.description | ascii_downcase | test("infra|deploy|cloud|k8s"))] | length')
+    echo "  Infrastructure: $infra repos"
+
+    # Dashboard/UI
+    local ui=$(echo "$repos" | jq -r '[.[] | select(.description != null) | select(.description | ascii_downcase | test("dashboard|ui|console|interface"))] | length')
+    echo "  Dashboard/UI: $ui repos"
+
+    echo ""
+}
+
+# Update frequency
+analyze_frequency() {
+    show_header
+    echo -e "${GREEN}${BOLD}⏰ Update Frequency Analysis${NC}"
+    echo ""
+
+    local repos=$(cat "$CACHE_FILE")
+
+    echo -e "${CYAN}Most Frequently Updated (Last 30 days):${NC}"
+
+    # Get repos updated in last 30 days
+    local cutoff=$(date -u -v-30d "+%Y-%m-%dT%H:%M:%SZ" 2>/dev/null || date -u -d '30 days ago' "+%Y-%m-%dT%H:%M:%SZ")
+
+    echo "$repos" | jq -r --arg cutoff "$cutoff" '[.[] | select(.pushedAt > $cutoff)] | sort_by(.pushedAt) | reverse | .[:10]' | \
+    jq -r '.[] | "  \(.name)\n    Last updated: \(.pushedAt | split("T")[0])"'
+
+    echo ""
+    echo -e "${YELLOW}Dormant Projects (No updates in 30+ days):${NC}"
+    local dormant=$(echo "$repos" | jq -r --arg cutoff "$cutoff" '[.[] | select(.pushedAt < $cutoff)] | length')
+    echo "  $dormant repositories have not been updated in 30+ days"
+
+    echo ""
+}
+
+# Cross-reference analysis
+analyze_connections() {
+    show_header
+    echo -e "${GREEN}${BOLD}🔗 Repository Connections & Patterns${NC}"
+    echo ""
+
+    local repos=$(cat "$CACHE_FILE")
+
+    echo -e "${CYAN}Common Naming Patterns:${NC}"
+
+    # Count prefix patterns
+    echo "  'blackroad-os-': $(echo "$repos" | jq -r '[.[] | select(.name | startswith("blackroad-os-"))] | length') repos"
+    echo "  'blackroad-': $(echo "$repos" | jq -r '[.[] | select(.name | startswith("blackroad-"))] | length') repos"
+
+    echo ""
+    echo -e "${YELLOW}Package Families (Packs):${NC}"
+    echo "$repos" | jq -r '[.[] | select(.name | contains("pack"))]' | \
+    jq -r '.[] | "  \(.name)"'
+
+    echo ""
+    echo -e "${MAGENTA}Potential Microservices:${NC}"
+    echo "$repos" | jq -r '[.[] | select(.description != null) | select(.description | ascii_downcase | test("service|api|gateway|worker"))]' | \
+    jq -r '.[:5] | .[] | "  \(.name) - \(.description[0:60])..."'
+
+    echo ""
+}
+
+# Main menu
+main() {
+    if [ ! -f "$CACHE_FILE" ]; then
+        echo -e "${RED}Error: Cache not found. Run 'bros refresh' first.${NC}"
+        exit 1
+    fi
+
+    case "${1:-all}" in
+        languages|lang)
+            analyze_languages
+            ;;
+        activity)
+            analyze_activity
+            ;;
+        orgs)
+            analyze_orgs
+            ;;
+        complexity)
+            analyze_complexity
+            ;;
+        frequency|freq)
+            analyze_frequency
+            ;;
+        connections|connect)
+            analyze_connections
+            ;;
+        all)
+            analyze_languages
+            echo ""
+            analyze_activity
+            echo ""
+            analyze_orgs
+            echo ""
+            analyze_complexity
+            echo ""
+            analyze_frequency
+            echo ""
+            analyze_connections
+            ;;
+        *)
+            echo "Usage: bros-analyze [languages|activity|orgs|complexity|frequency|connections|all]"
+            exit 1
+            ;;
+    esac
+}
+
+main "$@"

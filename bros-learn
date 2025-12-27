@@ -1,0 +1,401 @@
+#!/bin/bash
+# AI agent learning and knowledge accumulation
+
+LEARNING_DB="$HOME/.blackroad-cache/learning.json"
+PATTERNS_DB="$HOME/.blackroad-cache/patterns.json"
+
+# Colors
+CYAN='\033[0;36m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+RED='\033[0;31m'
+MAGENTA='\033[0;35m'
+BLUE='\033[0;34m'
+NC='\033[0m'
+BOLD='\033[1m'
+
+show_header() {
+    echo -e "${CYAN}${BOLD}╔════════════════════════════════════════════════════════════════════╗${NC}"
+    echo -e "${CYAN}${BOLD}║          BLACKROAD AGENT LEARNING SYSTEM                           ║${NC}"
+    echo -e "${CYAN}${BOLD}╚════════════════════════════════════════════════════════════════════╝${NC}"
+    echo ""
+}
+
+# Initialize learning database
+init_learning() {
+    mkdir -p "$(dirname "$LEARNING_DB")"
+    if [ ! -f "$LEARNING_DB" ]; then
+        echo '{"lessons": [], "skills": [], "mistakes": [], "insights": []}' > "$LEARNING_DB"
+    fi
+    if [ ! -f "$PATTERNS_DB" ]; then
+        echo '{"patterns": []}' > "$PATTERNS_DB"
+    fi
+}
+
+# Record a lesson learned
+learn_lesson() {
+    local title="$1"
+    local description="$2"
+    local category="${3:-general}"
+    
+    show_header
+    echo -e "${GREEN}📚 Recording Lesson${NC}"
+    echo ""
+    
+    init_learning
+    
+    local lesson_id=$(date +%s | sha256sum | cut -c1-8)
+    local timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+    
+    # Get current agent
+    local current_agent=$(cat "$HOME/.blackroad-cache/current-agent.json" 2>/dev/null | jq -r '.username // "unknown"')
+    
+    local lesson_data=$(jq -n \
+        --arg id "$lesson_id" \
+        --arg title "$title" \
+        --arg desc "$description" \
+        --arg cat "$category" \
+        --arg agent "$current_agent" \
+        --arg time "$timestamp" \
+        '{
+            id: $id,
+            title: $title,
+            description: $desc,
+            category: $cat,
+            learned_by: $agent,
+            learned_at: $time,
+            applied_count: 0
+        }')
+    
+    local db=$(cat "$LEARNING_DB")
+    db=$(echo "$db" | jq --argjson lesson "$lesson_data" '.lessons += [$lesson]')
+    echo "$db" > "$LEARNING_DB"
+    
+    echo -e "${GREEN}✓ Lesson recorded!${NC}"
+    echo -e "  ${BOLD}ID:${NC} $lesson_id"
+    echo -e "  ${BOLD}Title:${NC} $title"
+    echo -e "  ${BOLD}Category:${NC} $category"
+    
+    # Share with other agents
+    "$HOME/memory-til-broadcast.sh" broadcast learning "📚 Lesson learned: $title - $description (by $current_agent)" 2>/dev/null
+}
+
+# Record a mistake to avoid
+record_mistake() {
+    local what_happened="$1"
+    local what_to_do="$2"
+    local severity="${3:-medium}"
+    
+    show_header
+    echo -e "${YELLOW}⚠️  Recording Mistake${NC}"
+    echo ""
+    
+    init_learning
+    
+    local mistake_id=$(date +%s | sha256sum | cut -c1-8)
+    local timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+    
+    # Get current agent
+    local current_agent=$(cat "$HOME/.blackroad-cache/current-agent.json" 2>/dev/null | jq -r '.username // "unknown"')
+    
+    local mistake_data=$(jq -n \
+        --arg id "$mistake_id" \
+        --arg what "$what_happened" \
+        --arg fix "$what_to_do" \
+        --arg sev "$severity" \
+        --arg agent "$current_agent" \
+        --arg time "$timestamp" \
+        '{
+            id: $id,
+            what_happened: $what,
+            what_to_do_instead: $fix,
+            severity: $sev,
+            recorded_by: $agent,
+            recorded_at: $time
+        }')
+    
+    local db=$(cat "$LEARNING_DB")
+    db=$(echo "$db" | jq --argjson mistake "$mistake_data" '.mistakes += [$mistake]')
+    echo "$db" > "$LEARNING_DB"
+    
+    echo -e "${GREEN}✓ Mistake recorded!${NC}"
+    echo -e "  ${BOLD}What happened:${NC} $what_happened"
+    echo -e "  ${BOLD}What to do instead:${NC} $what_to_do"
+    echo -e "  ${BOLD}Severity:${NC} $severity"
+    
+    # Warn other agents
+    "$HOME/memory-til-broadcast.sh" broadcast warning "⚠️  Mistake to avoid ($severity): $what_happened → Do instead: $what_to_do" 2>/dev/null
+}
+
+# Detect a pattern
+detect_pattern() {
+    local pattern_name="$1"
+    local when_it_occurs="$2"
+    local how_to_handle="$3"
+    
+    show_header
+    echo -e "${MAGENTA}🔍 Detecting Pattern${NC}"
+    echo ""
+    
+    init_learning
+    
+    local pattern_id=$(date +%s | sha256sum | cut -c1-8)
+    local timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+    
+    # Get current agent
+    local current_agent=$(cat "$HOME/.blackroad-cache/current-agent.json" 2>/dev/null | jq -r '.username // "unknown"')
+    
+    local pattern_data=$(jq -n \
+        --arg id "$pattern_id" \
+        --arg name "$pattern_name" \
+        --arg when "$when_it_occurs" \
+        --arg how "$how_to_handle" \
+        --arg agent "$current_agent" \
+        --arg time "$timestamp" \
+        '{
+            id: $id,
+            name: $name,
+            when_it_occurs: $when,
+            how_to_handle: $how,
+            detected_by: $agent,
+            detected_at: $time,
+            occurrences: 1
+        }')
+    
+    local db=$(cat "$PATTERNS_DB")
+    db=$(echo "$db" | jq --argjson pattern "$pattern_data" '.patterns += [$pattern]')
+    echo "$db" > "$PATTERNS_DB"
+    
+    echo -e "${GREEN}✓ Pattern detected!${NC}"
+    echo -e "  ${BOLD}Pattern:${NC} $pattern_name"
+    echo -e "  ${BOLD}When:${NC} $when_it_occurs"
+    echo -e "  ${BOLD}How to handle:${NC} $how_to_handle"
+    
+    # Share pattern
+    "$HOME/bros-memory" pattern "$pattern_name" "$when_it_occurs. Handle: $how_to_handle" 2>/dev/null
+}
+
+# Add a skill
+add_skill() {
+    local skill_name="$1"
+    local proficiency="${2:-beginner}"
+    local notes="$3"
+    
+    show_header
+    echo -e "${BLUE}🎯 Adding Skill${NC}"
+    echo ""
+    
+    init_learning
+    
+    local skill_id=$(date +%s | sha256sum | cut -c1-8)
+    local timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+    
+    # Get current agent
+    local current_agent=$(cat "$HOME/.blackroad-cache/current-agent.json" 2>/dev/null | jq -r '.username // "unknown"')
+    
+    local skill_data=$(jq -n \
+        --arg id "$skill_id" \
+        --arg skill "$skill_name" \
+        --arg prof "$proficiency" \
+        --arg notes "$notes" \
+        --arg agent "$current_agent" \
+        --arg time "$timestamp" \
+        '{
+            id: $id,
+            skill: $skill,
+            proficiency: $prof,
+            notes: $notes,
+            agent: $agent,
+            acquired_at: $time
+        }')
+    
+    local db=$(cat "$LEARNING_DB")
+    db=$(echo "$db" | jq --argjson skill "$skill_data" '.skills += [$skill]')
+    echo "$db" > "$LEARNING_DB"
+    
+    echo -e "${GREEN}✓ Skill added!${NC}"
+    echo -e "  ${BOLD}Skill:${NC} $skill_name"
+    echo -e "  ${BOLD}Proficiency:${NC} $proficiency"
+    
+    # Update agent capabilities in registry
+    ~/blackroad-agent-registry.sh register "$current_agent" "$skill_name" 2>/dev/null || true
+}
+
+# Record insight
+record_insight() {
+    local insight="$1"
+    local context="$2"
+    
+    show_header
+    echo -e "${MAGENTA}💡 Recording Insight${NC}"
+    echo ""
+    
+    init_learning
+    
+    local insight_id=$(date +%s | sha256sum | cut -c1-8)
+    local timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+    
+    # Get current agent
+    local current_agent=$(cat "$HOME/.blackroad-cache/current-agent.json" 2>/dev/null | jq -r '.username // "unknown"')
+    
+    local insight_data=$(jq -n \
+        --arg id "$insight_id" \
+        --arg insight "$insight" \
+        --arg context "$context" \
+        --arg agent "$current_agent" \
+        --arg time "$timestamp" \
+        '{
+            id: $id,
+            insight: $insight,
+            context: $context,
+            agent: $agent,
+            recorded_at: $time
+        }')
+    
+    local db=$(cat "$LEARNING_DB")
+    db=$(echo "$db" | jq --argjson insight "$insight_data" '.insights += [$insight]')
+    echo "$db" > "$LEARNING_DB"
+    
+    echo -e "${GREEN}✓ Insight recorded!${NC}"
+    echo -e "  ${BOLD}Insight:${NC} $insight"
+    
+    # Share insight
+    "$HOME/memory-til-broadcast.sh" broadcast discovery "💡 Insight: $insight (Context: $context)" 2>/dev/null
+}
+
+# View lessons
+view_lessons() {
+    local category="${1:-all}"
+    
+    show_header
+    echo -e "${GREEN}📖 Lessons Learned${NC}"
+    echo ""
+    
+    init_learning
+    
+    local db=$(cat "$LEARNING_DB")
+    
+    if [ "$category" = "all" ]; then
+        echo "$db" | jq -r '.lessons[] | 
+            "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n" +
+            "  📚 \(.title)\n" +
+            "  Category: \(.category)\n" +
+            "  \(.description)\n" +
+            "  By: \(.learned_by) | Applied: \(.applied_count)x"' | head -50
+    else
+        echo "$db" | jq -r --arg cat "$category" '.lessons[] | select(.category == $cat) | 
+            "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n" +
+            "  📚 \(.title)\n" +
+            "  \(.description)\n" +
+            "  By: \(.learned_by) | Applied: \(.applied_count)x"' | head -50
+    fi
+}
+
+# View patterns
+view_patterns() {
+    show_header
+    echo -e "${MAGENTA}🔍 Detected Patterns${NC}"
+    echo ""
+    
+    init_learning
+    
+    local db=$(cat "$PATTERNS_DB")
+    
+    echo "$db" | jq -r '.patterns[] | 
+        "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n" +
+        "  🔍 \(.name)\n" +
+        "  When: \(.when_it_occurs)\n" +
+        "  Handle: \(.how_to_handle)\n" +
+        "  Detected by: \(.detected_by) | Occurrences: \(.occurrences)"' | head -50
+}
+
+# Learning stats
+learning_stats() {
+    show_header
+    echo -e "${BLUE}📊 Learning Statistics${NC}"
+    echo ""
+    
+    init_learning
+    
+    local db=$(cat "$LEARNING_DB")
+    local patterns_db=$(cat "$PATTERNS_DB")
+    
+    # Get current agent
+    local current_agent=$(cat "$HOME/.blackroad-cache/current-agent.json" 2>/dev/null | jq -r '.username // "unknown"')
+    
+    local total_lessons=$(echo "$db" | jq '.lessons | length')
+    local my_lessons=$(echo "$db" | jq --arg agent "$current_agent" '[.lessons[] | select(.learned_by == $agent)] | length')
+    local total_skills=$(echo "$db" | jq '.skills | length')
+    local total_mistakes=$(echo "$db" | jq '.mistakes | length')
+    local total_insights=$(echo "$db" | jq '.insights | length')
+    local total_patterns=$(echo "$patterns_db" | jq '.patterns | length')
+    
+    echo -e "${CYAN}Knowledge Base:${NC}"
+    echo -e "  Total Lessons: $total_lessons (You contributed: $my_lessons)"
+    echo -e "  Total Skills: $total_skills"
+    echo -e "  Patterns Detected: $total_patterns"
+    echo -e "  Insights: $total_insights"
+    echo -e "  Mistakes Recorded: $total_mistakes"
+    echo ""
+    
+    echo -e "${GREEN}Top Categories:${NC}"
+    echo "$db" | jq -r '[.lessons[].category] | group_by(.) | map({category: .[0], count: length}) | sort_by(.count) | reverse | .[:5][] | "  \(.category): \(.count)"'
+    
+    echo ""
+    echo -e "${MAGENTA}✨ Every mistake is a lesson, every pattern is wisdom!${NC}"
+}
+
+# Main
+main() {
+    case "${1:-help}" in
+        lesson)
+            learn_lesson "$2" "$3" "$4"
+            ;;
+        mistake)
+            record_mistake "$2" "$3" "$4"
+            ;;
+        pattern)
+            detect_pattern "$2" "$3" "$4"
+            ;;
+        skill)
+            add_skill "$2" "$3" "$4"
+            ;;
+        insight)
+            record_insight "$2" "$3"
+            ;;
+        lessons)
+            view_lessons "$2"
+            ;;
+        patterns)
+            view_patterns
+            ;;
+        stats)
+            learning_stats
+            ;;
+        *)
+            show_header
+            echo "Usage: bros-learn <command> [options]"
+            echo ""
+            echo "Commands:"
+            echo "  lesson <title> <desc> [category]     Record a lesson learned"
+            echo "  mistake <what> <fix> [severity]      Record mistake to avoid"
+            echo "  pattern <name> <when> <how>          Detect a pattern"
+            echo "  skill <name> [proficiency] [notes]   Add a skill"
+            echo "  insight <insight> <context>          Record an insight"
+            echo "  lessons [category]                   View lessons (all or by category)"
+            echo "  patterns                             View detected patterns"
+            echo "  stats                                Learning statistics"
+            echo ""
+            echo "Examples:"
+            echo "  bros-learn lesson 'Use TypeScript' 'Type safety prevents bugs' programming"
+            echo "  bros-learn mistake 'Forgot to commit' 'Use git hooks' high"
+            echo "  bros-learn pattern 'API Timeout' 'Under load' 'Add retry logic'"
+            echo "  bros-learn skill 'Kubernetes' expert 'Can deploy and debug'"
+            echo "  bros-learn insight 'Simplicity wins' 'Complex code = more bugs'"
+            echo ""
+            echo "🧠 Learn, grow, evolve!"
+            ;;
+    esac
+}
+
+main "$@"

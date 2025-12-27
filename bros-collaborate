@@ -1,0 +1,435 @@
+#!/bin/bash
+# Cross-agent collaboration and coordination
+
+CACHE_FILE="$HOME/.blackroad-cache/repos.json"
+AGENT_REGISTRY="$HOME/.blackroad-cache/agent-registry.json"
+COLLAB_STATE="$HOME/.blackroad-cache/collaboration.json"
+
+# Colors
+CYAN='\033[0;36m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+RED='\033[0;31m'
+MAGENTA='\033[0;35m'
+BLUE='\033[0;34m'
+NC='\033[0m'
+BOLD='\033[1m'
+
+show_header() {
+    echo -e "${CYAN}${BOLD}╔════════════════════════════════════════════════════════════════════╗${NC}"
+    echo -e "${CYAN}${BOLD}║          BLACKROAD AGENT COLLABORATION                             ║${NC}"
+    echo -e "${CYAN}${BOLD}╚════════════════════════════════════════════════════════════════════╝${NC}"
+    echo ""
+}
+
+# Initialize collaboration
+init_collab() {
+    mkdir -p "$(dirname "$COLLAB_STATE")"
+    if [ ! -f "$COLLAB_STATE" ]; then
+        echo '{"teams": [], "active_sessions": [], "requests": []}' > "$COLLAB_STATE"
+    fi
+}
+
+# Create a team
+create_team() {
+    local team_name="$1"
+    local purpose="$2"
+    
+    show_header
+    echo -e "${GREEN}🤝 Creating Team${NC}"
+    echo ""
+    
+    init_collab
+    
+    local team_id=$(date +%s | sha256sum | cut -c1-8)
+    local timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+    
+    # Get current agent
+    local current_agent=$(cat "$HOME/.blackroad-cache/current-agent.json" 2>/dev/null | jq -r '.username // "unknown"')
+    
+    local team_data=$(jq -n \
+        --arg id "$team_id" \
+        --arg name "$team_name" \
+        --arg purpose "$purpose" \
+        --arg leader "$current_agent" \
+        --arg created "$timestamp" \
+        '{
+            id: $id,
+            name: $name,
+            purpose: $purpose,
+            leader: $leader,
+            members: [$leader],
+            created_at: $created,
+            status: "active"
+        }')
+    
+    local state=$(cat "$COLLAB_STATE")
+    state=$(echo "$state" | jq --argjson team "$team_data" '.teams += [$team]')
+    echo "$state" > "$COLLAB_STATE"
+    
+    echo -e "${GREEN}✓ Team created!${NC}"
+    echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo -e "  ${BOLD}Team ID:${NC} $team_id"
+    echo -e "  ${BOLD}Name:${NC} $team_name"
+    echo -e "  ${BOLD}Purpose:${NC} $purpose"
+    echo -e "  ${BOLD}Leader:${NC} $current_agent"
+    echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    
+    # Log to memory
+    "$HOME/memory-system.sh" log collaboration "[TEAM] $team_name Created" "Team ID: $team_id. Purpose: $purpose. Leader: $current_agent" "bros-collaborate" 2>/dev/null
+}
+
+# Join a team
+join_team() {
+    local team_id="$1"
+    
+    show_header
+    echo -e "${GREEN}👋 Joining Team${NC}"
+    echo ""
+    
+    init_collab
+    
+    # Get current agent
+    local current_agent=$(cat "$HOME/.blackroad-cache/current-agent.json" 2>/dev/null | jq -r '.username // "unknown"')
+    
+    local state=$(cat "$COLLAB_STATE")
+    local team=$(echo "$state" | jq -r --arg id "$team_id" '.teams[] | select(.id == $id)')
+    
+    if [ -z "$team" ]; then
+        echo -e "${RED}Team not found: $team_id${NC}"
+        return 1
+    fi
+    
+    # Add member
+    state=$(echo "$state" | jq --arg id "$team_id" --arg member "$current_agent" \
+        '(.teams[] | select(.id == $id) | .members) += [$member]')
+    echo "$state" > "$COLLAB_STATE"
+    
+    local team_name=$(echo "$team" | jq -r '.name')
+    
+    echo -e "${GREEN}✓ Joined team: $team_name${NC}"
+    echo -e "  ${CYAN}Member:${NC} $current_agent"
+    
+    # Log to memory
+    "$HOME/memory-system.sh" log collaboration "[TEAM] $current_agent joined $team_name" "Team ID: $team_id" "bros-collaborate" 2>/dev/null
+}
+
+# List teams
+list_teams() {
+    show_header
+    echo -e "${GREEN}👥 Active Teams${NC}"
+    echo ""
+    
+    init_collab
+    
+    local state=$(cat "$COLLAB_STATE")
+    local teams=$(echo "$state" | jq -r '.teams[] | select(.status == "active")')
+    
+    if [ -z "$teams" ]; then
+        echo -e "${YELLOW}No active teams${NC}"
+        return
+    fi
+    
+    echo "$state" | jq -r '.teams[] | select(.status == "active") | 
+        "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n" +
+        "  Team: \(.name) (\(.id))\n" +
+        "  Purpose: \(.purpose)\n" +
+        "  Leader: \(.leader)\n" +
+        "  Members: \(.members | join(", "))\n" +
+        "  Created: \(.created_at)"'
+}
+
+# Request collaboration
+request_help() {
+    local task="$1"
+    local skills_needed="$2"
+    local urgency="${3:-medium}"
+    
+    show_header
+    echo -e "${GREEN}🆘 Requesting Collaboration${NC}"
+    echo ""
+    
+    init_collab
+    
+    local request_id=$(date +%s | sha256sum | cut -c1-8)
+    local timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+    
+    # Get current agent
+    local current_agent=$(cat "$HOME/.blackroad-cache/current-agent.json" 2>/dev/null | jq -r '.username // "unknown"')
+    
+    local request_data=$(jq -n \
+        --arg id "$request_id" \
+        --arg task "$task" \
+        --arg skills "$skills_needed" \
+        --arg urgency "$urgency" \
+        --arg requester "$current_agent" \
+        --arg time "$timestamp" \
+        '{
+            id: $id,
+            task: $task,
+            skills_needed: $skills,
+            urgency: $urgency,
+            requester: $requester,
+            created_at: $time,
+            status: "open",
+            responders: []
+        }')
+    
+    local state=$(cat "$COLLAB_STATE")
+    state=$(echo "$state" | jq --argjson req "$request_data" '.requests += [$req]')
+    echo "$state" > "$COLLAB_STATE"
+    
+    echo -e "${GREEN}✓ Collaboration request posted!${NC}"
+    echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo -e "  ${BOLD}Request ID:${NC} $request_id"
+    echo -e "  ${BOLD}Task:${NC} $task"
+    echo -e "  ${BOLD}Skills Needed:${NC} $skills_needed"
+    echo -e "  ${BOLD}Urgency:${NC} $urgency"
+    echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    
+    # Broadcast to all agents
+    "$HOME/memory-til-broadcast.sh" broadcast help "🆘 Collaboration needed: $task (Skills: $skills_needed, Urgency: $urgency) - Request ID: $request_id - From: $current_agent" 2>/dev/null
+}
+
+# Respond to request
+respond_to_request() {
+    local request_id="$1"
+    local message="$2"
+    
+    show_header
+    echo -e "${GREEN}✋ Responding to Request${NC}"
+    echo ""
+    
+    init_collab
+    
+    # Get current agent
+    local current_agent=$(cat "$HOME/.blackroad-cache/current-agent.json" 2>/dev/null | jq -r '.username // "unknown"')
+    
+    local state=$(cat "$COLLAB_STATE")
+    
+    # Add responder
+    state=$(echo "$state" | jq --arg id "$request_id" --arg agent "$current_agent" --arg msg "$message" \
+        '(.requests[] | select(.id == $id) | .responders) += [{agent: $agent, message: $msg}]')
+    echo "$state" > "$COLLAB_STATE"
+    
+    echo -e "${GREEN}✓ Response sent!${NC}"
+    echo -e "  ${CYAN}Agent:${NC} $current_agent"
+    echo -e "  ${CYAN}Message:${NC} $message"
+    
+    # Notify requester
+    local requester=$(echo "$state" | jq -r --arg id "$request_id" '.requests[] | select(.id == $id) | .requester')
+    "$HOME/memory-system.sh" log collaboration "[@$requester] Response to your request $request_id" "From: $current_agent. Message: $message" "bros-collaborate" 2>/dev/null
+}
+
+# List open requests
+list_requests() {
+    show_header
+    echo -e "${GREEN}📋 Open Collaboration Requests${NC}"
+    echo ""
+    
+    init_collab
+    
+    local state=$(cat "$COLLAB_STATE")
+    local requests=$(echo "$state" | jq -r '.requests[] | select(.status == "open")')
+    
+    if [ -z "$requests" ]; then
+        echo -e "${YELLOW}No open requests${NC}"
+        return
+    fi
+    
+    echo "$state" | jq -r '.requests[] | select(.status == "open") | 
+        "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n" +
+        "  Request: \(.id)\n" +
+        "  Task: \(.task)\n" +
+        "  Skills: \(.skills_needed)\n" +
+        "  Urgency: \(.urgency)\n" +
+        "  From: \(.requester)\n" +
+        "  Responses: \(.responders | length)"'
+}
+
+# Pair programming session
+pair_program() {
+    local partner="$1"
+    local repo="$2"
+    
+    show_header
+    echo -e "${GREEN}👥 Starting Pair Programming Session${NC}"
+    echo ""
+    
+    init_collab
+    
+    local session_id=$(date +%s | sha256sum | cut -c1-8)
+    local timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+    
+    # Get current agent
+    local current_agent=$(cat "$HOME/.blackroad-cache/current-agent.json" 2>/dev/null | jq -r '.username // "unknown"')
+    
+    local session_data=$(jq -n \
+        --arg id "$session_id" \
+        --arg driver "$current_agent" \
+        --arg navigator "$partner" \
+        --arg repo "$repo" \
+        --arg time "$timestamp" \
+        '{
+            id: $id,
+            driver: $driver,
+            navigator: $navigator,
+            repo: $repo,
+            started_at: $time,
+            status: "active",
+            switches: 0
+        }')
+    
+    local state=$(cat "$COLLAB_STATE")
+    state=$(echo "$state" | jq --argjson session "$session_data" '.active_sessions += [$session]')
+    echo "$state" > "$COLLAB_STATE"
+    
+    echo -e "${GREEN}✓ Pair programming session started!${NC}"
+    echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo -e "  ${BOLD}Session ID:${NC} $session_id"
+    echo -e "  ${BOLD}Driver:${NC} $current_agent 🚗"
+    echo -e "  ${BOLD}Navigator:${NC} $partner 🗺️"
+    echo -e "  ${BOLD}Repo:${NC} $repo"
+    echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo ""
+    echo -e "${YELLOW}💡 Remember:${NC}"
+    echo -e "  • Driver: Write the code"
+    echo -e "  • Navigator: Review, suggest, think ahead"
+    echo -e "  • Switch roles regularly!"
+    
+    # Notify partner
+    "$HOME/memory-system.sh" log collaboration "[@$partner] Pair programming invitation" "Session: $session_id. Repo: $repo. Driver: $current_agent. Navigator: $partner" "bros-collaborate" 2>/dev/null
+}
+
+# Knowledge share
+share_knowledge() {
+    local topic="$1"
+    local content="$2"
+    local audience="${3:-all}"
+    
+    show_header
+    echo -e "${GREEN}🎓 Sharing Knowledge${NC}"
+    echo ""
+    
+    # Get current agent
+    local current_agent=$(cat "$HOME/.blackroad-cache/current-agent.json" 2>/dev/null | jq -r '.username // "unknown"')
+    
+    echo -e "${CYAN}Topic:${NC} $topic"
+    echo -e "${CYAN}Audience:${NC} $audience"
+    echo ""
+    
+    # Share via TIL
+    "$HOME/memory-til-broadcast.sh" broadcast discovery "📚 Knowledge Share: $topic - $content (by $current_agent)" 2>/dev/null
+    
+    # Log to memory
+    "$HOME/memory-system.sh" log knowledge "[SHARE] $topic by $current_agent" "$content. Audience: $audience" "bros-collaborate" 2>/dev/null
+    
+    echo -e "${GREEN}✓ Knowledge shared!${NC}"
+}
+
+# Agent skills directory
+skills_directory() {
+    show_header
+    echo -e "${GREEN}🎯 Agent Skills Directory${NC}"
+    echo ""
+    
+    # Query all agents from registry and their capabilities
+    ~/blackroad-agent-registry.sh list 2>/dev/null | grep "🎭" | while read -r line; do
+        echo "$line"
+    done
+    
+    echo ""
+    echo -e "${BLUE}Use: bros-collaborate request-help '<task>' '<skills>'${NC}"
+}
+
+# Collaboration stats
+collab_stats() {
+    show_header
+    echo -e "${GREEN}📊 Collaboration Statistics${NC}"
+    echo ""
+    
+    init_collab
+    
+    local state=$(cat "$COLLAB_STATE")
+    
+    local total_teams=$(echo "$state" | jq '.teams | length')
+    local active_teams=$(echo "$state" | jq '[.teams[] | select(.status == "active")] | length')
+    local total_requests=$(echo "$state" | jq '.requests | length')
+    local open_requests=$(echo "$state" | jq '[.requests[] | select(.status == "open")] | length')
+    local active_sessions=$(echo "$state" | jq '.active_sessions | length')
+    
+    echo -e "${CYAN}Teams:${NC}"
+    echo -e "  Total: $total_teams"
+    echo -e "  Active: $active_teams"
+    echo ""
+    echo -e "${CYAN}Collaboration Requests:${NC}"
+    echo -e "  Total: $total_requests"
+    echo -e "  Open: $open_requests"
+    echo ""
+    echo -e "${CYAN}Active Pair Programming Sessions: $active_sessions${NC}"
+    
+    echo ""
+    echo -e "${MAGENTA}🤝 Collaboration is the BlackRoad way!${NC}"
+}
+
+# Main
+main() {
+    case "${1:-help}" in
+        create-team)
+            create_team "$2" "$3"
+            ;;
+        join-team)
+            join_team "$2"
+            ;;
+        list-teams|teams)
+            list_teams
+            ;;
+        request-help|help-request)
+            request_help "$2" "$3" "$4"
+            ;;
+        respond)
+            respond_to_request "$2" "$3"
+            ;;
+        list-requests|requests)
+            list_requests
+            ;;
+        pair)
+            pair_program "$2" "$3"
+            ;;
+        share)
+            share_knowledge "$2" "$3" "$4"
+            ;;
+        skills)
+            skills_directory
+            ;;
+        stats)
+            collab_stats
+            ;;
+        *)
+            show_header
+            echo "Usage: bros-collaborate <command> [options]"
+            echo ""
+            echo "Commands:"
+            echo "  create-team <name> <purpose>        Create a collaboration team"
+            echo "  join-team <team-id>                 Join an existing team"
+            echo "  list-teams                          List all active teams"
+            echo "  request-help <task> <skills> [urgency]  Request collaboration"
+            echo "  respond <request-id> <message>      Respond to a request"
+            echo "  list-requests                       List open requests"
+            echo "  pair <partner> <repo>               Start pair programming"
+            echo "  share <topic> <content> [audience]  Share knowledge"
+            echo "  skills                              View agent skills directory"
+            echo "  stats                               Collaboration statistics"
+            echo ""
+            echo "Examples:"
+            echo "  bros-collaborate create-team dashboard-squad 'Build amazing dashboards'"
+            echo "  bros-collaborate request-help 'Deploy to Railway' 'devops,railway' urgent"
+            echo "  bros-collaborate pair alice blackroad-os-operator"
+            echo "  bros-collaborate share 'React Hooks' 'Use useEffect for side effects'"
+            echo ""
+            echo "🤝 Collaboration makes us stronger!"
+            ;;
+    esac
+}
+
+main "$@"

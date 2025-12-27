@@ -1,0 +1,378 @@
+#!/bin/bash
+# Agent mission and goal tracking
+
+MISSIONS_DB="$HOME/.blackroad-cache/missions.json"
+
+# Colors
+CYAN='\033[0;36m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+RED='\033[0;31m'
+MAGENTA='\033[0;35m'
+BLUE='\033[0;34m'
+NC='\033[0m'
+BOLD='\033[1m'
+
+show_header() {
+    echo -e "${CYAN}${BOLD}╔════════════════════════════════════════════════════════════════════╗${NC}"
+    echo -e "${CYAN}${BOLD}║          BLACKROAD AGENT MISSION CONTROL                           ║${NC}"
+    echo -e "${CYAN}${BOLD}╚════════════════════════════════════════════════════════════════════╝${NC}"
+    echo ""
+}
+
+# Initialize missions database
+init_missions() {
+    mkdir -p "$(dirname "$MISSIONS_DB")"
+    if [ ! -f "$MISSIONS_DB" ]; then
+        echo '{"missions": [], "goals": [], "quests": []}' > "$MISSIONS_DB"
+    fi
+}
+
+# Create a mission
+create_mission() {
+    local mission_name="$1"
+    local purpose="$2"
+    local scope="${3:-personal}"
+    
+    show_header
+    echo -e "${GREEN}🎯 Creating Mission${NC}"
+    echo ""
+    
+    init_missions
+    
+    local mission_id=$(date +%s | sha256sum | cut -c1-8)
+    local timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+    
+    # Get current agent
+    local current_agent=$(cat "$HOME/.blackroad-cache/current-agent.json" 2>/dev/null | jq -r '.username // "unknown"')
+    
+    local mission_data=$(jq -n \
+        --arg id "$mission_id" \
+        --arg name "$mission_name" \
+        --arg purpose "$purpose" \
+        --arg scope "$scope" \
+        --arg agent "$current_agent" \
+        --arg time "$timestamp" \
+        '{
+            id: $id,
+            name: $name,
+            purpose: $purpose,
+            scope: $scope,
+            agent: $agent,
+            created_at: $time,
+            status: "active",
+            progress: 0,
+            goals: [],
+            victories: []
+        }')
+    
+    local db=$(cat "$MISSIONS_DB")
+    db=$(echo "$db" | jq --argjson mission "$mission_data" '.missions += [$mission]')
+    echo "$db" > "$MISSIONS_DB"
+    
+    echo -e "${GREEN}✓ Mission created!${NC}"
+    echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo -e "  ${BOLD}Mission ID:${NC} $mission_id"
+    echo -e "  ${BOLD}Name:${NC} $mission_name"
+    echo -e "  ${BOLD}Purpose:${NC} $purpose"
+    echo -e "  ${BOLD}Scope:${NC} $scope"
+    echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    
+    # Log to memory
+    "$HOME/memory-system.sh" log mission "[$current_agent] Mission: $mission_name" "Purpose: $purpose. Scope: $scope. ID: $mission_id" "bros-mission" 2>/dev/null
+}
+
+# Add a goal to mission
+add_goal() {
+    local mission_id="$1"
+    local goal="$2"
+    local type="${3:-milestone}"
+    
+    show_header
+    echo -e "${BLUE}🎪 Adding Goal${NC}"
+    echo ""
+    
+    init_missions
+    
+    local goal_id=$(date +%s | sha256sum | cut -c1-8)
+    local timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+    
+    local goal_data=$(jq -n \
+        --arg id "$goal_id" \
+        --arg goal "$goal" \
+        --arg type "$type" \
+        --arg time "$timestamp" \
+        '{
+            id: $id,
+            goal: $goal,
+            type: $type,
+            added_at: $time,
+            completed: false
+        }')
+    
+    local db=$(cat "$MISSIONS_DB")
+    db=$(echo "$db" | jq --arg mid "$mission_id" --argjson goal "$goal_data" \
+        '(.missions[] | select(.id == $mid) | .goals) += [$goal]')
+    echo "$db" > "$MISSIONS_DB"
+    
+    echo -e "${GREEN}✓ Goal added!${NC}"
+    echo -e "  ${BOLD}Goal:${NC} $goal"
+    echo -e "  ${BOLD}Type:${NC} $type"
+}
+
+# Complete a goal
+complete_goal() {
+    local mission_id="$1"
+    local goal_id="$2"
+    local notes="$3"
+    
+    show_header
+    echo -e "${GREEN}🏆 Goal Completed!${NC}"
+    echo ""
+    
+    init_missions
+    
+    local timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+    
+    # Get current agent
+    local current_agent=$(cat "$HOME/.blackroad-cache/current-agent.json" 2>/dev/null | jq -r '.username // "unknown"')
+    
+    local db=$(cat "$MISSIONS_DB")
+    
+    # Mark goal complete
+    db=$(echo "$db" | jq --arg mid "$mission_id" --arg gid "$goal_id" --arg time "$timestamp" \
+        '(.missions[] | select(.id == $mid) | .goals[] | select(.id == $gid) | .completed) = true |
+         (.missions[] | select(.id == $mid) | .goals[] | select(.id == $gid) | .completed_at) = $time')
+    
+    # Add to victories
+    local victory_data=$(jq -n \
+        --arg goal_id "$goal_id" \
+        --arg notes "$notes" \
+        --arg time "$timestamp" \
+        '{
+            goal_id: $goal_id,
+            notes: $notes,
+            celebrated_at: $time
+        }')
+    
+    db=$(echo "$db" | jq --arg mid "$mission_id" --argjson victory "$victory_data" \
+        '(.missions[] | select(.id == $mid) | .victories) += [$victory]')
+    
+    # Update progress
+    local completed=$(echo "$db" | jq --arg mid "$mission_id" \
+        '[.missions[] | select(.id == $mid) | .goals[] | select(.completed == true)] | length')
+    local total=$(echo "$db" | jq --arg mid "$mission_id" \
+        '.missions[] | select(.id == $mid) | .goals | length')
+    
+    local progress=$(awk "BEGIN {printf \"%.0f\", ($completed/$total)*100}")
+    
+    db=$(echo "$db" | jq --arg mid "$mission_id" --argjson prog "$progress" \
+        '(.missions[] | select(.id == $mid) | .progress) = $prog')
+    
+    echo "$db" > "$MISSIONS_DB"
+    
+    echo -e "${GREEN}🎉 Victory!${NC}"
+    echo -e "  ${BOLD}Progress:${NC} $progress%"
+    echo -e "  ${BOLD}Notes:${NC} $notes"
+    
+    # Celebrate
+    "$HOME/memory-til-broadcast.sh" broadcast victory "🏆 $current_agent achieved a goal! Progress: $progress%" 2>/dev/null
+}
+
+# View active missions
+view_missions() {
+    show_header
+    echo -e "${GREEN}🎯 Active Missions${NC}"
+    echo ""
+    
+    init_missions
+    
+    local db=$(cat "$MISSIONS_DB")
+    
+    # Get current agent
+    local current_agent=$(cat "$HOME/.blackroad-cache/current-agent.json" 2>/dev/null | jq -r '.username // "unknown"')
+    
+    echo "$db" | jq -r --arg agent "$current_agent" '.missions[] | select(.status == "active" and .agent == $agent) | 
+        "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n" +
+        "  🎯 \(.name) (\(.id))\n" +
+        "  Purpose: \(.purpose)\n" +
+        "  Progress: \(.progress)%\n" +
+        "  Goals: \(.goals | length) (\([.goals[] | select(.completed == true)] | length) completed)\n" +
+        "  Victories: \(.victories | length)"'
+}
+
+# Start a quest (short-term focused mission)
+start_quest() {
+    local quest_name="$1"
+    local objective="$2"
+    local duration="${3:-1 day}"
+    
+    show_header
+    echo -e "${MAGENTA}⚔️  Starting Quest${NC}"
+    echo ""
+    
+    init_missions
+    
+    local quest_id=$(date +%s | sha256sum | cut -c1-8)
+    local timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+    
+    # Get current agent
+    local current_agent=$(cat "$HOME/.blackroad-cache/current-agent.json" 2>/dev/null | jq -r '.username // "unknown"')
+    
+    local quest_data=$(jq -n \
+        --arg id "$quest_id" \
+        --arg name "$quest_name" \
+        --arg obj "$objective" \
+        --arg dur "$duration" \
+        --arg agent "$current_agent" \
+        --arg time "$timestamp" \
+        '{
+            id: $id,
+            name: $name,
+            objective: $obj,
+            duration: $dur,
+            agent: $agent,
+            started_at: $time,
+            status: "active",
+            completed: false
+        }')
+    
+    local db=$(cat "$MISSIONS_DB")
+    db=$(echo "$db" | jq --argjson quest "$quest_data" '.quests += [$quest]')
+    echo "$db" > "$MISSIONS_DB"
+    
+    echo -e "${GREEN}⚔️  Quest accepted!${NC}"
+    echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo -e "  ${BOLD}Quest:${NC} $quest_name"
+    echo -e "  ${BOLD}Objective:${NC} $objective"
+    echo -e "  ${BOLD}Duration:${NC} $duration"
+    echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    
+    # Announce quest
+    "$HOME/memory-til-broadcast.sh" broadcast quest "⚔️  $current_agent started quest: $quest_name - $objective" 2>/dev/null
+}
+
+# Complete quest
+complete_quest() {
+    local quest_id="$1"
+    local outcome="$2"
+    
+    show_header
+    echo -e "${GREEN}🏅 Quest Complete!${NC}"
+    echo ""
+    
+    init_missions
+    
+    local timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+    
+    # Get current agent
+    local current_agent=$(cat "$HOME/.blackroad-cache/current-agent.json" 2>/dev/null | jq -r '.username // "unknown"')
+    
+    local db=$(cat "$MISSIONS_DB")
+    
+    db=$(echo "$db" | jq --arg qid "$quest_id" --arg outcome "$outcome" --arg time "$timestamp" \
+        '(.quests[] | select(.id == $qid) | .completed) = true |
+         (.quests[] | select(.id == $qid) | .outcome) = $outcome |
+         (.quests[] | select(.id == $qid) | .completed_at) = $time |
+         (.quests[] | select(.id == $qid) | .status) = "completed"')
+    
+    echo "$db" > "$MISSIONS_DB"
+    
+    local quest_name=$(echo "$db" | jq -r --arg qid "$quest_id" '.quests[] | select(.id == $qid) | .name')
+    
+    echo -e "${GREEN}🎊 Quest complete: $quest_name${NC}"
+    echo -e "  ${BOLD}Outcome:${NC} $outcome"
+    
+    # Celebrate
+    "$HOME/memory-til-broadcast.sh" broadcast victory "🏅 $current_agent completed quest: $quest_name! Outcome: $outcome" 2>/dev/null
+}
+
+# Mission stats
+mission_stats() {
+    show_header
+    echo -e "${BLUE}📊 Mission Statistics${NC}"
+    echo ""
+    
+    init_missions
+    
+    local db=$(cat "$MISSIONS_DB")
+    
+    # Get current agent
+    local current_agent=$(cat "$HOME/.blackroad-cache/current-agent.json" 2>/dev/null | jq -r '.username // "unknown"')
+    
+    local active_missions=$(echo "$db" | jq --arg agent "$current_agent" \
+        '[.missions[] | select(.status == "active" and .agent == $agent)] | length')
+    local total_goals=$(echo "$db" | jq --arg agent "$current_agent" \
+        '[.missions[] | select(.agent == $agent) | .goals[]] | length')
+    local completed_goals=$(echo "$db" | jq --arg agent "$current_agent" \
+        '[.missions[] | select(.agent == $agent) | .goals[] | select(.completed == true)] | length')
+    local active_quests=$(echo "$db" | jq --arg agent "$current_agent" \
+        '[.quests[] | select(.status == "active" and .agent == $agent)] | length')
+    local completed_quests=$(echo "$db" | jq --arg agent "$current_agent" \
+        '[.quests[] | select(.completed == true and .agent == $agent)] | length')
+    
+    echo -e "${CYAN}Your Stats:${NC}"
+    echo -e "  Active Missions: $active_missions"
+    echo -e "  Total Goals: $total_goals"
+    echo -e "  Goals Completed: $completed_goals"
+    echo -e "  Active Quests: $active_quests"
+    echo -e "  Quests Completed: $completed_quests"
+    
+    if [ "$total_goals" -gt 0 ]; then
+        local completion_rate=$(awk "BEGIN {printf \"%.0f\", ($completed_goals/$total_goals)*100}")
+        echo -e "  ${BOLD}Completion Rate: $completion_rate%${NC}"
+    fi
+    
+    echo ""
+    echo -e "${GREEN}🎯 Every journey starts with a single step!${NC}"
+}
+
+# Main
+main() {
+    case "${1:-help}" in
+        create|new)
+            create_mission "$2" "$3" "$4"
+            ;;
+        add-goal|goal)
+            add_goal "$2" "$3" "$4"
+            ;;
+        complete-goal|done)
+            complete_goal "$2" "$3" "$4"
+            ;;
+        list|missions)
+            view_missions
+            ;;
+        quest)
+            start_quest "$2" "$3" "$4"
+            ;;
+        complete-quest)
+            complete_quest "$2" "$3"
+            ;;
+        stats)
+            mission_stats
+            ;;
+        *)
+            show_header
+            echo "Usage: bros-mission <command> [options]"
+            echo ""
+            echo "Commands:"
+            echo "  create <name> <purpose> [scope]      Create a mission"
+            echo "  add-goal <mission-id> <goal> [type]  Add goal to mission"
+            echo "  complete-goal <mid> <gid> [notes]    Mark goal complete"
+            echo "  list                                  View your missions"
+            echo "  quest <name> <objective> [duration]  Start a quest"
+            echo "  complete-quest <quest-id> <outcome>  Complete quest"
+            echo "  stats                                 Your statistics"
+            echo ""
+            echo "Examples:"
+            echo "  bros-mission create 'Learn Rust' 'Master systems programming' personal"
+            echo "  bros-mission add-goal abc123 'Complete Rust book' milestone"
+            echo "  bros-mission quest 'Deploy to production' 'Zero downtime deploy' '4 hours'"
+            echo "  bros-mission complete-quest def456 'Successfully deployed!'"
+            echo ""
+            echo "🎯 What's your mission?"
+            ;;
+    esac
+}
+
+main "$@"

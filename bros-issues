@@ -1,0 +1,335 @@
+#!/bin/bash
+# Issue management across repos
+
+CACHE_FILE="$HOME/.blackroad-cache/repos.json"
+
+# Colors
+CYAN='\033[0;36m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+RED='\033[0;31m'
+MAGENTA='\033[0;35m'
+BLUE='\033[0;34m'
+NC='\033[0m'
+BOLD='\033[1m'
+
+show_header() {
+    echo -e "${CYAN}${BOLD}╔════════════════════════════════════════════════════════════════════╗${NC}"
+    echo -e "${CYAN}${BOLD}║          BLACKROAD ISSUE MANAGEMENT                                ║${NC}"
+    echo -e "${CYAN}${BOLD}╚════════════════════════════════════════════════════════════════════╝${NC}"
+    echo ""
+}
+
+# List all open issues
+list_issues() {
+    local pattern="${1:-.}"
+
+    show_header
+    echo -e "${GREEN}📋 Open Issues Across Ecosystem${NC}"
+    echo ""
+
+    local repos=$(cat "$CACHE_FILE")
+    local matches=$(echo "$repos" | jq -r --arg p "$pattern" '.[] | select(.name | ascii_downcase | contains($p | ascii_downcase)) | .name')
+
+    if [ -z "$matches" ]; then
+        echo -e "${RED}No repos match: $pattern${NC}"
+        return 1
+    fi
+
+    local total_issues=0
+
+    echo "$matches" | while read -r name; do
+        local owner=$(echo "$repos" | jq -r --arg n "$name" '.[] | select(.name == $n) | .url | split("/")[-2]')
+        local issues=$(gh issue list --repo "$owner/$name" --json number,title,labels,createdAt,author 2>/dev/null)
+
+        if [ "$issues" != "[]" ]; then
+            echo -e "${CYAN}${BOLD}$owner/$name:${NC}"
+            echo "$issues" | jq -r '.[] | "  #\(.number) - \(.title)\n    Labels: \(.labels | map(.name) | join(", "))\n    by \(.author.login) on \(.createdAt | split("T")[0])"'
+            echo ""
+
+            local count=$(echo "$issues" | jq 'length')
+            ((total_issues += count))
+        fi
+    done
+
+    echo -e "${GREEN}Total open issues: $total_issues${NC}"
+}
+
+# Create issue in repos matching pattern
+create_issue() {
+    local title="$1"
+    local body="$2"
+    local pattern="${3:-.}"
+
+    show_header
+    echo -e "${GREEN}🆕 Creating Issue${NC}"
+    echo ""
+
+    if [ -z "$title" ]; then
+        echo -e "${RED}Error: Title required${NC}"
+        echo "Usage: bros-issues create <title> [body] [pattern]"
+        return 1
+    fi
+
+    local repos=$(cat "$CACHE_FILE")
+    local matches=$(echo "$repos" | jq -r --arg p "$pattern" '.[] | select(.name | ascii_downcase | contains($p | ascii_downcase)) | .name')
+
+    if [ -z "$matches" ]; then
+        echo -e "${RED}No repos match: $pattern${NC}"
+        return 1
+    fi
+
+    echo -e "${CYAN}Creating issue in:${NC}"
+    echo "$matches" | while read -r name; do
+        echo "  → $name"
+    done
+
+    echo ""
+    echo -e "${YELLOW}Create issue in all? (y/N)${NC}"
+    read -r confirm
+
+    if [[ "$confirm" =~ ^[Yy]$ ]]; then
+        echo "$matches" | while read -r name; do
+            local owner=$(echo "$repos" | jq -r --arg n "$name" '.[] | select(.name == $n) | .url | split("/")[-2]')
+
+            echo -e "${CYAN}$owner/$name:${NC}"
+            if gh issue create --repo "$owner/$name" --title "$title" --body "${body:-Created via bros-issues}" 2>/dev/null; then
+                echo -e "  ${GREEN}✓ Issue created${NC}"
+            else
+                echo -e "  ${RED}✗ Failed${NC}"
+            fi
+        done
+
+        echo ""
+        echo -e "${GREEN}✓ Issue creation complete${NC}"
+    fi
+}
+
+# Close issues by number
+close_issue() {
+    local issue_number="$1"
+    local pattern="${2:-.}"
+    local comment="$3"
+
+    show_header
+    echo -e "${GREEN}❌ Closing Issue #$issue_number${NC}"
+    echo ""
+
+    if [ -z "$issue_number" ]; then
+        echo -e "${RED}Error: Issue number required${NC}"
+        echo "Usage: bros-issues close <number> [pattern] [comment]"
+        return 1
+    fi
+
+    local repos=$(cat "$CACHE_FILE")
+    local matches=$(echo "$repos" | jq -r --arg p "$pattern" '.[] | select(.name | ascii_downcase | contains($p | ascii_downcase)) | .name')
+
+    echo "$matches" | while read -r name; do
+        local owner=$(echo "$repos" | jq -r --arg n "$name" '.[] | select(.name == $n) | .url | split("/")[-2]')
+
+        # Check if issue exists
+        if gh issue view "$issue_number" --repo "$owner/$name" >/dev/null 2>&1; then
+            echo -e "${CYAN}$owner/$name:${NC}"
+
+            # Add comment if provided
+            if [ -n "$comment" ]; then
+                gh issue comment "$issue_number" --repo "$owner/$name" --body "$comment" 2>/dev/null
+            fi
+
+            # Close issue
+            if gh issue close "$issue_number" --repo "$owner/$name" 2>/dev/null; then
+                echo -e "  ${GREEN}✓ Issue closed${NC}"
+            fi
+        fi
+    done
+}
+
+# Label issues
+label_issue() {
+    local issue_number="$1"
+    local labels="$2"
+    local pattern="${3:-.}"
+
+    show_header
+    echo -e "${GREEN}🏷️  Labeling Issue #$issue_number${NC}"
+    echo ""
+
+    if [ -z "$issue_number" ] || [ -z "$labels" ]; then
+        echo -e "${RED}Error: Issue number and labels required${NC}"
+        echo "Usage: bros-issues label <number> <labels> [pattern]"
+        return 1
+    fi
+
+    local repos=$(cat "$CACHE_FILE")
+    local matches=$(echo "$repos" | jq -r --arg p "$pattern" '.[] | select(.name | ascii_downcase | contains($p | ascii_downcase)) | .name')
+
+    echo "$matches" | while read -r name; do
+        local owner=$(echo "$repos" | jq -r --arg n "$name" '.[] | select(.name == $n) | .url | split("/")[-2]')
+
+        if gh issue view "$issue_number" --repo "$owner/$name" >/dev/null 2>&1; then
+            echo -e "${CYAN}$owner/$name:${NC}"
+
+            # Split labels by comma and add each
+            IFS=',' read -ra LABEL_ARRAY <<< "$labels"
+            for label in "${LABEL_ARRAY[@]}"; do
+                gh issue edit "$issue_number" --repo "$owner/$name" --add-label "$label" 2>/dev/null
+            done
+
+            echo -e "  ${GREEN}✓ Labels added: $labels${NC}"
+        fi
+    done
+}
+
+# Search issues by label
+search_by_label() {
+    local label="$1"
+    local pattern="${2:-.}"
+
+    show_header
+    echo -e "${GREEN}🔍 Issues with Label: $label${NC}"
+    echo ""
+
+    local repos=$(cat "$CACHE_FILE")
+    local matches=$(echo "$repos" | jq -r --arg p "$pattern" '.[] | select(.name | ascii_downcase | contains($p | ascii_downcase)) | .name')
+
+    local total=0
+
+    echo "$matches" | while read -r name; do
+        local owner=$(echo "$repos" | jq -r --arg n "$name" '.[] | select(.name == $n) | .url | split("/")[-2]')
+        local issues=$(gh issue list --repo "$owner/$name" --label "$label" --json number,title,createdAt 2>/dev/null)
+
+        if [ "$issues" != "[]" ]; then
+            echo -e "${CYAN}${BOLD}$owner/$name:${NC}"
+            echo "$issues" | jq -r '.[] | "  #\(.number) - \(.title) (\(.createdAt | split("T")[0]))"'
+            echo ""
+
+            local count=$(echo "$issues" | jq 'length')
+            ((total += count))
+        fi
+    done
+
+    echo -e "${GREEN}Total issues with '$label': $total${NC}"
+}
+
+# Issue statistics
+issue_stats() {
+    local pattern="${1:-.}"
+
+    show_header
+    echo -e "${GREEN}📊 Issue Statistics${NC}"
+    echo ""
+
+    local repos=$(cat "$CACHE_FILE")
+    local matches=$(echo "$repos" | jq -r --arg p "$pattern" '.[] | select(.name | ascii_downcase | contains($p | ascii_downcase)) | .name')
+
+    local total_open=0
+    local total_closed=0
+    local repos_with_issues=0
+
+    echo "$matches" | while read -r name; do
+        local owner=$(echo "$repos" | jq -r --arg n "$name" '.[] | select(.name == $n) | .url | split("/")[-2]')
+
+        local open=$(gh issue list --repo "$owner/$name" --state open --json number 2>/dev/null | jq 'length')
+        local closed=$(gh issue list --repo "$owner/$name" --state closed --limit 100 --json number 2>/dev/null | jq 'length')
+
+        if [ "$open" -gt 0 ] || [ "$closed" -gt 0 ]; then
+            echo -e "${CYAN}$owner/$name:${NC} $open open, $closed closed"
+            ((total_open += open))
+            ((total_closed += closed))
+            ((repos_with_issues++))
+        fi
+    done
+
+    echo ""
+    echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo -e "${GREEN}Total:${NC}"
+    echo -e "  Repos with issues: $repos_with_issues"
+    echo -e "  Total open: $total_open"
+    echo -e "  Total closed: $total_closed"
+    echo ""
+}
+
+# Assign issue
+assign_issue() {
+    local issue_number="$1"
+    local assignee="$2"
+    local pattern="${3:-.}"
+
+    show_header
+    echo -e "${GREEN}👤 Assigning Issue #$issue_number to $assignee${NC}"
+    echo ""
+
+    if [ -z "$issue_number" ] || [ -z "$assignee" ]; then
+        echo -e "${RED}Error: Issue number and assignee required${NC}"
+        echo "Usage: bros-issues assign <number> <username> [pattern]"
+        return 1
+    fi
+
+    local repos=$(cat "$CACHE_FILE")
+    local matches=$(echo "$repos" | jq -r --arg p "$pattern" '.[] | select(.name | ascii_downcase | contains($p | ascii_downcase)) | .name')
+
+    echo "$matches" | while read -r name; do
+        local owner=$(echo "$repos" | jq -r --arg n "$name" '.[] | select(.name == $n) | .url | split("/")[-2]')
+
+        if gh issue view "$issue_number" --repo "$owner/$name" >/dev/null 2>&1; then
+            echo -e "${CYAN}$owner/$name:${NC}"
+
+            if gh issue edit "$issue_number" --repo "$owner/$name" --add-assignee "$assignee" 2>/dev/null; then
+                echo -e "  ${GREEN}✓ Assigned to $assignee${NC}"
+            fi
+        fi
+    done
+}
+
+# Main
+main() {
+    if [ ! -f "$CACHE_FILE" ]; then
+        echo -e "${RED}Error: Cache not found. Run 'bros refresh' first.${NC}"
+        exit 1
+    fi
+
+    case "${1:-help}" in
+        list|ls)
+            list_issues "$2"
+            ;;
+        create|new)
+            create_issue "$2" "$3" "$4"
+            ;;
+        close)
+            close_issue "$2" "$3" "$4"
+            ;;
+        label)
+            label_issue "$2" "$3" "$4"
+            ;;
+        search-label|search)
+            search_by_label "$2" "$3"
+            ;;
+        stats)
+            issue_stats "$2"
+            ;;
+        assign)
+            assign_issue "$2" "$3" "$4"
+            ;;
+        *)
+            echo "Usage: bros-issues <command> [options]"
+            echo ""
+            echo "Commands:"
+            echo "  list [pattern]                    List all open issues"
+            echo "  create <title> [body] [pattern]   Create issue in matching repos"
+            echo "  close <number> [pattern] [comment] Close issue"
+            echo "  label <number> <labels> [pattern] Add labels to issue"
+            echo "  search <label> [pattern]          Search issues by label"
+            echo "  stats [pattern]                   Issue statistics"
+            echo "  assign <number> <username> [pattern] Assign issue"
+            echo ""
+            echo "Examples:"
+            echo "  bros-issues list dashboard"
+            echo "  bros-issues create 'Security audit' 'Need security review' agent"
+            echo "  bros-issues label 42 'bug,urgent' dashboard"
+            echo "  bros-issues search bug"
+            echo "  bros-issues stats"
+            ;;
+    esac
+}
+
+main "$@"

@@ -1,0 +1,449 @@
+#!/bin/bash
+# Git workflow automation - branches, PRs, merges
+
+CACHE_FILE="$HOME/.blackroad-cache/repos.json"
+LOCAL_DIR="${BLACKROAD_LOCAL_DIR:-$HOME/blackroad-repos}"
+
+# Colors
+CYAN='\033[0;36m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+RED='\033[0;31m'
+MAGENTA='\033[0;35m'
+BLUE='\033[0;34m'
+NC='\033[0m'
+BOLD='\033[1m'
+
+show_header() {
+    echo -e "${CYAN}${BOLD}╔════════════════════════════════════════════════════════════════════╗${NC}"
+    echo -e "${CYAN}${BOLD}║          BLACKROAD WORKFLOW AUTOMATION                             ║${NC}"
+    echo -e "${CYAN}${BOLD}╚════════════════════════════════════════════════════════════════════╝${NC}"
+    echo ""
+}
+
+# Create feature branch across multiple repos
+create_branch() {
+    local branch_name="$1"
+    local pattern="${2:-.}"
+
+    show_header
+    echo -e "${GREEN}🌿 Creating Branch: $branch_name${NC}"
+    echo ""
+
+    if [ -z "$branch_name" ]; then
+        echo -e "${RED}Error: Branch name required${NC}"
+        echo "Usage: bros-workflow branch <branch-name> [pattern]"
+        return 1
+    fi
+
+    local repos=$(cat "$CACHE_FILE")
+    local matches=$(echo "$repos" | jq -r --arg p "$pattern" '.[] | select(.name | ascii_downcase | contains($p | ascii_downcase)) | .name')
+
+    if [ -z "$matches" ]; then
+        echo -e "${RED}No repos match: $pattern${NC}"
+        return 1
+    fi
+
+    echo -e "${CYAN}Creating branch in:${NC}"
+    echo "$matches" | while read -r name; do
+        echo "  → $name"
+    done
+
+    echo ""
+    echo -e "${YELLOW}Create branch in all? (y/N)${NC}"
+    read -r confirm
+
+    if [[ "$confirm" =~ ^[Yy]$ ]]; then
+        local created=0
+        local failed=0
+
+        echo "$matches" | while read -r name; do
+            if [ -d "$LOCAL_DIR/$name" ]; then
+                cd "$LOCAL_DIR/$name"
+
+                echo -e "${CYAN}$name:${NC}"
+                if git checkout -b "$branch_name" 2>/dev/null; then
+                    echo -e "  ${GREEN}✓ Branch created${NC}"
+                    ((created++))
+                else
+                    echo -e "  ${YELLOW}Branch may already exist${NC}"
+                fi
+            else
+                echo -e "${RED}$name: Not cloned locally${NC}"
+                ((failed++))
+            fi
+        done
+
+        echo ""
+        echo -e "${GREEN}✓ Branch creation complete${NC}"
+    fi
+}
+
+# Create PR across repos
+create_prs() {
+    local branch="$1"
+    local title="$2"
+    local body="$3"
+    local pattern="${4:-.}"
+
+    show_header
+    echo -e "${GREEN}📝 Creating Pull Requests${NC}"
+    echo ""
+
+    if [ -z "$branch" ] || [ -z "$title" ]; then
+        echo -e "${RED}Error: Branch and title required${NC}"
+        echo "Usage: bros-workflow pr <branch> <title> [body] [pattern]"
+        return 1
+    fi
+
+    local repos=$(cat "$CACHE_FILE")
+    local matches=$(echo "$repos" | jq -r --arg p "$pattern" '.[] | select(.name | ascii_downcase | contains($p | ascii_downcase)) | .name')
+
+    if [ -z "$matches" ]; then
+        echo -e "${RED}No repos match: $pattern${NC}"
+        return 1
+    fi
+
+    echo -e "${CYAN}Creating PRs in:${NC}"
+    echo "$matches" | while read -r name; do
+        echo "  → $name"
+    done
+
+    echo ""
+    echo -e "${YELLOW}Create PRs in all? (y/N)${NC}"
+    read -r confirm
+
+    if [[ "$confirm" =~ ^[Yy]$ ]]; then
+        echo "$matches" | while read -r name; do
+            if [ -d "$LOCAL_DIR/$name" ]; then
+                cd "$LOCAL_DIR/$name"
+
+                echo -e "${CYAN}$name:${NC}"
+
+                # Check if branch exists
+                if git rev-parse --verify "$branch" >/dev/null 2>&1; then
+                    # Push branch
+                    git push -u origin "$branch" 2>/dev/null
+
+                    # Create PR
+                    local pr_body="${body:-Auto-generated PR from bros-workflow}"
+                    if gh pr create --title "$title" --body "$pr_body" --head "$branch" 2>/dev/null; then
+                        echo -e "  ${GREEN}✓ PR created${NC}"
+                    else
+                        echo -e "  ${YELLOW}PR may already exist${NC}"
+                    fi
+                else
+                    echo -e "  ${RED}✗ Branch $branch not found${NC}"
+                fi
+            fi
+        done
+
+        echo ""
+        echo -e "${GREEN}✓ PR creation complete${NC}"
+    fi
+}
+
+# List PRs across repos
+list_prs() {
+    local pattern="${1:-.}"
+
+    show_header
+    echo -e "${GREEN}📋 Open Pull Requests${NC}"
+    echo ""
+
+    local repos=$(cat "$CACHE_FILE")
+    local matches=$(echo "$repos" | jq -r --arg p "$pattern" '.[] | select(.name | ascii_downcase | contains($p | ascii_downcase)) | .name')
+
+    if [ -z "$matches" ]; then
+        echo -e "${RED}No repos match: $pattern${NC}"
+        return 1
+    fi
+
+    local total_prs=0
+
+    echo "$matches" | while read -r name; do
+        local owner=$(echo "$repos" | jq -r --arg n "$name" '.[] | select(.name == $n) | .url | split("/")[-2]')
+        local prs=$(gh pr list --repo "$owner/$name" --json number,title,author,createdAt 2>/dev/null)
+
+        if [ "$prs" != "[]" ]; then
+            echo -e "${CYAN}${BOLD}$name:${NC}"
+            echo "$prs" | jq -r '.[] | "  #\(.number) - \(.title)\n    by \(.author.login) on \(.createdAt | split("T")[0])"'
+            echo ""
+
+            local count=$(echo "$prs" | jq 'length')
+            ((total_prs += count))
+        fi
+    done
+
+    echo -e "${GREEN}Total open PRs: $total_prs${NC}"
+}
+
+# Merge PRs across repos
+merge_prs() {
+    local pr_number="$1"
+    local pattern="${2:-.}"
+
+    show_header
+    echo -e "${GREEN}🔀 Merging Pull Requests${NC}"
+    echo ""
+
+    if [ -z "$pr_number" ]; then
+        echo -e "${RED}Error: PR number required${NC}"
+        echo "Usage: bros-workflow merge <pr-number> [pattern]"
+        return 1
+    fi
+
+    local repos=$(cat "$CACHE_FILE")
+    local matches=$(echo "$repos" | jq -r --arg p "$pattern" '.[] | select(.name | ascii_downcase | contains($p | ascii_downcase)) | .name')
+
+    if [ -z "$matches" ]; then
+        echo -e "${RED}No repos match: $pattern${NC}"
+        return 1
+    fi
+
+    echo -e "${CYAN}Merging PR #$pr_number in:${NC}"
+    echo "$matches" | while read -r name; do
+        echo "  → $name"
+    done
+
+    echo ""
+    echo -e "${YELLOW}Merge PRs in all? (y/N)${NC}"
+    read -r confirm
+
+    if [[ "$confirm" =~ ^[Yy]$ ]]; then
+        echo "$matches" | while read -r name; do
+            local owner=$(echo "$repos" | jq -r --arg n "$name" '.[] | select(.name == $n) | .url | split("/")[-2]')
+
+            echo -e "${CYAN}$name:${NC}"
+            if gh pr merge "$pr_number" --repo "$owner/$name" --squash 2>/dev/null; then
+                echo -e "  ${GREEN}✓ PR merged${NC}"
+            else
+                echo -e "  ${YELLOW}PR may not exist or already merged${NC}"
+            fi
+        done
+
+        echo ""
+        echo -e "${GREEN}✓ Merge complete${NC}"
+    fi
+}
+
+# Check branch status across repos
+branch_status() {
+    local pattern="${1:-.}"
+
+    show_header
+    echo -e "${GREEN}🌳 Branch Status${NC}"
+    echo ""
+
+    local repos=$(cat "$CACHE_FILE")
+    local matches=$(echo "$repos" | jq -r --arg p "$pattern" '.[] | select(.name | ascii_downcase | contains($p | ascii_downcase)) | .name')
+
+    if [ -z "$matches" ]; then
+        echo -e "${RED}No repos match: $pattern${NC}"
+        return 1
+    fi
+
+    echo "$matches" | while read -r name; do
+        if [ -d "$LOCAL_DIR/$name" ]; then
+            cd "$LOCAL_DIR/$name"
+
+            local current=$(git branch --show-current 2>/dev/null)
+            local branches=$(git branch -a 2>/dev/null | wc -l | tr -d ' ')
+            local remotes=$(git branch -r 2>/dev/null | wc -l | tr -d ' ')
+
+            echo -e "${CYAN}$name:${NC}"
+            echo -e "  Current: ${GREEN}$current${NC}"
+            echo -e "  Local branches: $branches | Remote branches: $remotes"
+
+            # Show uncommitted changes
+            if ! git diff-index --quiet HEAD -- 2>/dev/null; then
+                echo -e "  ${YELLOW}⚠ Uncommitted changes${NC}"
+            fi
+
+            echo ""
+        fi
+    done
+}
+
+# Delete branch across repos
+delete_branch() {
+    local branch_name="$1"
+    local pattern="${2:-.}"
+
+    show_header
+    echo -e "${RED}🗑️  Deleting Branch: $branch_name${NC}"
+    echo ""
+
+    if [ -z "$branch_name" ]; then
+        echo -e "${RED}Error: Branch name required${NC}"
+        echo "Usage: bros-workflow delete-branch <branch-name> [pattern]"
+        return 1
+    fi
+
+    local repos=$(cat "$CACHE_FILE")
+    local matches=$(echo "$repos" | jq -r --arg p "$pattern" '.[] | select(.name | ascii_downcase | contains($p | ascii_downcase)) | .name')
+
+    if [ -z "$matches" ]; then
+        echo -e "${RED}No repos match: $pattern${NC}"
+        return 1
+    fi
+
+    echo -e "${CYAN}Deleting branch in:${NC}"
+    echo "$matches" | while read -r name; do
+        echo "  → $name"
+    done
+
+    echo ""
+    echo -e "${RED}${BOLD}This will delete the branch locally and remotely!${NC}"
+    echo -e "${YELLOW}Continue? (y/N)${NC}"
+    read -r confirm
+
+    if [[ "$confirm" =~ ^[Yy]$ ]]; then
+        echo "$matches" | while read -r name; do
+            if [ -d "$LOCAL_DIR/$name" ]; then
+                cd "$LOCAL_DIR/$name"
+
+                echo -e "${CYAN}$name:${NC}"
+
+                # Switch to main/master first
+                git checkout main 2>/dev/null || git checkout master 2>/dev/null
+
+                # Delete local
+                if git branch -D "$branch_name" 2>/dev/null; then
+                    echo -e "  ${GREEN}✓ Local branch deleted${NC}"
+                fi
+
+                # Delete remote
+                if git push origin --delete "$branch_name" 2>/dev/null; then
+                    echo -e "  ${GREEN}✓ Remote branch deleted${NC}"
+                fi
+            fi
+        done
+
+        echo ""
+        echo -e "${GREEN}✓ Branch deletion complete${NC}"
+    fi
+}
+
+# Interactive workflow wizard
+workflow_wizard() {
+    show_header
+    echo -e "${GREEN}🧙 Workflow Wizard${NC}"
+    echo ""
+
+    echo -e "${YELLOW}What would you like to do?${NC}"
+    echo ""
+    echo -e "  ${BLUE}1${NC}) Create feature branch"
+    echo -e "  ${BLUE}2${NC}) Create pull requests"
+    echo -e "  ${BLUE}3${NC}) List open PRs"
+    echo -e "  ${BLUE}4${NC}) Merge PRs"
+    echo -e "  ${BLUE}5${NC}) Check branch status"
+    echo -e "  ${BLUE}6${NC}) Delete branch"
+    echo ""
+
+    echo -ne "${GREEN}Choice: ${NC}"
+    read -r choice
+
+    case "$choice" in
+        1)
+            echo ""
+            echo -ne "${CYAN}Branch name: ${NC}"
+            read -r branch
+            echo -ne "${CYAN}Repo pattern (or . for all): ${NC}"
+            read -r pattern
+            create_branch "$branch" "$pattern"
+            ;;
+        2)
+            echo ""
+            echo -ne "${CYAN}Branch name: ${NC}"
+            read -r branch
+            echo -ne "${CYAN}PR title: ${NC}"
+            read -r title
+            echo -ne "${CYAN}PR body (optional): ${NC}"
+            read -r body
+            echo -ne "${CYAN}Repo pattern (or . for all): ${NC}"
+            read -r pattern
+            create_prs "$branch" "$title" "$body" "$pattern"
+            ;;
+        3)
+            echo ""
+            echo -ne "${CYAN}Repo pattern (or . for all): ${NC}"
+            read -r pattern
+            list_prs "$pattern"
+            ;;
+        4)
+            echo ""
+            echo -ne "${CYAN}PR number: ${NC}"
+            read -r pr
+            echo -ne "${CYAN}Repo pattern (or . for all): ${NC}"
+            read -r pattern
+            merge_prs "$pr" "$pattern"
+            ;;
+        5)
+            echo ""
+            echo -ne "${CYAN}Repo pattern (or . for all): ${NC}"
+            read -r pattern
+            branch_status "$pattern"
+            ;;
+        6)
+            echo ""
+            echo -ne "${CYAN}Branch name: ${NC}"
+            read -r branch
+            echo -ne "${CYAN}Repo pattern (or . for all): ${NC}"
+            read -r pattern
+            delete_branch "$branch" "$pattern"
+            ;;
+        *)
+            echo -e "${RED}Invalid choice${NC}"
+            ;;
+    esac
+}
+
+# Main
+main() {
+    case "${1:-help}" in
+        branch)
+            create_branch "$2" "$3"
+            ;;
+        pr)
+            create_prs "$2" "$3" "$4" "$5"
+            ;;
+        list-prs|prs)
+            list_prs "$2"
+            ;;
+        merge)
+            merge_prs "$2" "$3"
+            ;;
+        status)
+            branch_status "$2"
+            ;;
+        delete-branch|delete)
+            delete_branch "$2" "$3"
+            ;;
+        wizard)
+            workflow_wizard
+            ;;
+        *)
+            echo "Usage: bros-workflow <command> [options]"
+            echo ""
+            echo "Commands:"
+            echo "  branch <name> [pattern]        Create branch in matching repos"
+            echo "  pr <branch> <title> [body] [pattern]  Create PRs"
+            echo "  list-prs [pattern]             List open PRs"
+            echo "  merge <pr-number> [pattern]    Merge PRs"
+            echo "  status [pattern]               Check branch status"
+            echo "  delete-branch <name> [pattern] Delete branch (local + remote)"
+            echo "  wizard                         Interactive workflow wizard"
+            echo ""
+            echo "Examples:"
+            echo "  bros-workflow branch feature/auth dashboard"
+            echo "  bros-workflow pr feature/auth 'Add authentication' 'Implements JWT auth'"
+            echo "  bros-workflow list-prs"
+            echo "  bros-workflow merge 123 dashboard"
+            echo "  bros-workflow status agent"
+            echo "  bros-workflow wizard"
+            ;;
+    esac
+}
+
+main "$@"

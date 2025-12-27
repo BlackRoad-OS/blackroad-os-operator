@@ -1,0 +1,443 @@
+#!/bin/bash
+# BlackRoad OS Operator - Unified CLI for all GitHub repos
+# "bros" - Because you're operating the entire BlackRoad OS ecosystem
+
+VERSION="2.0.0"
+CACHE_DIR="$HOME/.blackroad-cache"
+CACHE_FILE="$CACHE_DIR/repos.json"
+CACHE_AGE=3600  # 1 hour
+
+mkdir -p "$CACHE_DIR"
+
+# Colors
+CYAN='\033[0;36m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+RED='\033[0;31m'
+MAGENTA='\033[0;35m'
+BLUE='\033[0;34m'
+NC='\033[0m'
+BOLD='\033[1m'
+
+# Fetch all repos (with caching)
+fetch_repos() {
+    local force_refresh=$1
+    
+    if [ -f "$CACHE_FILE" ] && [ -z "$force_refresh" ]; then
+        local age=$(($(date +%s) - $(stat -f %m "$CACHE_FILE" 2>/dev/null || stat -c %Y "$CACHE_FILE" 2>/dev/null)))
+        if [ $age -lt $CACHE_AGE ]; then
+            cat "$CACHE_FILE"
+            return
+        fi
+    fi
+    
+    echo "🔄 Fetching latest repo data..." >&2
+    
+    # Fetch from all BlackRoad orgs
+    local orgs=("BlackRoad-OS" "BlackRoad-AI" "BlackRoad-Cloud" "BlackRoad-Labs" "BlackRoad-Foundation")
+    local all_repos="[]"
+    
+    for org in "${orgs[@]}"; do
+        local repos=$(gh repo list "$org" --limit 1000 --json name,description,url,pushedAt,visibility,primaryLanguage 2>/dev/null || echo "[]")
+        all_repos=$(echo "$all_repos$repos" | jq -s 'add')
+    done
+    
+    echo "$all_repos" | tee "$CACHE_FILE"
+}
+
+# List repos
+cmd_list() {
+    local repos=$(fetch_repos)
+    local count=$(echo "$repos" | jq 'length')
+    
+    echo -e "${CYAN}${BOLD}╔════════════════════════════════════════════════════════════════╗${NC}"
+    echo -e "${CYAN}${BOLD}║  BlackRoad OS Operator - Repository Listing                   ║${NC}"
+    echo -e "${CYAN}${BOLD}╚════════════════════════════════════════════════════════════════╝${NC}"
+    echo ""
+    echo -e "${GREEN}Total repositories: ${BOLD}$count${NC}"
+    echo ""
+    
+    echo "$repos" | jq -r '.[] | "\(.name)|\(.description // "No description")|\(.primaryLanguage.name // "Unknown")|\(.pushedAt)"' | \
+    while IFS='|' read -r name desc lang pushed; do
+        local time_ago=$(date -j -f "%Y-%m-%dT%H:%M:%SZ" "$pushed" "+%Y-%m-%d %H:%M" 2>/dev/null || echo "$pushed")
+        printf "${BLUE}%-40s${NC} ${YELLOW}%-15s${NC} ${GREEN}%s${NC}\n" "$name" "[$lang]" "Updated: $time_ago"
+        if [ -n "$desc" ] && [ "$desc" != "No description" ]; then
+            echo -e "  ${MAGENTA}$desc${NC}"
+        fi
+        echo ""
+    done
+}
+
+# Search repos
+cmd_search() {
+    local query=$(echo "$*" | tr '[:upper:]' '[:lower:]')
+    local repos=$(fetch_repos)
+    
+    echo -e "${CYAN}${BOLD}🔍 Search results for: \"$*\"${NC}"
+    echo ""
+    
+    echo "$repos" | jq -r --arg q "$query" '.[] | select((.name | ascii_downcase | contains($q)) or (.description // "" | ascii_downcase | contains($q))) | "\(.name)|\(.description // "No description")|\(.url)"' | \
+    while IFS='|' read -r name desc url; do
+        echo -e "${GREEN}✓ $name${NC}"
+        echo -e "  ${MAGENTA}$desc${NC}"
+        echo -e "  ${BLUE}$url${NC}"
+        echo ""
+    done
+}
+
+# Clone a repo
+cmd_clone() {
+    local query="$1"
+    local repos=$(fetch_repos)
+    
+    local match=$(echo "$repos" | jq -r --arg q "$query" '.[] | select(.name | ascii_downcase | contains($q | ascii_downcase)) | "\(.name)|\(.url)"' | head -1)
+    
+    if [ -z "$match" ]; then
+        echo -e "${RED}No repository found matching: $query${NC}"
+        return 1
+    fi
+    
+    local name=$(echo "$match" | cut -d'|' -f1)
+    local url=$(echo "$match" | cut -d'|' -f2)
+    
+    echo -e "${GREEN}Cloning: $name${NC}"
+    echo -e "${BLUE}$url${NC}"
+    echo ""
+    
+    gh repo clone "$url"
+}
+
+# Show repo info
+cmd_info() {
+    local query="$1"
+    local repos=$(fetch_repos)
+    
+    local repo=$(echo "$repos" | jq --arg q "$query" '.[] | select(.name | ascii_downcase | contains($q | ascii_downcase))' | head -1)
+    
+    if [ -z "$repo" ]; then
+        echo -e "${RED}No repository found matching: $query${NC}"
+        return 1
+    fi
+    
+    echo -e "${CYAN}${BOLD}╔════════════════════════════════════════════════════════════════╗${NC}"
+    echo -e "${CYAN}${BOLD}║  Repository Information                                        ║${NC}"
+    echo -e "${CYAN}${BOLD}╚════════════════════════════════════════════════════════════════╝${NC}"
+    echo ""
+    
+    echo "$repo" | jq -r '
+        "Name:        \(.name)",
+        "Description: \(.description // "No description")",
+        "Language:    \(.primaryLanguage.name // "Unknown")",
+        "Visibility:  \(.visibility)",
+        "URL:         \(.url)",
+        "Last Push:   \(.pushedAt)"
+    '
+    echo ""
+}
+
+# Open repo in browser
+cmd_open() {
+    local query="$1"
+    local repos=$(fetch_repos)
+    
+    local url=$(echo "$repos" | jq -r --arg q "$query" '.[] | select(.name | ascii_downcase | contains($q | ascii_downcase)) | .url' | head -1)
+    
+    if [ -z "$url" ]; then
+        echo -e "${RED}No repository found matching: $query${NC}"
+        return 1
+    fi
+    
+    echo -e "${GREEN}Opening: $url${NC}"
+    open "$url" 2>/dev/null || xdg-open "$url" 2>/dev/null || echo "Could not open browser"
+}
+
+# Stats
+cmd_stats() {
+    local repos=$(fetch_repos)
+    
+    echo -e "${CYAN}${BOLD}╔════════════════════════════════════════════════════════════════╗${NC}"
+    echo -e "${CYAN}${BOLD}║  BlackRoad OS Ecosystem Statistics                            ║${NC}"
+    echo -e "${CYAN}${BOLD}╚════════════════════════════════════════════════════════════════╝${NC}"
+    echo ""
+    
+    local total=$(echo "$repos" | jq 'length')
+    local public=$(echo "$repos" | jq '[.[] | select(.visibility == "public")] | length')
+    local private=$(echo "$repos" | jq '[.[] | select(.visibility == "private")] | length')
+    
+    echo -e "${GREEN}Total Repositories:${NC} $total"
+    echo -e "${GREEN}Public:${NC} $public"
+    echo -e "${GREEN}Private:${NC} $private"
+    echo ""
+    
+    echo -e "${YELLOW}Top Languages:${NC}"
+    echo "$repos" | jq -r '[.[] | .primaryLanguage.name // "Unknown"] | group_by(.) | map({lang: .[0], count: length}) | sort_by(.count) | reverse | .[:5] | .[] | "  \(.lang): \(.count)"'
+    echo ""
+    
+    echo -e "${BLUE}Recently Updated (Last 5):${NC}"
+    echo "$repos" | jq -r 'sort_by(.pushedAt) | reverse | .[:5] | .[] | "  \(.name) - \(.pushedAt)"'
+    echo ""
+}
+
+# Refresh cache
+cmd_refresh() {
+    echo -e "${YELLOW}Refreshing repository cache...${NC}"
+    fetch_repos "force" > /dev/null
+    echo -e "${GREEN}✓ Cache refreshed!${NC}"
+}
+
+# Filter by language
+cmd_lang() {
+    local lang="$1"
+    local repos=$(fetch_repos)
+
+    if [ -z "$lang" ]; then
+        echo -e "${YELLOW}Available languages:${NC}"
+        echo "$repos" | jq -r '[.[] | .primaryLanguage.name // "Unknown"] | unique | sort | .[]' | while read -r l; do
+            local count=$(echo "$repos" | jq -r --arg lang "$l" '[.[] | select((.primaryLanguage.name // "Unknown") == $lang)] | length')
+            printf "  ${GREEN}%-15s${NC} (%d repos)\n" "$l" "$count"
+        done
+        return
+    fi
+
+    echo -e "${CYAN}${BOLD}🔍 $lang repositories:${NC}"
+    echo ""
+
+    echo "$repos" | jq -r --arg lang "$lang" '.[] | select((.primaryLanguage.name // "Unknown" | ascii_downcase) == ($lang | ascii_downcase)) | "\(.name)|\(.description // "No description")|\(.url)"' | \
+    while IFS='|' read -r name desc url; do
+        echo -e "${GREEN}✓ $name${NC}"
+        echo -e "  ${MAGENTA}$desc${NC}"
+        echo ""
+    done
+}
+
+# Recent activity
+cmd_recent() {
+    local limit="${1:-10}"
+    local repos=$(fetch_repos)
+
+    echo -e "${CYAN}${BOLD}╔════════════════════════════════════════════════════════════════╗${NC}"
+    echo -e "${CYAN}${BOLD}║  Recently Updated Repositories (Last $limit)                   ║${NC}"
+    echo -e "${CYAN}${BOLD}╚════════════════════════════════════════════════════════════════╝${NC}"
+    echo ""
+
+    echo "$repos" | jq -r --arg limit "$limit" 'sort_by(.pushedAt) | reverse | .[0:($limit | tonumber)] | .[] | "\(.name)|\(.pushedAt)|\(.description // "No description")"' | \
+    while IFS='|' read -r name pushed desc; do
+        local time_ago=$(date -j -f "%Y-%m-%dT%H:%M:%SZ" "$pushed" "+%Y-%m-%d %H:%M" 2>/dev/null || echo "$pushed")
+        echo -e "${GREEN}$name${NC}"
+        echo -e "  ${BLUE}Updated: $time_ago${NC}"
+        echo -e "  ${MAGENTA}$desc${NC}"
+        echo ""
+    done
+}
+
+# Category filter (infra, agent, dashboard, etc)
+cmd_category() {
+    local cat="$1"
+    local repos=$(fetch_repos)
+
+    if [ -z "$cat" ]; then
+        echo -e "${YELLOW}Try categories like:${NC}"
+        echo "  infra, agent, bot, deploy, dashboard, pack, cloud, ai, os"
+        return
+    fi
+
+    echo -e "${CYAN}${BOLD}🔍 Repos matching category: $cat${NC}"
+    echo ""
+
+    echo "$repos" | jq -r --arg cat "$cat" '.[] | select(.name | ascii_downcase | contains($cat | ascii_downcase)) | "\(.name)|\(.description // "No description")|\(.url)"' | \
+    while IFS='|' read -r name desc url; do
+        echo -e "${GREEN}✓ $name${NC}"
+        echo -e "  ${MAGENTA}$desc${NC}"
+        echo -e "  ${BLUE}$url${NC}"
+        echo ""
+    done
+}
+
+# Bulk clone by pattern
+cmd_clone_all() {
+    local pattern="$1"
+    local repos=$(fetch_repos)
+
+    if [ -z "$pattern" ]; then
+        echo -e "${RED}Usage: bros clone-all <pattern>${NC}"
+        echo -e "${YELLOW}Example: bros clone-all agent${NC}"
+        return 1
+    fi
+
+    local matches=$(echo "$repos" | jq -r --arg p "$pattern" '.[] | select(.name | ascii_downcase | contains($p | ascii_downcase)) | .name')
+    local count=$(echo "$matches" | wc -l | xargs)
+
+    if [ -z "$matches" ]; then
+        echo -e "${RED}No repositories match: $pattern${NC}"
+        return 1
+    fi
+
+    echo -e "${YELLOW}Found $count repos matching '$pattern':${NC}"
+    echo "$matches" | while read -r name; do
+        echo -e "  ${GREEN}$name${NC}"
+    done
+    echo ""
+    echo -e "${YELLOW}Clone all? (y/N)${NC}"
+    read -r confirm
+
+    if [[ "$confirm" =~ ^[Yy]$ ]]; then
+        echo ""
+        echo "$matches" | while read -r name; do
+            local url=$(echo "$repos" | jq -r --arg n "$name" '.[] | select(.name == $n) | .url')
+            echo -e "${CYAN}Cloning $name...${NC}"
+            gh repo clone "$url" 2>&1 | grep -v "already exists" || true
+            echo ""
+        done
+        echo -e "${GREEN}✓ All repos cloned!${NC}"
+    else
+        echo -e "${YELLOW}Cancelled.${NC}"
+    fi
+}
+
+# Show repo URLs only (for scripts)
+cmd_urls() {
+    local pattern="$1"
+    local repos=$(fetch_repos)
+
+    if [ -z "$pattern" ]; then
+        echo "$repos" | jq -r '.[] | .url'
+    else
+        echo "$repos" | jq -r --arg p "$pattern" '.[] | select(.name | ascii_downcase | contains($p | ascii_downcase)) | .url'
+    fi
+}
+
+# Tree view by org
+cmd_tree() {
+    local repos=$(fetch_repos)
+
+    echo -e "${CYAN}${BOLD}╔════════════════════════════════════════════════════════════════╗${NC}"
+    echo -e "${CYAN}${BOLD}║  BlackRoad Ecosystem - Organization Tree                      ║${NC}"
+    echo -e "${CYAN}${BOLD}╚════════════════════════════════════════════════════════════════╝${NC}"
+    echo ""
+
+    local orgs=("BlackRoad-OS" "BlackRoad-AI" "BlackRoad-Cloud" "BlackRoad-Labs" "BlackRoad-Foundation")
+
+    for org in "${orgs[@]}"; do
+        local count=$(gh repo list "$org" --limit 1000 --json name 2>/dev/null | jq 'length')
+        echo -e "${GREEN}${BOLD}$org${NC} ($count repos)"
+
+        gh repo list "$org" --limit 1000 --json name 2>/dev/null | jq -r '.[].name' | head -10 | while read -r name; do
+            echo -e "  ${BLUE}├─ $name${NC}"
+        done
+
+        if [ "$count" -gt 10 ]; then
+            echo -e "  ${MAGENTA}└─ ... and $((count - 10)) more${NC}"
+        fi
+        echo ""
+    done
+}
+
+# Help
+cmd_help() {
+    cat << 'HELP'
+╔════════════════════════════════════════════════════════════════╗
+║  BlackRoad OS Operator (bros) v2.0 - Unified CLI              ║
+╚════════════════════════════════════════════════════════════════╝
+
+USAGE:
+  bros <command> [arguments]
+
+CORE COMMANDS:
+  list, ls              List all repositories
+  search <query>        Search repos by name or description
+  clone <name>          Clone a repository
+  info <name>           Show detailed repo information
+  open <name>           Open repo in browser
+  stats                 Show ecosystem statistics
+
+DISCOVERY COMMANDS:
+  lang [language]       Filter by language (python, typescript, etc)
+  recent [N]            Show N recently updated repos (default: 10)
+  category <cat>        Filter by category (infra, agent, bot, etc)
+  tree                  Show organization tree view
+
+BULK OPERATIONS:
+  clone-all <pattern>   Clone all repos matching pattern
+  urls [pattern]        Show repo URLs (scriptable output)
+
+MAINTENANCE:
+  refresh               Refresh repository cache
+  help                  Show this help
+
+EXAMPLES:
+  bros list                     # List all repos
+  bros lang python              # All Python repos
+  bros recent 5                 # Last 5 updated
+  bros category agent           # All agent repos
+  bros search bitcoin           # Find bitcoin-related repos
+  bros clone roadchain          # Clone blackroad-os-roadchain
+  bros clone-all dashboard      # Clone all dashboard repos
+  bros tree                     # Show org structure
+  bros urls agent               # Get URLs of agent repos
+
+QUICK ALIAS: Use 'br' instead of 'bros'
+
+Cache auto-refreshes hourly. Force refresh: bros refresh
+
+Made with ✨ for BlackRoad OS - v2.0
+HELP
+}
+
+# Main command router
+main() {
+    local cmd=$1
+    shift
+
+    case "$cmd" in
+        list|ls)
+            cmd_list "$@"
+            ;;
+        search|find)
+            cmd_search "$@"
+            ;;
+        clone)
+            cmd_clone "$@"
+            ;;
+        info|show)
+            cmd_info "$@"
+            ;;
+        open|browse)
+            cmd_open "$@"
+            ;;
+        stats|status)
+            cmd_stats "$@"
+            ;;
+        lang|language)
+            cmd_lang "$@"
+            ;;
+        recent|activity)
+            cmd_recent "$@"
+            ;;
+        category|cat|type)
+            cmd_category "$@"
+            ;;
+        clone-all|bulk-clone)
+            cmd_clone_all "$@"
+            ;;
+        urls|links)
+            cmd_urls "$@"
+            ;;
+        tree|orgs)
+            cmd_tree "$@"
+            ;;
+        refresh|update)
+            cmd_refresh "$@"
+            ;;
+        help|--help|-h|"")
+            cmd_help
+            ;;
+        *)
+            echo -e "${RED}Unknown command: $cmd${NC}"
+            echo ""
+            cmd_help
+            exit 1
+            ;;
+    esac
+}
+
+main "$@"

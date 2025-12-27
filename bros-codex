@@ -1,0 +1,289 @@
+#!/bin/bash
+# Codex integration - check existing solutions
+
+CACHE_FILE="$HOME/.blackroad-cache/repos.json"
+CODEX_SYSTEM="$HOME/blackroad-codex-verification-suite.sh"
+
+# Colors
+CYAN='\033[0;36m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+RED='\033[0;31m'
+MAGENTA='\033[0;35m'
+BLUE='\033[0;34m'
+NC='\033[0m'
+BOLD='\033[1m'
+
+show_header() {
+    echo -e "${CYAN}${BOLD}╔════════════════════════════════════════════════════════════════════╗${NC}"
+    echo -e "${CYAN}${BOLD}║          BLACKROAD CODEX INTEGRATION                               ║${NC}"
+    echo -e "${CYAN}${BOLD}╚════════════════════════════════════════════════════════════════════╝${NC}"
+    echo ""
+}
+
+# Search codex for existing solutions
+search_codex() {
+    local query="$1"
+
+    show_header
+    echo -e "${GREEN}🔍 Searching Codex${NC}"
+    echo -e "${YELLOW}Query: $query${NC}"
+    echo ""
+
+    if [ -x "$CODEX_SYSTEM" ]; then
+        "$CODEX_SYSTEM" search "$query" 2>/dev/null
+    else
+        echo -e "${RED}Codex system not found at: $CODEX_SYSTEM${NC}"
+    fi
+}
+
+# Check if component exists in codex
+check_exists() {
+    local component="$1"
+
+    show_header
+    echo -e "${GREEN}🔎 Checking Codex for: $component${NC}"
+    echo ""
+
+    if [ -x "$CODEX_SYSTEM" ]; then
+        local result=$("$CODEX_SYSTEM" search "$component" 2>/dev/null | wc -l)
+
+        if [ "$result" -gt 0 ]; then
+            echo -e "${GREEN}✓ Found in Codex!${NC}"
+            echo ""
+            "$CODEX_SYSTEM" search "$component" 2>/dev/null | head -10
+            echo ""
+            echo -e "${YELLOW}💡 Solution may already exist! Check before building.${NC}"
+        else
+            echo -e "${YELLOW}✗ Not found in Codex${NC}"
+            echo -e "${CYAN}This might be a new component to build!${NC}"
+        fi
+    else
+        echo -e "${RED}Codex system not found${NC}"
+    fi
+}
+
+# Show codex stats
+codex_stats() {
+    show_header
+    echo -e "${GREEN}📊 Codex Statistics${NC}"
+    echo ""
+
+    if [ -x "$CODEX_SYSTEM" ]; then
+        "$CODEX_SYSTEM" stats 2>/dev/null
+    else
+        echo -e "${RED}Codex system not found${NC}"
+    fi
+}
+
+# Find similar components
+find_similar() {
+    local component="$1"
+
+    show_header
+    echo -e "${GREEN}🔗 Finding Similar Components${NC}"
+    echo -e "${YELLOW}Looking for: $component${NC}"
+    echo ""
+
+    if [ -x "$CODEX_SYSTEM" ]; then
+        # Extract key words
+        local keywords=$(echo "$component" | tr '[:upper:]' '[:lower:]' | tr '-_' ' ')
+
+        echo -e "${CYAN}Searching for related components...${NC}"
+        for word in $keywords; do
+            echo ""
+            echo -e "${MAGENTA}→ Components with '$word':${NC}"
+            "$CODEX_SYSTEM" search "$word" 2>/dev/null | head -5
+        done
+    else
+        echo -e "${RED}Codex system not found${NC}"
+    fi
+}
+
+# Agent workflow helper
+agent_check() {
+    local task="$1"
+
+    show_header
+    echo -e "${GREEN}🤖 Agent Workflow Check${NC}"
+    echo -e "${YELLOW}Task: $task${NC}"
+    echo ""
+
+    echo -e "${CYAN}${BOLD}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo -e "${MAGENTA}STEP 1: Check [CODEX] for existing solutions${NC}"
+    echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+
+    if [ -x "$CODEX_SYSTEM" ]; then
+        local codex_result=$("$CODEX_SYSTEM" search "$task" 2>/dev/null | wc -l)
+
+        if [ "$codex_result" -gt 0 ]; then
+            echo -e "${GREEN}✓ FOUND IN CODEX!${NC}"
+            echo ""
+            "$CODEX_SYSTEM" search "$task" 2>/dev/null | head -10
+            echo ""
+            echo -e "${YELLOW}${BOLD}⚠️  DON'T REBUILD! Solution exists! ⚠️${NC}"
+        else
+            echo -e "${YELLOW}✗ Not in Codex - new component!${NC}"
+            echo ""
+            echo -e "${CYAN}STEP 2: Check [MEMORY] for context${NC}"
+            echo "  → bros-memory search '$task'"
+            echo ""
+            echo -e "${GREEN}✓ Ready to build - this is new!${NC}"
+        fi
+    else
+        echo -e "${RED}Codex not available${NC}"
+    fi
+
+    echo ""
+    echo -e "${CYAN}${BOLD}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+}
+
+# Verify before deploy
+verify_deployment() {
+    local component="$1"
+    local repo="$2"
+
+    show_header
+    echo -e "${GREEN}🔍 Pre-Deployment Verification${NC}"
+    echo ""
+
+    echo -e "${CYAN}Checking Codex for: $component${NC}"
+
+    if [ -x "$CODEX_SYSTEM" ]; then
+        "$CODEX_SYSTEM" search "$component" 2>/dev/null | head -5
+    fi
+
+    echo ""
+    echo -e "${CYAN}Checking Memory for: $repo${NC}"
+    "$HOME/memory-system.sh" search "deployed.*$repo" 2>/dev/null | head -3
+
+    echo ""
+    echo -e "${YELLOW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo -e "${MAGENTA}Deployment Checklist:${NC}"
+    echo "  □ Component verified in Codex"
+    echo "  □ Previous deployments checked in Memory"
+    echo "  □ Dependencies updated"
+    echo "  □ Tests passing"
+    echo "  □ Environment variables set"
+    echo -e "${YELLOW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+}
+
+# Golden rule reminder
+golden_rule() {
+    show_header
+    echo -e "${YELLOW}${BOLD}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo -e "${MAGENTA}${BOLD}          THE GOLDEN RULE FOR ALL AGENTS          ${NC}"
+    echo -e "${YELLOW}${BOLD}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo ""
+    echo -e "${GREEN}${BOLD}BEFORE BUILDING ANYTHING:${NC}"
+    echo ""
+    echo -e "${CYAN}1. Check [CODEX] for existing solutions${NC}"
+    echo "   → bros-codex check <component>"
+    echo "   → bros-codex search <keyword>"
+    echo "   → 8,789+ components already exist!"
+    echo ""
+    echo -e "${CYAN}2. Check [MEMORY] for context & history${NC}"
+    echo "   → bros-memory search <topic>"
+    echo "   → bros-memory agent-context <repo>"
+    echo "   → Learn from past deployments!"
+    echo ""
+    echo -e "${RED}${BOLD}DON'T REBUILD WHAT EXISTS!${NC}"
+    echo ""
+    echo -e "${GREEN}Codex has: 8,789 components${NC}"
+    echo -e "${GREEN}Memory has: All deployment history${NC}"
+    echo ""
+    echo -e "${YELLOW}${BOLD}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo -e "${MAGENTA}         Check first, build second! 🧠            ${NC}"
+    echo -e "${YELLOW}${BOLD}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+}
+
+# List categories from codex
+codex_categories() {
+    show_header
+    echo -e "${GREEN}📚 Codex Categories${NC}"
+    echo ""
+
+    if [ -x "$CODEX_SYSTEM" ]; then
+        echo -e "${CYAN}Available component categories:${NC}"
+        "$CODEX_SYSTEM" summary 2>/dev/null | grep -i "category\|type\|kind" || echo "Run: $CODEX_SYSTEM summary"
+    else
+        echo -e "${RED}Codex system not found${NC}"
+    fi
+}
+
+# Quick lookup
+quick_lookup() {
+    local term="$1"
+
+    show_header
+    echo -e "${GREEN}⚡ Quick Lookup${NC}"
+    echo ""
+
+    echo -e "${CYAN}Codex results:${NC}"
+    if [ -x "$CODEX_SYSTEM" ]; then
+        "$CODEX_SYSTEM" search "$term" 2>/dev/null | head -5
+    fi
+
+    echo ""
+    echo -e "${CYAN}Memory results:${NC}"
+    "$HOME/memory-system.sh" search "$term" 2>/dev/null | head -5
+}
+
+# Main
+main() {
+    case "${1:-help}" in
+        search|find)
+            search_codex "$2"
+            ;;
+        check|exists)
+            check_exists "$2"
+            ;;
+        stats)
+            codex_stats
+            ;;
+        similar)
+            find_similar "$2"
+            ;;
+        agent-check|agent)
+            agent_check "$2"
+            ;;
+        verify)
+            verify_deployment "$2" "$3"
+            ;;
+        golden-rule|rule)
+            golden_rule
+            ;;
+        categories|cat)
+            codex_categories
+            ;;
+        quick|q)
+            quick_lookup "$2"
+            ;;
+        *)
+            echo "Usage: bros-codex <command> [options]"
+            echo ""
+            echo "Commands:"
+            echo "  search <query>              Search Codex for components"
+            echo "  check <component>           Check if component exists"
+            echo "  stats                       Codex statistics"
+            echo "  similar <component>         Find similar components"
+            echo "  agent-check <task>          Agent workflow check"
+            echo "  verify <component> <repo>   Pre-deployment verification"
+            echo "  golden-rule                 Show THE GOLDEN RULE"
+            echo "  categories                  List Codex categories"
+            echo "  quick <term>                Quick lookup (Codex + Memory)"
+            echo ""
+            echo "Examples:"
+            echo "  bros-codex check authentication"
+            echo "  bros-codex search dashboard"
+            echo "  bros-codex agent-check 'build user login'"
+            echo "  bros-codex golden-rule"
+            echo "  bros-codex quick react"
+            echo ""
+            echo "Remember: Check Codex BEFORE building anything!"
+            echo "8,789+ components already exist!"
+            ;;
+    esac
+}
+
+main "$@"

@@ -1,0 +1,865 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Alexa Louise Amundson - AI Orchestration Founder | Deep AI Architecture + Enterprise Sales Execution + FINRA Series 7/63/65">
+    <meta name="keywords" content="AI, Machine Learning, Enterprise Sales, BlackRoad OS, Cognitive Systems, Financial Services">
+    <meta name="author" content="Alexa Louise Amundson">
+
+    <!-- Open Graph -->
+    <meta property="og:title" content="Alexa Louise Amundson - Resume">
+    <meta property="og:description" content="AI Orchestration Founder | 1.38M+ LOC | $26.8M Sales">
+    <meta property="og:type" content="profile">
+    <meta property="og:url" content="https://resume.blackroad.io">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Alexa Louise Amundson - Resume">
+    <meta name="twitter:description" content="AI Orchestration Founder | 1.38M+ LOC | $26.8M Sales">
+
+    <title>Alexa Louise Amundson - Resume</title>
+
+    <style>
+        :root {
+            --bg-primary: #0a0a0a;
+            --bg-secondary: #1a1a1a;
+            --bg-card: #2a2a2a;
+            --text-primary: #ffffff;
+            --text-secondary: #a0a0a0;
+            --text-muted: #707070;
+            --accent-orange: #FF9D00;
+            --accent-pink: #FF0066;
+            --accent-purple: #7700FF;
+            --accent-blue: #0066FF;
+            --accent-green: #00ff88;
+            --border: #3a3a3a;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        /* Header */
+        header {
+            text-align: center;
+            margin-bottom: 60px;
+            padding: 60px 20px;
+            background: linear-gradient(135deg, var(--accent-orange), var(--accent-pink), var(--accent-purple), var(--accent-blue));
+            border-radius: 16px;
+            position: relative;
+        }
+
+        h1 {
+            font-size: 3.5em;
+            font-weight: 700;
+            margin-bottom: 10px;
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+
+        .title {
+            font-size: 1.4em;
+            color: rgba(255,255,255,0.95);
+            margin-bottom: 20px;
+            font-weight: 500;
+        }
+
+        .contact-info {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-top: 20px;
+            font-size: 1.1em;
+        }
+
+        .contact-info a {
+            color: white;
+            text-decoration: none;
+            transition: opacity 0.2s;
+        }
+
+        .contact-info a:hover {
+            opacity: 0.8;
+        }
+
+        .action-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 25px;
+        }
+
+        .btn {
+            padding: 12px 30px;
+            border: 2px solid white;
+            background: rgba(255,255,255,0.1);
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.3s;
+            cursor: pointer;
+            display: inline-block;
+        }
+
+        .btn:hover {
+            background: white;
+            color: var(--accent-purple);
+            transform: translateY(-2px);
+        }
+
+        /* Summary */
+        .summary {
+            background: var(--bg-card);
+            padding: 40px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            margin-bottom: 40px;
+            border-left: 4px solid var(--accent-orange);
+        }
+
+        .summary h2 {
+            color: var(--accent-orange);
+            margin-bottom: 20px;
+            font-size: 1.8em;
+        }
+
+        .summary p {
+            font-size: 1.15em;
+            line-height: 1.8;
+            color: var(--text-secondary);
+        }
+
+        /* Metrics Grid */
+        .metrics-section {
+            margin-bottom: 50px;
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid var(--accent-pink);
+        }
+
+        .section-header h2 {
+            font-size: 2em;
+            color: var(--accent-pink);
+        }
+
+        .verification-badge {
+            background: rgba(0, 255, 136, 0.1);
+            color: var(--accent-green);
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.7em;
+            font-weight: 600;
+            border: 1px solid var(--accent-green);
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .metric-card {
+            background: var(--bg-card);
+            padding: 25px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            transition: all 0.3s;
+        }
+
+        .metric-card:hover {
+            border-color: var(--accent-orange);
+            transform: translateY(-2px);
+        }
+
+        .metric-card h3 {
+            color: var(--accent-orange);
+            font-size: 0.9em;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+        }
+
+        .metric-value {
+            font-size: 2.2em;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 5px;
+        }
+
+        .metric-label {
+            color: var(--text-secondary);
+            font-size: 0.95em;
+        }
+
+        /* Experience */
+        .experience-item {
+            background: var(--bg-card);
+            padding: 35px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            margin-bottom: 30px;
+            border-left: 4px solid var(--accent-blue);
+        }
+
+        .experience-header {
+            margin-bottom: 25px;
+        }
+
+        .experience-header h3 {
+            font-size: 1.8em;
+            color: var(--text-primary);
+            margin-bottom: 5px;
+        }
+
+        .experience-meta {
+            color: var(--text-secondary);
+            font-size: 1.1em;
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .experience-meta span {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .subsection {
+            margin-bottom: 20px;
+        }
+
+        .subsection h4 {
+            color: var(--accent-blue);
+            font-size: 1.2em;
+            margin-bottom: 12px;
+        }
+
+        .subsection ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .subsection li {
+            padding-left: 25px;
+            margin-bottom: 10px;
+            position: relative;
+            color: var(--text-secondary);
+        }
+
+        .subsection li:before {
+            content: "▹";
+            position: absolute;
+            left: 0;
+            color: var(--accent-orange);
+            font-weight: bold;
+        }
+
+        .subsection strong {
+            color: var(--text-primary);
+        }
+
+        /* Skills */
+        .skills-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+        }
+
+        .skill-category {
+            background: var(--bg-card);
+            padding: 25px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+        }
+
+        .skill-category h3 {
+            color: var(--accent-purple);
+            margin-bottom: 15px;
+            font-size: 1.2em;
+        }
+
+        .skill-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .skill-tag {
+            background: rgba(119, 0, 255, 0.1);
+            color: var(--accent-purple);
+            padding: 6px 15px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            border: 1px solid rgba(119, 0, 255, 0.3);
+        }
+
+        /* Awards */
+        .awards-list {
+            background: var(--bg-card);
+            padding: 30px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+        }
+
+        .awards-list ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .awards-list li {
+            padding: 15px 0;
+            border-bottom: 1px solid var(--border);
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .awards-list li:last-child {
+            border-bottom: none;
+        }
+
+        .awards-list li:before {
+            content: "🏆";
+            font-size: 1.5em;
+        }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            margin-top: 80px;
+            padding: 40px 20px;
+            border-top: 1px solid var(--border);
+            color: var(--text-muted);
+        }
+
+        footer p {
+            margin-bottom: 10px;
+        }
+
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .footer-links a {
+            color: var(--accent-blue);
+            text-decoration: none;
+        }
+
+        .footer-links a:hover {
+            color: var(--accent-orange);
+        }
+
+        /* Print Styles */
+        @media print {
+            body {
+                background: white;
+                color: black;
+            }
+
+            header {
+                background: none;
+                border: 2px solid black;
+            }
+
+            h1, .title, .contact-info a {
+                color: black !important;
+            }
+
+            .action-buttons {
+                display: none;
+            }
+
+            .metric-card, .experience-item, .skill-category, .awards-list, .summary {
+                background: white;
+                border: 1px solid #ccc;
+                break-inside: avoid;
+            }
+
+            .section-header {
+                border-bottom: 2px solid black;
+            }
+
+            .verification-badge {
+                border-color: black;
+                color: black;
+            }
+
+            footer {
+                border-top: 1px solid #ccc;
+            }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2.5em;
+            }
+
+            .title {
+                font-size: 1.2em;
+            }
+
+            .contact-info {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .metrics-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .skills-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .action-buttons {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header>
+            <h1>ALEXA LOUISE AMUNDSON</h1>
+            <p class="title">AI Orchestration Founder | Deep AI Architecture + Enterprise Sales Execution</p>
+
+            <div class="contact-info">
+                <span>📍 Lakeville, MN</span>
+                <a href="mailto:amundsonalexa@gmail.com">✉️ amundsonalexa@gmail.com</a>
+                <a href="tel:+15078280842">📱 (507) 828-0842</a>
+                <a href="https://linkedin.com/in/alexaamundson" target="_blank">💼 LinkedIn</a>
+                <a href="https://github.com/blackboxprogramming" target="_blank">💻 GitHub</a>
+            </div>
+
+            <div class="action-buttons">
+                <a href="#" class="btn" onclick="window.print(); return false;">📄 Download PDF</a>
+                <a href="mailto:amundsonalexa@gmail.com" class="btn">📧 Contact Me</a>
+                <a href="https://kpi.blackroad.io" class="btn" target="_blank">📊 View KPI Dashboard</a>
+            </div>
+        </header>
+
+        <!-- Professional Summary -->
+        <section class="summary">
+            <h2>Professional Summary</h2>
+            <p>
+                AI Orchestration Founder directing the development of a production-grade enterprise operating system with cognitive AI at its core.
+                Rare hybrid of <strong>Deep AI Architecture (1.38M+ LOC orchestrated)</strong> + <strong>Enterprise Sales Execution ($26.8M closed)</strong> +
+                <strong>FINRA Series 7/63/65</strong>. Expert at bridging the gap between complex cognitive systems and aggressive revenue growth in regulated environments.
+            </p>
+        </section>
+
+        <!-- Platform Metrics -->
+        <section class="metrics-section">
+            <div class="section-header">
+                <h2>Platform Metrics</h2>
+                <span class="verification-badge">✓ VERIFIED DEC 2025</span>
+            </div>
+
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <h3>Lines of Code</h3>
+                    <div class="metric-value">1.38M+</div>
+                    <div class="metric-label">Across 14,541 files</div>
+                </div>
+
+                <div class="metric-card">
+                    <h3>Repositories</h3>
+                    <div class="metric-value">53+</div>
+                    <div class="metric-label">15 GitHub Organizations</div>
+                </div>
+
+                <div class="metric-card">
+                    <h3>Microservices</h3>
+                    <div class="metric-value">23</div>
+                    <div class="metric-label">22 Applications</div>
+                </div>
+
+                <div class="metric-card">
+                    <h3>API Endpoints</h3>
+                    <div class="metric-value">2,119</div>
+                    <div class="metric-label">79 API Domains</div>
+                </div>
+
+                <div class="metric-card">
+                    <h3>Autonomous Agents</h3>
+                    <div class="metric-value">145</div>
+                    <div class="metric-label">69 Enterprise Bots</div>
+                </div>
+
+                <div class="metric-card">
+                    <h3>CI/CD Workflows</h3>
+                    <div class="metric-value">437</div>
+                    <div class="metric-label">Automated Pipelines</div>
+                </div>
+
+                <div class="metric-card">
+                    <h3>Cloudflare Workers</h3>
+                    <div class="metric-value">26</div>
+                    <div class="metric-label">Edge Computing</div>
+                </div>
+
+                <div class="metric-card">
+                    <h3>Cloudflare Pages</h3>
+                    <div class="metric-value">33</div>
+                    <div class="metric-label">Static Deployments</div>
+                </div>
+
+                <div class="metric-card">
+                    <h3>Sales Revenue</h3>
+                    <div class="metric-value">$26.8M</div>
+                    <div class="metric-label">11 Months at Securian</div>
+                </div>
+            </div>
+
+            <p style="color: var(--text-muted); text-align: center; margin-top: 20px;">
+                <strong>Verification:</strong> PS-SHA-∞ (256-step cascade hashing) |
+                <strong>Source of Truth:</strong> GitHub (BlackRoad-OS) + Cloudflare
+            </p>
+        </section>
+
+        <!-- Professional Experience -->
+        <section class="metrics-section">
+            <div class="section-header">
+                <h2>Professional Experience</h2>
+            </div>
+
+            <!-- BlackRoad OS -->
+            <div class="experience-item">
+                <div class="experience-header">
+                    <h3>BLACKROAD OS, INC. / PRISM CONSOLE</h3>
+                    <div class="experience-meta">
+                        <span>👤 Founder & Chief Architect</span>
+                        <span>📍 Remote</span>
+                        <span>📅 May 2025 – Present</span>
+                    </div>
+                </div>
+
+                <div class="subsection">
+                    <h4>AI/ML & Cognitive Orchestration</h4>
+                    <ul>
+                        <li>Built <strong>Lucidia AI Engine</strong> managing 76 autonomous agents across distributed infrastructure</li>
+                        <li>Architected <strong>69 enterprise automation bots</strong> for GitHub, Linear, and multi-cloud orchestration</li>
+                        <li>Designed <strong>RAG pipeline</strong> with intent chain processing and policy evaluation engine</li>
+                        <li>Deployed edge AI on <strong>Raspberry Pi/Jetson fleet</strong> with MQTT-based coordination</li>
+                    </ul>
+                </div>
+
+                <div class="subsection">
+                    <h4>Enterprise API & Microservices</h4>
+                    <ul>
+                        <li>Engineered <strong>2,119 API endpoints</strong> across 79 domains (Finance, CRM, HR/WFM, IT Ops)</li>
+                        <li>Built CRM infrastructure: <strong>CPQ configurator</strong>, partner portal, deal pipeline automation</li>
+                        <li>Created <strong>SOX compliance engine</strong> processing 10K+ rules/minute in Go</li>
+                    </ul>
+                </div>
+
+                <div class="subsection">
+                    <h4>Infrastructure-as-Code & DevOps</h4>
+                    <ul>
+                        <li>Managed <strong>89 Terraform modules</strong> across AWS, GCP, Railway, DigitalOcean</li>
+                        <li>Orchestrated <strong>17 production Kubernetes</strong> configurations with Helm charts</li>
+                        <li>Built <strong>437-workflow CI/CD pipeline</strong> with self-healing remediation (30 min → 5 min deploys)</li>
+                        <li>Deployed <strong>89 Docker containers</strong> with optimized multi-stage builds</li>
+                    </ul>
+                </div>
+
+                <div class="subsection">
+                    <h4>Key Achievements</h4>
+                    <ul>
+                        <li>Grew codebase from <strong>0 to 1.38M LOC</strong> in 7 months with 5,937 commits</li>
+                        <li>Managed <strong>14,541 files</strong> across 297 modules with zero production outages</li>
+                        <li>Built cryptographic <strong>PS-SHA-∞ truth system</strong> serving as identity authority</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Securian Financial -->
+            <div class="experience-item">
+                <div class="experience-header">
+                    <h3>SECURIAN FINANCIAL</h3>
+                    <div class="experience-meta">
+                        <span>👤 Internal Annuity Wholesaler / Senior Sales Analyst</span>
+                        <span>📍 St. Paul, MN</span>
+                        <span>📅 Jul 2024 – Jun 2025</span>
+                    </div>
+                </div>
+
+                <div class="subsection">
+                    <h4>Revenue Performance</h4>
+                    <ul>
+                        <li>Sold <strong>$26.8M in annuities</strong> in 11 months (92% of annual goal)</li>
+                        <li>Achieved <strong>38% territory growth</strong> year-over-year</li>
+                        <li>Ranked in <strong>top 15% nationally</strong> for new advisor acquisition</li>
+                    </ul>
+                </div>
+
+                <div class="subsection">
+                    <h4>Strategic Leadership</h4>
+                    <ul>
+                        <li>Selected as <strong>due-diligence presenter</strong> for network of 24,000+ financial advisors</li>
+                        <li>Delivered keynote at <strong>2024 Winter Sales Conference</strong> on Salesforce automation</li>
+                        <li>Led <strong>Salesforce click-to-dial</strong> implementation reducing call time by 40%</li>
+                        <li>Eliminated <strong>3,000 CRM errors to zero</strong> through data quality initiative</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Ameriprise Financial -->
+            <div class="experience-item">
+                <div class="experience-header">
+                    <h3>AMERIPRISE FINANCIAL</h3>
+                    <div class="experience-meta">
+                        <span>👤 Financial Advisor / Advisor in Training</span>
+                        <span>📍 Minneapolis, MN</span>
+                        <span>📅 Aug 2023 – May 2024</span>
+                    </div>
+                </div>
+
+                <div class="subsection">
+                    <ul>
+                        <li>Identified <strong>$14M pipeline gap</strong> → projected 400% GDC growth opportunity</li>
+                        <li>Completed <strong>2,400+ prospecting calls</strong> with 10% appointment conversion (2x team average)</li>
+                        <li>Ranked <strong>#1 on training team</strong> for Q4 2023 activity metrics</li>
+                        <li>Earned <strong>Sales Training Thought-Leadership Award</strong> for automating call-note workflows</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- eXp Realty -->
+            <div class="experience-item">
+                <div class="experience-header">
+                    <h3>EXP REALTY</h3>
+                    <div class="experience-meta">
+                        <span>👤 Real Estate Agent</span>
+                        <span>📍 Remote</span>
+                        <span>📅 Aug 2022 – Aug 2023</span>
+                    </div>
+                </div>
+
+                <div class="subsection">
+                    <ul>
+                        <li>Closed <strong>$3.2M in transaction volume</strong> in first 12 months</li>
+                        <li>Maintained <strong>10% conversion rate</strong> on 1,000+ cold prospecting calls</li>
+                        <li>Built automated follow-up sequences improving response rates by 25%</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- Technical Skills -->
+        <section class="metrics-section">
+            <div class="section-header">
+                <h2>Technical Skills</h2>
+            </div>
+
+            <div class="skills-grid">
+                <div class="skill-category">
+                    <h3>Programming Languages</h3>
+                    <div class="skill-tags">
+                        <span class="skill-tag">Python</span>
+                        <span class="skill-tag">TypeScript</span>
+                        <span class="skill-tag">JavaScript</span>
+                        <span class="skill-tag">Go</span>
+                        <span class="skill-tag">C</span>
+                        <span class="skill-tag">SQL</span>
+                        <span class="skill-tag">Bash</span>
+                    </div>
+                </div>
+
+                <div class="skill-category">
+                    <h3>AI/ML & Data</h3>
+                    <div class="skill-tags">
+                        <span class="skill-tag">PyTorch</span>
+                        <span class="skill-tag">TensorFlow</span>
+                        <span class="skill-tag">Qiskit</span>
+                        <span class="skill-tag">RAG Pipelines</span>
+                        <span class="skill-tag">LangChain</span>
+                        <span class="skill-tag">Pinecone</span>
+                        <span class="skill-tag">Snowflake</span>
+                    </div>
+                </div>
+
+                <div class="skill-category">
+                    <h3>Cloud & Infrastructure</h3>
+                    <div class="skill-tags">
+                        <span class="skill-tag">AWS</span>
+                        <span class="skill-tag">GCP</span>
+                        <span class="skill-tag">Cloudflare</span>
+                        <span class="skill-tag">Railway</span>
+                        <span class="skill-tag">Kubernetes</span>
+                        <span class="skill-tag">Docker</span>
+                        <span class="skill-tag">Terraform</span>
+                    </div>
+                </div>
+
+                <div class="skill-category">
+                    <h3>Frameworks & Tools</h3>
+                    <div class="skill-tags">
+                        <span class="skill-tag">FastAPI</span>
+                        <span class="skill-tag">Node.js</span>
+                        <span class="skill-tag">Express</span>
+                        <span class="skill-tag">Redis</span>
+                        <span class="skill-tag">PostgreSQL</span>
+                        <span class="skill-tag">GitHub Actions</span>
+                    </div>
+                </div>
+
+                <div class="skill-category">
+                    <h3>Edge & IoT</h3>
+                    <div class="skill-tags">
+                        <span class="skill-tag">Raspberry Pi</span>
+                        <span class="skill-tag">NVIDIA Jetson</span>
+                        <span class="skill-tag">MQTT</span>
+                        <span class="skill-tag">Edge Inference</span>
+                    </div>
+                </div>
+
+                <div class="skill-category">
+                    <h3>Financial Systems</h3>
+                    <div class="skill-tags">
+                        <span class="skill-tag">Salesforce</span>
+                        <span class="skill-tag">Excel VBA</span>
+                        <span class="skill-tag">Financial Modeling</span>
+                        <span class="skill-tag">Compliance</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Education & Licenses -->
+        <section class="metrics-section">
+            <div class="section-header">
+                <h2>Education & Licenses</h2>
+            </div>
+
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <h3>Education</h3>
+                    <div class="metric-label">
+                        <strong>University of Minnesota – Twin Cities</strong><br>
+                        B.A., Strategic Communication<br>
+                        (Advertising & Public Relations)
+                    </div>
+                </div>
+
+                <div class="metric-card">
+                    <h3>Professional Licenses</h3>
+                    <div class="metric-label">
+                        • SIE (Securities Industry Essentials)<br>
+                        • Series 7 (General Securities)<br>
+                        • Series 66 (Uniform Combined State)<br>
+                        • Life & Health Insurance (MN)<br>
+                        • Real Estate License (MN - inactive)
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Leadership & Awards -->
+        <section class="metrics-section">
+            <div class="section-header">
+                <h2>Leadership & Awards</h2>
+            </div>
+
+            <div class="awards-list">
+                <ul>
+                    <li>National Speech & Debate Finalist / Minnesota State Finalist</li>
+                    <li>3× Enterprise Top Sales Award (Jun-Aug 2019)</li>
+                    <li>Presenter: LPL Due Diligence Conference & Securian 2024 Winter Sales Conference</li>
+                    <li>Ameriprise Sales Training Thought-Leadership Award (2024)</li>
+                    <li>Dean's List: University of Minnesota – Twin Cities</li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer>
+            <p><strong>Resume Version 2.0</strong> • Last Updated: December 2025</p>
+            <p>Verification: PS-SHA-∞ Protocol • Source of Truth: GitHub (BlackRoad-OS) + Cloudflare</p>
+
+            <div class="footer-links">
+                <a href="https://blackroad.io" target="_blank">BlackRoad OS</a>
+                <a href="https://kpi.blackroad.io" target="_blank">KPI Dashboard</a>
+                <a href="https://github.com/BlackRoad-OS" target="_blank">GitHub</a>
+                <a href="mailto:amundsonalexa@gmail.com">Contact</a>
+            </div>
+
+            <p style="margin-top: 20px; font-size: 0.9em;">
+                © 2025 Alexa Louise Amundson. All rights reserved.
+            </p>
+        </footer>
+    </div>
+
+    <!-- JSON-LD Structured Data -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "Person",
+        "name": "Alexa Louise Amundson",
+        "jobTitle": "Founder & Chief Architect",
+        "worksFor": {
+            "@type": "Organization",
+            "name": "BlackRoad OS, Inc."
+        },
+        "email": "amundsonalexa@gmail.com",
+        "telephone": "+1-507-828-0842",
+        "address": {
+            "@type": "PostalAddress",
+            "addressLocality": "Lakeville",
+            "addressRegion": "MN",
+            "addressCountry": "US"
+        },
+        "sameAs": [
+            "https://linkedin.com/in/alexaamundson",
+            "https://github.com/blackboxprogramming",
+            "https://blackroad.io"
+        ],
+        "alumniOf": {
+            "@type": "CollegeOrUniversity",
+            "name": "University of Minnesota – Twin Cities"
+        },
+        "knowsAbout": [
+            "Artificial Intelligence",
+            "Machine Learning",
+            "Enterprise Sales",
+            "Financial Services",
+            "Cloud Infrastructure",
+            "DevOps",
+            "Quantum Computing"
+        ]
+    }
+    </script>
+</body>
+</html>

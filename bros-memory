@@ -1,0 +1,369 @@
+#!/bin/bash
+# Memory system integration for repos
+
+CACHE_FILE="$HOME/.blackroad-cache/repos.json"
+MEMORY_SYSTEM="$HOME/memory-system.sh"
+
+# Colors
+CYAN='\033[0;36m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+RED='\033[0;31m'
+MAGENTA='\033[0;35m'
+BLUE='\033[0;34m'
+NC='\033[0m'
+BOLD='\033[1m'
+
+show_header() {
+    echo -e "${CYAN}${BOLD}╔════════════════════════════════════════════════════════════════════╗${NC}"
+    echo -e "${CYAN}${BOLD}║          BLACKROAD MEMORY INTEGRATION                              ║${NC}"
+    echo -e "${CYAN}${BOLD}╚════════════════════════════════════════════════════════════════════╝${NC}"
+    echo ""
+}
+
+# Log repo event to memory
+log_event() {
+    local event_type="$1"
+    local title="$2"
+    local description="$3"
+    local repo_pattern="${4:-.}"
+
+    show_header
+    echo -e "${GREEN}📝 Logging Event to Memory${NC}"
+    echo ""
+
+    local repos=$(cat "$CACHE_FILE")
+    local matches=$(echo "$repos" | jq -r --arg p "$repo_pattern" '.[] | select(.name | ascii_downcase | contains($p | ascii_downcase)) | .name')
+
+    echo -e "${CYAN}Logging for repos:${NC}"
+    echo "$matches" | while read -r name; do
+        echo "  → $name"
+    done
+
+    echo ""
+    echo "$matches" | while read -r name; do
+        "$MEMORY_SYSTEM" log "$event_type" "[$name] $title" "$description" "$name" 2>/dev/null
+        echo -e "${GREEN}✓${NC} Logged: $name"
+    done
+
+    echo ""
+    echo -e "${GREEN}✓ Memory logged${NC}"
+}
+
+# Search memory for repo-related info
+search_memory() {
+    local query="$1"
+
+    show_header
+    echo -e "${GREEN}🔍 Searching Memory${NC}"
+    echo -e "${YELLOW}Query: $query${NC}"
+    echo ""
+
+    "$MEMORY_SYSTEM" search "$query" 2>/dev/null || echo -e "${YELLOW}No results found${NC}"
+}
+
+# Get repo timeline from memory
+repo_timeline() {
+    local repo_name="$1"
+
+    show_header
+    echo -e "${GREEN}📅 Repository Timeline: $repo_name${NC}"
+    echo ""
+
+    echo -e "${CYAN}Recent events for $repo_name:${NC}"
+    "$MEMORY_SYSTEM" search "$repo_name" 2>/dev/null | grep -i "$repo_name" | head -20
+
+    echo ""
+}
+
+# Log deployment to memory
+log_deployment() {
+    local repo="$1"
+    local environment="${2:-production}"
+    local status="${3:-success}"
+
+    show_header
+    echo -e "${GREEN}🚀 Logging Deployment${NC}"
+    echo ""
+
+    local timestamp=$(date '+%Y-%m-%d %H:%M:%S')
+
+    "$MEMORY_SYSTEM" log deployed "[$repo] Deployed to $environment" "Status: $status. Timestamp: $timestamp. Logged via bros-memory." "$repo" 2>/dev/null
+
+    echo -e "${GREEN}✓ Deployment logged to memory${NC}"
+    echo -e "${CYAN}Repo: $repo${NC}"
+    echo -e "${CYAN}Environment: $environment${NC}"
+    echo -e "${CYAN}Status: $status${NC}"
+}
+
+# Remember repo patterns/insights
+remember_pattern() {
+    local pattern="$1"
+    local description="$2"
+    local repo_pattern="${3:-.}"
+
+    show_header
+    echo -e "${GREEN}💡 Remembering Pattern${NC}"
+    echo ""
+
+    local repos=$(cat "$CACHE_FILE")
+    local matches=$(echo "$repos" | jq -r --arg p "$repo_pattern" '.[] | select(.name | ascii_downcase | contains($p | ascii_downcase)) | .name')
+
+    local repo_list=$(echo "$matches" | tr '\n' ',' | sed 's/,$//')
+
+    "$MEMORY_SYSTEM" log pattern "[PATTERN] $pattern" "$description. Applies to: $repo_list" "blackroad-ecosystem" 2>/dev/null
+
+    echo -e "${GREEN}✓ Pattern remembered${NC}"
+    echo -e "${CYAN}Pattern: $pattern${NC}"
+    echo -e "${CYAN}Description: $description${NC}"
+    echo -e "${CYAN}Repos: $repo_list${NC}"
+}
+
+# Get memory summary for agent context
+agent_context() {
+    local repo="$1"
+
+    show_header
+    echo -e "${GREEN}🤖 Agent Context for: $repo${NC}"
+    echo ""
+
+    echo -e "${CYAN}Recent deployments:${NC}"
+    "$MEMORY_SYSTEM" search "deployed.*$repo" 2>/dev/null | head -5
+    echo ""
+
+    echo -e "${CYAN}Recent changes:${NC}"
+    "$MEMORY_SYSTEM" search "updated.*$repo\|created.*$repo" 2>/dev/null | head -5
+    echo ""
+
+    echo -e "${CYAN}Known patterns:${NC}"
+    "$MEMORY_SYSTEM" search "PATTERN.*$repo" 2>/dev/null | head -5
+    echo ""
+
+    echo -e "${CYAN}Issues/Notes:${NC}"
+    "$MEMORY_SYSTEM" search "issue.*$repo\|bug.*$repo\|todo.*$repo" 2>/dev/null | head -5
+}
+
+# Bulk log repo states
+snapshot_all() {
+    local pattern="${1:-.}"
+
+    show_header
+    echo -e "${GREEN}📸 Snapshotting Repo States${NC}"
+    echo ""
+
+    local repos=$(cat "$CACHE_FILE")
+    local matches=$(echo "$repos" | jq -r --arg p "$pattern" '.[] | select(.name | ascii_downcase | contains($p | ascii_downcase)) | .name')
+
+    local timestamp=$(date '+%Y-%m-%d %H:%M:%S')
+
+    echo "$matches" | while read -r name; do
+        # Get repo info
+        local owner=$(echo "$repos" | jq -r --arg n "$name" '.[] | select(.name == $n) | .url | split("/")[-2]')
+        local lang=$(echo "$repos" | jq -r --arg n "$name" '.[] | select(.name == $n) | .primaryLanguage.name // "Unknown"')
+        local pushed=$(echo "$repos" | jq -r --arg n "$name" '.[] | select(.name == $n) | .pushedAt')
+
+        local description="Language: $lang. Last push: $pushed. Snapshot: $timestamp"
+
+        "$MEMORY_SYSTEM" log snapshot "[$name] Snapshot" "$description" "$name" 2>/dev/null
+
+        echo -e "${GREEN}✓${NC} $name"
+    done
+
+    echo ""
+    echo -e "${GREEN}✓ Snapshot complete${NC}"
+}
+
+# Ask memory about repos
+ask_memory() {
+    local question="$1"
+
+    show_header
+    echo -e "${GREEN}❓ Asking Memory${NC}"
+    echo -e "${YELLOW}Q: $question${NC}"
+    echo ""
+
+    echo -e "${CYAN}Memory search results:${NC}"
+    "$MEMORY_SYSTEM" search "$question" 2>/dev/null || echo -e "${YELLOW}No relevant memories found${NC}"
+    echo ""
+
+    echo -e "${BLUE}Tip: Use 'bros-memory agent-context <repo>' for detailed context${NC}"
+}
+
+# Memory stats
+memory_stats() {
+    show_header
+    echo -e "${GREEN}📊 Memory Statistics${NC}"
+    echo ""
+
+    if [ -x "$MEMORY_SYSTEM" ]; then
+        echo -e "${CYAN}Memory system summary:${NC}"
+        "$MEMORY_SYSTEM" summary 2>/dev/null || echo -e "${YELLOW}Summary not available${NC}"
+    else
+        echo -e "${RED}Memory system not found at: $MEMORY_SYSTEM${NC}"
+    fi
+}
+
+# Create memory note
+note() {
+    local title="$1"
+    local content="$2"
+    local repo="${3:-blackroad-ecosystem}"
+
+    show_header
+    echo -e "${GREEN}📝 Creating Memory Note${NC}"
+    echo ""
+
+    "$MEMORY_SYSTEM" log note "[$repo] $title" "$content" "$repo" 2>/dev/null
+
+    echo -e "${GREEN}✓ Note created${NC}"
+    echo -e "${CYAN}Title: $title${NC}"
+    echo -e "${CYAN}Repo: $repo${NC}"
+}
+
+# Export repo knowledge
+export_knowledge() {
+    local repo="$1"
+    local output_file="${2:-$HOME/.blackroad-cache/$repo-knowledge.md}"
+
+    show_header
+    echo -e "${GREEN}📤 Exporting Knowledge: $repo${NC}"
+    echo ""
+
+    {
+        echo "# $repo Knowledge Base"
+        echo ""
+        echo "Generated: $(date)"
+        echo ""
+        echo "## Recent Deployments"
+        "$MEMORY_SYSTEM" search "deployed.*$repo" 2>/dev/null | head -10
+        echo ""
+        echo "## Recent Changes"
+        "$MEMORY_SYSTEM" search "updated.*$repo\|created.*$repo" 2>/dev/null | head -10
+        echo ""
+        echo "## Patterns & Insights"
+        "$MEMORY_SYSTEM" search "PATTERN.*$repo" 2>/dev/null
+        echo ""
+        echo "## Issues & TODOs"
+        "$MEMORY_SYSTEM" search "issue.*$repo\|todo.*$repo" 2>/dev/null
+        echo ""
+    } > "$output_file"
+
+    echo -e "${GREEN}✓ Knowledge exported${NC}"
+    echo -e "${CYAN}File: $output_file${NC}"
+    echo ""
+    echo -e "${BLUE}View: cat $output_file${NC}"
+}
+
+# Remind agents about repo
+agent_reminder() {
+    local repo="$1"
+
+    show_header
+    echo -e "${GREEN}🔔 Agent Reminder: $repo${NC}"
+    echo ""
+
+    echo -e "${YELLOW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo -e "${CYAN}${BOLD}AGENT: Before working on $repo, remember:${NC}"
+    echo -e "${YELLOW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo ""
+
+    echo -e "${MAGENTA}📚 Check [MEMORY] first:${NC}"
+    echo "  → bros-memory agent-context $repo"
+    echo "  → bros-memory search '$repo'"
+    echo ""
+
+    echo -e "${MAGENTA}📖 Check [CODEX] second:${NC}"
+    echo "  → ~/blackroad-codex-verification-suite.sh search $repo"
+    echo ""
+
+    echo -e "${CYAN}Last deployment:${NC}"
+    "$MEMORY_SYSTEM" search "deployed.*$repo" 2>/dev/null | head -1
+    echo ""
+
+    echo -e "${CYAN}Recent changes:${NC}"
+    "$MEMORY_SYSTEM" search "updated.*$repo" 2>/dev/null | head -3
+    echo ""
+
+    echo -e "${YELLOW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo -e "${GREEN}Ready to work? Check memory first! 🧠${NC}"
+    echo -e "${YELLOW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+}
+
+# Main
+main() {
+    if [ ! -f "$CACHE_FILE" ]; then
+        echo -e "${RED}Error: Cache not found. Run 'bros refresh' first.${NC}"
+        exit 1
+    fi
+
+    case "${1:-help}" in
+        log)
+            log_event "$2" "$3" "$4" "$5"
+            ;;
+        search|find)
+            search_memory "$2"
+            ;;
+        timeline)
+            repo_timeline "$2"
+            ;;
+        deploy)
+            log_deployment "$2" "$3" "$4"
+            ;;
+        pattern)
+            remember_pattern "$2" "$3" "$4"
+            ;;
+        agent-context|context)
+            agent_context "$2"
+            ;;
+        snapshot)
+            snapshot_all "$2"
+            ;;
+        ask)
+            ask_memory "$2"
+            ;;
+        stats)
+            memory_stats
+            ;;
+        note)
+            note "$2" "$3" "$4"
+            ;;
+        export)
+            export_knowledge "$2" "$3"
+            ;;
+        reminder|remind)
+            agent_reminder "$2"
+            ;;
+        *)
+            echo "Usage: bros-memory <command> [options]"
+            echo ""
+            echo "Commands:"
+            echo "  log <type> <title> <desc> [pattern]  Log event to memory"
+            echo "  search <query>                       Search memory"
+            echo "  timeline <repo>                      Show repo timeline"
+            echo "  deploy <repo> [env] [status]         Log deployment"
+            echo "  pattern <name> <desc> [pattern]      Remember pattern"
+            echo "  agent-context <repo>                 Get context for agents"
+            echo "  snapshot [pattern]                   Snapshot all repos"
+            echo "  ask <question>                       Ask memory"
+            echo "  stats                                Memory statistics"
+            echo "  note <title> <content> [repo]        Create note"
+            echo "  export <repo> [file]                 Export knowledge"
+            echo "  reminder <repo>                      Agent reminder"
+            echo ""
+            echo "Examples:"
+            echo "  bros-memory log updated 'Added auth' 'JWT implementation' dashboard"
+            echo "  bros-memory search deployment"
+            echo "  bros-memory deploy blackroad-os-operator production success"
+            echo "  bros-memory agent-context blackroad-os-operator"
+            echo "  bros-memory reminder blackroad-os-operator"
+            echo "  bros-memory snapshot agent"
+            echo ""
+            echo "Agent workflow:"
+            echo "  1. bros-memory reminder <repo>   # Check before starting"
+            echo "  2. Do your work..."
+            echo "  3. bros-memory log updated 'Your changes' 'Details' <repo>"
+            ;;
+    esac
+}
+
+main "$@"

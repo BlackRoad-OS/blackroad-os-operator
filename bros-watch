@@ -1,0 +1,399 @@
+#!/bin/bash
+# Real-time monitoring and alerts for repos
+
+CACHE_FILE="$HOME/.blackroad-cache/repos.json"
+WATCH_STATE="$HOME/.blackroad-cache/watch-state.json"
+
+# Colors
+CYAN='\033[0;36m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+RED='\033[0;31m'
+MAGENTA='\033[0;35m'
+BLUE='\033[0;34m'
+NC='\033[0m'
+BOLD='\033[1m'
+
+show_header() {
+    echo -e "${CYAN}${BOLD}╔════════════════════════════════════════════════════════════════════╗${NC}"
+    echo -e "${CYAN}${BOLD}║          BLACKROAD REAL-TIME MONITOR                               ║${NC}"
+    echo -e "${CYAN}${BOLD}╚════════════════════════════════════════════════════════════════════╝${NC}"
+    echo ""
+}
+
+# Initialize watch state
+init_state() {
+    mkdir -p "$(dirname "$WATCH_STATE")"
+    if [ ! -f "$WATCH_STATE" ]; then
+        echo '{}' > "$WATCH_STATE"
+    fi
+}
+
+# Watch for new commits
+watch_commits() {
+    local pattern="${1:-.}"
+    local interval="${2:-60}"
+
+    show_header
+    echo -e "${GREEN}👁️  Watching for New Commits${NC}"
+    echo -e "${YELLOW}Pattern: $pattern | Check interval: ${interval}s${NC}"
+    echo -e "${BLUE}Press Ctrl+C to stop${NC}"
+    echo ""
+
+    init_state
+
+    local repos=$(cat "$CACHE_FILE")
+    local matches=$(echo "$repos" | jq -r --arg p "$pattern" '.[] | select(.name | ascii_downcase | contains($p | ascii_downcase)) | .name')
+
+    # Store initial state
+    echo "$matches" | while read -r name; do
+        local owner=$(echo "$repos" | jq -r --arg n "$name" '.[] | select(.name == $n) | .url | split("/")[-2]')
+        local latest=$(gh api "repos/$owner/$name/commits" --jq '.[0].sha' 2>/dev/null)
+
+        local state=$(cat "$WATCH_STATE")
+        state=$(echo "$state" | jq --arg repo "$owner/$name" --arg sha "$latest" '.[$repo] = $sha')
+        echo "$state" > "$WATCH_STATE"
+    done
+
+    echo -e "${GREEN}Initial state captured. Monitoring...${NC}"
+    echo ""
+
+    # Watch loop
+    while true; do
+        local changes=0
+        local timestamp=$(date '+%Y-%m-%d %H:%M:%S')
+
+        echo "$matches" | while read -r name; do
+            local owner=$(echo "$repos" | jq -r --arg n "$name" '.[] | select(.name == $n) | .url | split("/")[-2]')
+            local latest=$(gh api "repos/$owner/$name/commits" --jq '.[0].sha' 2>/dev/null)
+
+            if [ -n "$latest" ]; then
+                local state=$(cat "$WATCH_STATE")
+                local last_seen=$(echo "$state" | jq -r --arg repo "$owner/$name" '.[$repo] // empty')
+
+                if [ -n "$last_seen" ] && [ "$latest" != "$last_seen" ]; then
+                    # New commit detected!
+                    local commit_msg=$(gh api "repos/$owner/$name/commits/$latest" --jq '.commit.message' 2>/dev/null | head -1)
+                    local author=$(gh api "repos/$owner/$name/commits/$latest" --jq '.commit.author.name' 2>/dev/null)
+
+                    echo -e "${RED}🔔 NEW COMMIT${NC} [$timestamp]"
+                    echo -e "  ${CYAN}$owner/$name${NC}"
+                    echo -e "  ${GREEN}Author:${NC} $author"
+                    echo -e "  ${YELLOW}Message:${NC} $commit_msg"
+                    echo -e "  ${BLUE}SHA:${NC} ${latest:0:7}"
+                    echo ""
+
+                    # Update state
+                    state=$(echo "$state" | jq --arg repo "$owner/$name" --arg sha "$latest" '.[$repo] = $sha')
+                    echo "$state" > "$WATCH_STATE"
+
+                    ((changes++))
+                fi
+            fi
+        done
+
+        if [ $changes -eq 0 ]; then
+            echo -ne "\r${CYAN}[$timestamp]${NC} No changes... (checking every ${interval}s)"
+        fi
+
+        sleep "$interval"
+    done
+}
+
+# Watch for new issues
+watch_issues() {
+    local pattern="${1:-.}"
+    local interval="${2:-120}"
+
+    show_header
+    echo -e "${GREEN}📋 Watching for New Issues${NC}"
+    echo -e "${YELLOW}Pattern: $pattern | Check interval: ${interval}s${NC}"
+    echo -e "${BLUE}Press Ctrl+C to stop${NC}"
+    echo ""
+
+    init_state
+
+    local repos=$(cat "$CACHE_FILE")
+    local matches=$(echo "$repos" | jq -r --arg p "$pattern" '.[] | select(.name | ascii_downcase | contains($p | ascii_downcase)) | .name')
+
+    # Store initial issue counts
+    echo "$matches" | while read -r name; do
+        local owner=$(echo "$repos" | jq -r --arg n "$name" '.[] | select(.name == $n) | .url | split("/")[-2]')
+        local count=$(gh issue list --repo "$owner/$name" --json number 2>/dev/null | jq 'length')
+
+        local state=$(cat "$WATCH_STATE")
+        state=$(echo "$state" | jq --arg repo "$owner/$name" --argjson count "$count" '.issues[$repo] = $count')
+        echo "$state" > "$WATCH_STATE"
+    done
+
+    echo -e "${GREEN}Monitoring for new issues...${NC}"
+    echo ""
+
+    while true; do
+        local timestamp=$(date '+%Y-%m-%d %H:%M:%S')
+
+        echo "$matches" | while read -r name; do
+            local owner=$(echo "$repos" | jq -r --arg n "$name" '.[] | select(.name == $n) | .url | split("/")[-2]')
+            local count=$(gh issue list --repo "$owner/$name" --json number 2>/dev/null | jq 'length')
+
+            local state=$(cat "$WATCH_STATE")
+            local last_count=$(echo "$state" | jq -r --arg repo "$owner/$name" '.issues[$repo] // 0')
+
+            if [ "$count" -gt "$last_count" ]; then
+                # New issue!
+                local new_issues=$(gh issue list --repo "$owner/$name" --json number,title,author --limit $((count - last_count)) 2>/dev/null)
+
+                echo -e "${RED}🔔 NEW ISSUE${NC} [$timestamp]"
+                echo -e "  ${CYAN}$owner/$name${NC}"
+                echo "$new_issues" | jq -r '.[] | "  #\(.number) - \(.title)\n    by \(.author.login)"'
+                echo ""
+
+                # Update state
+                state=$(echo "$state" | jq --arg repo "$owner/$name" --argjson count "$count" '.issues[$repo] = $count')
+                echo "$state" > "$WATCH_STATE"
+            fi
+        done
+
+        echo -ne "\r${CYAN}[$timestamp]${NC} Monitoring issues... (checking every ${interval}s)"
+        sleep "$interval"
+    done
+}
+
+# Watch for new PRs
+watch_prs() {
+    local pattern="${1:-.}"
+    local interval="${2:-120}"
+
+    show_header
+    echo -e "${GREEN}🔀 Watching for New Pull Requests${NC}"
+    echo -e "${YELLOW}Pattern: $pattern | Check interval: ${interval}s${NC}"
+    echo -e "${BLUE}Press Ctrl+C to stop${NC}"
+    echo ""
+
+    init_state
+
+    local repos=$(cat "$CACHE_FILE")
+    local matches=$(echo "$repos" | jq -r --arg p "$pattern" '.[] | select(.name | ascii_downcase | contains($p | ascii_downcase)) | .name')
+
+    # Store initial PR counts
+    echo "$matches" | while read -r name; do
+        local owner=$(echo "$repos" | jq -r --arg n "$name" '.[] | select(.name == $n) | .url | split("/")[-2]')
+        local count=$(gh pr list --repo "$owner/$name" --json number 2>/dev/null | jq 'length')
+
+        local state=$(cat "$WATCH_STATE")
+        state=$(echo "$state" | jq --arg repo "$owner/$name" --argjson count "$count" '.prs[$repo] = $count')
+        echo "$state" > "$WATCH_STATE"
+    done
+
+    echo -e "${GREEN}Monitoring for new PRs...${NC}"
+    echo ""
+
+    while true; do
+        local timestamp=$(date '+%Y-%m-%d %H:%M:%S')
+
+        echo "$matches" | while read -r name; do
+            local owner=$(echo "$repos" | jq -r --arg n "$name" '.[] | select(.name == $n) | .url | split("/")[-2]')
+            local count=$(gh pr list --repo "$owner/$name" --json number 2>/dev/null | jq 'length')
+
+            local state=$(cat "$WATCH_STATE")
+            local last_count=$(echo "$state" | jq -r --arg repo "$owner/$name" '.prs[$repo] // 0')
+
+            if [ "$count" -gt "$last_count" ]; then
+                # New PR!
+                local new_prs=$(gh pr list --repo "$owner/$name" --json number,title,author --limit $((count - last_count)) 2>/dev/null)
+
+                echo -e "${RED}🔔 NEW PULL REQUEST${NC} [$timestamp]"
+                echo -e "  ${CYAN}$owner/$name${NC}"
+                echo "$new_prs" | jq -r '.[] | "  #\(.number) - \(.title)\n    by \(.author.login)"'
+                echo ""
+
+                # Update state
+                state=$(echo "$state" | jq --arg repo "$owner/$name" --argjson count "$count" '.prs[$repo] = $count')
+                echo "$state" > "$WATCH_STATE"
+            fi
+        done
+
+        echo -ne "\r${CYAN}[$timestamp]${NC} Monitoring PRs... (checking every ${interval}s)"
+        sleep "$interval"
+    done
+}
+
+# Watch for deployment failures
+watch_deployments() {
+    local pattern="${1:-.}"
+    local interval="${2:-300}"
+
+    show_header
+    echo -e "${GREEN}🚀 Watching Deployments${NC}"
+    echo -e "${YELLOW}Pattern: $pattern | Check interval: ${interval}s${NC}"
+    echo -e "${BLUE}Press Ctrl+C to stop${NC}"
+    echo ""
+
+    local repos=$(cat "$CACHE_FILE")
+    local matches=$(echo "$repos" | jq -r --arg p "$pattern" '.[] | select(.name | ascii_downcase | contains($p | ascii_downcase)) | .name')
+
+    echo -e "${GREEN}Monitoring GitHub Actions workflows...${NC}"
+    echo ""
+
+    while true; do
+        local timestamp=$(date '+%Y-%m-%d %H:%M:%S')
+
+        echo "$matches" | while read -r name; do
+            local owner=$(echo "$repos" | jq -r --arg n "$name" '.[] | select(.name == $n) | .url | split("/")[-2]')
+
+            # Get latest workflow runs
+            local runs=$(gh run list --repo "$owner/$name" --limit 5 --json status,conclusion,name,createdAt 2>/dev/null)
+
+            # Check for failures
+            local failures=$(echo "$runs" | jq -r '.[] | select(.conclusion == "failure") | "\(.name) - \(.createdAt)"')
+
+            if [ -n "$failures" ]; then
+                echo -e "${RED}❌ WORKFLOW FAILURE${NC} [$timestamp]"
+                echo -e "  ${CYAN}$owner/$name${NC}"
+                echo "$failures" | while read -r fail; do
+                    echo "    $fail"
+                done
+                echo ""
+            fi
+        done
+
+        echo -ne "\r${CYAN}[$timestamp]${NC} Monitoring deployments... (checking every ${interval}s)"
+        sleep "$interval"
+    done
+}
+
+# Watch everything
+watch_all() {
+    local pattern="${1:-.}"
+
+    show_header
+    echo -e "${GREEN}👁️  Watching Everything${NC}"
+    echo -e "${YELLOW}Pattern: $pattern${NC}"
+    echo -e "${BLUE}Press Ctrl+C to stop${NC}"
+    echo ""
+
+    # Start multiple watch processes in background
+    watch_commits "$pattern" 60 &
+    local pid_commits=$!
+
+    watch_issues "$pattern" 120 &
+    local pid_issues=$!
+
+    watch_prs "$pattern" 120 &
+    local pid_prs=$!
+
+    # Wait for Ctrl+C
+    trap "kill $pid_commits $pid_issues $pid_prs 2>/dev/null; exit" INT
+
+    wait
+}
+
+# Dashboard - live stats
+live_dashboard() {
+    local pattern="${1:-.}"
+    local interval="${2:-10}"
+
+    while true; do
+        clear
+        show_header
+        echo -e "${GREEN}${BOLD}📊 LIVE DASHBOARD${NC}"
+        echo -e "${YELLOW}Updated: $(date '+%Y-%m-%d %H:%M:%S')${NC}"
+        echo ""
+
+        local repos=$(cat "$CACHE_FILE")
+        local matches=$(echo "$repos" | jq -r --arg p "$pattern" '.[] | select(.name | ascii_downcase | contains($p | ascii_downcase)) | .name')
+
+        echo -e "${CYAN}Activity Summary (Last 24h):${NC}"
+
+        local total_commits=0
+        local total_issues=0
+        local total_prs=0
+
+        echo "$matches" | while read -r name; do
+            local owner=$(echo "$repos" | jq -r --arg n "$name" '.[] | select(.name == $n) | .url | split("/")[-2]')
+
+            # Count recent commits
+            local commits=$(gh api "repos/$owner/$name/commits" --jq 'length' 2>/dev/null || echo 0)
+
+            # Count open issues
+            local issues=$(gh issue list --repo "$owner/$name" --json number 2>/dev/null | jq 'length')
+
+            # Count open PRs
+            local prs=$(gh pr list --repo "$owner/$name" --json number 2>/dev/null | jq 'length')
+
+            if [ $commits -gt 0 ] || [ $issues -gt 0 ] || [ $prs -gt 0 ]; then
+                echo -e "  ${GREEN}$name:${NC} $commits commits, $issues issues, $prs PRs"
+            fi
+        done
+
+        echo ""
+        echo -e "${BLUE}Refreshing in ${interval}s... (Press Ctrl+C to stop)${NC}"
+
+        sleep "$interval"
+    done
+}
+
+# Reset watch state
+reset_state() {
+    show_header
+    echo -e "${YELLOW}Resetting watch state...${NC}"
+
+    rm -f "$WATCH_STATE"
+    init_state
+
+    echo -e "${GREEN}✓ Watch state reset${NC}"
+}
+
+# Main
+main() {
+    if [ ! -f "$CACHE_FILE" ]; then
+        echo -e "${RED}Error: Cache not found. Run 'bros refresh' first.${NC}"
+        exit 1
+    fi
+
+    case "${1:-help}" in
+        commits)
+            watch_commits "$2" "$3"
+            ;;
+        issues)
+            watch_issues "$2" "$3"
+            ;;
+        prs)
+            watch_prs "$2" "$3"
+            ;;
+        deployments|deploy)
+            watch_deployments "$2" "$3"
+            ;;
+        all)
+            watch_all "$2"
+            ;;
+        dashboard|live)
+            live_dashboard "$2" "$3"
+            ;;
+        reset)
+            reset_state
+            ;;
+        *)
+            echo "Usage: bros-watch <command> [pattern] [interval]"
+            echo ""
+            echo "Commands:"
+            echo "  commits [pattern] [interval]      Watch for new commits (default: 60s)"
+            echo "  issues [pattern] [interval]       Watch for new issues (default: 120s)"
+            echo "  prs [pattern] [interval]          Watch for new PRs (default: 120s)"
+            echo "  deployments [pattern] [interval]  Watch for deployment failures (default: 300s)"
+            echo "  all [pattern]                     Watch everything"
+            echo "  dashboard [pattern] [interval]    Live activity dashboard (default: 10s)"
+            echo "  reset                             Reset watch state"
+            echo ""
+            echo "Examples:"
+            echo "  bros-watch commits dashboard 30"
+            echo "  bros-watch issues agent"
+            echo "  bros-watch all"
+            echo "  bros-watch dashboard . 5"
+            echo ""
+            echo "Note: Press Ctrl+C to stop monitoring"
+            ;;
+    esac
+}
+
+main "$@"

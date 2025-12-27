@@ -1,0 +1,85 @@
+{
+  "metadata": {
+    "timestamp": "2025-12-23T22:33:05.974059Z",
+    "audit_date": "2025-12-23",
+    "collector_version": "1.0.0",
+    "verification_protocol": "PS-SHA-\u221e",
+    "verification_hash": "e640ac56b3ea5a55463b30bfb7fd2910e868c1df940aa8c8b993480dbed479df"
+  },
+  "code": {
+    "total_files": 19713,
+    "total_loc": 1161185,
+    "total_commits": 210,
+    "contributors": 4,
+    "by_language": {
+      "python": {
+        "files": 5020,
+        "loc": 25887
+      },
+      "typescript": {
+        "files": 2404,
+        "loc": 343807
+      },
+      "javascript": {
+        "files": 7117,
+        "loc": 244434
+      },
+      "go": {
+        "files": 0,
+        "loc": 0
+      },
+      "c_cpp": {
+        "files": 5172,
+        "loc": 547057
+      }
+    }
+  },
+  "infrastructure": {
+    "cloudflare": {
+      "workers": 26,
+      "pages": 34,
+      "zones": 16,
+      "kv_stores": 8,
+      "d1_databases": 1
+    },
+    "devops": {
+      "workflows": 52,
+      "docker_containers": 3,
+      "terraform_modules": 0,
+      "k8s_configs": 0
+    },
+    "integrations": 60
+  },
+  "agents": {
+    "total": 29,
+    "operator_level": 0,
+    "by_category": {}
+  },
+  "api": {
+    "total_routes": 60,
+    "python_routes": 55,
+    "typescript_routes": 5,
+    "api_domains": 60
+  },
+  "github": {
+    "organizations": 15,
+    "total_repos": 56,
+    "by_org": {
+      "BlackRoad-OS": 53,
+      "BlackRoad-AI": 3,
+      "BlackRoad-Archive": 0,
+      "BlackRoad-Cloud": 0,
+      "BlackRoad-Education": 0,
+      "BlackRoad-Foundation": 0,
+      "BlackRoad-Gov": 0,
+      "BlackRoad-Hardware": 0,
+      "BlackRoad-Interactive": 0,
+      "BlackRoad-Labs": 0,
+      "BlackRoad-Media": 0,
+      "BlackRoad-Security": 0,
+      "BlackRoad-Studio": 0,
+      "BlackRoad-Ventures": 0,
+      "Blackbox-Enterprises": 0
+    }
+  }
+}

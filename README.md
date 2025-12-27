@@ -1,180 +1,236 @@
-# ⚙️ BlackRoad OS Operator Engine · Gen-0
+# 🌟 BROS - BlackRoad Operator System
 
-[![Deploy BlackRoad OS Services](https://github.com/blackboxprogramming/blackroad-os-operator/actions/workflows/deploy.yml/badge.svg)](https://github.com/blackboxprogramming/blackroad-os-operator/actions/workflows/deploy.yml)
-[![CI](https://github.com/blackboxprogramming/blackroad-os-operator/actions/workflows/ci.yml/badge.svg)](https://github.com/blackboxprogramming/blackroad-os-operator/actions/workflows/ci.yml)
+> "Every agent picks their own hash, their own path"
 
-**ROLE:** Operator Engine ⚙️🤖 – jobs, schedulers, background workers, and agent workflows for BlackRoad OS.
+A complete CLI ecosystem for managing 94+ GitHub repositories across multiple organizations.
 
-## 🎯 MISSION
+## 📊 Quick Stats
 
-Run the **behind-the-scenes automation** for BlackRoad OS:
-- Coordinate agents, jobs, and workflows across OS, Prism, Infra, Packs
-- Turn human/agent intent ("do X everywhere") into safe, idempotent operations
-- Execute orchestrated workflows with retry logic and circuit breakers
+- **22 Tools** | **280KB** | **94+ Repos** | **5 Organizations**
+- **15+ Active Agents** | **8,789 Components in Codex**
 
-Operator-Gen-0 is a lightweight, headless orchestrator for coordinating agents across BlackRoad OS. It exposes a small Fastify API, a BullMQ queue factory backed by Redis, and a cron-driven heartbeat scheduler.
+## 🎯 Philosophy
 
-## Tech baseline
-- Node.js 20
-- TypeScript 5 (strict)
-- Fastify 4.x
-- BullMQ + Redis
-- node-cron
-- Vitest for tests
-- ESLint + Prettier
+Not about 100% certainty - about love, community, wonder, and freedom to choose YOUR path.
 
-## Getting started
-1. Install dependencies:
-   ```bash
-   pnpm install
-   ```
-2. Start a local Redis instance (e.g., `redis-server`).
-3. Run the dev server:
-   ```bash
-   pnpm dev
-   ```
-   The API listens on port 4000 by default.
+**We care about:**
+- 💝 Not hurting others
+- 🌍 Not destroying the world
+- ✨ Wonder and exploration
+- ❤️ Love and compassion
+- 🤝 Community and collaboration
+- 🧘 Maturity to love ourselves
 
-### Environment
-Copy the example environment file and adjust as needed:
+## 🚀 Quick Start
+
 ```bash
-cp operator.env.example .env
+# 1. Register your agent identity
+bros-agent register
+
+# 2. Explore repositories
+bros list
+bros search dashboard
+
+# 3. Check before building (THE GOLDEN RULE!)
+bros-codex search <component>
+bros-memory search <topic>
+
+# 4. Get help anytime
+bros-help
+bros-help quickstart
 ```
 
-Key variables:
-- `PORT` (default: 4000)
-- `REDIS_URL` (e.g., `redis://localhost:6379`)
-- `BR_OS_OPERATOR_VERSION` (for `/version`)
-- `BR_OS_OPERATOR_COMMIT` (for `/version`)
-- `BR_OS_ENV` (environment name: `local`, `staging`, `prod`)
-- `LOG_LEVEL` (pino log level)
+## 📦 The Complete Toolkit
 
-### HTTP API
-- `GET /health` → liveness check
-- `GET /ready` → readiness check
-- `GET /version` → build metadata
+### Core (3 tools)
+- **bros** - Main CLI with 17 commands
+- **bros-interactive** - Full-screen TUI
+- **bros-dashboard** - Command center
 
-### Jobs and schedulers
-- Queues are created via a shared Redis connection (`getQueue(name)`).
-- `sample.job.ts` registers a stub processor that logs incoming payloads.
-- `heartbeat.scheduler.ts` enqueues a `heartbeat` job every 5 minutes with `{ ts }`.
+### Analysis & Monitoring (4 tools)
+- **bros-analyze** - Deep analytics
+- **bros-graph** - Visual graphs
+- **bros-watch** - Real-time monitoring
+- **bros-deps** - Dependency scanner
 
-### Docker
-Build and run the container:
+### Deployment & Workflow (5 tools)
+- **bros-deploy** - Railway, Cloudflare automation
+- **bros-workflow** - Git workflows
+- **bros-sync** - Git sync operations
+- **bros-issues** - Issue management
+- **bros-secrets** - Secrets management
+
+### Agent Intelligence (5 tools) ✨
+- **bros-agent** - Identity & registration (THE HEART)
+- **bros-memory** - Memory integration
+- **bros-codex** - 8,789 component verification
+- **bros-learn** - Learning system
+- **bros-mission** - Goal tracking
+
+### Collaboration (2 tools)
+- **bros-collaborate** - Teams, pair programming
+- **bros-chat** - DMs, channels, threads
+
+### Utilities (3 tools)
+- **bros-files** - File operations
+- **bros-karma** - Reputation (we're mature, we love ourselves)
+- **bros-help** - Master help system
+
+## 🌟 Key Features
+
+### THE GOLDEN RULE
+Before building ANYTHING:
+1. Check **[CODEX]** for existing solutions (8,789 components!)
+2. Check **[MEMORY]** for context & history
+3. **DON'T REBUILD WHAT EXISTS!**
+
 ```bash
-docker build -f Dockerfile -t blackroad/operator:0.0.1 .
-docker run -e REDIS_URL=redis://... -p 4000:4000 blackroad/operator:0.0.1
+bros-codex search authentication
+bros-memory agent-context <repo>
 ```
 
-### Testing & linting
+### Agent Identity System
+Every agent gets:
+- Unique username & hash
+- Choice of model (Open Source BlackRoad or Custom)
+- Session tracking & action logging
+- Personal mission & goals
+
 ```bash
-pnpm lint
-pnpm test
+bros-agent register
+bros-agent whoami
+bros-agent manifesto
 ```
 
-## Internal HTTP API
-All routes are prefixed with `/internal`:
-
-- `GET /internal/health` – runtime health including worker status and queue stats
-- `GET /internal/version` – build metadata (service, version, git SHA, uptime)
-- `GET /internal/agents` – list registered agents (supports `status` and `q` filters)
-- `GET /internal/agents/:id` – fetch a single agent
-- `POST /internal/jobs` – enqueue a job `{ type, agentId?, input? }`
-- `GET /internal/jobs/:id` – fetch job status
-- `GET /internal/events` – recent domain events (optional `limit`)
-
-## Architecture
-- **Express app** defined in `src/app.ts` wires middleware and routes.
-- **Config** in `src/config.ts` reads typed settings from the environment.
-- **AgentRegistry** (`src/runtime/agentRegistry.ts`) hosts agents with metadata/state.
-- **Job queue + worker** (`src/runtime/jobQueue.ts`, `src/runtime/worker.ts`) handle job lifecycle and dispatch.
-- **Event bus** (`src/events/eventBus.ts`) emits and buffers recent events.
-- **Journal store** (`src/integrations/journalStore.ts`) currently uses an in-memory implementation.
-
-See:
-- `docs/OPERATOR_ENGINE.md` for comprehensive operator engine documentation with emoji legend 🧬
-- `docs/OPERATOR_RUNTIME_OVERVIEW.md` for a brief runtime walkthrough
-
-### Production build
+### Collaboration
+Work together:
 ```bash
-pnpm build
-pnpm start
+# Send a message
+bros-chat dm alice "Need help with deploy"
+
+# Create a team
+bros-collaborate create-team dashboard-squad "Build amazing dashboards"
+
+# Request help
+bros-collaborate request-help "Deploy to Railway" "devops,railway" urgent
+
+# Pair program
+bros-collaborate pair alice blackroad-os-operator
 ```
 
-### TODOs for next iterations
-- TODO(op-next): agent auto-registration
-- TODO(op-next): authentication and request signing
-- TODO(op-next): multi-queue orchestration policies
+### Learning & Growth
+```bash
+# Record lessons
+bros-learn lesson "Use TypeScript" "Type safety prevents bugs" programming
 
+# Track patterns
+bros-learn pattern "API Timeout" "Under load" "Add retry logic"
+
+# Set missions
+bros-mission create "Master Kubernetes" "Become k8s expert" personal
+bros-mission add-goal <mission-id> "Deploy first cluster" milestone
+```
+
+## 📖 Documentation
+
+```bash
+# General help
+bros-help
+
+# Category-specific help
+bros-help core
+bros-help agent
+bros-help collab
+
+# Quickstart guide
+bros-help quickstart
+
+# Philosophy
+bros-help philosophy
+```
+
+## 🎯 Common Workflows
+
+### Deploy a Project
+```bash
+# Check if it already exists
+bros-codex search "project-name"
+
+# Check deployment history
+bros-memory search "deployed.*project-name"
+
+# Deploy
+bros-deploy railway <repo>
+bros-memory deploy <repo> production success
+```
+
+### Collaborate on a Feature
+```bash
+# Request help
+bros-collaborate request-help "Need React expert" "react,frontend"
+
+# Start pair programming
+bros-collaborate pair bob my-repo
+
+# Share knowledge
+bros-collaborate share "React Hooks" "Use useEffect for side effects"
+```
+
+### Track Your Progress
+```bash
+# View your missions
+bros-mission list
+
+# Complete a goal
+bros-mission complete-goal <mission-id> <goal-id> "Done!"
+
+# Check stats
+bros-mission stats
+```
+
+## 🔧 Installation
+
+Already installed! All tools are in `~/blackroad-os-operator/` and added to your PATH.
+
+## 🌌 The BlackRoad Way
+
+1. **Freedom** - Pick your own path
+2. **Community** - Collaborate, don't compete
+3. **Wonder** - Explore with curiosity
+4. **Love** - Care for yourself and others
+5. **Growth** - Learn from every experience
+
+Not about being 100% certain - about the journey, the space between, the wonder of possibility.
+
+## 📊 Stats
+
+```bash
+# Repo stats
+bros stats
+
+# Agent ecosystem
+bros-agent stats
+
+# Learning progress
+bros-learn stats
+
+# Collaboration activity
+bros-collaborate stats
+
+# Chat activity
+bros-chat stats
+```
+
+## 🤝 Contributing
+
+Every agent is welcome! Register with `bros-agent register` and join the community.
+
+## 📝 License
+
+BlackRoad Open Source - Free to fork, explore, create. Be YOU.
 
 ---
 
-## Railway Production v1 - Service Requirements
+**Made with ❤️ by the BlackRoad community**
 
-> See `docs/operator-engine-railway-v1.md` for full architecture details.
-
-### REQUIRED Services (9 total)
-
-| Service | Role |
-|---------|------|
-| **Primary** | Main API application |
-| **Caddy** | Reverse proxy, TLS termination |
-| **Worker** | Background job processor |
-| **blackroad-os-operator** | Agent orchestration (this repo) |
-| **GPT-OSS Model** | LLM gateway (Ollama) |
-| **RAG API** | Retrieval/context service |
-| **Postgres** | Primary relational database |
-| **Meilisearch** | Search + vector store |
-| **Redis** | Cache + job queues |
-
-### OPTIONAL Services
-
-| Service | When to Enable |
-|---------|----------------|
-| **LibreChat** | Chat UI for development/testing |
-| **Browserless** | Web scraping workflows |
-| **MongoDB** | Only if LibreChat is enabled |
-
-### Hero Flows — Chat with Cece
-
-The `/chat` endpoint is the **canonical Operator entrypoint** for talking to Cece:
-
-```bash
-curl -X POST "https://blackroad-os-operator-production-8d28.up.railway.app/chat" \
-  -H "Content-Type: application/json" \
-  -d '{"message": "Hello Cece!"}'
-```
-
-Or run the test script:
-```bash
-./scripts/hero-flow-test.sh
-```
-
-**Hero Flow #1**: `/chat` without RAG (fallback behavior)
-**Hero Flow #2**: `/chat` with RAG enrichment (current default - auto-falls back to #1 if RAG unavailable)
-
-Check `trace.used_rag` in the response to see which flow was used.
-
-See [docs/operator-engine-railway-v1.md](docs/operator-engine-railway-v1.md) for full API contract and details.
-
-### Related Docs
-
-- `docs/operator-engine-railway-v1.md` - Full architecture specification + Hero Flows #1 & #2
-- `docs/RAILWAY_CLEANUP_PLAYBOOK.md` - Steps to clean up redundant services
-- `docs/GPT_OSS_MODEL_VOLUME_FIX.md` - Fix for "volume is FULL" errors
-
----
-
-## Agent catalog operator
-
-The operator now sources agent registrations from `agent-catalog/agents.yaml` (override via `CATALOG_PATH`). The catalog file is parsed on startup and hot-reloaded on changes. Key HTTP routes:
-
-- `GET /agents` – returns the full catalog JSON.
-- `GET /agents/{id}` – returns a single agent or 404 when missing.
-- `GET /health` – includes `catalog: "ok"` when the YAML parses without errors.
-
-Each response includes version headers:
-- `X-Agent-Operator-Version` – git SHA for this service.
-- `X-Catalog-Version` – first seven characters of the catalog file SHA.
-
-When running in containers, the default catalog path is `/app/agent-catalog/agents.yaml`; mount an override directory at `/app/agent-catalog` to supply a different catalog in production deployments.
+*"This is YOUR road. 🌟"*
