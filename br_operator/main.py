@@ -1020,6 +1020,13 @@ def create_app(catalog_path: Path | None = None, enable_watch: bool = True) -> F
             "summary": f"{agent_count}/{len(expected_agents)} agents online",
         }
 
+    # ============================================
+    # AI WORKFLOWS: Linear + Notion + HuggingFace
+    # ============================================
+
+    from .webhooks_linear import router as linear_webhooks_router
+    app.include_router(linear_webhooks_router)
+
     return app
 
 

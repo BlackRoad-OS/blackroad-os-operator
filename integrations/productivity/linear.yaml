@@ -1,0 +1,376 @@
+# Linear Configuration
+# BlackRoad OS Project Management & Issue Tracking
+#
+# AI-powered task triage, auto-labeling, and workflow automation
+#
+# @blackroad_name: BlackRoad Linear
+# @tier: Team
+# @operator: alexa.operator.v1
+
+version: "linear-v1"
+
+# ============================================
+# CONNECTION
+# ============================================
+
+connection:
+  api_key: "${LINEAR_API_KEY}"
+  graphql_endpoint: "https://api.linear.app/graphql"
+
+# ============================================
+# WORKSPACE
+# ============================================
+
+workspace:
+  organization: "BlackRoad"
+
+  # Teams
+  teams:
+    - name: "Platform"
+      key: "PLAT"
+      description: "Core infrastructure and backend"
+
+    - name: "Governance"
+      key: "GOV"
+      description: "Policy engine, compliance, auditing"
+
+    - name: "Frontend"
+      key: "FE"
+      description: "UI/UX and client applications"
+
+    - name: "DevRel"
+      key: "DEV"
+      description: "Developer relations and documentation"
+
+    - name: "Operations"
+      key: "OPS"
+      description: "DevOps, SRE, infrastructure"
+
+# ============================================
+# PROJECTS
+# ============================================
+
+projects:
+  # Core Infrastructure
+  blackroad-os:
+    name: "BlackRoad OS"
+    team: "Platform"
+    state: active
+    icon: "🌌"
+
+  operator:
+    name: "Operator Engine"
+    team: "Platform"
+    state: active
+    icon: "⚙️"
+
+  # Governance
+  governance:
+    name: "Governance System"
+    team: "Governance"
+    state: active
+    icon: "🏛️"
+
+  # Frontend
+  dashboard:
+    name: "Dashboard & Console"
+    team: "Frontend"
+    state: active
+    icon: "📊"
+
+# ============================================
+# LABELS
+# ============================================
+
+labels:
+  # Priority
+  - name: "P0: Critical"
+    color: "#E5484D"
+    description: "System down, data loss, security breach"
+
+  - name: "P1: High"
+    color: "#F76B15"
+    description: "Major feature broken, blocking issue"
+
+  - name: "P2: Medium"
+    color: "#FFC53D"
+    description: "Important but not blocking"
+
+  - name: "P3: Low"
+    color: "#9BA1A6"
+    description: "Nice to have, low impact"
+
+  # Type
+  - name: "bug"
+    color: "#E5484D"
+
+  - name: "feature"
+    color: "#0091FF"
+
+  - name: "improvement"
+    color: "#8E4EC6"
+
+  - name: "refactor"
+    color: "#00A2C7"
+
+  - name: "docs"
+    color: "#17B897"
+
+  - name: "security"
+    color: "#E5484D"
+
+  - name: "performance"
+    color: "#F76B15"
+
+  # AI-powered auto-labels
+  - name: "ai:triaged"
+    color: "#8E4EC6"
+    description: "Auto-triaged by AI"
+
+  - name: "ai:needs-review"
+    color: "#FFC53D"
+    description: "AI flagged for human review"
+
+  - name: "ai:generated"
+    color: "#17B897"
+    description: "AI-generated content"
+
+# ============================================
+# WORKFLOWS
+# ============================================
+
+workflows:
+  # Standard workflow
+  standard:
+    name: "Standard Workflow"
+    states:
+      - name: "Triage"
+        type: triage
+        color: "#95A2B3"
+
+      - name: "Backlog"
+        type: backlog
+        color: "#95A2B3"
+
+      - name: "Todo"
+        type: unstarted
+        color: "#95A2B3"
+
+      - name: "In Progress"
+        type: started
+        color: "#0091FF"
+
+      - name: "In Review"
+        type: started
+        color: "#F2C94C"
+
+      - name: "Done"
+        type: completed
+        color: "#17B897"
+
+      - name: "Canceled"
+        type: canceled
+        color: "#95A2B3"
+
+# ============================================
+# AI WORKFLOWS
+# ============================================
+
+ai_workflows:
+  # Auto-triage new issues
+  auto_triage:
+    enabled: true
+    trigger: issue_created
+    model: "blackroad/intent-classifier-v1"  # From HuggingFace
+    actions:
+      - classify_intent
+      - assign_priority
+      - suggest_labels
+      - suggest_assignee
+      - generate_summary
+
+    # Classification rules
+    classifiers:
+      priority:
+        P0: ["security", "data loss", "system down", "breach", "critical"]
+        P1: ["blocking", "major bug", "broken", "urgent"]
+        P2: ["important", "feature request", "improvement"]
+        P3: ["minor", "nice to have", "low priority"]
+
+      type:
+        bug: ["error", "crash", "broken", "bug", "issue", "problem"]
+        feature: ["feature", "add", "new", "implement", "support"]
+        improvement: ["improve", "optimize", "enhance", "better"]
+        refactor: ["refactor", "cleanup", "restructure", "reorganize"]
+        docs: ["documentation", "docs", "readme", "guide", "tutorial"]
+        security: ["security", "vulnerability", "CVE", "exploit", "breach"]
+        performance: ["slow", "performance", "latency", "speed", "optimization"]
+
+  # Generate Notion docs from Linear context
+  notion_sync:
+    enabled: true
+    trigger: issue_state_changed
+    conditions:
+      - state: "Done"
+      - label: "feature"
+    model: "meta-llama/Meta-Llama-3.1-8B-Instruct"  # From HuggingFace
+    actions:
+      - generate_feature_spec
+      - create_notion_page
+      - link_linear_issue
+
+    # Template for Notion doc generation
+    notion_template: "feature-spec"
+
+  # Auto-summarize on completion
+  completion_summary:
+    enabled: true
+    trigger: issue_state_changed
+    conditions:
+      - state: "Done"
+    model: "facebook/bart-large-cnn"  # From HuggingFace
+    actions:
+      - summarize_comments
+      - summarize_changes
+      - add_completion_note
+
+  # Content moderation
+  moderation:
+    enabled: true
+    trigger: comment_created
+    model: "MoritzLaworx/toxic-comment-model"  # From HuggingFace
+    actions:
+      - check_toxicity
+      - flag_inappropriate
+      - notify_moderator
+
+# ============================================
+# INTEGRATIONS
+# ============================================
+
+integrations:
+  # Notion sync
+  notion:
+    enabled: true
+    sync_databases:
+      - linear_project: "blackroad-os"
+        notion_database: "feature-specs"
+        sync_direction: "bidirectional"
+        field_mapping:
+          title: "Feature Name"
+          state: "Status"
+          assignee: "Owner"
+          priority: "Priority"
+          url: "Linear Issue"
+
+    auto_create_docs:
+      enabled: true
+      trigger_states: ["Done", "In Review"]
+      use_ai_generation: true
+
+  # GitHub
+  github:
+    enabled: true
+    auto_link_prs: true
+    auto_link_commits: true
+
+  # Slack
+  slack:
+    enabled: true
+    notifications:
+      - channel: "#engineering"
+        triggers: ["P0", "P1"]
+
+      - channel: "#product"
+        triggers: ["feature_shipped"]
+
+# ============================================
+# WEBHOOKS
+# ============================================
+
+webhooks:
+  # Operator webhook for AI processing
+  operator:
+    url: "${OPERATOR_WEBHOOK_URL}/webhooks/linear"
+    events:
+      - Issue
+      - Comment
+      - IssueLabel
+
+    # Send to AI workflow engine
+    route_to: "ai_workflow_engine"
+
+  # Notion sync webhook
+  notion_sync:
+    url: "${OPERATOR_WEBHOOK_URL}/webhooks/linear-notion-sync"
+    events:
+      - Issue
+    filters:
+      - state_changed: true
+
+# ============================================
+# QUERIES
+# ============================================
+
+queries:
+  # High priority issues
+  high_priority:
+    name: "High Priority Issues"
+    filter:
+      state:
+        type: { in: ["triage", "backlog", "unstarted", "started"] }
+      priority: { in: [0, 1] }
+
+  # AI-triaged issues needing review
+  ai_needs_review:
+    name: "AI-Triaged: Needs Review"
+    filter:
+      labels: { some: { name: { eq: "ai:needs-review" } } }
+      state:
+        type: { nin: ["completed", "canceled"] }
+
+  # Ready for Notion docs
+  ready_for_docs:
+    name: "Ready for Documentation"
+    filter:
+      state:
+        name: { eq: "Done" }
+      labels: { some: { name: { eq: "feature" } } }
+      notion_synced: false
+
+# ============================================
+# RATE LIMITS
+# ============================================
+
+rate_limits:
+  graphql:
+    requests_per_hour: 1500
+
+  ai_processing:
+    issues_per_minute: 10
+    batch_size: 5
+
+# ============================================
+# MONITORING
+# ============================================
+
+monitoring:
+  logging:
+    enabled: true
+    level: info
+
+  metrics:
+    - issues_created
+    - issues_triaged
+    - ai_classifications
+    - notion_syncs
+    - processing_latency
+
+  alerts:
+    - name: ai_processing_failed
+      condition: error_rate > 0.1
+      severity: warning
+
+    - name: webhook_delayed
+      condition: processing_time > 30s
+      severity: warning

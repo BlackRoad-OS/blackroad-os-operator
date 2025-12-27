@@ -28,3 +28,7 @@ structlog==24.4.0
 
 # SDK generation
 datamodel-code-generator==0.26.3
+
+# AI Workflows Integration
+huggingface-hub>=0.20.0
+notion-client>=2.2.0
