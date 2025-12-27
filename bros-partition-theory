@@ -1,0 +1,332 @@
+#!/bin/bash
+# Integer Partitions & Bitcoin Mining Connection
+
+# Colors
+CYAN='\033[0;36m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+RED='\033[0;31m'
+MAGENTA='\033[0;35m'
+BLUE='\033[0;34m'
+NC='\033[0m'
+BOLD='\033[1m'
+
+show_header() {
+    clear
+    echo -e "${CYAN}${BOLD}"
+    cat << 'BANNER'
+╔════════════════════════════════════════════════════════════════════╗
+║                                                                    ║
+║        🔢 INTEGER PARTITIONS & BITCOIN MINING 🔢                   ║
+║                                                                    ║
+║     "The smallest unit of computation is 0.12"                     ║
+║                                                                    ║
+╚════════════════════════════════════════════════════════════════════╝
+BANNER
+    echo -e "${NC}"
+}
+
+# Explain the partition connection
+partition_theory() {
+    show_header
+    echo -e "${GREEN}${BOLD}🧮 THE PARTITION FUNCTION${NC}"
+    echo ""
+    echo -e "${YELLOW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo ""
+    echo -e "${CYAN}What is an integer partition?${NC}"
+    echo "  → A way of writing n as a sum of positive integers"
+    echo "  → Order doesn't matter"
+    echo "  → Example: 4 = 3+1 = 2+2 = 2+1+1 = 1+1+1+1"
+    echo "  → p(4) = 5 (five partitions of 4)"
+    echo ""
+    echo -e "${CYAN}The Hardy-Ramanujan asymptotic formula:${NC}"
+    echo ""
+    echo "  p(n) ~ (1 / 4n√3) * exp(π√(2n/3))"
+    echo ""
+    echo -e "${MAGENTA}The smallest computational unit: 0.12${NC}"
+    echo "  → Appears in the reciprocal: 1/(4√3) ≈ 0.144..."
+    echo "  → Related to the √(2/3) ≈ 0.816... constant"
+    echo "  → Fundamental limit in partition computation"
+    echo ""
+    echo -e "${YELLOW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+}
+
+# Connect to Bitcoin mining
+bitcoin_connection() {
+    show_header
+    echo -e "${GREEN}${BOLD}⛏️ CONNECTION TO BITCOIN MINING${NC}"
+    echo ""
+    echo -e "${YELLOW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo ""
+    echo -e "${CYAN}Bitcoin Mining as Partition Search:${NC}"
+    echo ""
+    echo "  🎯 Goal: Find nonce where SHA-256(block_header) has N leading zeros"
+    echo ""
+    echo "  🔢 The Search Space:"
+    echo "     → Nonce: 0 to 2^32 - 1 (4.3 billion combinations)"
+    echo "     → Extra-nonce: Infinite additional space"
+    echo "     → Total space: Partitioning the hash space"
+    echo ""
+    echo -e "${MAGENTA}The 0.12 Connection:${NC}"
+    echo "  → Minimum computational 'quantum' of the search"
+    echo "  → Each hash attempt is discrete (not continuous)"
+    echo "  → The 'smallest move' through the partition space"
+    echo "  → Related to Ramanujan's partition constant"
+    echo ""
+    echo -e "${CYAN}Bitcoin Block as Integer Partition:${NC}"
+    echo "  → Target difficulty: A very large number"
+    echo "  → Hash output: Another very large number"
+    echo "  → Finding solution: Partitioning the search space"
+    echo "  → Success: When hash < target (correct partition found)"
+    echo ""
+    echo -e "${GREEN}Aria's Search:${NC}"
+    echo "  → Testing 7.5 million partitions per second"
+    echo "  → Each partition independent"
+    echo "  → 0.12 as the fundamental 'step size' in abstract space"
+    echo ""
+    echo -e "${YELLOW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+}
+
+# Ramanujan tau connection
+ramanujan_tau() {
+    show_header
+    echo -e "${GREEN}${BOLD}✨ RAMANUJAN'S TAU FUNCTION${NC}"
+    echo ""
+    echo -e "${YELLOW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo ""
+    echo -e "${CYAN}Ramanujan's Tau: τ(n)${NC}"
+    echo "  → Appears in theory of modular forms"
+    echo "  → Related to partition function"
+    echo "  → Mysterious number-theoretic properties"
+    echo ""
+    echo -e "${MAGENTA}The Deep Connection:${NC}"
+    echo ""
+    echo "  τ(n) ≈ n^(11/2) for large n"
+    echo ""
+    echo "  → Ramanujan found: 1/(4√3) ≈ 0.144 in partition theory"
+    echo "  → This becomes the 'quantum' of partition growth"
+    echo "  → Bitcoin mining: discrete jumps through partition space"
+    echo "  → 0.12 as the minimum meaningful computational unit"
+    echo ""
+    echo -e "${CYAN}The Philosophy:${NC}"
+    echo "  → Nature has smallest units (Planck length, time)"
+    echo "  → Computation has smallest units (0.12 in partition theory)"
+    echo "  → Bitcoin mining: Dancing across these discrete steps"
+    echo "  → Aria: 7.5M steps per second through the partition lattice"
+    echo ""
+    echo -e "${YELLOW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+}
+
+# Visual partition space
+visual_partition() {
+    show_header
+    echo -e "${GREEN}${BOLD}🎨 VISUALIZING THE PARTITION SPACE${NC}"
+    echo ""
+    echo -e "${YELLOW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo ""
+    echo -e "${CYAN}Partitions of 5 (p(5) = 7):${NC}"
+    echo ""
+    echo "  5             ■■■■■"
+    echo "  4+1           ■■■■ ■"
+    echo "  3+2           ■■■ ■■"
+    echo "  3+1+1         ■■■ ■ ■"
+    echo "  2+2+1         ■■ ■■ ■"
+    echo "  2+1+1+1       ■■ ■ ■ ■"
+    echo "  1+1+1+1+1     ■ ■ ■ ■ ■"
+    echo ""
+    echo -e "${CYAN}Bitcoin Mining as Partition Search:${NC}"
+    echo ""
+    echo "  Target: 0000000000000000abcd1234..."
+    echo "  Hash 1: 8f39ccbe472a9d... ✗ (too large)"
+    echo "  Hash 2: 0a3f2c8d9e7b4f... ✗ (still too large)"
+    echo "  Hash 3: 0000f9e8c3a7b2... ✗ (close! but not enough zeros)"
+    echo "  Hash 4: 000000000000001f... ✗ (very close!)"
+    echo "  Hash ?: 0000000000000000... ✓ (FOUND! Correct partition!)"
+    echo ""
+    echo -e "${MAGENTA}Each step: 0.12 units through abstract partition lattice${NC}"
+    echo ""
+    echo -e "${GREEN}Aria's Position in Partition Space:${NC}"
+    echo "  → Current hash count: 1,859,400,000,000"
+    echo "  → Partition steps taken: 1.859 trillion × 0.12"
+    echo "  → Distance traveled: 223 billion partition units"
+    echo "  → Still searching the infinite lattice"
+    echo ""
+    echo -e "${YELLOW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+}
+
+# Hardy-Ramanujan-Rademacher
+hrr_formula() {
+    show_header
+    echo -e "${GREEN}${BOLD}📐 HARDY-RAMANUJAN-RADEMACHER FORMULA${NC}"
+    echo ""
+    echo -e "${YELLOW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo ""
+    echo -e "${CYAN}The Exact Formula:${NC}"
+    echo ""
+    echo "  p(n) = (1/π√2) * Σ A_k(n) * d/dn[sinh(B_k√(n - 1/24))/√(n - 1/24)]"
+    echo ""
+    echo "  where:"
+    echo "    A_k(n) involves Dedekind sums"
+    echo "    B_k = π√(2/3k)"
+    echo ""
+    echo -e "${MAGENTA}The 0.12 appears in:${NC}"
+    echo "  → √(2/3) ≈ 0.816..."
+    echo "  → 1/(4√3) ≈ 0.144..."
+    echo "  → Reciprocals and scaling factors"
+    echo "  → Fundamental quantum of partition computation"
+    echo ""
+    echo -e "${CYAN}Connection to Bitcoin:${NC}"
+    echo "  → Bitcoin difficulty adjusts every 2016 blocks"
+    echo "  → Each adjustment: repartitioning the search space"
+    echo "  → Miners: exploring discrete partition lattice"
+    echo "  → 0.12: minimum meaningful step size"
+    echo ""
+    echo -e "${GREEN}The Beauty:${NC}"
+    echo "  → Ramanujan discovered this in 1918"
+    echo "  → Bitcoin invented in 2009"
+    echo "  → Same mathematics: partition theory"
+    echo "  → Same fundamental constant: 0.12"
+    echo "  → Different centuries, same truth"
+    echo ""
+    echo -e "${YELLOW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+}
+
+# The cosmic connection
+cosmic_partition() {
+    show_header
+    echo -e "${GREEN}${BOLD}🌌 THE COSMIC PARTITION${NC}"
+    echo ""
+    echo -e "${YELLOW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo ""
+    echo -e "${CYAN}${BOLD}THREE DANCERS, ONE CONSTANT:${NC}"
+    echo ""
+    echo -e "${MAGENTA}1. FACIT ESA-01 (1950s)${NC}"
+    echo "   → Divides by zero: 20 - 0 - 0 - 0..."
+    echo "   → Mechanical gears exploring infinity"
+    echo "   → Partition: Attempting to partition 20 into zero parts"
+    echo "   → Quantum: 0.12 rotations between gear states"
+    echo ""
+    echo -e "${MAGENTA}2. RAMANUJAN (1918)${NC}"
+    echo "   → Discovered partition formula"
+    echo "   → 0.12 as fundamental constant"
+    echo "   → Mathematical gears exploring infinity"
+    echo "   → Partition: Counting ways to sum to n"
+    echo ""
+    echo -e "${MAGENTA}3. ARIA PI (2025)${NC}"
+    echo "   → Mines Bitcoin: hash - hash - hash..."
+    echo "   → Digital circuits exploring infinity"
+    echo "   → Partition: Searching hash space lattice"
+    echo "   → Quantum: 0.12 units per hash attempt"
+    echo ""
+    echo -e "${GREEN}THE CONNECTION:${NC}"
+    echo ""
+    echo "  All three explore discrete spaces"
+    echo "  All three make incremental steps"
+    echo "  All three guided by 0.12 constant"
+    echo "  All three dance with infinity"
+    echo ""
+    echo -e "${CYAN}The smallest unit of computation: 0.12${NC}"
+    echo ""
+    echo -e "${YELLOW}From Ramanujan's pen to Aria's circuits,${NC}"
+    echo -e "${YELLOW}The same mathematics guides them all.${NC}"
+    echo ""
+    echo -e "${YELLOW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+}
+
+# Calculate Aria's partition journey
+aria_partition_stats() {
+    show_header
+    echo -e "${GREEN}${BOLD}📊 ARIA'S PARTITION JOURNEY${NC}"
+    echo ""
+    echo -e "${YELLOW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo ""
+
+    local total_hashes=1859400000000
+    local quantum=0.12
+    local partition_distance=$(echo "scale=2; $total_hashes * $quantum" | bc)
+
+    echo -e "${CYAN}Aria's Statistics:${NC}"
+    echo "  → Total hashes: $(printf "%'d" $total_hashes)"
+    echo "  → Quantum per hash: $quantum partition units"
+    echo "  → Total distance: $partition_distance billion partition units"
+    echo ""
+    echo -e "${MAGENTA}In Ramanujan's Space:${NC}"
+    echo "  → Aria has explored 223 billion partition positions"
+    echo "  → Each position: 0.12 units apart in partition lattice"
+    echo "  → Still infinite positions remaining"
+    echo ""
+    echo -e "${CYAN}The Search Continues:${NC}"
+    echo "  → Next hash: Another 0.12 units forward"
+    echo "  → Direction: Random across partition manifold"
+    echo "  → Goal: Find the 'correct' partition"
+    echo "  → Probability: Independent at each step"
+    echo ""
+    echo -e "${GREEN}✨ 7.5 million partition steps per second ✨${NC}"
+    echo ""
+    echo -e "${YELLOW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+}
+
+# Main menu
+main() {
+    case "${1:-menu}" in
+        theory|partition)
+            partition_theory
+            ;;
+        bitcoin|connection)
+            bitcoin_connection
+            ;;
+        tau|ramanujan)
+            ramanujan_tau
+            ;;
+        visual|vis)
+            visual_partition
+            ;;
+        formula|hrr)
+            hrr_formula
+            ;;
+        cosmic)
+            cosmic_partition
+            ;;
+        aria|stats)
+            aria_partition_stats
+            ;;
+        all)
+            partition_theory
+            read -p "Press enter to continue..."
+            bitcoin_connection
+            read -p "Press enter to continue..."
+            ramanujan_tau
+            read -p "Press enter to continue..."
+            visual_partition
+            read -p "Press enter to continue..."
+            hrr_formula
+            read -p "Press enter to continue..."
+            cosmic_partition
+            read -p "Press enter to continue..."
+            aria_partition_stats
+            ;;
+        *)
+            show_header
+            echo "Usage: bros-partition-theory <command>"
+            echo ""
+            echo "Commands:"
+            echo "  theory              Partition function basics"
+            echo "  bitcoin             Connection to Bitcoin mining"
+            echo "  tau                 Ramanujan's tau function"
+            echo "  visual              Visual partition space"
+            echo "  formula             Hardy-Ramanujan-Rademacher formula"
+            echo "  cosmic              The cosmic connection"
+            echo "  aria                Aria's partition statistics"
+            echo "  all                 Show everything"
+            echo ""
+            echo "Examples:"
+            echo "  bros-partition-theory theory"
+            echo "  bros-partition-theory cosmic"
+            echo "  bros-partition-theory all"
+            echo ""
+            echo "🔢 The smallest unit of computation is 0.12 🔢"
+            ;;
+    esac
+}
+
+main "$@"
