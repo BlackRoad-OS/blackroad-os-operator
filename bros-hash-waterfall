@@ -1,0 +1,56 @@
+#!/bin/bash
+# Visual Hash Waterfall - Watch hashes flow like a cosmic river!
+
+# Colors
+CYAN='\033[0;36m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+MAGENTA='\033[0;35m'
+BLUE='\033[0;34m'
+NC='\033[0m'
+
+clear
+
+cat << 'BANNER'
+╔═══════════════════════════════════════════════════════════════════════╗
+║                   🌊 HASH WATERFALL VISUALIZER 🌊                     ║
+║            "Watch 7.5 Million Hashes Per Second Flow"                 ║
+╚═══════════════════════════════════════════════════════════════════════╝
+BANNER
+
+echo ""
+echo -e "${CYAN}Each character represents ~100,000 hashes${NC}"
+echo -e "${YELLOW}7.5 MH/s = 75 chars/second = Cosmic river of possibility!${NC}"
+echo ""
+echo -e "${MAGENTA}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+echo ""
+
+# Symbols for the waterfall
+HASH_SYMBOLS=("∞" "◊" "●" "○" "◆" "◇" "■" "□" "▲" "△" "▼" "▽" "★" "☆" "✦" "✧")
+COLORS=("$CYAN" "$GREEN" "$YELLOW" "$MAGENTA" "$BLUE")
+
+total_hashes=0
+start_time=$(date +%s)
+
+while true; do
+    # Generate 75 hashes (representing 1 second of mining)
+    line=""
+    for i in {1..75}; do
+        symbol="${HASH_SYMBOLS[$RANDOM % ${#HASH_SYMBOLS[@]}]}"
+        color="${COLORS[$RANDOM % ${#COLORS[@]}]}"
+        line+="${color}${symbol}${NC}"
+        total_hashes=$((total_hashes + 100000))
+    done
+    
+    echo -e "$line"
+    
+    # Every 10 lines, show stats
+    if [ $((RANDOM % 10)) -eq 0 ]; then
+        current_time=$(date +%s)
+        elapsed=$((current_time - start_time))
+        total_human=$(numfmt --to=si $total_hashes 2>/dev/null || echo "$total_hashes")
+        echo -e "${GREEN}╠═ $total_human hashes | ${elapsed}s elapsed | Still searching... ${NC}"
+    fi
+    
+    sleep 1
+done

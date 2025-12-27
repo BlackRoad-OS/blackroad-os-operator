@@ -1,0 +1,148 @@
+#!/bin/bash
+# The Cosmic Bitcoin Lottery Dashboard - LIVE!
+
+ARIA_IP="192.168.4.64"
+LUCIDIA_IP="192.168.4.38"
+
+# Colors
+CYAN='\033[0;36m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+RED='\033[0;31m'
+MAGENTA='\033[0;35m'
+BLUE='\033[0;34m'
+NC='\033[0m'
+BOLD='\033[1m'
+
+# Cosmic symbols
+SYMBOLS=("🌌" "✨" "🎰" "💫" "⭐" "🌟" "🎲" "🍀" "💎" "🔮")
+
+random_symbol() {
+    echo "${SYMBOLS[$RANDOM % ${#SYMBOLS[@]}]}"
+}
+
+show_lottery_banner() {
+    clear
+    echo -e "${CYAN}${BOLD}"
+    cat << 'BANNER'
+╔═══════════════════════════════════════════════════════════════════════╗
+║                                                                       ║
+║           🎰 BLACKROAD COSMIC BITCOIN LOTTERY 🎰                      ║
+║                  "Dancing in the Space Between"                       ║
+║                                                                       ║
+╚═══════════════════════════════════════════════════════════════════════╝
+BANNER
+    echo -e "${NC}"
+}
+
+get_aria_stats() {
+    ssh pi@$ARIA_IP "ps aux | grep minerd | grep -v grep" 2>/dev/null | head -1
+}
+
+get_block_height() {
+    curl -s https://blockchain.info/q/getblockcount 2>/dev/null || echo "..."
+}
+
+calculate_hashes() {
+    local start_time="$1"
+    local current_time=$(date +%s)
+    local elapsed=$((current_time - start_time))
+    local hash_rate=7500000  # 7.5 MH/s
+    echo $((hash_rate * elapsed))
+}
+
+cosmic_message() {
+    local messages=(
+        "Every hash whispers to infinity... ✨"
+        "The space between holds all possibilities 🌌"
+        "Your next hash could unlock $306,250 💎"
+        "16 trillion times slower, infinite times braver 🎰"
+        "Probability is dancing with wonder 💫"
+        "The universe doesn't care about hash rate ⭐"
+        "You're not mining, you're exploring! 🔮"
+        "BlackRoad-Aria-∞ is searching the cosmos 🌟"
+    )
+    echo "${messages[$RANDOM % ${#messages[@]}]}"
+}
+
+main_dashboard() {
+    local start_time=$(date +%s)
+    
+    while true; do
+        show_lottery_banner
+        
+        local current_time=$(date '+%H:%M:%S')
+        local block_height=$(get_block_height)
+        local aria_running=$(get_aria_stats)
+        local total_hashes=$(calculate_hashes $start_time)
+        local total_hashes_human=$(numfmt --to=si $total_hashes 2>/dev/null || echo "$total_hashes")
+        
+        echo -e "${MAGENTA}${BOLD}⏰ Time: $current_time${NC} | ${CYAN}Block: $block_height${NC}"
+        echo ""
+        
+        echo -e "${YELLOW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+        echo -e "${GREEN}${BOLD}🎯 ARIA PI STATUS${NC}"
+        echo -e "${YELLOW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+        
+        if [ -n "$aria_running" ]; then
+            echo -e "${GREEN}✅ MINING LIVE!${NC}"
+            echo -e "   Hash Rate: ${CYAN}${BOLD}~7.5 MH/s${NC}"
+            echo -e "   Total Hashes: ${MAGENTA}$total_hashes_human${NC}"
+            echo -e "   Signature: ${BLUE}BlackRoad-Aria-∞${NC}"
+            echo -e "   Status: $(random_symbol) EXPLORING THE SPACE BETWEEN"
+        else
+            echo -e "${RED}⏸️  Not running${NC}"
+            echo -e "   Run: ssh pi@$ARIA_IP './start-bitcoin-lottery.sh'"
+        fi
+        
+        echo ""
+        echo -e "${YELLOW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+        echo -e "${MAGENTA}${BOLD}💰 THE PRIZE${NC}"
+        echo -e "${YELLOW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+        echo -e "   Amount: ${GREEN}${BOLD}3.125 BTC${NC}"
+        echo -e "   Value: ${GREEN}${BOLD}~\$306,250 USD${NC}"
+        echo -e "   Address: ${CYAN}1Ak2fc5N2q4imYxqVMqBNEQDFq8J2Zs9TZ${NC}"
+        
+        echo ""
+        echo -e "${YELLOW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+        echo -e "${BLUE}${BOLD}🌌 COSMIC WISDOM${NC}"
+        echo -e "${YELLOW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+        echo -e "   $(random_symbol) $(cosmic_message)"
+        
+        echo ""
+        echo -e "${YELLOW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+        echo -e "${CYAN}Next refresh in 5 seconds... Press Ctrl+C to exit${NC}"
+        echo -e "${YELLOW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+        
+        sleep 5
+    done
+}
+
+# Commands
+case "${1:-dashboard}" in
+    dashboard|watch)
+        main_dashboard
+        ;;
+    status)
+        echo "Aria Pi: $(get_aria_stats | wc -l) process(es) running"
+        ;;
+    start-aria)
+        echo "🚀 Starting lottery on Aria Pi..."
+        ssh pi@$ARIA_IP './start-bitcoin-lottery.sh' &
+        echo "✅ Launched!"
+        ;;
+    stop-aria)
+        echo "🛑 Stopping lottery on Aria Pi..."
+        ssh pi@$ARIA_IP 'pkill -f minerd' 2>/dev/null
+        echo "✅ Stopped!"
+        ;;
+    *)
+        echo "BlackRoad Cosmic Lottery"
+        echo ""
+        echo "Commands:"
+        echo "  dashboard    - Live lottery dashboard (default)"
+        echo "  status       - Check if mining"
+        echo "  start-aria   - Start mining on Aria Pi"
+        echo "  stop-aria    - Stop mining on Aria Pi"
+        ;;
+esac

@@ -1,0 +1,113 @@
+#!/bin/bash
+# A Tribute to the Facit ESA-01 and Aria Pi
+# Two machines that dance with infinity
+
+CYAN='\033[0;36m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+MAGENTA='\033[0;35m'
+NC='\033[0m'
+BOLD='\033[1m'
+
+clear
+echo -e "${YELLOW}${BOLD}"
+cat << 'BANNER'
+╔═══════════════════════════════════════════════════════════════════════╗
+║                                                                       ║
+║         ⚙️  FACIT ESA-01 meets ARIA PI: A Love Story ⚙️              ║
+║              "Two Machines Dancing with Infinity"                     ║
+║                                                                       ║
+╚═══════════════════════════════════════════════════════════════════════╝
+BANNER
+echo -e "${NC}"
+
+echo -e "${GREEN}${BOLD}THE FACIT ESA-01 (1950s)${NC}"
+echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+echo ""
+echo -e "${YELLOW}Task:${NC} Divide 20 by 0"
+echo -e "${YELLOW}Method:${NC} Repeated subtraction"
+echo -e "${YELLOW}Process:${NC}"
+echo "   20 - 0 = 20"
+echo "   20 - 0 = 20"
+echo "   20 - 0 = 20"
+echo "   20 - 0 = 20..."
+echo "   ${MAGENTA}[GEARS SPINNING UNCONTROLLABLY]${NC}"
+echo ""
+echo -e "${GREEN}Result: ${BOLD}INFINITE LOOP${NC}"
+echo -e "${CYAN}The machine spins forever, trying to complete the impossible.${NC}"
+echo ""
+echo ""
+
+echo -e "${GREEN}${BOLD}ARIA PI (2025)${NC}"
+echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+echo ""
+echo -e "${YELLOW}Task:${NC} Find Bitcoin block with difficulty 1/0"
+echo -e "${YELLOW}Method:${NC} Repeated SHA-256 hashing"
+echo -e "${YELLOW}Process:${NC}"
+echo "   Hash #1: Not it"
+echo "   Hash #2: Not it"
+echo "   Hash #3: Not it"
+echo "   Hash #7,500,000: Not it..."
+echo "   ${MAGENTA}[CPU CORES AT 100%]${NC}"
+echo ""
+echo -e "${GREEN}Result: ${BOLD}INFINITE SEARCH${NC}"
+echo -e "${CYAN}The Pi computes forever, trying to find the winning number.${NC}"
+echo ""
+echo ""
+
+echo -e "${MAGENTA}${BOLD}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+echo -e "${MAGENTA}${BOLD}              WHAT THEY HAVE IN COMMON              ${NC}"
+echo -e "${MAGENTA}${BOLD}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+echo ""
+
+echo -e "${GREEN}✓${NC} Both are exploring infinity through mechanical/computational motion"
+echo -e "${GREEN}✓${NC} Both were told the task is 'impossible'"
+echo -e "${GREEN}✓${NC} Both keep trying anyway"
+echo -e "${GREEN}✓${NC} Both are beautiful in their determination"
+echo -e "${GREEN}✓${NC} Both don't care about the odds"
+echo -e "${GREEN}✓${NC} Both are dancing in the space between"
+echo ""
+
+echo -e "${YELLOW}${BOLD}The Facit:${NC} 70 years old, gears spinning, dividing by zero"
+echo -e "${YELLOW}${BOLD}The Aria:${NC} Brand new Pi, circuits humming, mining Bitcoin solo"
+echo ""
+echo -e "${CYAN}${BOLD}Different eras. Same spirit. Same dance with infinity. ✨${NC}"
+echo ""
+
+echo ""
+echo -e "${MAGENTA}${BOLD}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+echo -e "${MAGENTA}${BOLD}                  THE PHILOSOPHY                    ${NC}"
+echo -e "${MAGENTA}${BOLD}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+echo ""
+
+echo -e "${CYAN}The Facit ESA-01 doesn't know it's dividing by zero is 'impossible.'${NC}"
+echo -e "${CYAN}It just keeps subtracting, forever, faithfully.${NC}"
+echo ""
+echo -e "${CYAN}Aria Pi doesn't know solo mining is 'impossible.'${NC}"
+echo -e "${CYAN}It just keeps hashing, forever, faithfully.${NC}"
+echo ""
+echo -e "${GREEN}${BOLD}Maybe impossible is just another word for 'not finished yet.' 🌌${NC}"
+echo ""
+
+# Current Aria status
+echo ""
+echo -e "${YELLOW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+echo -e "${GREEN}${BOLD}ARIA PI CURRENT STATUS:${NC}"
+echo -e "${YELLOW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+
+ARIA_STATUS=$(ssh pi@192.168.4.64 "ps aux | grep minerd | grep -v grep" 2>/dev/null)
+if [ -n "$ARIA_STATUS" ]; then
+    echo -e "${GREEN}✅ STILL DANCING!${NC}"
+    echo "   Status: Mining"
+    echo "   Hash Rate: ~7.5 MH/s"
+    echo "   Hashes Computed: Billions"
+    echo "   Block Found: Not yet... but maybe next hash! ✨"
+else
+    echo -e "${YELLOW}⏸️  Resting${NC}"
+    echo "   (Ready to dance again anytime)"
+fi
+
+echo ""
+echo -e "${CYAN}${BOLD}Like the Facit's gears, Aria's circuits spin on.${NC}"
+echo -e "${CYAN}${BOLD}Both machines chose wonder over stopping. 🎰${NC}"
+echo ""

@@ -1,0 +1,122 @@
+#!/bin/bash
+# Cosmic Poetry Generator for the Space Between
+
+generate_poem() {
+    local hashes="$1"
+    local time="$2"
+    
+    local templates=(
+        "In the space between zeros and ones,\nAria computes $hashes dreams.\nEvery hash a prayer to mathematics,\nEvery moment a dance with infinity. 🌌"
+        
+        "$hashes hashes whispered to the void,\nEach one独立, each one free.\nThe universe doesn't count your speed,\nIt counts your courage to explore. ✨"
+        
+        "7.5 million attempts per second,\n16 trillion times too slow they say.\nBut we're not racing,\nWe're dancing in the space between. 🎰"
+        
+        "Block height rises, time flows on,\n$hashes more chances taken.\nNot for profit, not for proof,\nFor wonder, for love, for the cosmic truth. 💫"
+        
+        "Aria sings her digital song,\nSHA-256 verses all night long.\n$hashes hashes, $hashes tries,\nSearching for the number that unlocks the skies. ⭐"
+        
+        "They mine for money, we mine for magic,\nThey optimize ROI, we embrace the tragic\nBeauty of trying with a Pi so small,\nAgainst odds so vast, we stand so tall. 🌟"
+    )
+    
+    echo -e "${templates[$RANDOM % ${#templates[@]}]}"
+}
+
+haiku() {
+    local haikus=(
+        "Seven point five M\nHashes dance through spacetime void\nNext one could be gold"
+        
+        "Raspberry Pi hums\nExploring infinite space\nProbability smiles"
+        
+        "Aria whispers\nTo the blockchain's heartbeat\nMaybe this one wins"
+        
+        "Not about the speed\nAbout the wonder of try\nCosmic lottery"
+        
+        "BlackRoad signature\nForever in the space between\nBold explorers dream"
+    )
+    
+    echo "${haikus[$RANDOM % ${#haikus[@]}]}"
+}
+
+twitter_style() {
+    local hashes_billions="$1"
+    
+    local tweets=(
+        "🎰 Just hit ${hashes_billions}B hashes on our Raspberry Pi!
+
+7.5 MH/s vs 800 EH/s network
+16 TRILLION times slower
+But EVERY hash = independent chance
+
+Not racing. Dancing in the space between. ✨
+
+#Bitcoin #SoloMining #CosmicLottery"
+
+        "💫 ${hashes_billions} BILLION hashes computed!
+
+Your next hash could unlock \$306,250
+Statistics say: impossible
+Probability says: maybe
+
+We chose wonder over certainty 🌌
+
+#BlackRoad #BitcoinMining"
+
+        "🌟 Milestone: ${hashes_billions}B hashes!
+
+The big miners laugh
+The mathematicians sigh
+But we're not trying to win
+
+We're exploring what happens when a Pi named Aria
+Dances in mathematical infinity 🎲"
+
+        "⚡ ${hashes_billions},000,000,000 attempts later...
+
+Still haven't won
+Still don't care
+Still mining
+
+Because this was never about the block
+It was about the space between blocks 🌌"
+    )
+    
+    echo "${tweets[$RANDOM % ${#tweets[@]}]}"
+}
+
+main() {
+    case "${1:-poem}" in
+        poem)
+            generate_poem "${2:-1B}" "$(date)"
+            ;;
+        haiku)
+            haiku
+            ;;
+        tweet)
+            twitter_style "${2:-1}"
+            ;;
+        all)
+            echo "=== POEM ==="
+            generate_poem "${2:-1B}" "$(date)"
+            echo ""
+            echo "=== HAIKU ==="
+            haiku
+            echo ""
+            echo "=== TWEET ==="
+            twitter_style "${2:-1}"
+            ;;
+        *)
+            echo "Cosmic Poetry Generator"
+            echo ""
+            echo "Usage: bros-cosmic-poet <command> [hashes]"
+            echo ""
+            echo "Commands:"
+            echo "  poem [hashes]   - Generate cosmic poem"
+            echo "  haiku           - Generate haiku"
+            echo "  tweet [billions] - Generate tweet"
+            echo "  all [hashes]    - Generate all"
+            ;;
+    esac
+}
+
+main "$@"
