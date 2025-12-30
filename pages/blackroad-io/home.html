@@ -2744,6 +2744,18 @@
             />
         </div>
 
+        <!-- Window Preview Popup -->
+        <div id="window-preview-popup" style="display: none; position: fixed; bottom: 70px; background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 12px; backdrop-filter: blur(20px); box-shadow: 0 10px 30px rgba(0,0,0,0.5); padding: 12px; z-index: 9999; min-width: 320px; max-width: 400px;">
+            <div style="font-size: 14px; font-weight: 600; margin-bottom: 8px; display: flex; align-items: center; gap: 8px;">
+                <span id="preview-icon"></span>
+                <span id="preview-title"></span>
+            </div>
+            <div style="width: 100%; height: 180px; background: rgba(0,0,0,0.5); border-radius: 8px; display: flex; align-items: center; justify-content: center; border: 1px solid var(--glass-border); overflow: hidden;">
+                <div id="preview-content" style="font-size: 48px; opacity: 0.5;"></div>
+            </div>
+            <div style="font-size: 11px; opacity: 0.7; margin-top: 8px;" id="preview-info"></div>
+        </div>
+
         <!-- Power Menu Popup -->
         <div id="power-menu-popup" style="display: none; position: fixed; bottom: 70px; right: 20px; width: 220px; background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 12px; backdrop-filter: blur(20px); box-shadow: 0 10px 30px rgba(0,0,0,0.5); padding: 12px; z-index: 10000;">
             <div style="padding: 14px; cursor: pointer; border-radius: 8px; transition: all 0.2s ease; margin-bottom: 6px; display: flex; align-items: center; gap: 12px;" onmouseover="this.style.background='rgba(255,29,108,0.15)'" onmouseout="this.style.background='transparent'" onclick="powerAction('lock')">
@@ -3003,6 +3015,62 @@
             else menu.classList.toggle('active');
         }
 
+        // Window Preview System
+        let previewTimeout;
+
+        function showWindowPreview(windowId, buttonElement) {
+            clearTimeout(previewTimeout);
+
+            previewTimeout = setTimeout(() => {
+                const popup = document.getElementById('window-preview-popup');
+                const window = document.getElementById(windowId);
+
+                if (!window) return;
+
+                const titles = {
+                    'roadmail': { icon: '📧', name: 'RoadMail', desc: 'Email Client' },
+                    'blackroad-social': { icon: '👥', name: 'Social', desc: 'Social Network' },
+                    'blackstream': { icon: '📺', name: 'BlackStream', desc: 'Video Streaming' },
+                    'roadview': { icon: '🌍', name: 'Browser', desc: 'Web Browser' },
+                    'road-city': { icon: '🏙️', name: 'Road City', desc: 'City Builder Game' },
+                    'roadcoin-miner': { icon: '⛏️', name: 'Miner', desc: 'Cryptocurrency Miner' },
+                    'roadchain': { icon: '⛓️', name: 'RoadChain', desc: 'Blockchain Explorer' },
+                    'terminal': { icon: '💻', name: 'Terminal', desc: 'Command Line Interface' },
+                    'file-explorer': { icon: '📁', name: 'Files', desc: 'File Manager' },
+                    'github': { icon: '🐙', name: 'GitHub', desc: 'Code Repository' },
+                    'raspberry-pi': { icon: '🥧', name: 'Raspberry Pi', desc: 'Device Manager' },
+                    'ai-chat': { icon: '🤖', name: 'AI Chat', desc: 'Cece AI Assistant' },
+                    'road-craft': { icon: '⛏️', name: 'RoadCraft', desc: 'Crafting Game' },
+                    'road-life': { icon: '🏡', name: 'Road Life', desc: 'Life Simulation' },
+                    'wallet': { icon: '💰', name: 'Wallet', desc: 'Digital Wallet' }
+                };
+
+                const info = titles[windowId] || { icon: '🪟', name: windowId, desc: 'Application' };
+
+                // Update preview content
+                document.getElementById('preview-icon').textContent = info.icon;
+                document.getElementById('preview-title').textContent = info.name;
+                document.getElementById('preview-content').textContent = info.icon;
+
+                const status = window.classList.contains('active') ? 'Active' : 'Minimized';
+                const size = `${window.style.width || '800px'} × ${window.style.height || '600px'}`;
+                document.getElementById('preview-info').textContent = `Status: ${status} • Size: ${size}`;
+
+                // Position popup above the button
+                const buttonRect = buttonElement.getBoundingClientRect();
+                popup.style.left = (buttonRect.left - 80) + 'px';
+                popup.style.display = 'block';
+                popup.style.animation = 'fadeIn 0.15s ease-out';
+            }, 500); // 500ms delay before showing preview
+        }
+
+        function hideWindowPreview() {
+            clearTimeout(previewTimeout);
+            const popup = document.getElementById('window-preview-popup');
+            popup.style.animation = 'fadeOut 0.15s ease-out';
+            setTimeout(() => popup.style.display = 'none', 150);
+        }
+
         function updateTaskbar() {
             const bar = document.getElementById('taskbar-apps');
             bar.innerHTML = '';
@@ -3033,6 +3101,11 @@
                     if (w.classList.contains('active')) minimizeWindow(id);
                     else openWindow(id);
                 };
+
+                // Add window preview on hover
+                btn.onmouseenter = (e) => showWindowPreview(id, e.currentTarget);
+                btn.onmouseleave = () => hideWindowPreview();
+
                 bar.appendChild(btn);
             });
         }
