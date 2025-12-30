@@ -701,6 +701,66 @@
             }
         }
 
+        /* Context Menu */
+        .context-menu {
+            position: fixed;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 8px;
+            backdrop-filter: blur(20px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            z-index: 10001;
+            min-width: 200px;
+            display: none;
+            animation: contextMenuShow 0.15s var(--ease-out-expo);
+        }
+
+        .context-menu.active {
+            display: block;
+        }
+
+        .context-menu-item {
+            padding: 10px 14px;
+            cursor: pointer;
+            font-size: 13px;
+            border-radius: 8px;
+            transition: all 0.15s ease;
+            color: var(--white);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .context-menu-item:hover {
+            background: rgba(255, 29, 108, 0.15);
+            color: var(--hot-pink);
+        }
+
+        .context-menu-item .icon {
+            font-size: 16px;
+            width: 20px;
+            text-align: center;
+        }
+
+        .context-menu-separator {
+            height: 1px;
+            background: var(--glass-border);
+            margin: 6px 8px;
+        }
+
+        @keyframes contextMenuShow {
+            from {
+                opacity: 0;
+                transform: scale(0.95) translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
         .button-primary {
             background: var(--gradient-brand);
             border: none;
@@ -1126,6 +1186,36 @@
 
     <!-- Notification Container -->
     <div class="notification-container" id="notification-container"></div>
+
+    <!-- Context Menu -->
+    <div class="context-menu" id="context-menu">
+        <div class="context-menu-item" onclick="contextMenuAction('refresh')">
+            <span class="icon">🔄</span>
+            <span>Refresh</span>
+        </div>
+        <div class="context-menu-item" onclick="contextMenuAction('terminal')">
+            <span class="icon">⌨️</span>
+            <span>Open Terminal</span>
+        </div>
+        <div class="context-menu-item" onclick="contextMenuAction('files')">
+            <span class="icon">📁</span>
+            <span>File Explorer</span>
+        </div>
+        <div class="context-menu-separator"></div>
+        <div class="context-menu-item" onclick="contextMenuAction('personalize')">
+            <span class="icon">🎨</span>
+            <span>Personalize</span>
+        </div>
+        <div class="context-menu-item" onclick="contextMenuAction('settings')">
+            <span class="icon">⚙️</span>
+            <span>Settings</span>
+        </div>
+        <div class="context-menu-separator"></div>
+        <div class="context-menu-item" onclick="contextMenuAction('about')">
+            <span class="icon">ℹ️</span>
+            <span>About BlackRoad OS</span>
+        </div>
+    </div>
 
     <div class="desktop" id="desktop">
         <!-- Row 1 - AI & Communication -->
@@ -3021,6 +3111,68 @@
                     'info', 6000);
             }
         });
+
+        // Context Menu System
+        const contextMenu = document.getElementById('context-menu');
+
+        // Show context menu on right-click
+        document.addEventListener('contextmenu', (e) => {
+            // Only show on desktop area (not on windows or taskbar)
+            const isDesktop = e.target.id === 'desktop' || e.target.classList.contains('icon') || e.target.classList.contains('icon-image') || e.target.classList.contains('icon-label');
+
+            if (isDesktop) {
+                e.preventDefault();
+
+                // Position context menu at cursor
+                contextMenu.style.left = e.clientX + 'px';
+                contextMenu.style.top = e.clientY + 'px';
+                contextMenu.classList.add('active');
+
+                // Adjust if menu goes off-screen
+                setTimeout(() => {
+                    const menuRect = contextMenu.getBoundingClientRect();
+                    if (menuRect.right > window.innerWidth) {
+                        contextMenu.style.left = (window.innerWidth - menuRect.width - 10) + 'px';
+                    }
+                    if (menuRect.bottom > window.innerHeight) {
+                        contextMenu.style.top = (window.innerHeight - menuRect.height - 10) + 'px';
+                    }
+                }, 10);
+            }
+        });
+
+        // Hide context menu on click anywhere else
+        document.addEventListener('click', () => {
+            contextMenu.classList.remove('active');
+        });
+
+        // Context menu actions
+        function contextMenuAction(action) {
+            contextMenu.classList.remove('active');
+
+            switch(action) {
+                case 'refresh':
+                    showNotification('Desktop Refreshed', 'Desktop icons and layout refreshed', 'success', 2000);
+                    break;
+                case 'terminal':
+                    openWindow('terminal');
+                    break;
+                case 'files':
+                    openWindow('file-explorer');
+                    break;
+                case 'personalize':
+                    showNotification('Personalize', 'Personalization settings coming soon!', 'info', 3000);
+                    break;
+                case 'settings':
+                    openWindow('settings');
+                    break;
+                case 'about':
+                    showNotification('BlackRoad OS',
+                        'Version 1.0.0 | Built with ❤️ by BlackRoad | Powered by Claude AI',
+                        'info', 5000);
+                    break;
+            }
+        }
 
         // GitHub Integration
         const githubRepos = [
