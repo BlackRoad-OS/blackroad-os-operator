@@ -616,6 +616,91 @@
             transform: translateY(0);
         }
 
+        /* Notifications */
+        .notification-container {
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            z-index: 10000;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            pointer-events: none;
+        }
+
+        .notification {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 16px 20px;
+            min-width: 320px;
+            max-width: 400px;
+            backdrop-filter: blur(20px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            animation: slideIn 0.3s var(--ease-out-expo);
+            pointer-events: all;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .notification::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background: var(--hot-pink);
+        }
+
+        .notification.success::before {
+            background: #4ade80;
+        }
+
+        .notification.error::before {
+            background: #ef4444;
+        }
+
+        .notification.info::before {
+            background: var(--electric-blue);
+        }
+
+        .notification-title {
+            font-weight: 600;
+            font-size: 14px;
+            margin-bottom: 4px;
+            color: var(--white);
+        }
+
+        .notification-message {
+            font-size: 12px;
+            opacity: 0.8;
+            color: var(--white);
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(450px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideOut {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(450px);
+                opacity: 0;
+            }
+        }
+
         .button-primary {
             background: var(--gradient-brand);
             border: none;
@@ -1038,6 +1123,9 @@
         <div class="orb orb-2"></div>
         <div class="orb orb-3"></div>
     </div>
+
+    <!-- Notification Container -->
+    <div class="notification-container" id="notification-container"></div>
 
     <div class="desktop" id="desktop">
         <!-- Row 1 - AI & Communication -->
@@ -2462,6 +2550,19 @@
             openWindows.add(id);
             updateTaskbar();
             toggleStartMenu(false);
+
+            // Show notification
+            const appNames = {
+                'roadmail': '📧 RoadMail',
+                'terminal': '💻 Terminal',
+                'file-explorer': '📁 File Explorer',
+                'roadview': '🌍 RoadView Browser',
+                'ai-chat': '🤖 AI Assistant'
+            };
+            const appName = appNames[id] || id;
+            if (typeof showNotification === 'function') {
+                showNotification('App Opened', `${appName} is now running`, 'info', 3000);
+            }
         }
 
         function closeWindow(id) {
@@ -2681,6 +2782,41 @@
             // Scroll to bottom
             output.parentElement.scrollTop = output.parentElement.scrollHeight;
         }
+
+        // Notification System
+        function showNotification(title, message, type = 'info', duration = 4000) {
+            const container = document.getElementById('notification-container');
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.innerHTML = `
+                <div class="notification-title">${title}</div>
+                <div class="notification-message">${message}</div>
+            `;
+
+            container.appendChild(notification);
+
+            // Remove on click
+            notification.onclick = () => {
+                notification.style.animation = 'slideOut 0.3s ease-out forwards';
+                setTimeout(() => notification.remove(), 300);
+            };
+
+            // Auto remove after duration
+            setTimeout(() => {
+                if (notification.parentElement) {
+                    notification.style.animation = 'slideOut 0.3s ease-out forwards';
+                    setTimeout(() => notification.remove(), 300);
+                }
+            }, duration);
+        }
+
+        // Show welcome notification on load
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                const username = window.Clerk?.user?.primaryEmailAddress?.emailAddress?.split('@')[0] || 'User';
+                showNotification('Welcome to BlackRoad OS', `Hello ${username}! Your system is ready.`, 'success', 5000);
+            }, 2000);
+        });
 
         // GitHub Integration
         const githubRepos = [
