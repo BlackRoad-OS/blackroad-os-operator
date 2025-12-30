@@ -2588,6 +2588,11 @@
                     <span style="color: var(--electric-blue);">ls</span> - List files<br>
                     <span style="color: var(--electric-blue);">pwd</span> - Print working directory<br>
                     <span style="color: var(--electric-blue);">date</span> - Show current date/time<br>
+                    <span style="color: var(--electric-blue);">cat [file]</span> - Display file contents<br>
+                    <span style="color: var(--electric-blue);">echo [text]</span> - Print text<br>
+                    <span style="color: var(--electric-blue);">history</span> - Show command history<br>
+                    <span style="color: var(--electric-blue);">uptime</span> - Show system uptime<br>
+                    <span style="color: var(--electric-blue);">ps</span> - List running processes<br>
                     <span style="color: var(--electric-blue);">lucidia status</span> - Check Lucidia status<br>
                     <span style="color: var(--electric-blue);">blackroad --version</span> - Show OS version<br>
                     <span style="color: var(--electric-blue);">agents</span> - List active agents<br>
@@ -2628,6 +2633,39 @@
                     <span style="color: var(--electric-blue);">aria-helper</span> - Assistant Agent<br>
                     <span style="color: var(--violet);">octavia-analyzer</span> - Analysis Agent<br>
                     <span style="color: var(--amber);">radius-planner</span> - Planning Agent`;
+                    break;
+                case 'cat':
+                    if (args[0]) {
+                        result.innerHTML = `<span style="color: var(--violet);">README.md</span><br><br>
+                        # BlackRoad OS<br>
+                        The Complete AI Operating System<br><br>
+                        Version: 12.0 (Ultimate Modern)<br>
+                        Licensed under BlackRoad Sovereign License`;
+                    } else {
+                        result.textContent = 'Usage: cat [filename]';
+                    }
+                    break;
+                case 'echo':
+                    result.textContent = args.join(' ') || '';
+                    break;
+                case 'history':
+                    result.innerHTML = terminalHistory.map((cmd, i) =>
+                        `<span style="color: var(--electric-blue);">${i + 1}</span> ${cmd}`
+                    ).join('<br>');
+                    break;
+                case 'uptime':
+                    const uptimeDays = Math.floor(Math.random() * 30 + 10);
+                    const uptimeHours = Math.floor(Math.random() * 24);
+                    result.innerHTML = `<span style="color: #4ade80;">System uptime: ${uptimeDays} days, ${uptimeHours} hours</span><br>
+                    Load average: 0.42, 0.67, 0.89`;
+                    break;
+                case 'ps':
+                    result.innerHTML = `PID    NAME                  CPU    MEM<br>
+                    <span style="color: var(--electric-blue);">1</span>      blackroad-kernel      12%    2.4GB<br>
+                    <span style="color: var(--electric-blue);">247</span>    lucidia-core          8%     1.2GB<br>
+                    <span style="color: var(--electric-blue);">389</span>    agent-orchestrator    15%    890MB<br>
+                    <span style="color: var(--electric-blue);">512</span>    roadchain-node        6%     512MB<br>
+                    <span style="color: var(--electric-blue);">701</span>    terminal              2%     128MB`;
                     break;
                 case 'clear':
                     output.innerHTML = '';
@@ -4457,9 +4495,16 @@
                         const email = window.Clerk.user.primaryEmailAddress?.emailAddress || 'User';
                         const username = email.split('@')[0];
                         userProfile.textContent = `👤 ${username}`;
-                        userProfile.onclick = () => {
-                            alert(`Logged in as: ${email}\n\nClick to sign out`);
-                            // Could add sign out functionality here
+                        userProfile.onclick = async () => {
+                            if (confirm(`Logged in as: ${email}\n\nDo you want to sign out?`)) {
+                                try {
+                                    await window.Clerk.signOut();
+                                    window.location.href = '/';
+                                } catch (error) {
+                                    console.error('Sign out error:', error);
+                                    alert('Error signing out. Please try again.');
+                                }
+                            }
                         };
                     }
                 }
