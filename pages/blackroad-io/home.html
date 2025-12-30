@@ -2638,13 +2638,145 @@
             if (draggedWindow) {
                 draggedWindow.style.left = (e.clientX - offsetX) + 'px';
                 draggedWindow.style.top = (e.clientY - offsetY) + 'px';
+
+                // Show snap preview
+                const snapZone = getSnapZone(e.clientX, e.clientY);
+                updateSnapPreview(snapZone);
             }
         }
 
-        function dragEnd() {
+        let snapPreview = null;
+
+        function getSnapZone(x, y) {
+            const snapMargin = 50;
+            const screenWidth = window.innerWidth;
+            const screenHeight = window.innerHeight;
+
+            if (y < snapMargin) {
+                if (x < snapMargin) return 'top-left';
+                if (x > screenWidth - snapMargin) return 'top-right';
+                return 'top';
+            }
+            if (x < snapMargin) return 'left';
+            if (x > screenWidth - snapMargin) return 'right';
+            return null;
+        }
+
+        function updateSnapPreview(zone) {
+            if (!snapPreview) {
+                snapPreview = document.createElement('div');
+                snapPreview.style.cssText = `
+                    position: fixed;
+                    border: 2px solid var(--hot-pink);
+                    background: rgba(255, 29, 108, 0.1);
+                    pointer-events: none;
+                    z-index: 9999;
+                    transition: all 0.2s ease;
+                `;
+                document.body.appendChild(snapPreview);
+            }
+
+            if (!zone) {
+                snapPreview.style.display = 'none';
+                return;
+            }
+
+            snapPreview.style.display = 'block';
+            const taskbarHeight = 60;
+
+            switch(zone) {
+                case 'top':
+                    snapPreview.style.left = '0';
+                    snapPreview.style.top = '0';
+                    snapPreview.style.width = '100%';
+                    snapPreview.style.height = '100%';
+                    break;
+                case 'left':
+                    snapPreview.style.left = '0';
+                    snapPreview.style.top = '0';
+                    snapPreview.style.width = '50%';
+                    snapPreview.style.height = `calc(100% - ${taskbarHeight}px)`;
+                    break;
+                case 'right':
+                    snapPreview.style.left = '50%';
+                    snapPreview.style.top = '0';
+                    snapPreview.style.width = '50%';
+                    snapPreview.style.height = `calc(100% - ${taskbarHeight}px)`;
+                    break;
+                case 'top-left':
+                    snapPreview.style.left = '0';
+                    snapPreview.style.top = '0';
+                    snapPreview.style.width = '50%';
+                    snapPreview.style.height = `calc(50% - ${taskbarHeight/2}px)`;
+                    break;
+                case 'top-right':
+                    snapPreview.style.left = '50%';
+                    snapPreview.style.top = '0';
+                    snapPreview.style.width = '50%';
+                    snapPreview.style.height = `calc(50% - ${taskbarHeight/2}px)`;
+                    break;
+            }
+        }
+
+        function dragEnd(e) {
+            if (draggedWindow) {
+                const snapZone = getSnapZone(e.clientX, e.clientY);
+
+                if (snapZone) {
+                    snapWindow(draggedWindow, snapZone);
+                    showNotification('Window Snapped', `Window snapped to ${snapZone}`, 'success', 2000);
+                }
+
+                if (snapPreview) {
+                    snapPreview.style.display = 'none';
+                }
+            }
+
             draggedWindow = null;
             document.removeEventListener('mousemove', drag);
             document.removeEventListener('mouseup', dragEnd);
+        }
+
+        function snapWindow(win, zone) {
+            const taskbarHeight = 60;
+
+            switch(zone) {
+                case 'top':
+                    win.style.left = '0';
+                    win.style.top = '0';
+                    win.style.width = '100%';
+                    win.style.height = '100%';
+                    win.classList.add('maximized');
+                    break;
+                case 'left':
+                    win.style.left = '0';
+                    win.style.top = '0';
+                    win.style.width = '50%';
+                    win.style.height = `calc(100% - ${taskbarHeight}px)`;
+                    win.classList.remove('maximized');
+                    break;
+                case 'right':
+                    win.style.left = '50%';
+                    win.style.top = '0';
+                    win.style.width = '50%';
+                    win.style.height = `calc(100% - ${taskbarHeight}px)`;
+                    win.classList.remove('maximized');
+                    break;
+                case 'top-left':
+                    win.style.left = '0';
+                    win.style.top = '0';
+                    win.style.width = '50%';
+                    win.style.height = `calc(50% - ${taskbarHeight/2}px)`;
+                    win.classList.remove('maximized');
+                    break;
+                case 'top-right':
+                    win.style.left = '50%';
+                    win.style.top = '0';
+                    win.style.width = '50%';
+                    win.style.height = `calc(50% - ${taskbarHeight/2}px)`;
+                    win.classList.remove('maximized');
+                    break;
+            }
         }
 
         // Close start menu when clicking outside
