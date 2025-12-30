@@ -1,0 +1,981 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BlackRoad OS — [ABOUT PAGE TITLE]</title>
+    <style>
+        :root {
+            --black: #000000;
+            --white: #FFFFFF;
+            --amber: #F5A623;
+            --orange: #F26522;
+            --hot-pink: #FF1D6C;
+            --magenta: #E91E63;
+            --electric-blue: #2979FF;
+            --sky-blue: #448AFF;
+            --violet: #9C27B0;
+            --deep-purple: #5E35B1;
+            
+            --gradient-brand: linear-gradient(135deg, var(--amber) 0%, var(--hot-pink) 38.2%, var(--violet) 61.8%, var(--electric-blue) 100%);
+            
+            --phi: 1.618;
+            --space-xs: 8px;
+            --space-sm: 13px;
+            --space-md: 21px;
+            --space-lg: 34px;
+            --space-xl: 55px;
+            --space-2xl: 89px;
+            --space-3xl: 144px;
+            
+            --ease: cubic-bezier(0.25, 0.1, 0.25, 1);
+            --ease-out: cubic-bezier(0, 0, 0.2, 1);
+            --ease-spring: cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html { scroll-behavior: smooth; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif;
+            background: var(--black);
+            color: var(--white);
+            overflow-x: hidden;
+            line-height: 1.618;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* ========== SCROLL PROGRESS ========== */
+        .scroll-progress {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 2px;
+            background: var(--gradient-brand);
+            z-index: 9999;
+            width: 0%;
+        }
+
+        /* ========== NAVIGATION ========== */
+        nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            padding: var(--space-md) var(--space-xl);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: saturate(180%) blur(20px);
+        }
+
+        .nav-logo {
+            display: flex;
+            align-items: center;
+            gap: var(--space-sm);
+            text-decoration: none;
+            color: var(--white);
+        }
+
+        .nav-logo-mark {
+            width: 36px;
+            height: 36px;
+        }
+
+        .nav-logo-mark .road-dashes {
+            animation: logo-spin 20s linear infinite;
+            transform-origin: 50px 50px;
+        }
+
+        @keyframes logo-spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .nav-logo-text {
+            font-size: 15px;
+            font-weight: 500;
+            letter-spacing: 0.02em;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: var(--space-lg);
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: var(--white);
+            text-decoration: none;
+            font-size: 14px;
+            opacity: 0.7;
+            transition: opacity 0.3s var(--ease);
+        }
+
+        .nav-links a:hover {
+            opacity: 1;
+        }
+
+        .nav-cta {
+            padding: var(--space-xs) var(--space-md);
+            background: var(--white);
+            color: var(--black);
+            font-size: 14px;
+            font-weight: 500;
+            text-decoration: none;
+            border-radius: 6px;
+            transition: all 0.3s var(--ease-spring);
+        }
+
+        .nav-cta:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(255, 29, 108, 0.3);
+        }
+
+        /* ========== PAGE HERO ========== */
+        .page-hero {
+            min-height: 70vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            padding: var(--space-3xl) var(--space-xl);
+        }
+
+        .page-hero-grid {
+            position: absolute;
+            inset: 0;
+            background-image: 
+                linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+            background-size: 55px 55px;
+            animation: grid-move 25s linear infinite;
+            opacity: 0.5;
+        }
+
+        @keyframes grid-move {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(55px, 55px); }
+        }
+
+        .page-hero-orb {
+            position: absolute;
+            width: 800px;
+            height: 800px;
+            background: var(--gradient-brand);
+            border-radius: 50%;
+            filter: blur(150px);
+            opacity: 0.1;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+        }
+
+        .page-hero-content {
+            position: relative;
+            z-index: 10;
+            max-width: 800px;
+        }
+
+        .page-hero-label {
+            font-size: 12px;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: var(--hot-pink);
+            margin-bottom: var(--space-md);
+            animation: fade-up 0.8s var(--ease-out) 0.2s both;
+        }
+
+        .page-hero-title {
+            font-size: clamp(40px, 7vw, 72px);
+            font-weight: 600;
+            line-height: 1.1;
+            margin-bottom: var(--space-md);
+            animation: fade-up 0.8s var(--ease-out) 0.4s both;
+        }
+
+        .page-hero-title-gradient {
+            background: var(--gradient-brand);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .page-hero-desc {
+            font-size: 18px;
+            opacity: 0.7;
+            max-width: 600px;
+            margin: 0 auto;
+            animation: fade-up 0.8s var(--ease-out) 0.6s both;
+        }
+
+        @keyframes fade-up {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* ========== SECTION STYLES ========== */
+        section {
+            padding: var(--space-3xl) var(--space-xl);
+            position: relative;
+        }
+
+        .section-header {
+            max-width: 700px;
+            margin-bottom: var(--space-xl);
+        }
+
+        .section-header.centered {
+            text-align: center;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .section-label {
+            font-size: 12px;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: var(--hot-pink);
+            margin-bottom: var(--space-sm);
+            display: block;
+        }
+
+        .section-title {
+            font-size: clamp(32px, 5vw, 55px);
+            font-weight: 600;
+            line-height: 1.1;
+            margin-bottom: var(--space-sm);
+        }
+
+        .section-desc {
+            font-size: 16px;
+            opacity: 0.7;
+            line-height: 1.7;
+        }
+
+        /* ========== MISSION SECTION ========== */
+        .mission {
+            background: linear-gradient(180deg, var(--black) 0%, rgba(20, 20, 20, 1) 100%);
+        }
+
+        .mission-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: var(--space-2xl);
+            align-items: center;
+        }
+
+        @media (max-width: 900px) {
+            .mission-grid {
+                grid-template-columns: 1fr;
+                gap: var(--space-xl);
+            }
+        }
+
+        .mission-content h3 {
+            font-size: clamp(28px, 4vw, 40px);
+            font-weight: 600;
+            margin-bottom: var(--space-md);
+            line-height: 1.2;
+        }
+
+        .mission-content p {
+            font-size: 16px;
+            opacity: 0.75;
+            line-height: 1.8;
+            margin-bottom: var(--space-md);
+        }
+
+        .mission-visual {
+            position: relative;
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .mission-logo {
+            width: 200px;
+            height: 200px;
+            animation: float 6s ease-in-out infinite;
+        }
+
+        .mission-logo .road-dashes {
+            animation: logo-spin 15s linear infinite;
+            transform-origin: 50px 50px;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+
+        .mission-ring {
+            position: absolute;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            animation: ring-pulse 4s ease-in-out infinite;
+        }
+
+        .mission-ring-1 { width: 300px; height: 300px; animation-delay: 0s; }
+        .mission-ring-2 { width: 400px; height: 400px; animation-delay: 0.5s; }
+        .mission-ring-3 { width: 500px; height: 500px; animation-delay: 1s; }
+
+        @keyframes ring-pulse {
+            0%, 100% { opacity: 0.1; transform: scale(1); }
+            50% { opacity: 0.3; transform: scale(1.02); }
+        }
+
+        /* ========== VALUES SECTION ========== */
+        .values {
+            background: var(--black);
+        }
+
+        .values-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: var(--space-md);
+        }
+
+        .value-card {
+            padding: var(--space-lg);
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 20px;
+            text-align: center;
+            transition: all 0.4s var(--ease);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .value-card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: var(--gradient-brand);
+            opacity: 0;
+            transition: opacity 0.4s var(--ease);
+        }
+
+        .value-card:hover {
+            transform: translateY(-8px);
+            border-color: transparent;
+        }
+
+        .value-card:hover::before {
+            opacity: 0.1;
+        }
+
+        .value-card > * {
+            position: relative;
+            z-index: 1;
+        }
+
+        .value-icon {
+            width: 64px;
+            height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 29, 108, 0.1);
+            border-radius: 16px;
+            margin: 0 auto var(--space-md);
+            font-size: 28px;
+        }
+
+        .value-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: var(--space-xs);
+        }
+
+        .value-desc {
+            font-size: 14px;
+            opacity: 0.6;
+            line-height: 1.7;
+        }
+
+        /* ========== TIMELINE SECTION ========== */
+        .timeline-section {
+            background: linear-gradient(180deg, var(--black) 0%, rgba(20, 20, 20, 1) 100%);
+        }
+
+        .timeline {
+            position: relative;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 50%;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: linear-gradient(to bottom, var(--hot-pink), var(--electric-blue));
+            transform: translateX(-50%);
+        }
+
+        @media (max-width: 600px) {
+            .timeline::before {
+                left: 20px;
+            }
+        }
+
+        .timeline-item {
+            position: relative;
+            padding: var(--space-lg) 0;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: var(--space-xl);
+            align-items: center;
+        }
+
+        @media (max-width: 600px) {
+            .timeline-item {
+                grid-template-columns: 1fr;
+                padding-left: 60px;
+            }
+        }
+
+        .timeline-item:nth-child(odd) .timeline-content {
+            text-align: right;
+        }
+
+        .timeline-item:nth-child(even) .timeline-content {
+            grid-column: 2;
+        }
+
+        .timeline-item:nth-child(even) .timeline-date {
+            grid-column: 1;
+            grid-row: 1;
+            text-align: right;
+        }
+
+        @media (max-width: 600px) {
+            .timeline-item:nth-child(odd) .timeline-content,
+            .timeline-item:nth-child(even) .timeline-content,
+            .timeline-item:nth-child(even) .timeline-date {
+                text-align: left;
+                grid-column: 1;
+            }
+        }
+
+        .timeline-dot {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            width: 16px;
+            height: 16px;
+            background: var(--hot-pink);
+            border-radius: 50%;
+            border: 3px solid var(--black);
+            z-index: 10;
+        }
+
+        @media (max-width: 600px) {
+            .timeline-dot {
+                left: 20px;
+            }
+        }
+
+        .timeline-date {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--hot-pink);
+            letter-spacing: 0.05em;
+        }
+
+        .timeline-content h4 {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: var(--space-xs);
+        }
+
+        .timeline-content p {
+            font-size: 14px;
+            opacity: 0.6;
+            line-height: 1.7;
+        }
+
+        /* ========== TEAM SECTION ========== */
+        .team {
+            background: var(--black);
+        }
+
+        .team-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: var(--space-md);
+        }
+
+        .team-card {
+            text-align: center;
+            padding: var(--space-lg);
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 20px;
+            transition: all 0.4s var(--ease);
+        }
+
+        .team-card:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: rgba(255, 255, 255, 0.12);
+            transform: translateY(-4px);
+        }
+
+        .team-avatar {
+            width: 120px;
+            height: 120px;
+            margin: 0 auto var(--space-md);
+            border-radius: 50%;
+            background: var(--gradient-brand);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 48px;
+            font-weight: 600;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .team-avatar::before {
+            content: '';
+            position: absolute;
+            inset: 3px;
+            background: var(--black);
+            border-radius: 50%;
+        }
+
+        .team-avatar span {
+            position: relative;
+            z-index: 1;
+        }
+
+        .team-name {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .team-role {
+            font-size: 14px;
+            color: var(--hot-pink);
+            margin-bottom: var(--space-sm);
+        }
+
+        .team-bio {
+            font-size: 13px;
+            opacity: 0.6;
+            line-height: 1.6;
+        }
+
+        .team-socials {
+            display: flex;
+            justify-content: center;
+            gap: var(--space-xs);
+            margin-top: var(--space-sm);
+        }
+
+        .team-social {
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.06);
+            border-radius: 8px;
+            color: var(--white);
+            text-decoration: none;
+            opacity: 0.5;
+            transition: all 0.3s var(--ease);
+            font-size: 12px;
+        }
+
+        .team-social:hover {
+            opacity: 1;
+            background: var(--hot-pink);
+        }
+
+        /* ========== CTA SECTION ========== */
+        .cta {
+            background: linear-gradient(180deg, rgba(20, 20, 20, 1) 0%, var(--black) 100%);
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .cta-orb {
+            position: absolute;
+            width: 600px;
+            height: 600px;
+            background: var(--gradient-brand);
+            border-radius: 50%;
+            filter: blur(150px);
+            opacity: 0.12;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+        }
+
+        .cta-content {
+            position: relative;
+            z-index: 10;
+        }
+
+        .cta-title {
+            font-size: clamp(28px, 4vw, 48px);
+            font-weight: 600;
+            margin-bottom: var(--space-sm);
+        }
+
+        .cta-desc {
+            font-size: 17px;
+            opacity: 0.7;
+            max-width: 500px;
+            margin: 0 auto var(--space-lg);
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--space-xs);
+            padding: var(--space-sm) var(--space-lg);
+            font-size: 15px;
+            font-weight: 500;
+            text-decoration: none;
+            border-radius: 8px;
+            transition: all 0.4s var(--ease-spring);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-primary {
+            background: var(--white);
+            color: var(--black);
+        }
+
+        .btn-primary::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: var(--gradient-brand);
+            opacity: 0;
+            transition: opacity 0.4s var(--ease);
+        }
+
+        .btn-primary span {
+            position: relative;
+            z-index: 1;
+        }
+
+        .btn-primary:hover {
+            color: var(--white);
+            transform: translateY(-3px);
+            box-shadow: 0 12px 40px rgba(255, 29, 108, 0.4);
+        }
+
+        .btn-primary:hover::before {
+            opacity: 1;
+        }
+
+        /* ========== FOOTER ========== */
+        footer {
+            padding: var(--space-xl) var(--space-xl);
+            background: var(--black);
+            border-top: 1px solid rgba(255, 255, 255, 0.06);
+            text-align: center;
+        }
+
+        .footer-logo {
+            width: 48px;
+            height: 48px;
+            margin: 0 auto var(--space-sm);
+        }
+
+        .footer-text {
+            font-size: 14px;
+            opacity: 0.5;
+        }
+    </style>
+</head>
+<body>
+    <!-- Scroll Progress -->
+    <div class="scroll-progress" id="scrollProgress"></div>
+
+    <!-- ========== NAVIGATION ========== -->
+    <nav>
+        <a href="#" class="nav-logo">
+            <div class="nav-logo-mark">
+                <svg viewBox="0 0 100 100" fill="none">
+                    <circle cx="50" cy="50" r="44" stroke="#FF1D6C" stroke-width="6"/>
+                    <g class="road-dashes">
+                        <rect x="47" y="4" width="6" height="12" fill="#000" rx="2"/>
+                        <rect x="47" y="84" width="6" height="12" fill="#000" rx="2"/>
+                        <rect x="84" y="47" width="12" height="6" fill="#000" rx="2"/>
+                        <rect x="4" y="47" width="12" height="6" fill="#000" rx="2"/>
+                        <rect x="75" y="18" width="6" height="10" fill="#000" rx="2" transform="rotate(45 78 23)"/>
+                        <rect x="19" y="72" width="6" height="10" fill="#000" rx="2" transform="rotate(45 22 77)"/>
+                        <rect x="72" y="72" width="6" height="10" fill="#000" rx="2" transform="rotate(-45 75 77)"/>
+                        <rect x="22" y="18" width="6" height="10" fill="#000" rx="2" transform="rotate(-45 25 23)"/>
+                    </g>
+                    <path d="M50 10C27.9 10 10 27.9 10 50H90C90 27.9 72.1 10 50 10Z" fill="#F5A623"/>
+                    <path d="M10 50C10 72.1 27.9 90 50 90C72.1 90 90 72.1 90 50H10Z" fill="#2979FF"/>
+                    <circle cx="50" cy="50" r="14" fill="#000"/>
+                </svg>
+            </div>
+            <span class="nav-logo-text">BlackRoad OS</span>
+        </a>
+        
+        <ul class="nav-links">
+            <li><a href="#">[Nav Link 1]</a></li>
+            <li><a href="#">[Nav Link 2]</a></li>
+            <li><a href="#">[Nav Link 3]</a></li>
+            <li><a href="#">[Nav Link 4]</a></li>
+        </ul>
+        
+        <a href="#" class="nav-cta">[CTA Button]</a>
+    </nav>
+
+    <!-- ========== PAGE HERO ========== -->
+    <section class="page-hero">
+        <div class="page-hero-grid"></div>
+        <div class="page-hero-orb"></div>
+        
+        <div class="page-hero-content">
+            <span class="page-hero-label">[Page Label]</span>
+            <h1 class="page-hero-title">
+                [About Page Title]<br>
+                <span class="page-hero-title-gradient">[Gradient Subtitle]</span>
+            </h1>
+            <p class="page-hero-desc">
+                Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+            </p>
+        </div>
+    </section>
+
+    <!-- ========== MISSION ========== -->
+    <section class="mission">
+        <div class="mission-grid">
+            <div class="mission-content">
+                <span class="section-label">[Section Label]</span>
+                <h3>[Mission Statement Headline]</h3>
+                <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris.</p>
+                <p>Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident.</p>
+            </div>
+            <div class="mission-visual">
+                <div class="mission-ring mission-ring-1"></div>
+                <div class="mission-ring mission-ring-2"></div>
+                <div class="mission-ring mission-ring-3"></div>
+                <svg class="mission-logo" viewBox="0 0 100 100" fill="none">
+                    <circle cx="50" cy="50" r="44" stroke="url(#missionGrad)" stroke-width="6"/>
+                    <g class="road-dashes">
+                        <rect x="47" y="4" width="6" height="12" fill="#000" rx="2"/>
+                        <rect x="47" y="84" width="6" height="12" fill="#000" rx="2"/>
+                        <rect x="84" y="47" width="12" height="6" fill="#000" rx="2"/>
+                        <rect x="4" y="47" width="12" height="6" fill="#000" rx="2"/>
+                    </g>
+                    <path d="M50 10C27.9 10 10 27.9 10 50H90C90 27.9 72.1 10 50 10Z" fill="#F5A623"/>
+                    <path d="M10 50C10 72.1 27.9 90 50 90C72.1 90 90 72.1 90 50H10Z" fill="#2979FF"/>
+                    <circle cx="50" cy="50" r="14" fill="#000"/>
+                    <defs>
+                        <linearGradient id="missionGrad" x1="0" y1="0" x2="100" y2="100">
+                            <stop offset="0%" stop-color="#F5A623"/>
+                            <stop offset="50%" stop-color="#FF1D6C"/>
+                            <stop offset="100%" stop-color="#2979FF"/>
+                        </linearGradient>
+                    </defs>
+                </svg>
+            </div>
+        </div>
+    </section>
+
+    <!-- ========== VALUES ========== -->
+    <section class="values">
+        <div class="section-header centered">
+            <span class="section-label">[Section Label]</span>
+            <h2 class="section-title">[Values Section Title]</h2>
+            <p class="section-desc">Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
+        </div>
+        
+        <div class="values-grid">
+            <div class="value-card">
+                <div class="value-icon">◆</div>
+                <h3 class="value-title">[Value Title 1]</h3>
+                <p class="value-desc">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor.</p>
+            </div>
+            <div class="value-card">
+                <div class="value-icon">◈</div>
+                <h3 class="value-title">[Value Title 2]</h3>
+                <p class="value-desc">Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip.</p>
+            </div>
+            <div class="value-card">
+                <div class="value-icon">◇</div>
+                <h3 class="value-title">[Value Title 3]</h3>
+                <p class="value-desc">Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore.</p>
+            </div>
+            <div class="value-card">
+                <div class="value-icon">⬡</div>
+                <h3 class="value-title">[Value Title 4]</h3>
+                <p class="value-desc">Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- ========== TIMELINE ========== -->
+    <section class="timeline-section">
+        <div class="section-header centered">
+            <span class="section-label">[Section Label]</span>
+            <h2 class="section-title">[Timeline Title]</h2>
+            <p class="section-desc">Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
+        </div>
+        
+        <div class="timeline">
+            <div class="timeline-item">
+                <div class="timeline-dot"></div>
+                <div class="timeline-content">
+                    <h4>[Milestone Title 1]</h4>
+                    <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt.</p>
+                </div>
+                <div class="timeline-date">[YEAR]</div>
+            </div>
+            
+            <div class="timeline-item">
+                <div class="timeline-dot"></div>
+                <div class="timeline-date">[YEAR]</div>
+                <div class="timeline-content">
+                    <h4>[Milestone Title 2]</h4>
+                    <p>Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo.</p>
+                </div>
+            </div>
+            
+            <div class="timeline-item">
+                <div class="timeline-dot"></div>
+                <div class="timeline-content">
+                    <h4>[Milestone Title 3]</h4>
+                    <p>Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat.</p>
+                </div>
+                <div class="timeline-date">[YEAR]</div>
+            </div>
+            
+            <div class="timeline-item">
+                <div class="timeline-dot"></div>
+                <div class="timeline-date">[YEAR]</div>
+                <div class="timeline-content">
+                    <h4>[Milestone Title 4]</h4>
+                    <p>Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ========== TEAM ========== -->
+    <section class="team">
+        <div class="section-header centered">
+            <span class="section-label">[Section Label]</span>
+            <h2 class="section-title">[Team Section Title]</h2>
+            <p class="section-desc">Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
+        </div>
+        
+        <div class="team-grid">
+            <div class="team-card">
+                <div class="team-avatar"><span>A</span></div>
+                <h3 class="team-name">[Person Name]</h3>
+                <div class="team-role">[Role / Title]</div>
+                <p class="team-bio">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor.</p>
+                <div class="team-socials">
+                    <a href="#" class="team-social">✦</a>
+                    <a href="#" class="team-social">◆</a>
+                    <a href="#" class="team-social">●</a>
+                </div>
+            </div>
+            <div class="team-card">
+                <div class="team-avatar"><span>B</span></div>
+                <h3 class="team-name">[Person Name]</h3>
+                <div class="team-role">[Role / Title]</div>
+                <p class="team-bio">Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip.</p>
+                <div class="team-socials">
+                    <a href="#" class="team-social">✦</a>
+                    <a href="#" class="team-social">◆</a>
+                    <a href="#" class="team-social">●</a>
+                </div>
+            </div>
+            <div class="team-card">
+                <div class="team-avatar"><span>C</span></div>
+                <h3 class="team-name">[Person Name]</h3>
+                <div class="team-role">[Role / Title]</div>
+                <p class="team-bio">Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat.</p>
+                <div class="team-socials">
+                    <a href="#" class="team-social">✦</a>
+                    <a href="#" class="team-social">◆</a>
+                    <a href="#" class="team-social">●</a>
+                </div>
+            </div>
+            <div class="team-card">
+                <div class="team-avatar"><span>D</span></div>
+                <h3 class="team-name">[Person Name]</h3>
+                <div class="team-role">[Role / Title]</div>
+                <p class="team-bio">Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia.</p>
+                <div class="team-socials">
+                    <a href="#" class="team-social">✦</a>
+                    <a href="#" class="team-social">◆</a>
+                    <a href="#" class="team-social">●</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ========== CTA ========== -->
+    <section class="cta">
+        <div class="cta-orb"></div>
+        <div class="cta-content">
+            <h2 class="cta-title">[Call to Action Headline]</h2>
+            <p class="cta-desc">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor.</p>
+            <a href="#" class="btn btn-primary"><span>[CTA Button Text]</span></a>
+        </div>
+    </section>
+
+    <!-- ========== FOOTER ========== -->
+    <footer>
+        <div class="footer-logo">
+            <svg viewBox="0 0 100 100" fill="none">
+                <circle cx="50" cy="50" r="44" stroke="#FF1D6C" stroke-width="6"/>
+                <path d="M50 10C27.9 10 10 27.9 10 50H90C90 27.9 72.1 10 50 10Z" fill="#F5A623"/>
+                <path d="M10 50C10 72.1 27.9 90 50 90C72.1 90 90 72.1 90 50H10Z" fill="#2979FF"/>
+                <circle cx="50" cy="50" r="14" fill="#000"/>
+            </svg>
+        </div>
+        <p class="footer-text">BlackRoad OS · [Legal Text Placeholder]</p>
+    </footer>
+
+    <script>
+        // Scroll Progress
+        window.addEventListener('scroll', () => {
+            const progress = document.getElementById('scrollProgress');
+            const scrollTop = document.documentElement.scrollTop;
+            const scrollHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+            progress.style.width = (scrollTop / scrollHeight) * 100 + '%';
+        });
+    </script>
+</body>
+</html>
