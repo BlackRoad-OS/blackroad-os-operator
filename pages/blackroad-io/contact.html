@@ -1,0 +1,874 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>[BRAND_NAME] — [PAGE_TITLE]</title>
+    <style>
+        :root {
+            --black: #000000;
+            --white: #FFFFFF;
+            --amber: #F5A623;
+            --orange: #F26522;
+            --hot-pink: #FF1D6C;
+            --magenta: #E91E63;
+            --electric-blue: #2979FF;
+            --sky-blue: #448AFF;
+            --violet: #9C27B0;
+            --deep-purple: #5E35B1;
+            
+            --gradient-brand: linear-gradient(135deg, var(--amber) 0%, var(--hot-pink) 38.2%, var(--violet) 61.8%, var(--electric-blue) 100%);
+            
+            --phi: 1.618;
+            --space-xs: 8px;
+            --space-sm: 13px;
+            --space-md: 21px;
+            --space-lg: 34px;
+            --space-xl: 55px;
+            --space-2xl: 89px;
+            --space-3xl: 144px;
+            
+            --ease: cubic-bezier(0.25, 0.1, 0.25, 1);
+            --ease-out: cubic-bezier(0, 0, 0.2, 1);
+            --ease-spring: cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html { scroll-behavior: smooth; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif;
+            background: var(--black);
+            color: var(--white);
+            overflow-x: hidden;
+            line-height: 1.618;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* ========== NAVIGATION ========== */
+        nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            padding: var(--space-md) var(--space-xl);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: saturate(180%) blur(20px);
+        }
+
+        .nav-logo {
+            display: flex;
+            align-items: center;
+            gap: var(--space-sm);
+            text-decoration: none;
+            color: var(--white);
+        }
+
+        .nav-logo-mark {
+            width: 36px;
+            height: 36px;
+        }
+
+        .nav-logo-mark .road-dashes {
+            animation: dashes-spin 8s linear infinite;
+            transform-origin: 50px 50px;
+        }
+
+        @keyframes dashes-spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .nav-logo-text {
+            font-size: 15px;
+            font-weight: 500;
+            letter-spacing: 0.02em;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: var(--space-lg);
+            align-items: center;
+        }
+
+        .nav-links a {
+            color: rgba(255, 255, 255, 0.6);
+            text-decoration: none;
+            font-size: 14px;
+            transition: color 0.3s var(--ease);
+        }
+
+        .nav-links a:hover {
+            color: var(--white);
+        }
+
+        /* ========== PAGE HERO ========== */
+        .page-hero {
+            min-height: 50vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            padding: var(--space-3xl) var(--space-xl);
+            padding-top: calc(var(--space-3xl) + 60px);
+        }
+
+        .hero-grid {
+            position: absolute;
+            inset: 0;
+            background-image: 
+                linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+            background-size: 55px 55px;
+            animation: grid-move 20s linear infinite;
+            opacity: 0.5;
+        }
+
+        @keyframes grid-move {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(55px, 55px); }
+        }
+
+        .hero-orb {
+            position: absolute;
+            width: 500px;
+            height: 500px;
+            border-radius: 50%;
+            filter: blur(120px);
+            opacity: 0.15;
+            background: var(--gradient-brand);
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 10;
+            max-width: 700px;
+        }
+
+        .hero-label {
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            background: var(--gradient-brand);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: var(--space-md);
+            display: inline-block;
+        }
+
+        .hero-title {
+            font-size: clamp(40px, 8vw, 72px);
+            font-weight: 600;
+            letter-spacing: -0.03em;
+            line-height: 1.1;
+            margin-bottom: var(--space-md);
+        }
+
+        .hero-description {
+            font-size: 18px;
+            color: rgba(255, 255, 255, 0.6);
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        /* ========== SECTIONS ========== */
+        section {
+            padding: var(--space-2xl) var(--space-2xl);
+            background: var(--black);
+            position: relative;
+        }
+
+        /* ========== CONTACT LAYOUT ========== */
+        .contact-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: var(--space-2xl);
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        /* ========== CONTACT INFO ========== */
+        .contact-info {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-xl);
+        }
+
+        .contact-intro h2 {
+            font-size: clamp(28px, 4vw, 40px);
+            font-weight: 600;
+            margin-bottom: var(--space-md);
+        }
+
+        .contact-intro p {
+            font-size: 16px;
+            color: rgba(255, 255, 255, 0.5);
+            line-height: 1.7;
+        }
+
+        .contact-methods {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-md);
+        }
+
+        .contact-method {
+            display: flex;
+            align-items: flex-start;
+            gap: var(--space-md);
+            padding: var(--space-lg);
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            border-radius: var(--space-sm);
+            transition: all 0.3s var(--ease);
+        }
+
+        .contact-method:hover {
+            background: rgba(255, 255, 255, 0.04);
+            border-color: rgba(255, 255, 255, 0.08);
+        }
+
+        .contact-method-icon {
+            width: 48px;
+            height: 48px;
+            background: rgba(255, 29, 108, 0.1);
+            border-radius: var(--space-xs);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            flex-shrink: 0;
+        }
+
+        .contact-method-content h3 {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .contact-method-content p {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.5);
+            margin-bottom: var(--space-xs);
+        }
+
+        .contact-method-content a {
+            color: var(--hot-pink);
+            text-decoration: none;
+            font-size: 14px;
+            transition: color 0.2s var(--ease);
+        }
+
+        .contact-method-content a:hover {
+            color: var(--white);
+        }
+
+        /* Social Links */
+        .social-links {
+            display: flex;
+            gap: var(--space-sm);
+        }
+
+        .social-link {
+            width: 44px;
+            height: 44px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: var(--space-xs);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: rgba(255, 255, 255, 0.5);
+            text-decoration: none;
+            font-size: 18px;
+            transition: all 0.3s var(--ease);
+        }
+
+        .social-link:hover {
+            background: var(--hot-pink);
+            border-color: var(--hot-pink);
+            color: var(--white);
+            transform: translateY(-3px);
+        }
+
+        /* ========== CONTACT FORM ========== */
+        .contact-form-container {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            border-radius: var(--space-md);
+            padding: var(--space-xl);
+        }
+
+        .contact-form {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-md);
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: var(--space-md);
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-xs);
+        }
+
+        .form-label {
+            font-size: 13px;
+            font-weight: 500;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .form-label span {
+            color: var(--hot-pink);
+        }
+
+        .form-input,
+        .form-select,
+        .form-textarea {
+            padding: var(--space-md);
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: var(--space-xs);
+            color: var(--white);
+            font-size: 15px;
+            font-family: inherit;
+            outline: none;
+            transition: all 0.3s var(--ease);
+        }
+
+        .form-input::placeholder,
+        .form-textarea::placeholder {
+            color: rgba(255, 255, 255, 0.3);
+        }
+
+        .form-input:focus,
+        .form-select:focus,
+        .form-textarea:focus {
+            border-color: var(--hot-pink);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .form-select {
+            cursor: pointer;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='rgba(255,255,255,0.4)' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            padding-right: 40px;
+        }
+
+        .form-select option {
+            background: var(--black);
+            color: var(--white);
+        }
+
+        .form-textarea {
+            resize: vertical;
+            min-height: 150px;
+        }
+
+        .form-submit {
+            padding: var(--space-md) var(--space-xl);
+            background: var(--gradient-brand);
+            border: none;
+            border-radius: var(--space-xs);
+            color: var(--white);
+            font-size: 15px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s var(--ease);
+            margin-top: var(--space-sm);
+        }
+
+        .form-submit:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 40px rgba(255, 29, 108, 0.3);
+        }
+
+        /* ========== FAQ SECTION ========== */
+        .faq-section {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: var(--space-xl);
+        }
+
+        .section-label {
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            background: var(--gradient-brand);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: var(--space-sm);
+            display: inline-block;
+        }
+
+        .section-title {
+            font-size: clamp(28px, 4vw, 40px);
+            font-weight: 600;
+        }
+
+        .faq-list {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-sm);
+        }
+
+        .faq-item {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            border-radius: var(--space-sm);
+            overflow: hidden;
+        }
+
+        .faq-question {
+            width: 100%;
+            padding: var(--space-lg);
+            background: transparent;
+            border: none;
+            color: var(--white);
+            font-size: 16px;
+            font-weight: 500;
+            text-align: left;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: var(--space-md);
+            transition: background 0.3s var(--ease);
+        }
+
+        .faq-question:hover {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .faq-icon {
+            width: 24px;
+            height: 24px;
+            position: relative;
+            flex-shrink: 0;
+        }
+
+        .faq-icon::before,
+        .faq-icon::after {
+            content: '';
+            position: absolute;
+            background: var(--hot-pink);
+            transition: transform 0.3s var(--ease);
+        }
+
+        .faq-icon::before {
+            width: 2px;
+            height: 14px;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .faq-icon::after {
+            width: 14px;
+            height: 2px;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .faq-item.active .faq-icon::before {
+            transform: translate(-50%, -50%) rotate(90deg);
+        }
+
+        .faq-answer {
+            padding: 0 var(--space-lg);
+            max-height: 0;
+            overflow: hidden;
+            transition: all 0.3s var(--ease);
+        }
+
+        .faq-item.active .faq-answer {
+            padding: 0 var(--space-lg) var(--space-lg);
+            max-height: 300px;
+        }
+
+        .faq-answer p {
+            font-size: 15px;
+            color: rgba(255, 255, 255, 0.5);
+            line-height: 1.7;
+        }
+
+        /* ========== MAP SECTION ========== */
+        .map-section {
+            padding: 0;
+        }
+
+        .map-container {
+            height: 400px;
+            background: rgba(255, 255, 255, 0.02);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .map-placeholder {
+            text-align: center;
+            z-index: 10;
+        }
+
+        .map-placeholder-icon {
+            font-size: 55px;
+            margin-bottom: var(--space-md);
+            display: block;
+        }
+
+        .map-placeholder-text {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.4);
+        }
+
+        .map-grid {
+            position: absolute;
+            inset: 0;
+            background-image: 
+                linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+            background-size: 34px 34px;
+        }
+
+        /* ========== FOOTER ========== */
+        footer {
+            background: var(--black);
+            padding: var(--space-xl);
+            border-top: 1px solid rgba(255, 255, 255, 0.04);
+            text-align: center;
+        }
+
+        .footer-logo {
+            width: 55px;
+            height: 55px;
+            margin: 0 auto var(--space-md);
+        }
+
+        .footer-logo svg {
+            width: 100%;
+            height: 100%;
+        }
+
+        .footer-logo .road-dashes {
+            animation: dashes-spin 8s linear infinite;
+            transform-origin: 50px 50px;
+        }
+
+        footer p {
+            font-size: 13px;
+            opacity: 0.3;
+        }
+
+        /* ========== RESPONSIVE ========== */
+        @media (max-width: 900px) {
+            .contact-layout {
+                grid-template-columns: 1fr;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            nav {
+                padding: var(--space-sm) var(--space-md);
+            }
+
+            .nav-links {
+                display: none;
+            }
+
+            section {
+                padding: var(--space-xl) var(--space-lg);
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Navigation -->
+    <nav>
+        <a href="#" class="nav-logo">
+            <div class="nav-logo-mark">
+                <svg viewBox="0 0 100 100" fill="none">
+                    <circle cx="50" cy="50" r="44" stroke="#FF1D6C" stroke-width="6"/>
+                    <g class="road-dashes">
+                        <rect x="47" y="4" width="6" height="12" fill="#000" rx="2"/>
+                        <rect x="47" y="84" width="6" height="12" fill="#000" rx="2"/>
+                        <rect x="84" y="47" width="12" height="6" fill="#000" rx="2"/>
+                        <rect x="4" y="47" width="12" height="6" fill="#000" rx="2"/>
+                        <rect x="75" y="18" width="6" height="10" fill="#000" rx="2" transform="rotate(45 78 23)"/>
+                        <rect x="19" y="72" width="6" height="10" fill="#000" rx="2" transform="rotate(45 22 77)"/>
+                        <rect x="72" y="72" width="6" height="10" fill="#000" rx="2" transform="rotate(-45 75 77)"/>
+                        <rect x="22" y="18" width="6" height="10" fill="#000" rx="2" transform="rotate(-45 25 23)"/>
+                    </g>
+                    <path d="M50 10C27.9 10 10 27.9 10 50H90C90 27.9 72.1 10 50 10Z" fill="#F5A623"/>
+                    <path d="M10 50C10 72.1 27.9 90 50 90C72.1 90 90 72.1 90 50H10Z" fill="#2979FF"/>
+                    <circle cx="50" cy="50" r="14" fill="#000"/>
+                </svg>
+            </div>
+            <span class="nav-logo-text">[BRAND_NAME]</span>
+        </a>
+        <div class="nav-links">
+            <a href="#">[NAV_LINK_1]</a>
+            <a href="#">[NAV_LINK_2]</a>
+            <a href="#">[NAV_LINK_3]</a>
+            <a href="#">[NAV_LINK_4]</a>
+        </div>
+    </nav>
+
+    <!-- Page Hero -->
+    <section class="page-hero">
+        <div class="hero-grid"></div>
+        <div class="hero-orb"></div>
+        <div class="hero-content">
+            <span class="hero-label">[HERO_LABEL]</span>
+            <h1 class="hero-title">[HERO_TITLE]</h1>
+            <p class="hero-description">[HERO_DESCRIPTION]</p>
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section>
+        <div class="contact-layout">
+            <!-- Contact Info -->
+            <div class="contact-info">
+                <div class="contact-intro">
+                    <h2>[CONTACT_INTRO_TITLE]</h2>
+                    <p>[CONTACT_INTRO_TEXT]</p>
+                </div>
+
+                <div class="contact-methods">
+                    <div class="contact-method">
+                        <div class="contact-method-icon">[CONTACT_METHOD_1_ICON]</div>
+                        <div class="contact-method-content">
+                            <h3>[CONTACT_METHOD_1_TITLE]</h3>
+                            <p>[CONTACT_METHOD_1_DESC]</p>
+                            <a href="#">[CONTACT_METHOD_1_LINK]</a>
+                        </div>
+                    </div>
+
+                    <div class="contact-method">
+                        <div class="contact-method-icon">[CONTACT_METHOD_2_ICON]</div>
+                        <div class="contact-method-content">
+                            <h3>[CONTACT_METHOD_2_TITLE]</h3>
+                            <p>[CONTACT_METHOD_2_DESC]</p>
+                            <a href="#">[CONTACT_METHOD_2_LINK]</a>
+                        </div>
+                    </div>
+
+                    <div class="contact-method">
+                        <div class="contact-method-icon">[CONTACT_METHOD_3_ICON]</div>
+                        <div class="contact-method-content">
+                            <h3>[CONTACT_METHOD_3_TITLE]</h3>
+                            <p>[CONTACT_METHOD_3_DESC]</p>
+                            <a href="#">[CONTACT_METHOD_3_LINK]</a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="social-links">
+                    <a href="#" class="social-link">[SOCIAL_1]</a>
+                    <a href="#" class="social-link">[SOCIAL_2]</a>
+                    <a href="#" class="social-link">[SOCIAL_3]</a>
+                    <a href="#" class="social-link">[SOCIAL_4]</a>
+                </div>
+            </div>
+
+            <!-- Contact Form -->
+            <div class="contact-form-container">
+                <form class="contact-form">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">[FORM_LABEL_FIRST_NAME] <span>*</span></label>
+                            <input type="text" class="form-input" placeholder="[FORM_PLACEHOLDER_FIRST_NAME]">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">[FORM_LABEL_LAST_NAME] <span>*</span></label>
+                            <input type="text" class="form-input" placeholder="[FORM_PLACEHOLDER_LAST_NAME]">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">[FORM_LABEL_EMAIL] <span>*</span></label>
+                        <input type="email" class="form-input" placeholder="[FORM_PLACEHOLDER_EMAIL]">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">[FORM_LABEL_COMPANY]</label>
+                        <input type="text" class="form-input" placeholder="[FORM_PLACEHOLDER_COMPANY]">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">[FORM_LABEL_SUBJECT] <span>*</span></label>
+                        <select class="form-select">
+                            <option value="">[FORM_SELECT_DEFAULT]</option>
+                            <option value="general">[FORM_SELECT_OPTION_1]</option>
+                            <option value="sales">[FORM_SELECT_OPTION_2]</option>
+                            <option value="support">[FORM_SELECT_OPTION_3]</option>
+                            <option value="partnership">[FORM_SELECT_OPTION_4]</option>
+                            <option value="other">[FORM_SELECT_OPTION_5]</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">[FORM_LABEL_MESSAGE] <span>*</span></label>
+                        <textarea class="form-textarea" placeholder="[FORM_PLACEHOLDER_MESSAGE]"></textarea>
+                    </div>
+
+                    <button type="submit" class="form-submit">[FORM_SUBMIT_TEXT]</button>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <!-- FAQ Section -->
+    <section>
+        <div class="faq-section">
+            <div class="section-header">
+                <span class="section-label">[FAQ_LABEL]</span>
+                <h2 class="section-title">[FAQ_TITLE]</h2>
+            </div>
+
+            <div class="faq-list">
+                <div class="faq-item">
+                    <button class="faq-question">
+                        [FAQ_1_QUESTION]
+                        <span class="faq-icon"></span>
+                    </button>
+                    <div class="faq-answer">
+                        <p>[FAQ_1_ANSWER]</p>
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <button class="faq-question">
+                        [FAQ_2_QUESTION]
+                        <span class="faq-icon"></span>
+                    </button>
+                    <div class="faq-answer">
+                        <p>[FAQ_2_ANSWER]</p>
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <button class="faq-question">
+                        [FAQ_3_QUESTION]
+                        <span class="faq-icon"></span>
+                    </button>
+                    <div class="faq-answer">
+                        <p>[FAQ_3_ANSWER]</p>
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <button class="faq-question">
+                        [FAQ_4_QUESTION]
+                        <span class="faq-icon"></span>
+                    </button>
+                    <div class="faq-answer">
+                        <p>[FAQ_4_ANSWER]</p>
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <button class="faq-question">
+                        [FAQ_5_QUESTION]
+                        <span class="faq-icon"></span>
+                    </button>
+                    <div class="faq-answer">
+                        <p>[FAQ_5_ANSWER]</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Map Section -->
+    <section class="map-section">
+        <div class="map-container">
+            <div class="map-grid"></div>
+            <div class="map-placeholder">
+                <span class="map-placeholder-icon">[MAP_ICON]</span>
+                <p class="map-placeholder-text">[MAP_PLACEHOLDER_TEXT]</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-logo">
+            <svg viewBox="0 0 100 100" fill="none">
+                <circle cx="50" cy="50" r="44" stroke="#FF1D6C" stroke-width="6"/>
+                <g class="road-dashes">
+                    <rect x="47" y="4" width="6" height="12" fill="#000" rx="2"/>
+                    <rect x="47" y="84" width="6" height="12" fill="#000" rx="2"/>
+                    <rect x="84" y="47" width="12" height="6" fill="#000" rx="2"/>
+                    <rect x="4" y="47" width="12" height="6" fill="#000" rx="2"/>
+                    <rect x="75" y="18" width="6" height="10" fill="#000" rx="2" transform="rotate(45 78 23)"/>
+                    <rect x="19" y="72" width="6" height="10" fill="#000" rx="2" transform="rotate(45 22 77)"/>
+                    <rect x="72" y="72" width="6" height="10" fill="#000" rx="2" transform="rotate(-45 75 77)"/>
+                    <rect x="22" y="18" width="6" height="10" fill="#000" rx="2" transform="rotate(-45 25 23)"/>
+                </g>
+                <path d="M50 10C27.9 10 10 27.9 10 50H90C90 27.9 72.1 10 50 10Z" fill="#F5A623"/>
+                <path d="M10 50C10 72.1 27.9 90 50 90C72.1 90 90 72.1 90 50H10Z" fill="#2979FF"/>
+                <circle cx="50" cy="50" r="14" fill="#000"/>
+            </svg>
+        </div>
+        <p>[FOOTER_TEXT]</p>
+    </footer>
+
+    <script>
+        // FAQ Accordion
+        document.querySelectorAll('.faq-question').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const item = btn.parentElement;
+                const isActive = item.classList.contains('active');
+                
+                // Close all
+                document.querySelectorAll('.faq-item').forEach(i => i.classList.remove('active'));
+                
+                // Open clicked if wasn't active
+                if (!isActive) {
+                    item.classList.add('active');
+                }
+            });
+        });
+    </script>
+
+</body>
+</html>
