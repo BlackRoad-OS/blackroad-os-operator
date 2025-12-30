@@ -850,6 +850,28 @@
             }
         }
 
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeOut {
+            from {
+                opacity: 1;
+                transform: translateY(0);
+            }
+            to {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+        }
+
         .button-primary {
             background: var(--gradient-brand);
             border: none;
@@ -2699,10 +2721,26 @@
         <div class="taskbar-apps" id="taskbar-apps"></div>
         <div class="system-tray">
             <span style="font-size: 14px;">🌐</span>
-            <span style="font-size: 14px;">🔊</span>
+            <span id="volume-icon" style="font-size: 14px; position: relative;" onclick="toggleVolumeSlider()" title="Volume">🔊</span>
             <span style="font-size: 14px;">⛏️</span>
             <span id="system-clock" style="font-size: 12px; margin-left: 10px; font-family: 'JetBrains Mono', monospace; font-weight: 500; opacity: 0.9; min-width: 140px; text-align: right;" title="System Time"></span>
             <span id="user-profile" style="font-size: 12px; margin-left: 10px; opacity: 0.9; cursor: pointer;" title="Click to view profile"></span>
+        </div>
+
+        <!-- Volume Slider Popup -->
+        <div id="volume-slider-popup" style="display: none; position: fixed; bottom: 70px; right: 280px; width: 60px; height: 200px; background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 12px; backdrop-filter: blur(20px); box-shadow: 0 10px 30px rgba(0,0,0,0.5); padding: 20px 15px; z-index: 10000;">
+            <div style="text-align: center; margin-bottom: 10px; font-size: 24px;" id="volume-icon-display">🔊</div>
+            <div style="text-align: center; margin-bottom: 15px; font-size: 14px; font-weight: 600;" id="volume-percentage">70%</div>
+            <input
+                type="range"
+                id="volume-slider"
+                min="0"
+                max="100"
+                value="70"
+                orient="vertical"
+                style="width: 140px; transform: rotate(-90deg) translateX(-40px); transform-origin: left top; cursor: pointer;"
+                oninput="updateVolume(this.value)"
+            />
         </div>
         <div class="clock" id="clock"></div>
     </div>
@@ -2801,6 +2839,61 @@
                 showNotification('Window Maximized', 'Window expanded to full screen', 'info', 2000);
             }
         }
+
+        // Volume Control System
+        let currentVolume = 70;
+        let volumeSliderOpen = false;
+
+        function toggleVolumeSlider() {
+            const popup = document.getElementById('volume-slider-popup');
+            volumeSliderOpen = !volumeSliderOpen;
+
+            if (volumeSliderOpen) {
+                popup.style.display = 'block';
+                popup.style.animation = 'fadeIn 0.2s ease-out';
+            } else {
+                popup.style.animation = 'fadeOut 0.2s ease-out';
+                setTimeout(() => popup.style.display = 'none', 200);
+            }
+        }
+
+        function updateVolume(value) {
+            currentVolume = parseInt(value);
+
+            // Update percentage display
+            document.getElementById('volume-percentage').textContent = currentVolume + '%';
+
+            // Update icons based on volume level
+            const volumeIcon = document.getElementById('volume-icon');
+            const volumeIconDisplay = document.getElementById('volume-icon-display');
+
+            let icon = '🔊';
+            if (currentVolume === 0) {
+                icon = '🔇';
+            } else if (currentVolume < 33) {
+                icon = '🔈';
+            } else if (currentVolume < 66) {
+                icon = '🔉';
+            }
+
+            volumeIcon.textContent = icon;
+            volumeIconDisplay.textContent = icon;
+
+            // Show notification for significant changes
+            if (value % 10 === 0) {
+                showNotification('Volume', `Volume set to ${currentVolume}%`, 'info', 1500);
+            }
+        }
+
+        // Close volume slider when clicking outside
+        document.addEventListener('click', (e) => {
+            const popup = document.getElementById('volume-slider-popup');
+            const volumeIcon = document.getElementById('volume-icon');
+
+            if (volumeSliderOpen && !popup.contains(e.target) && e.target !== volumeIcon) {
+                toggleVolumeSlider();
+            }
+        });
 
         function toggleStartMenu(force) {
             const menu = document.getElementById('start-menu');
