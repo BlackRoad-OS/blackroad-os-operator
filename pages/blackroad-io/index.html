@@ -4645,5 +4645,31 @@ License: Infinity License`
       }
     </script>
 
+    <!-- Clerk Authentication Protection -->
+    <script>
+      // Wait for Clerk to load, then check authentication
+      window.addEventListener('load', async () => {
+        try {
+          // Wait for Clerk to be ready
+          await window.Clerk.load();
+
+          // Check if user is signed in
+          if (!window.Clerk.user) {
+            // User is NOT signed in - redirect to login
+            console.log('[BlackRoad] User not authenticated - redirecting to login');
+            window.location.href = '/login';
+          } else {
+            // User IS signed in - show welcome message in console
+            console.log('[BlackRoad] Welcome,', window.Clerk.user.primaryEmailAddress?.emailAddress || 'User');
+            console.log('[BlackRoad] User ID:', window.Clerk.user.id);
+          }
+        } catch (error) {
+          console.error('[BlackRoad] Clerk authentication error:', error);
+          // On error, redirect to login to be safe
+          window.location.href = '/login';
+        }
+      });
+    </script>
+
 </body>
 </html>
