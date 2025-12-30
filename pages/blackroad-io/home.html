@@ -2082,10 +2082,19 @@
                     </div>
                 </div>
 
-                <div style="display: flex; gap: 12px; margin-bottom: 20px;">
+                <div style="display: flex; gap: 12px; margin-bottom: 20px; align-items: center;">
+                    <input
+                        type="text"
+                        id="explorer-search"
+                        placeholder="🔍 Search files and folders..."
+                        style="flex: 1; padding: 10px 16px; background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); border-radius: 8px; color: var(--white); font-family: 'JetBrains Mono', monospace; font-size: 13px; outline: none; transition: all 0.2s ease;"
+                        oninput="searchExplorerFiles(this.value)"
+                        onfocus="this.style.borderColor='var(--electric-blue)'"
+                        onblur="this.style.borderColor='var(--glass-border)'"
+                    />
                     <button class="toolbar-button" onclick="alert('Create new folder')">📁 New Folder</button>
                     <button class="toolbar-button" onclick="alert('Upload file')">📤 Upload</button>
-                    <button class="toolbar-button" onclick="loadExplorerFiles()">🔄 Refresh</button>
+                    <button class="toolbar-button" onclick="loadExplorerFiles(); document.getElementById('explorer-search').value=''">🔄 Refresh</button>
                 </div>
 
                 <div id="explorer-files-list"></div>
@@ -3989,6 +3998,71 @@
         setTimeout(() => {
             loadExplorerFiles();
         }, 300);
+
+        // Search functionality
+        function searchExplorerFiles(query) {
+            const list = document.getElementById('explorer-files-list');
+            if (!list) return;
+
+            const searchQuery = query.toLowerCase().trim();
+
+            // If empty query, show all files
+            if (!searchQuery) {
+                loadExplorerFiles();
+                return;
+            }
+
+            // Filter files based on search query
+            const filteredFiles = explorerFiles.filter(item =>
+                item.name.toLowerCase().includes(searchQuery) ||
+                item.folder.toLowerCase().includes(searchQuery) ||
+                item.type.toLowerCase().includes(searchQuery)
+            );
+
+            // Show no results message if nothing found
+            if (filteredFiles.length === 0) {
+                list.innerHTML = `
+                    <div style="text-align: center; padding: 60px 20px; opacity: 0.5;">
+                        <div style="font-size: 48px; margin-bottom: 16px;">🔍</div>
+                        <div style="font-size: 16px; font-weight: 600; margin-bottom: 8px;">No files found</div>
+                        <div style="font-size: 13px; opacity: 0.7;">Try a different search term</div>
+                    </div>
+                `;
+                return;
+            }
+
+            // Display filtered results
+            list.innerHTML = filteredFiles.map(item => {
+                const typeStyle = item.type === 'folder'
+                    ? { bg: 'rgba(41,121,255,0.2)', color: 'var(--electric-blue)' }
+                    : { bg: 'rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.6)' };
+
+                // Highlight matching text
+                const highlightText = (text, query) => {
+                    const regex = new RegExp(`(${query})`, 'gi');
+                    return text.replace(regex, '<span style="background: var(--amber); color: black; padding: 2px 4px; border-radius: 3px;">$1</span>');
+                };
+
+                return `
+                    <div style="padding: 16px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; margin-bottom: 12px; cursor: pointer; transition: all 0.2s ease;" onmouseover="this.style.borderColor='var(--electric-blue)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.08)'" onclick="alert('${item.type === 'folder' ? 'Folder' : 'File'}: ${item.name}\\nSize: ${item.size}\\nLocation: ${item.folder}\\nModified: ${item.modified}')">
+                        <div style="display: flex; gap: 14px; align-items: center;">
+                            <div style="font-size: 36px;">${item.icon}</div>
+                            <div style="flex: 1;">
+                                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 6px;">
+                                    <div style="font-weight: 600; font-size: 15px;">${highlightText(item.name, searchQuery)}</div>
+                                    <span style="padding: 4px 10px; background: ${typeStyle.bg}; color: ${typeStyle.color}; border-radius: 6px; font-size: 10px; font-weight: 600; text-transform: uppercase;">${item.type}</span>
+                                </div>
+                                <div style="font-size: 12px; opacity: 0.7; margin-bottom: 4px;">📍 ${highlightText(item.folder, searchQuery)}</div>
+                                <div style="font-size: 11px; opacity: 0.6;">Size: ${item.size} • Modified: ${item.modified}</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            // Show search results count
+            showNotification('Search Results', `Found ${filteredFiles.length} matching file${filteredFiles.length > 1 ? 's' : ''}`, 'info', 2000);
+        }
 
         // Drag and Drop File Upload System
         const dropZone = document.getElementById('explorer-content-files');
