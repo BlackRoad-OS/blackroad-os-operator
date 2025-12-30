@@ -4328,18 +4328,6 @@
     </script>
     <!-- End BlackRoad Backend Integration -->
 
-    <!-- Clerk Authentication Protection -->
-    <script>
-        window.addEventListener('load', async () => {
-            await window.Clerk.load();
-
-            // Check if user is signed in
-            if (!window.Clerk.user) {
-                // Redirect to login if not authenticated
-                window.location.href = '/login';
-            }
-        });
-    </script>
 
 </body>
 </html>
