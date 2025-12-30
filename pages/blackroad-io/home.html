@@ -761,6 +761,40 @@
             }
         }
 
+        /* Drag and Drop */
+        .drop-zone {
+            position: relative;
+        }
+
+        .drop-zone.drag-over::after {
+            content: '📤 Drop files here to upload';
+            position: absolute;
+            inset: 0;
+            background: rgba(41, 121, 255, 0.1);
+            border: 3px dashed var(--electric-blue);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--electric-blue);
+            backdrop-filter: blur(10px);
+            z-index: 1000;
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 0.8;
+                transform: scale(1);
+            }
+            50% {
+                opacity: 1;
+                transform: scale(1.02);
+            }
+        }
+
         .button-primary {
             background: var(--gradient-brand);
             border: none;
@@ -2028,7 +2062,7 @@
             </div>
 
             <!-- Files Tab -->
-            <div id="explorer-content-files" style="padding: 20px;">
+            <div id="explorer-content-files" class="drop-zone" style="padding: 20px;">
                 <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px;">
                     <div style="padding: 20px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; text-align: center;">
                         <div style="font-size: 32px; font-weight: 700; background: linear-gradient(135deg, var(--amber), var(--hot-pink)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">1,247</div>
@@ -3955,6 +3989,86 @@
         setTimeout(() => {
             loadExplorerFiles();
         }, 300);
+
+        // Drag and Drop File Upload System
+        const dropZone = document.getElementById('explorer-content-files');
+        let uploadedFiles = [];
+
+        // Prevent default drag behaviors on the whole page
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            document.body.addEventListener(eventName, preventDefaults, false);
+        });
+
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        // Highlight drop zone when dragging over it
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropZone.addEventListener(eventName, () => {
+                dropZone.classList.add('drag-over');
+            }, false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, () => {
+                dropZone.classList.remove('drag-over');
+            }, false);
+        });
+
+        // Handle dropped files
+        dropZone.addEventListener('drop', handleDrop, false);
+
+        function handleDrop(e) {
+            const dt = e.dataTransfer;
+            const files = [...dt.files];
+
+            if (files.length === 0) return;
+
+            // Process each file
+            files.forEach(file => {
+                uploadedFiles.push({
+                    id: Date.now() + Math.random(),
+                    name: file.name,
+                    type: file.type.startsWith('image/') ? 'image' :
+                          file.type.includes('pdf') ? 'pdf' :
+                          file.type.includes('zip') ? 'archive' : 'file',
+                    icon: file.type.startsWith('image/') ? '🖼️' :
+                          file.type.includes('pdf') ? '📄' :
+                          file.type.includes('zip') ? '📦' :
+                          file.name.endsWith('.js') ? '📜' :
+                          file.name.endsWith('.py') ? '🐍' :
+                          file.name.endsWith('.md') ? '📝' : '📄',
+                    size: formatFileSize(file.size),
+                    modified: 'Just now',
+                    folder: '/Uploads'
+                });
+            });
+
+            // Show success notification
+            showNotification(
+                'Files Uploaded',
+                `Successfully uploaded ${files.length} file${files.length > 1 ? 's' : ''}: ${files.map(f => f.name).join(', ')}`,
+                'success',
+                4000
+            );
+
+            // Add uploaded files to explorer
+            explorerFiles.unshift(...uploadedFiles.slice(-files.length));
+            loadExplorerFiles();
+
+            // Clear uploaded files array
+            uploadedFiles = [];
+        }
+
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + ' ' + sizes[i];
+        }
     </script>
 
     <!-- Terminal Tab Management -->
