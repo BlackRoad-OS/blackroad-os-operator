@@ -2725,6 +2725,7 @@
             <span style="font-size: 14px;">⛏️</span>
             <span id="system-clock" style="font-size: 12px; margin-left: 10px; font-family: 'JetBrains Mono', monospace; font-weight: 500; opacity: 0.9; min-width: 140px; text-align: right;" title="System Time"></span>
             <span id="user-profile" style="font-size: 12px; margin-left: 10px; opacity: 0.9; cursor: pointer;" title="Click to view profile"></span>
+            <span id="power-button" style="font-size: 14px; margin-left: 8px; color: var(--hot-pink);" onclick="togglePowerMenu()" title="Power">⏻</span>
         </div>
 
         <!-- Volume Slider Popup -->
@@ -2742,6 +2743,40 @@
                 oninput="updateVolume(this.value)"
             />
         </div>
+
+        <!-- Power Menu Popup -->
+        <div id="power-menu-popup" style="display: none; position: fixed; bottom: 70px; right: 20px; width: 220px; background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 12px; backdrop-filter: blur(20px); box-shadow: 0 10px 30px rgba(0,0,0,0.5); padding: 12px; z-index: 10000;">
+            <div style="padding: 14px; cursor: pointer; border-radius: 8px; transition: all 0.2s ease; margin-bottom: 6px; display: flex; align-items: center; gap: 12px;" onmouseover="this.style.background='rgba(255,29,108,0.15)'" onmouseout="this.style.background='transparent'" onclick="powerAction('lock')">
+                <span style="font-size: 20px;">🔒</span>
+                <div>
+                    <div style="font-weight: 600; font-size: 13px;">Lock</div>
+                    <div style="font-size: 11px; opacity: 0.7;">Lock your session</div>
+                </div>
+            </div>
+            <div style="padding: 14px; cursor: pointer; border-radius: 8px; transition: all 0.2s ease; margin-bottom: 6px; display: flex; align-items: center; gap: 12px;" onmouseover="this.style.background='rgba(255,29,108,0.15)'" onmouseout="this.style.background='transparent'" onclick="powerAction('sleep')">
+                <span style="font-size: 20px;">😴</span>
+                <div>
+                    <div style="font-weight: 600; font-size: 13px;">Sleep</div>
+                    <div style="font-size: 11px; opacity: 0.7;">Save power and resume later</div>
+                </div>
+            </div>
+            <div style="height: 1px; background: var(--glass-border); margin: 8px 0;"></div>
+            <div style="padding: 14px; cursor: pointer; border-radius: 8px; transition: all 0.2s ease; margin-bottom: 6px; display: flex; align-items: center; gap: 12px;" onmouseover="this.style.background='rgba(255,165,0,0.15)'" onmouseout="this.style.background='transparent'" onclick="powerAction('restart')">
+                <span style="font-size: 20px;">🔄</span>
+                <div>
+                    <div style="font-weight: 600; font-size: 13px;">Restart</div>
+                    <div style="font-size: 11px; opacity: 0.7;">Restart BlackRoad OS</div>
+                </div>
+            </div>
+            <div style="padding: 14px; cursor: pointer; border-radius: 8px; transition: all 0.2s ease; display: flex; align-items: center; gap: 12px;" onmouseover="this.style.background='rgba(239,68,68,0.15)'" onmouseout="this.style.background='transparent'" onclick="powerAction('shutdown')">
+                <span style="font-size: 20px;">⏻</span>
+                <div>
+                    <div style="font-weight: 600; font-size: 13px; color: #ef4444;">Shutdown</div>
+                    <div style="font-size: 11px; opacity: 0.7;">Turn off your system</div>
+                </div>
+            </div>
+        </div>
+
         <div class="clock" id="clock"></div>
     </div>
 
@@ -2892,6 +2927,73 @@
 
             if (volumeSliderOpen && !popup.contains(e.target) && e.target !== volumeIcon) {
                 toggleVolumeSlider();
+            }
+        });
+
+        // Power Menu System
+        let powerMenuOpen = false;
+
+        function togglePowerMenu() {
+            const popup = document.getElementById('power-menu-popup');
+            powerMenuOpen = !powerMenuOpen;
+
+            if (powerMenuOpen) {
+                popup.style.display = 'block';
+                popup.style.animation = 'fadeIn 0.2s ease-out';
+            } else {
+                popup.style.animation = 'fadeOut 0.2s ease-out';
+                setTimeout(() => popup.style.display = 'none', 200);
+            }
+        }
+
+        function powerAction(action) {
+            togglePowerMenu();
+
+            switch(action) {
+                case 'lock':
+                    showNotification('Locked', 'Session locked. Redirecting to login...', 'info', 3000);
+                    setTimeout(() => {
+                        window.Clerk?.signOut();
+                        window.location.href = '/';
+                    }, 2000);
+                    break;
+
+                case 'sleep':
+                    showNotification('Sleep Mode', 'Entering sleep mode...', 'info', 2000);
+                    setTimeout(() => {
+                        document.body.style.opacity = '0';
+                        setTimeout(() => {
+                            document.body.style.opacity = '1';
+                            showNotification('Resumed', 'Welcome back!', 'success', 2000);
+                        }, 1000);
+                    }, 1500);
+                    break;
+
+                case 'restart':
+                    if (confirm('Are you sure you want to restart BlackRoad OS?')) {
+                        showNotification('Restarting', 'System is restarting...', 'info', 2000);
+                        setTimeout(() => window.location.reload(), 2000);
+                    }
+                    break;
+
+                case 'shutdown':
+                    if (confirm('Are you sure you want to shutdown BlackRoad OS?')) {
+                        showNotification('Shutting Down', 'Goodbye! See you soon.', 'error', 2000);
+                        setTimeout(() => {
+                            document.body.innerHTML = '<div style="display: flex; align-items: center; justify-content: center; height: 100vh; background: black; color: white; font-family: JetBrains Mono, monospace; font-size: 24px;">BlackRoad OS has shut down</div>';
+                        }, 2000);
+                    }
+                    break;
+            }
+        }
+
+        // Close power menu when clicking outside
+        document.addEventListener('click', (e) => {
+            const powerPopup = document.getElementById('power-menu-popup');
+            const powerButton = document.getElementById('power-button');
+
+            if (powerMenuOpen && !powerPopup.contains(e.target) && e.target !== powerButton) {
+                togglePowerMenu();
             }
         });
 
