@@ -1776,7 +1776,17 @@
                     <div style="margin-bottom: 8px;"><span style="color: var(--amber);">cecilia@blackroad</span>:<span style="color: var(--electric-blue);">~</span>$ blackroad --version</div>
                     <div style="margin-bottom: 15px;">BlackRoad OS v12.0 (Ultimate Modern)</div>
 
-                    <div><span style="color: var(--amber);">cecilia@blackroad</span>:<span style="color: var(--electric-blue);">~</span>$ <span class="cursor-blink" style="background: var(--hot-pink); padding: 0 4px;">_</span></div>
+                    <div id="terminal-output"></div>
+                    <div style="display: flex; align-items: center;">
+                        <span style="color: var(--amber);">cecilia@blackroad</span>:<span style="color: var(--electric-blue);">~</span>$
+                        <input
+                            type="text"
+                            id="terminal-input"
+                            style="flex: 1; background: transparent; border: none; color: var(--white); font-family: 'JetBrains Mono', monospace; font-size: 13px; outline: none; margin-left: 5px;"
+                            placeholder="Type 'help' for commands..."
+                            onkeypress="if(event.key === 'Enter') executeTerminalCommand()"
+                        />
+                    </div>
                 </div>
             </div>
 
@@ -2405,6 +2415,7 @@
             <span style="font-size: 14px;">🌐</span>
             <span style="font-size: 14px;">🔊</span>
             <span style="font-size: 14px;">⛏️</span>
+            <span id="user-profile" style="font-size: 12px; margin-left: 10px; opacity: 0.9; cursor: pointer;" title="Click to view profile"></span>
         </div>
         <div class="clock" id="clock"></div>
     </div>
@@ -2543,6 +2554,95 @@
                 startMenu.classList.remove('active');
             }
         });
+
+        // Terminal Command Execution
+        let terminalHistory = [];
+
+        function executeTerminalCommand() {
+            const input = document.getElementById('terminal-input');
+            const output = document.getElementById('terminal-output');
+            const command = input.value.trim();
+
+            if (!command) return;
+
+            terminalHistory.push(command);
+
+            // Display command
+            const commandLine = document.createElement('div');
+            commandLine.style.marginBottom = '8px';
+            commandLine.innerHTML = `<span style="color: var(--amber);">cecilia@blackroad</span>:<span style="color: var(--electric-blue);">~</span>$ ${command}`;
+            output.appendChild(commandLine);
+
+            // Execute command
+            const result = document.createElement('div');
+            result.style.marginBottom = '15px';
+
+            const cmd = command.toLowerCase().split(' ')[0];
+            const args = command.split(' ').slice(1);
+
+            switch(cmd) {
+                case 'help':
+                    result.innerHTML = `Available commands:<br>
+                    <span style="color: var(--electric-blue);">help</span> - Show this help<br>
+                    <span style="color: var(--electric-blue);">whoami</span> - Show current user<br>
+                    <span style="color: var(--electric-blue);">ls</span> - List files<br>
+                    <span style="color: var(--electric-blue);">pwd</span> - Print working directory<br>
+                    <span style="color: var(--electric-blue);">date</span> - Show current date/time<br>
+                    <span style="color: var(--electric-blue);">lucidia status</span> - Check Lucidia status<br>
+                    <span style="color: var(--electric-blue);">blackroad --version</span> - Show OS version<br>
+                    <span style="color: var(--electric-blue);">agents</span> - List active agents<br>
+                    <span style="color: var(--electric-blue);">clear</span> - Clear terminal`;
+                    break;
+                case 'whoami':
+                    result.textContent = window.Clerk?.user?.primaryEmailAddress?.emailAddress || 'cecilia@blackroad.io';
+                    break;
+                case 'ls':
+                    result.innerHTML = `<span style="color: var(--electric-blue);">Documents</span>  <span style="color: var(--electric-blue);">Downloads</span>  <span style="color: var(--electric-blue);">Pictures</span>  <span style="color: var(--electric-blue);">Projects</span>  <span style="color: var(--electric-blue);">workspace</span>`;
+                    break;
+                case 'pwd':
+                    result.textContent = '/home/cecilia';
+                    break;
+                case 'date':
+                    result.textContent = new Date().toLocaleString();
+                    break;
+                case 'lucidia':
+                    if (args[0] === 'status') {
+                        result.innerHTML = `<span style="color: #4ade80;">✓ Lucidia Core: ONLINE</span><br>
+                        <span style="color: #4ade80;">✓ Active Agents: ${Math.floor(Math.random() * 500 + 800)}</span><br>
+                        <span style="color: #4ade80;">✓ Memory Sync: ${(99 + Math.random()).toFixed(1)}%</span><br>
+                        <span style="color: #4ade80;">✓ Trinary Logic: ENABLED</span>`;
+                    } else {
+                        result.textContent = 'Usage: lucidia status';
+                    }
+                    break;
+                case 'blackroad':
+                    if (args[0] === '--version' || args[0] === '-v') {
+                        result.textContent = 'BlackRoad OS v12.0 (Ultimate Modern)';
+                    } else {
+                        result.textContent = 'Usage: blackroad --version';
+                    }
+                    break;
+                case 'agents':
+                    result.innerHTML = `Active Agents:<br>
+                    <span style="color: var(--hot-pink);">cecilia-coordinator</span> - Orchestration Agent<br>
+                    <span style="color: var(--electric-blue);">aria-helper</span> - Assistant Agent<br>
+                    <span style="color: var(--violet);">octavia-analyzer</span> - Analysis Agent<br>
+                    <span style="color: var(--amber);">radius-planner</span> - Planning Agent`;
+                    break;
+                case 'clear':
+                    output.innerHTML = '';
+                    input.value = '';
+                    return;
+                default:
+                    result.innerHTML = `<span style="color: #ef4444;">Command not found: ${cmd}</span><br>Type 'help' for available commands`;
+            }
+
+            output.appendChild(result);
+            input.value = '';
+
+            // Scroll to bottom
+            output.parentElement.scrollTop = output.parentElement.scrollHeight;
+        }
 
         // GitHub Integration
         const githubRepos = [
@@ -4350,6 +4450,18 @@
                 } else {
                     console.log('[Auth] ✅ User authenticated:', window.Clerk.user.primaryEmailAddress?.emailAddress);
                     console.log('[BlackRoad OS] Welcome to BlackRoad OS!');
+
+                    // Update user profile in taskbar
+                    const userProfile = document.getElementById('user-profile');
+                    if (userProfile && window.Clerk.user) {
+                        const email = window.Clerk.user.primaryEmailAddress?.emailAddress || 'User';
+                        const username = email.split('@')[0];
+                        userProfile.textContent = `👤 ${username}`;
+                        userProfile.onclick = () => {
+                            alert(`Logged in as: ${email}\n\nClick to sign out`);
+                            // Could add sign out functionality here
+                        };
+                    }
                 }
             } catch (error) {
                 console.error('[Auth] Error checking authentication:', error);
