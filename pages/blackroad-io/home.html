@@ -2697,6 +2697,7 @@
                     <span style="color: var(--electric-blue);">lucidia status</span> - Check Lucidia status<br>
                     <span style="color: var(--electric-blue);">blackroad --version</span> - Show OS version<br>
                     <span style="color: var(--electric-blue);">agents</span> - List active agents<br>
+                    <span style="color: var(--electric-blue);">shortcuts</span> - Show keyboard shortcuts<br>
                     <span style="color: var(--electric-blue);">clear</span> - Clear terminal`;
                     break;
                 case 'whoami':
@@ -2768,6 +2769,16 @@
                     <span style="color: var(--electric-blue);">512</span>    roadchain-node        6%     512MB<br>
                     <span style="color: var(--electric-blue);">701</span>    terminal              2%     128MB`;
                     break;
+                case 'shortcuts':
+                    result.innerHTML = `<span style="color: var(--hot-pink);">Keyboard Shortcuts:</span><br><br>
+                    <span style="color: var(--amber);">Ctrl+T</span> - Open Terminal<br>
+                    <span style="color: var(--amber);">Ctrl+E</span> - Open File Explorer<br>
+                    <span style="color: var(--amber);">Ctrl+B</span> - Open Browser<br>
+                    <span style="color: var(--amber);">Ctrl+W</span> - Close active window<br>
+                    <span style="color: var(--amber);">Ctrl+M</span> - Minimize all windows<br>
+                    <span style="color: var(--amber);">Ctrl+C</span> - Copy selected text<br>
+                    <span style="color: var(--amber);">Ctrl+Shift+T</span> - Show shortcuts (notification)`;
+                    break;
                 case 'clear':
                     output.innerHTML = '';
                     input.value = '';
@@ -2816,6 +2827,67 @@
                 const username = window.Clerk?.user?.primaryEmailAddress?.emailAddress?.split('@')[0] || 'User';
                 showNotification('Welcome to BlackRoad OS', `Hello ${username}! Your system is ready.`, 'success', 5000);
             }, 2000);
+        });
+
+        // Keyboard Shortcuts System
+        let clipboardContent = '';
+
+        document.addEventListener('keydown', (e) => {
+            const ctrl = e.ctrlKey || e.metaKey;
+
+            // Ctrl+C - Copy (show notification)
+            if (ctrl && e.key === 'c') {
+                const selection = window.getSelection().toString();
+                if (selection) {
+                    clipboardContent = selection;
+                    showNotification('Copied', `Copied ${selection.length} characters to clipboard`, 'success', 2000);
+                }
+            }
+
+            // Ctrl+T - Open Terminal
+            if (ctrl && e.key === 't') {
+                e.preventDefault();
+                openWindow('terminal');
+            }
+
+            // Ctrl+E - Open File Explorer
+            if (ctrl && e.key === 'e') {
+                e.preventDefault();
+                openWindow('file-explorer');
+            }
+
+            // Ctrl+B - Open Browser
+            if (ctrl && e.key === 'b') {
+                e.preventDefault();
+                openWindow('roadview');
+            }
+
+            // Ctrl+W - Close active window
+            if (ctrl && e.key === 'w') {
+                e.preventDefault();
+                const activeWindow = Array.from(openWindows).find(id =>
+                    document.getElementById(id).classList.contains('active')
+                );
+                if (activeWindow) {
+                    closeWindow(activeWindow);
+                    showNotification('Window Closed', 'Window closed successfully', 'info', 2000);
+                }
+            }
+
+            // Ctrl+M - Minimize all windows
+            if (ctrl && e.key === 'm') {
+                e.preventDefault();
+                openWindows.forEach(id => minimizeWindow(id));
+                showNotification('Windows Minimized', 'All windows minimized', 'info', 2000);
+            }
+
+            // Ctrl+Shift+T - Show keyboard shortcuts
+            if (ctrl && e.shiftKey && e.key === 'T') {
+                e.preventDefault();
+                showNotification('Keyboard Shortcuts',
+                    'Ctrl+T: Terminal | Ctrl+E: Explorer | Ctrl+B: Browser | Ctrl+W: Close | Ctrl+M: Minimize All',
+                    'info', 6000);
+            }
         });
 
         // GitHub Integration
