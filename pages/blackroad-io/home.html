@@ -3,7 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Black Road OS - The Complete AI Ecosystem</title>
+    <title>BlackRoad OS - The Complete Operating System</title>
+
+    <!-- Clerk Authentication -->
+    <script async crossorigin="anonymous" data-clerk-publishable-key="pk_live_Y2xlcmsuYmxhY2tyb2FkLmlvJA" src="https://cdn.jsdelivr.net/npm/@clerk/clerk-js@latest/dist/clerk.browser.js" type="text/javascript"></script>
+
+    <!-- Stripe Payment -->
+    <script src="https://js.stripe.com/v3/"></script>
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -1141,9 +1148,9 @@
                 </div>
 
                 <div style="display: flex; gap: 10px; margin-bottom: 20px;">
-                    <button class="toolbar-button" onclick="alert('Compose new email')">✉️ New Email</button>
+                    <button class="toolbar-button" onclick="composeEmail()">✉️ New Email</button>
                     <button class="toolbar-button" onclick="loadRoadMailInbox()">🔄 Refresh</button>
-                    <button class="toolbar-button" onclick="alert('Mark all as read')">✓ Mark All Read</button>
+                    <button class="toolbar-button" onclick="markAllRead()">✓ Mark All Read</button>
                 </div>
 
                 <div id="roadmail-inbox-list"></div>
@@ -1229,9 +1236,9 @@
                 </div>
 
                 <div style="display: flex; gap: 10px; margin-bottom: 20px;">
-                    <button class="toolbar-button" onclick="alert('Opening new tab...')">➕ New Tab</button>
+                    <button class="toolbar-button" onclick="openNewTab()">➕ New Tab</button>
                     <button class="toolbar-button" onclick="loadRoadViewTabs()">🔄 Refresh</button>
-                    <button class="toolbar-button" onclick="alert('Closing all tabs...')">❌ Close All</button>
+                    <button class="toolbar-button" onclick="closeAllTabs()">❌ Close All</button>
                 </div>
 
                 <div id="roadview-tabs-list"></div>
@@ -1298,7 +1305,7 @@
             <button class="toolbar-button">🏭 Industry</button>
             <button class="toolbar-button">🏠 Residential</button>
             <button class="toolbar-button">🌳 Nature</button>
-            <button class="toolbar-button">💾 Save</button>
+            <button class="toolbar-button" onclick="saveGame('Road City')">💾 Save</button>
         </div>
         <div class="window-content">
             <div class="game-world">
@@ -1431,9 +1438,9 @@
                         Current difficulty: 1,847,293<br>
                         Next payout in: 2h 34m
                     </div>
-                    <button class="button button-primary">⏸️ Pause Mining</button>
-                    <button class="button">⚙️ Configure</button>
-                    <button class="button">💰 Withdraw</button>
+                    <button class="button button-primary" onclick="pauseMining()">⏸️ Pause Mining</button>
+                    <button class="button" onclick="configureMining()">⚙️ Configure</button>
+                    <button class="button" onclick="withdrawEarnings()">💰 Withdraw</button>
                 </div>
 
                 <div style="border: 1px solid var(--glass-border); padding: 20px; background: rgba(255,255,255,0.02); border-radius: 12px; margin-top: 20px;">
@@ -1553,7 +1560,7 @@
                 </div>
 
                 <div style="display: flex; gap: 12px; margin-bottom: 20px;">
-                    <button class="toolbar-button" onclick="alert('Start streaming')">🎥 Go Live</button>
+                    <button class="toolbar-button" onclick="goLive()">🎥 Go Live</button>
                     <button class="toolbar-button" onclick="loadStreamLive()">🔄 Refresh</button>
                 </div>
 
@@ -1582,7 +1589,7 @@
                 </div>
 
                 <div style="display: flex; gap: 12px; margin-bottom: 20px;">
-                    <button class="toolbar-button" onclick="alert('Upload video')">📤 Upload</button>
+                    <button class="toolbar-button" onclick="uploadVideo()">📤 Upload</button>
                     <button class="toolbar-button" onclick="loadStreamVideos()">🔄 Refresh</button>
                 </div>
 
@@ -1607,7 +1614,7 @@
                 </div>
 
                 <div style="display: flex; gap: 12px; margin-bottom: 20px;">
-                    <button class="toolbar-button" onclick="alert('Create channel')">➕ Create</button>
+                    <button class="toolbar-button" onclick="createChannel()">➕ Create</button>
                     <button class="toolbar-button" onclick="loadStreamChannels()">🔄 Refresh</button>
                 </div>
 
@@ -1658,7 +1665,7 @@
                 </div>
 
                 <div style="display: flex; gap: 12px; margin-bottom: 20px;">
-                    <button class="toolbar-button" onclick="alert('Create new post')">📝 New Post</button>
+                    <button class="toolbar-button" onclick="createPost()">📝 New Post</button>
                     <button class="toolbar-button" onclick="loadSocialFeed()">🔄 Refresh</button>
                 </div>
 
@@ -1683,7 +1690,7 @@
                 </div>
 
                 <div style="display: flex; gap: 12px; margin-bottom: 20px;">
-                    <button class="toolbar-button" onclick="alert('Find friends')">🔍 Find Friends</button>
+                    <button class="toolbar-button" onclick="findFriends()">🔍 Find Friends</button>
                     <button class="toolbar-button" onclick="loadSocialFriends()">🔄 Refresh</button>
                 </div>
 
@@ -1708,7 +1715,7 @@
                 </div>
 
                 <div style="display: flex; gap: 12px; margin-bottom: 20px;">
-                    <button class="toolbar-button" onclick="alert('New message')">✉️ New Message</button>
+                    <button class="toolbar-button" onclick="sendMessage()">✉️ New Message</button>
                     <button class="toolbar-button" onclick="loadSocialMessages()">🔄 Refresh</button>
                 </div>
 
@@ -1853,8 +1860,8 @@
                 </div>
 
                 <div style="display: flex; gap: 12px; margin-bottom: 20px;">
-                    <button class="toolbar-button" onclick="alert('Create new folder')">📁 New Folder</button>
-                    <button class="toolbar-button" onclick="alert('Upload file')">📤 Upload</button>
+                    <button class="toolbar-button" onclick="createFolder()">📁 New Folder</button>
+                    <button class="toolbar-button" onclick="uploadFile()">📤 Upload</button>
                     <button class="toolbar-button" onclick="loadExplorerFiles()">🔄 Refresh</button>
                 </div>
 
@@ -1948,7 +1955,7 @@
                 </div>
 
                 <div style="display: flex; gap: 12px; margin-bottom: 20px;">
-                    <button class="toolbar-button" onclick="alert('Create new repository')">➕ New Repo</button>
+                    <button class="toolbar-button" onclick="createRepo()">➕ New Repo</button>
                     <button class="toolbar-button" onclick="alert('Import repository')">📥 Import</button>
                     <button class="toolbar-button" onclick="loadGitHubRepos()">🔄 Refresh</button>
                 </div>
@@ -1974,7 +1981,7 @@
                 </div>
 
                 <div style="display: flex; gap: 12px; margin-bottom: 20px;">
-                    <button class="toolbar-button" onclick="alert('Create pull request')">➕ New PR</button>
+                    <button class="toolbar-button" onclick="createPR()">➕ New PR</button>
                     <button class="toolbar-button" onclick="loadGitHubPRs()">🔄 Refresh</button>
                 </div>
 
@@ -2261,9 +2268,9 @@
             <h2 style="margin: 30px 0; font-size: 48px; background: var(--gradient-brand); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">1,247.89 RC</h2>
             <div style="color: rgba(255,255,255,0.5); font-size: 14px; margin-bottom: 30px;">≈ $18,705 USD</div>
             <div style="display: flex; gap: 12px; justify-content: center;">
-                <button class="button button-primary">📤 Send</button>
-                <button class="button">📥 Receive</button>
-                <button class="button">📊 History</button>
+                <button class="button button-primary" onclick="sendCrypto()">📤 Send</button>
+                <button class="button" onclick="receiveCrypto()">📥 Receive</button>
+                <button class="button" onclick="viewTransactionHistory()">📊 History</button>
             </div>
         </div>
     </div>
@@ -4323,6 +4330,343 @@
       })();
     </script>
     <!-- End BlackRoad Backend Integration -->
+
+    <!-- Interactive Button Functions -->
+    <script>
+      // =============================================================================
+      // TERMINAL COMMAND EXECUTION
+      // =============================================================================
+      function executeTerminalCommand(command) {
+        const commandResponses = {
+          'help': `Available commands:
+  ls      - List files and directories
+  pwd     - Print working directory
+  whoami  - Display current user
+  date    - Show current date and time
+  echo    - Display message
+  neofetch - Display system information
+  clear   - Clear terminal output
+  lucidia status - Check Lucidia Core status
+  blackroad --version - Show BlackRoad OS version`,
+          'ls': `Projects/     Documents/    Desktop/      Downloads/
+AI-Models/   Scripts/      GitHub/       Cloudflare/
+blackroad-os-operator/    huggingface-models/`,
+          'pwd': `/Users/alexa/projects/blackroad-os-operator`,
+          'whoami': `alexa (cecilia)`,
+          'date': new Date().toLocaleString(),
+          'neofetch': `
+       ██████╗ ██╗      █████╗  ██████╗██╗  ██╗██████╗  ██████╗  █████╗ ██████╗
+       ██╔══██╗██║     ██╔══██╗██╔════╝██║ ██╔╝██╔══██╗██╔═══██╗██╔══██╗██╔══██╗
+       ██████╔╝██║     ███████║██║     █████╔╝ ██████╔╝██║   ██║███████║██║  ██║
+       ██╔══██╗██║     ██╔══██║██║     ██╔═██╗ ██╔══██╗██║   ██║██╔══██║██║  ██║
+       ██████╔╝███████╗██║  ██║╚██████╗██║  ██╗██║  ██║╚██████╔╝██║  ██║██████╔╝
+       ╚═════╝ ╚══════╝╚═╝  ╚═╝ ╚═════╝╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═╝╚═════╝
+
+       OS: BlackRoad OS v12.0 (Ultimate Modern)
+       Kernel: Lucidia Core v3.0
+       Uptime: 42 days, 12 hours
+       Packages: 8,789 components
+       Memory: 2847MB / 16384MB
+       AI Agents: 1,000 active`,
+          'clear': '[Terminal cleared]',
+          'lucidia status': `✓ Lucidia Core: ONLINE
+✓ Active Agents: 1,000
+✓ Memory Sync: 99.7%
+✓ Trinary Logic: ENABLED
+✓ Contradiction Resolution: OPERATIONAL`,
+          'blackroad --version': `BlackRoad OS v12.0 (Ultimate Modern)
+Build: 2025-01-15
+Core: Lucidia v3.0
+License: Infinity License`
+        };
+
+        let response = commandResponses[command.toLowerCase().trim()];
+
+        if (!response) {
+          if (command.startsWith('echo ')) {
+            response = command.substring(5);
+          } else {
+            response = `Command not found: ${command}. Type 'help' for available commands.`;
+          }
+        }
+
+        alert(`$ ${command}\n\n${response}`);
+      }
+
+      // =============================================================================
+      // ROADMAIL FUNCTIONS
+      // =============================================================================
+      function composeEmail() {
+        const subject = prompt('Email Subject:');
+        if (!subject) return;
+
+        const to = prompt('To (email address):');
+        if (!to) return;
+
+        const body = prompt('Message:');
+        if (!body) return;
+
+        alert(`✉️ Email Composed!\n\nTo: ${to}\nSubject: ${subject}\n\nYour email has been drafted. In production, this would integrate with your email service.`);
+        loadRoadMailDrafts();
+      }
+
+      function markAllRead() {
+        alert('✓ All emails marked as read!\n\nAll 42 unread emails in your inbox have been marked as read.');
+        loadRoadMailInbox();
+      }
+
+      // =============================================================================
+      // FILE EXPLORER FUNCTIONS
+      // =============================================================================
+      function uploadFile() {
+        const filename = prompt('Enter filename to upload:');
+        if (!filename) return;
+
+        alert(`📤 Uploading: ${filename}\n\nFile would be uploaded to current directory.\n\nIn production, this would integrate with your file storage system.`);
+        loadExplorerFiles();
+      }
+
+      function createFolder() {
+        const foldername = prompt('Enter folder name:');
+        if (!foldername) return;
+
+        alert(`📁 Folder Created: ${foldername}\n\nNew folder created in current directory.\n\nIn production, this would create an actual directory.`);
+        loadExplorerFiles();
+      }
+
+      function downloadFile(filename) {
+        alert(`⬇️ Downloading: ${filename}\n\nFile download would begin.\n\nIn production, this would trigger actual file download.`);
+      }
+
+      // =============================================================================
+      // BLACKSTREAM FUNCTIONS
+      // =============================================================================
+      function goLive() {
+        alert(`🎥 Starting Live Stream...\n\nStream Title: Live from BlackRoad OS\nQuality: 1080p60\nServer: rtmp://stream.blackroad.io\n\nIn production, this would initialize your streaming setup.`);
+      }
+
+      function uploadVideo() {
+        const title = prompt('Video Title:');
+        if (!title) return;
+
+        alert(`📤 Uploading Video: ${title}\n\nProcessing...  0%\nQuality: 1080p\nEstimated time: 3 minutes\n\nIn production, this would upload to your video platform.`);
+        loadStreamVideos();
+      }
+
+      function createChannel() {
+        const channelName = prompt('Channel Name:');
+        if (!channelName) return;
+
+        alert(`➕ Creating Channel: ${channelName}\n\n✓ Channel created successfully!\n✓ You can now start uploading videos\n✓ Invite viewers to subscribe\n\nIn production, this would create a new channel.`);
+        loadStreamChannels();
+      }
+
+      // =============================================================================
+      // SOCIAL NETWORK FUNCTIONS
+      // =============================================================================
+      function createPost() {
+        const content = prompt('What\'s on your mind?');
+        if (!content) return;
+
+        alert(`📝 Post Created!\n\n"${content}"\n\n✓ Published to your feed\n✓ Visible to 247 followers\n✓ Posted in AI Developers community\n\nIn production, this would publish to your social feed.`);
+        loadSocialFeed();
+      }
+
+      function findFriends() {
+        alert(`🔍 Finding Friends...\n\nSuggested connections:\n• @roadie - AI Developer\n• @aria - ML Engineer\n• @radius - Blockchain Expert\n• @octavia - Systems Architect\n\nIn production, this would show friend suggestions.`);
+      }
+
+      function sendMessage() {
+        const to = prompt('Send message to:');
+        if (!to) return;
+
+        const message = prompt('Message:');
+        if (!message) return;
+
+        alert(`✉️ Message Sent to ${to}!\n\n"${message}"\n\n✓ Message delivered\n✓ ${to} will be notified\n\nIn production, this would send via your messaging system.`);
+        loadSocialMessages();
+      }
+
+      // =============================================================================
+      // ROADVIEW BROWSER FUNCTIONS
+      // =============================================================================
+      function openNewTab() {
+        alert(`➕ New Tab Opened\n\nTab: New Tab\nURL: about:blank\n\nIn production, this would open a new browser tab.`);
+        loadRoadViewTabs();
+      }
+
+      function closeAllTabs() {
+        const confirm = window.confirm('Close all 12 tabs?');
+        if (confirm) {
+          alert(`❌ Closing All Tabs\n\nClosed 12 tabs\nKeeping 1 active tab\n\nIn production, this would close all browser tabs.`);
+          loadRoadViewTabs();
+        }
+      }
+
+      function navigateToURL() {
+        const url = prompt('Enter URL:');
+        if (!url) return;
+
+        alert(`🌍 Navigating to: ${url}\n\nLoading page...\n\nIn production, this would navigate to the URL.`);
+      }
+
+      // =============================================================================
+      // WALLET FUNCTIONS
+      // =============================================================================
+      function sendCrypto() {
+        const to = prompt('Send to (address):');
+        if (!to) return;
+
+        const amount = prompt('Amount (RoadCoin):');
+        if (!amount) return;
+
+        alert(`💰 Sending ${amount} RoadCoin to:\n${to}\n\nTransaction ID: 0x${Math.random().toString(16).substr(2, 16)}\nStatus: Pending\nEstimated confirmation: 2 minutes\n\nIn production, this would process blockchain transaction.`);
+      }
+
+      function receiveCrypto() {
+        alert(`📥 Receive RoadCoin\n\nYour Address:\n0x742d35Cc6634C0532925a3b844Bc9e7595f0bEa3\n\nShare this address to receive RoadCoin.\n\nIn production, this would show your actual wallet address.`);
+      }
+
+      function viewTransactionHistory() {
+        alert(`📋 Transaction History\n\nRecent transactions:\n• +42.5 RC - Received from @cecilia - 2 hours ago\n• -10.0 RC - Sent to @roadchain_official - 5 hours ago\n• +100.0 RC - Mining reward - 1 day ago\n\nTotal: 247.3 RoadCoin`);
+      }
+
+      // =============================================================================
+      // GAME CONTROLS - ROAD CITY
+      // =============================================================================
+      function pauseGame(game) {
+        alert(`⏸️ ${game} Paused\n\nGame paused.\nPress Resume to continue.\n\nIn production, this would pause the game engine.`);
+      }
+
+      function resumeGame(game) {
+        alert(`▶️ ${game} Resumed\n\nGame resumed.\nHave fun building!\n\nIn production, this would resume the game engine.`);
+      }
+
+      function saveGame(game) {
+        alert(`💾 ${game} Saved\n\nProgress saved successfully!\nSave file: ${game.toLowerCase().replace(' ', '-')}-save-${Date.now()}\n\nIn production, this would save game state.`);
+      }
+
+      function loadGame(game) {
+        alert(`📂 Load ${game}\n\nAvailable saves:\n• Latest - 15 min ago\n• Checkpoint 1 - 2 hours ago\n• Auto-save - 5 min ago\n\nIn production, this would load saved game state.`);
+      }
+
+      // =============================================================================
+      // ROADCOIN MINER CONTROLS
+      // =============================================================================
+      function pauseMining() {
+        alert(`⏸️ Mining Paused\n\nHashrate: 0 MH/s\nActive threads: 0\n\nMining has been paused. Click Resume to continue.`);
+      }
+
+      function resumeMining() {
+        alert(`▶️ Mining Resumed\n\nHashrate: 847 MH/s\nActive threads: 8\nEstimated earnings: 2.4 RC/hour\n\nMining in progress!`);
+      }
+
+      function configureMining() {
+        alert(`⚙️ Mining Configuration\n\nSettings:\n• Threads: 8\n• Algorithm: RandomX\n• Pool: pool.roadcoin.network\n• Difficulty: Auto\n\nIn production, this would open config panel.`);
+      }
+
+      function withdrawEarnings() {
+        alert(`💰 Withdraw Earnings\n\nAvailable balance: 42.7 RoadCoin\nMinimum withdrawal: 10 RC\n\nIn production, this would transfer to your wallet.`);
+      }
+
+      // =============================================================================
+      // GITHUB INTEGRATION FUNCTIONS
+      // =============================================================================
+      function createRepo() {
+        const repoName = prompt('Repository name:');
+        if (!repoName) return;
+
+        alert(`🆕 Creating Repository: ${repoName}\n\n✓ Repository created\n✓ Initialized with README\n✓ Default branch: main\n\nIn production, this would use GitHub API to create repo.`);
+        loadGitHubRepos();
+      }
+
+      function createPR() {
+        const title = prompt('Pull Request title:');
+        if (!title) return;
+
+        alert(`🔀 Creating Pull Request: ${title}\n\n✓ PR #${Math.floor(Math.random() * 1000)} created\n✓ Ready for review\n✓ CI/CD pipeline started\n\nIn production, this would create PR via GitHub API.`);
+        loadGitHubPRs();
+      }
+
+      // =============================================================================
+      // RASPBERRY PI FUNCTIONS
+      // =============================================================================
+      function rebootDevice(deviceName) {
+        const confirm = window.confirm(`Reboot ${deviceName}?`);
+        if (confirm) {
+          alert(`🔄 Rebooting ${deviceName}\n\nDevice will be offline for ~30 seconds\nServices will restart automatically\n\nIn production, this would SSH reboot command.`);
+        }
+      }
+
+      function openSSH(deviceName, ip) {
+        alert(`💻 SSH Connection\n\nConnecting to ${deviceName}\nIP: ${ip}\nPort: 22\nUser: alexa\n\nIn production, this would open SSH terminal.`);
+      }
+
+      // =============================================================================
+      // KEYCLOAK & HEADSCALE FUNCTIONS
+      // =============================================================================
+      function createRealm() {
+        const realmName = prompt('Realm name:');
+        if (!realmName) return;
+
+        alert(`🔐 Creating Realm: ${realmName}\n\n✓ Realm created\n✓ Admin user configured\n✓ Default clients added\n\nIn production, this would use Keycloak API.`);
+      }
+
+      function addUser() {
+        const username = prompt('Username:');
+        if (!username) return;
+
+        alert(`👤 Adding User: ${username}\n\n✓ User created\n✓ Temporary password sent\n✓ Email verification pending\n\nIn production, this would create Keycloak user.`);
+      }
+
+      function addNode() {
+        const nodeName = prompt('Node name:');
+        if (!nodeName) return;
+
+        alert(`🖥️ Adding Node: ${nodeName}\n\n✓ Node registered\n✓ Pre-auth key generated\n✓ Routes configured\n\nIn production, this would register Headscale node.`);
+      }
+    </script>
+
+    <!-- Stripe Subscription Integration -->
+    <script>
+      const stripe = Stripe('pk_live_51QTXnDGr1p9v7Jc5wf0uL9GN8fQbJgVQO2C5ylxH0Py5hTKp9aY3oiRrwzG5V8YxL4lCnZGnQf0QbQf5V0QV0QbQ00QbQf5V0Q'); // Your Stripe publishable key
+
+      function subscribe() {
+        // Create checkout session for $29/month subscription
+        fetch('https://blackroad-api.railway.app/create-checkout-session', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ priceId: 'price_blackroad_os_monthly_29' })
+        })
+        .then(res => res.json())
+        .then(session => {
+          return stripe.redirectToCheckout({ sessionId: session.id });
+        });
+      }
+    </script>
+
+    <!-- Clerk Authentication Check for /home -->
+    <script>
+      // Verify user is authenticated on /home
+      window.addEventListener('load', async () => {
+        try {
+          await window.Clerk.load();
+
+          if (!window.Clerk.user) {
+            // Not authenticated - redirect to landing page
+            console.log('[BlackRoad] Not authenticated - redirecting to home');
+            window.location.href = '/';
+          } else {
+            // User is authenticated - show OS
+            console.log('[BlackRoad] ✅ Authenticated:', window.Clerk.user.primaryEmailAddress?.emailAddress);
+            console.log('[BlackRoad] Access granted to BlackRoad OS');
+          }
+        } catch (error) {
+          console.error('[BlackRoad] Auth error:', error);
+          window.location.href = '/';
+        }
+      });
+    </script>
 
 </body>
 </html>
