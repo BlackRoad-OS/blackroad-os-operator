@@ -1,0 +1,9 @@
+{
+  "name": "edge-agent",
+  "version": "1.0.0",
+  "main": "agent.js",
+  "dependencies": {
+    "mqtt": "^5.3.4",
+    "express": "^4.18.2"
+  }
+}

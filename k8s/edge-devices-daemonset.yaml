@@ -1,0 +1,269 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: blackroad-edge
+  labels:
+    edge: "true"
+    quantum-mesh: "enabled"
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: edge-config
+  namespace: blackroad-edge
+data:
+  # Edge Device Configuration
+  ALICE_IP: "192.168.4.49"
+  ARIA_IP: "192.168.4.64"
+  OCTAVIA_IP: "192.168.4.74"
+  LUCIDIA_IP: "192.168.4.38"
+  SHELLFISH_IP: "174.138.44.45"
+
+  # Tailscale Mesh
+  TAILSCALE_NETWORK: "alexa-louise.taile5d081.ts.net"
+  TAILSCALE_IP: "100.95.120.67"
+
+  # Quantum Settings
+  SQTT_ENABLED: "true"
+  QUANTUM_ENTANGLEMENT: "active"
+  EDGE_SYNC_MODE: "real-time"
+
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: blackroad-edge-agent
+  namespace: blackroad-edge
+  labels:
+    app: edge-agent
+    quantum: sqtt-enabled
+spec:
+  selector:
+    matchLabels:
+      app: edge-agent
+  template:
+    metadata:
+      labels:
+        app: edge-agent
+        quantum: sqtt-enabled
+    spec:
+      hostNetwork: true
+      hostPID: true
+      tolerations:
+      - key: node-role.kubernetes.io/master
+        effect: NoSchedule
+      - key: node-role.kubernetes.io/control-plane
+        effect: NoSchedule
+      containers:
+      - name: edge-agent
+        image: blackroad/edge-agent:latest
+        securityContext:
+          privileged: true
+        env:
+        - name: NODE_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.nodeName
+        - name: NODE_IP
+          valueFrom:
+            fieldRef:
+              fieldPath: status.hostIP
+        envFrom:
+        - configMapRef:
+            name: edge-config
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "200m"
+          limits:
+            memory: "1Gi"
+            cpu: "1000m"
+        volumeMounts:
+        - name: varlog
+          mountPath: /var/log
+        - name: varlibdocker
+          mountPath: /var/lib/docker
+          readOnly: true
+        - name: etcmachine-id
+          mountPath: /etc/machine-id
+          readOnly: true
+      volumes:
+      - name: varlog
+        hostPath:
+          path: /var/log
+      - name: varlibdocker
+        hostPath:
+          path: /var/lib/docker
+      - name: etcmachine-id
+        hostPath:
+          path: /etc/machine-id
+          type: File
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: edge-mesh-service
+  namespace: blackroad-edge
+  labels:
+    app: edge-mesh
+spec:
+  type: NodePort
+  ports:
+  - port: 8080
+    targetPort: 8080
+    nodePort: 30080
+    protocol: TCP
+    name: http
+  - port: 9090
+    targetPort: 9090
+    nodePort: 30090
+    protocol: TCP
+    name: metrics
+  selector:
+    app: edge-agent
+
+---
+# Raspberry Pi Node Selectors
+apiVersion: v1
+kind: Node
+metadata:
+  name: alice
+  labels:
+    blackroad.io/device: raspberry-pi-5
+    blackroad.io/hostname: alice
+    blackroad.io/ip: 192.168.4.49
+    blackroad.io/role: edge-compute
+    blackroad.io/quantum: enabled
+
+---
+apiVersion: v1
+kind: Node
+metadata:
+  name: aria
+  labels:
+    blackroad.io/device: raspberry-pi-5
+    blackroad.io/hostname: aria
+    blackroad.io/ip: 192.168.4.64
+    blackroad.io/role: edge-compute
+    blackroad.io/quantum: enabled
+
+---
+apiVersion: v1
+kind: Node
+metadata:
+  name: octavia
+  labels:
+    blackroad.io/device: raspberry-pi
+    blackroad.io/hostname: octavia
+    blackroad.io/ip: 192.168.4.74
+    blackroad.io/role: edge-storage
+    blackroad.io/quantum: enabled
+
+---
+apiVersion: v1
+kind: Node
+metadata:
+  name: lucidia
+  labels:
+    blackroad.io/device: raspberry-pi
+    blackroad.io/hostname: lucidia
+    blackroad.io/ip: 192.168.4.38
+    blackroad.io/role: edge-gateway
+    blackroad.io/quantum: enabled
+    tailscale: enabled
+
+---
+# Edge Device Workload Distribution
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: edge-compute-alice
+  namespace: blackroad-edge
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      edge-device: alice
+  template:
+    metadata:
+      labels:
+        edge-device: alice
+    spec:
+      nodeSelector:
+        blackroad.io/hostname: alice
+      containers:
+      - name: compute-worker
+        image: blackroad/edge-worker:latest
+        resources:
+          requests:
+            memory: "2Gi"
+            cpu: "2000m"
+          limits:
+            memory: "7Gi"
+            cpu: "4000m"
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: edge-compute-aria
+  namespace: blackroad-edge
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      edge-device: aria
+  template:
+    metadata:
+      labels:
+        edge-device: aria
+    spec:
+      nodeSelector:
+        blackroad.io/hostname: aria
+      containers:
+      - name: compute-worker
+        image: blackroad/edge-worker:latest
+        resources:
+          requests:
+            memory: "2Gi"
+            cpu: "2000m"
+          limits:
+            memory: "7Gi"
+            cpu: "4000m"
+
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: edge-storage-octavia
+  namespace: blackroad-edge
+spec:
+  serviceName: edge-storage
+  replicas: 1
+  selector:
+    matchLabels:
+      edge-device: octavia
+  template:
+    metadata:
+      labels:
+        edge-device: octavia
+    spec:
+      nodeSelector:
+        blackroad.io/hostname: octavia
+      containers:
+      - name: storage-node
+        image: blackroad/edge-storage:latest
+        volumeMounts:
+        - name: data
+          mountPath: /data
+  volumeClaimTemplates:
+  - metadata:
+      name: data
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: 1Ti

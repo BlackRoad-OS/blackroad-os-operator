@@ -1,0 +1,422 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: blackroad-sqtt
+  labels:
+    quantum: "true"
+    technology: "sqtt-v1"
+    entanglement: "enabled"
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: sqtt-config
+  namespace: blackroad-sqtt
+data:
+  # SQTT Configuration
+  QUANTUM_MODE: "superposition"
+  ENTANGLEMENT_ENABLED: "true"
+  QUANTUM_TELEPORT: "active"
+  MEASUREMENT_PROTOCOL: "probabilistic"
+
+  # Quantum State Management
+  QUBIT_COUNT: "1024"
+  COHERENCE_TIME: "10s"
+  ERROR_CORRECTION: "surface-code"
+
+  # BlackRoad Quantum Network
+  QUANTUM_MESH: "enabled"
+  EDGE_ENTANGLEMENT: "alice,aria,octavia,lucidia"
+
+  # Multi-dimensional Routing
+  DIMENSION_COUNT: "11"
+  SPACETIME_ROUTING: "enabled"
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sqtt-quantum-processor
+  namespace: blackroad-sqtt
+  labels:
+    app: sqtt-processor
+    quantum: "true"
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: sqtt-processor
+  template:
+    metadata:
+      labels:
+        app: sqtt-processor
+        quantum: "true"
+      annotations:
+        quantum.blackroad.io/state: "superposition"
+    spec:
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+              - key: app
+                operator: In
+                values:
+                - sqtt-processor
+            topologyKey: kubernetes.io/hostname
+      containers:
+      - name: quantum-processor
+        image: blackroad/sqtt-quantum:latest
+        ports:
+        - containerPort: 8080
+          name: http
+        - containerPort: 9090
+          name: quantum-api
+        - containerPort: 1883
+          name: mqtt
+        env:
+        - name: QUANTUM_STATE
+          value: "superposition"
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: POD_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: POD_IP
+          valueFrom:
+            fieldRef:
+              fieldPath: status.podIP
+        envFrom:
+        - configMapRef:
+            name: sqtt-config
+        resources:
+          requests:
+            memory: "2Gi"
+            cpu: "2000m"
+          limits:
+            memory: "8Gi"
+            cpu: "4000m"
+        volumeMounts:
+        - name: quantum-state
+          mountPath: /quantum/state
+      volumes:
+      - name: quantum-state
+        emptyDir: {}
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: sqtt-quantum-service
+  namespace: blackroad-sqtt
+  labels:
+    quantum: "true"
+spec:
+  type: ClusterIP
+  ports:
+  - port: 8080
+    targetPort: 8080
+    name: http
+  - port: 9090
+    targetPort: 9090
+    name: quantum-api
+  - port: 1883
+    targetPort: 1883
+    name: mqtt
+  selector:
+    app: sqtt-processor
+
+---
+# Quantum Entanglement StatefulSet
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: quantum-entanglement
+  namespace: blackroad-sqtt
+spec:
+  serviceName: quantum-entanglement
+  replicas: 4  # One for each edge device
+  selector:
+    matchLabels:
+      app: entanglement-node
+  template:
+    metadata:
+      labels:
+        app: entanglement-node
+        quantum: "entangled"
+    spec:
+      containers:
+      - name: entanglement
+        image: blackroad/quantum-entanglement:latest
+        ports:
+        - containerPort: 9090
+          name: quantum
+        env:
+        - name: ENTANGLEMENT_PAIR
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: MQTT_BROKER
+          value: "mosquitto-mqtt.blackroad-mqtt.svc.cluster.local:1883"
+        envFrom:
+        - configMapRef:
+            name: sqtt-config
+        resources:
+          requests:
+            memory: "1Gi"
+            cpu: "1000m"
+          limits:
+            memory: "4Gi"
+            cpu: "2000m"
+        volumeMounts:
+        - name: quantum-state
+          mountPath: /quantum/entanglement
+  volumeClaimTemplates:
+  - metadata:
+      name: quantum-state
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: 10Gi
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: quantum-entanglement
+  namespace: blackroad-sqtt
+spec:
+  clusterIP: None
+  ports:
+  - port: 9090
+    name: quantum
+  selector:
+    app: entanglement-node
+
+---
+# Quantum Teleportation Service
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: quantum-teleport
+  namespace: blackroad-sqtt
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: quantum-teleport
+  template:
+    metadata:
+      labels:
+        app: quantum-teleport
+    spec:
+      containers:
+      - name: teleport
+        image: blackroad/quantum-teleport:latest
+        ports:
+        - containerPort: 9091
+        env:
+        - name: TELEPORT_PROTOCOL
+          value: "bell-state"
+        - name: SOURCE_DEVICES
+          value: "alice,aria,octavia,lucidia"
+        envFrom:
+        - configMapRef:
+            name: sqtt-config
+        resources:
+          requests:
+            memory: "1Gi"
+            cpu: "1000m"
+          limits:
+            memory: "2Gi"
+            cpu: "2000m"
+
+---
+# Quantum State Observer
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: quantum-state-observer
+  namespace: blackroad-sqtt
+spec:
+  schedule: "*/1 * * * *"  # Every minute
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: observer
+            image: blackroad/quantum-observer:latest
+            env:
+            - name: OBSERVATION_MODE
+              value: "probabilistic"
+            - name: COLLAPSE_THRESHOLD
+              value: "0.95"
+            envFrom:
+            - configMapRef:
+                name: sqtt-config
+          restartPolicy: OnFailure
+
+---
+# Quantum Metrics and Monitoring
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: quantum-metrics
+  namespace: blackroad-sqtt
+data:
+  metrics.yaml: |
+    # SQTT Quantum Metrics
+
+    # Entanglement Metrics
+    quantum_entanglement_pairs: "Number of entangled pairs"
+    quantum_entanglement_fidelity: "Entanglement fidelity (0-1)"
+    quantum_entanglement_distance: "Distance between entangled nodes"
+
+    # Superposition Metrics
+    quantum_superposition_states: "Number of superposition states"
+    quantum_coherence_time: "Quantum coherence time (seconds)"
+    quantum_decoherence_rate: "Decoherence rate (1/seconds)"
+
+    # Teleportation Metrics
+    quantum_teleport_success_rate: "Teleportation success rate (%)"
+    quantum_teleport_latency: "Teleportation latency (ms)"
+    quantum_teleport_throughput: "Teleportations per second"
+
+    # Error Correction
+    quantum_error_rate: "Quantum error rate (%)"
+    quantum_correction_success: "Error correction success rate (%)"
+
+    # Network Metrics
+    quantum_mesh_nodes: "Active quantum mesh nodes"
+    quantum_mesh_latency: "Quantum mesh latency (ms)"
+    quantum_mesh_bandwidth: "Quantum bandwidth (qubits/s)"
+
+---
+# SQTT API Gateway
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sqtt-api-gateway
+  namespace: blackroad-sqtt
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: sqtt-gateway
+  template:
+    metadata:
+      labels:
+        app: sqtt-gateway
+    spec:
+      containers:
+      - name: gateway
+        image: blackroad/sqtt-gateway:latest
+        ports:
+        - containerPort: 443
+          name: https
+        - containerPort: 8080
+          name: http
+        env:
+        - name: GATEWAY_MODE
+          value: "quantum-enabled"
+        - name: TLS_ENABLED
+          value: "true"
+        - name: QUANTUM_BACKENDS
+          value: "sqtt-quantum-service.blackroad-sqtt.svc.cluster.local:9090"
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "500m"
+          limits:
+            memory: "1Gi"
+            cpu: "1000m"
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: sqtt-api-gateway
+  namespace: blackroad-sqtt
+spec:
+  type: LoadBalancer
+  ports:
+  - port: 443
+    targetPort: 443
+    name: https
+  - port: 80
+    targetPort: 8080
+    name: http
+  selector:
+    app: sqtt-gateway
+
+---
+# Quantum-Classical Bridge
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: quantum-classical-bridge
+  namespace: blackroad-sqtt
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: qc-bridge
+  template:
+    metadata:
+      labels:
+        app: qc-bridge
+    spec:
+      containers:
+      - name: bridge
+        image: blackroad/quantum-classical-bridge:latest
+        ports:
+        - containerPort: 8080
+        env:
+        - name: CLASSICAL_ENDPOINT
+          value: "blackroad-os-service.blackroad-os.svc.cluster.local:80"
+        - name: QUANTUM_ENDPOINT
+          value: "sqtt-quantum-service.blackroad-sqtt.svc.cluster.local:9090"
+        - name: BRIDGE_MODE
+          value: "bidirectional"
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "500m"
+          limits:
+            memory: "2Gi"
+            cpu: "2000m"
+
+---
+# Network Policy for Quantum Isolation
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: sqtt-isolation
+  namespace: blackroad-sqtt
+spec:
+  podSelector:
+    matchLabels:
+      quantum: "true"
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          quantum-access: "allowed"
+    - podSelector:
+        matchLabels:
+          quantum-access: "allowed"
+  egress:
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          quantum-access: "allowed"

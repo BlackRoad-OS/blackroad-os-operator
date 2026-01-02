@@ -1,0 +1,307 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: blackroad-mqtt
+  labels:
+    iot: "true"
+    quantum-mesh: "enabled"
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mosquitto-config
+  namespace: blackroad-mqtt
+data:
+  mosquitto.conf: |
+    # BlackRoad MQTT Broker Configuration
+    listener 1883
+    listener 8883
+    protocol mqtt
+
+    listener 9001
+    protocol websockets
+
+    # Authentication
+    allow_anonymous false
+    password_file /mosquitto/config/passwd
+
+    # Persistence
+    persistence true
+    persistence_location /mosquitto/data/
+
+    # Logging
+    log_dest stdout
+    log_type all
+    log_timestamp true
+    log_timestamp_format %Y-%m-%dT%H:%M:%S
+
+    # Connection limits
+    max_connections -1
+    max_inflight_messages 100
+    max_queued_messages 1000
+
+    # Message size
+    message_size_limit 268435456
+
+    # Keepalive
+    max_keepalive 3600
+
+    # Bridge to edge devices
+    connection alice
+    address 192.168.4.49:1883
+    topic blackroad/alice/# both 0
+
+    connection aria
+    address 192.168.4.64:1883
+    topic blackroad/aria/# both 0
+
+    connection octavia
+    address 192.168.4.74:1883
+    topic blackroad/octavia/# both 0
+
+    connection lucidia
+    address 192.168.4.38:1883
+    topic blackroad/lucidia/# both 0
+
+    # SQTT Quantum Topics
+    topic blackroad/sqtt/quantum/# both 2
+    topic blackroad/sqtt/entanglement/# both 2
+    topic blackroad/sqtt/superposition/# both 2
+
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: mosquitto-broker
+  namespace: blackroad-mqtt
+  labels:
+    app: mosquitto
+    tier: messaging
+spec:
+  serviceName: mosquitto
+  replicas: 3
+  selector:
+    matchLabels:
+      app: mosquitto
+  template:
+    metadata:
+      labels:
+        app: mosquitto
+        tier: messaging
+    spec:
+      containers:
+      - name: mosquitto
+        image: eclipse-mosquitto:2.0
+        ports:
+        - containerPort: 1883
+          name: mqtt
+          protocol: TCP
+        - containerPort: 8883
+          name: mqtt-tls
+          protocol: TCP
+        - containerPort: 9001
+          name: websocket
+          protocol: TCP
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "500m"
+          limits:
+            memory: "2Gi"
+            cpu: "2000m"
+        volumeMounts:
+        - name: mosquitto-config
+          mountPath: /mosquitto/config/mosquitto.conf
+          subPath: mosquitto.conf
+        - name: mosquitto-data
+          mountPath: /mosquitto/data
+        - name: mosquitto-log
+          mountPath: /mosquitto/log
+        livenessProbe:
+          tcpSocket:
+            port: 1883
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          tcpSocket:
+            port: 1883
+          initialDelaySeconds: 5
+          periodSeconds: 5
+      volumes:
+      - name: mosquitto-config
+        configMap:
+          name: mosquitto-config
+  volumeClaimTemplates:
+  - metadata:
+      name: mosquitto-data
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: 10Gi
+  - metadata:
+      name: mosquitto-log
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: 5Gi
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mosquitto-mqtt
+  namespace: blackroad-mqtt
+  labels:
+    app: mosquitto
+spec:
+  type: LoadBalancer
+  ports:
+  - port: 1883
+    targetPort: 1883
+    protocol: TCP
+    name: mqtt
+  - port: 8883
+    targetPort: 8883
+    protocol: TCP
+    name: mqtt-tls
+  - port: 9001
+    targetPort: 9001
+    protocol: TCP
+    name: websocket
+  selector:
+    app: mosquitto
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mosquitto-headless
+  namespace: blackroad-mqtt
+spec:
+  clusterIP: None
+  ports:
+  - port: 1883
+    name: mqtt
+  selector:
+    app: mosquitto
+
+---
+# MQTT Client for Edge Devices
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mqtt-edge-client
+  namespace: blackroad-mqtt
+spec:
+  replicas: 4
+  selector:
+    matchLabels:
+      app: mqtt-client
+      role: edge-bridge
+  template:
+    metadata:
+      labels:
+        app: mqtt-client
+        role: edge-bridge
+    spec:
+      containers:
+      - name: mqtt-client
+        image: blackroad/mqtt-edge-client:latest
+        env:
+        - name: MQTT_BROKER
+          value: "mosquitto-mqtt.blackroad-mqtt.svc.cluster.local"
+        - name: MQTT_PORT
+          value: "1883"
+        - name: EDGE_DEVICES
+          value: "alice,aria,octavia,lucidia"
+        - name: SQTT_ENABLED
+          value: "true"
+        - name: QUANTUM_TOPICS
+          value: "blackroad/sqtt/quantum/#,blackroad/sqtt/entanglement/#"
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "200m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+
+---
+# MQTT Topic Schema ConfigMap
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mqtt-topics
+  namespace: blackroad-mqtt
+data:
+  topics.yaml: |
+    # BlackRoad MQTT Topic Schema
+
+    # Edge Device Status
+    blackroad/{device}/status: "Device online/offline status"
+    blackroad/{device}/metrics: "Device metrics (CPU, RAM, temp)"
+    blackroad/{device}/logs: "Device log streams"
+
+    # OS Deployment
+    blackroad/os/deploy: "OS deployment commands"
+    blackroad/os/update: "OS update notifications"
+    blackroad/os/health: "OS health checks"
+
+    # User Sessions
+    blackroad/users/{user_id}/session: "User session events"
+    blackroad/users/{user_id}/actions: "User actions in OS"
+
+    # SQTT Quantum Topics
+    blackroad/sqtt/quantum/state: "Quantum state updates"
+    blackroad/sqtt/quantum/entanglement: "Entanglement events"
+    blackroad/sqtt/quantum/measurement: "Quantum measurements"
+    blackroad/sqtt/quantum/teleport: "Quantum teleportation"
+
+    # Multicloud Sync
+    blackroad/cloud/cloudflare/sync: "Cloudflare edge sync"
+    blackroad/cloud/digitalocean/sync: "DigitalOcean sync"
+    blackroad/cloud/github/sync: "GitHub sync events"
+
+    # Real-time Features
+    blackroad/terminal/commands: "Terminal command broadcasts"
+    blackroad/browser/navigation: "Browser navigation sync"
+    blackroad/files/upload: "File upload events"
+    blackroad/notifications: "System-wide notifications"
+
+    # Analytics
+    blackroad/analytics/events: "User analytics events"
+    blackroad/analytics/performance: "Performance metrics"
+
+---
+# MQTT Monitoring
+apiVersion: v1
+kind: Service
+metadata:
+  name: mosquitto-metrics
+  namespace: blackroad-mqtt
+  labels:
+    app: mosquitto
+spec:
+  ports:
+  - port: 9090
+    name: metrics
+  selector:
+    app: mosquitto
+
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: mosquitto-monitor
+  namespace: blackroad-mqtt
+spec:
+  selector:
+    matchLabels:
+      app: mosquitto
+  endpoints:
+  - port: metrics
+    interval: 30s
