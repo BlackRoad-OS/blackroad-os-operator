@@ -119,15 +119,182 @@ lucidia.earth         lucidia.studio        lucidiaqi.com
 roadchain.io          roadcoin.io
 ```
 
-## GitHub Organization
-- **Enterprise:** blackroad-os
-- **Organizations (15):**
-  - BlackRoad-OS (main)
-  - BlackRoad-AI, BlackRoad-Labs, BlackRoad-Security
-  - BlackRoad-Cloud, BlackRoad-Hardware, BlackRoad-Interactive
-  - BlackRoad-Media, BlackRoad-Studio, BlackRoad-Archive
-  - BlackRoad-Education, BlackRoad-Foundation, BlackRoad-Gov
-  - BlackRoad-Ventures, Blackbox-Enterprises
+## GitHub Organizations (15)
+| Organization | Focus | Repos |
+|--------------|-------|-------|
+| **BlackRoad-OS** | Core platform | 50+ (operator, salesforce-agent, cluster, road* libs) |
+| **BlackRoad-AI** | AI/ML models | Agent models, inference |
+| **BlackRoad-Labs** | R&D, experiments | Quantum, edge AI |
+| **BlackRoad-Security** | Security tools | Auth, encryption |
+| **BlackRoad-Cloud** | Cloud infra | K8s, deployments |
+| **BlackRoad-Hardware** | IoT, embedded | ESP32, Pi configs |
+| **BlackRoad-Interactive** | Games, 3D | Godot, Three.js |
+| **BlackRoad-Media** | Content, streaming | Mastodon, Ghost |
+| **BlackRoad-Studio** | Design tools | Penpot, Krita |
+| **BlackRoad-Archive** | Data preservation | IPFS, ArchiveBox |
+| **BlackRoad-Education** | Learning | Moodle, Outline |
+| **BlackRoad-Foundation** | CRM, ERP | EspoCRM, Odoo |
+| **BlackRoad-Gov** | Governance | Snapshot, voting |
+| **BlackRoad-Ventures** | Business tools | BTCPay, Plausible |
+| **Blackbox-Enterprises** | Legacy/parent | Original org |
+
+---
+
+## Cloudflare Infrastructure
+
+### Account
+- **Account ID:** 848cf0b18d51e0170e0d1537aec3505a
+- **Tunnel ID:** 52915859-da18-4aa6-add5-7bd9fcac2e0b
+
+### Pages Projects (15+)
+| Project | Domain | Status |
+|---------|--------|--------|
+| blackroad-os-web | blackroadqi.com, blackroadquantum.* | ✓ Active |
+| blackroad-os-brand | brand.blackroad.io | ✓ Active |
+| blackroad-os-demo | demo.blackroad.io | ✓ Active |
+| blackroad-os-docs | docs subdomain | ✓ Active |
+| blackroad-prism-console | Console UI | ✓ Active |
+| blackroad-dashboard | Dashboard | ✓ Active |
+| lucidia-earth | lucidia.earth | ✓ Active |
+| console-blackroad-io | Console | ✓ Active |
+| analytics-blackroad-io | Analytics | ✓ Active |
+| research-lab-blackroad-io | Research | ✓ Active |
+| engineering-blackroad-io | Engineering | ✓ Active |
+| blackroad-agents-spawner | Agent spawner | ✓ Active |
+
+### KV Namespaces (24)
+| Namespace | Purpose |
+|-----------|---------|
+| AGENTS_KV | Agent registry |
+| API_KEYS | API key storage |
+| API_KEY_METADATA | Key metadata |
+| APPLICATIONS | App registry |
+| BILLING | Billing data |
+| blackroad-api-CLAIMS | Auth sessions |
+| blackroad-api-DELEGATIONS | Delegations |
+| blackroad-api-INTENTS | Intent chains |
+| blackroad-api-ORGS | Org data |
+| blackroad-api-POLICIES | Policy store |
+| blackroad-claude-memory | Claude memory |
+| blackroad-router-AGENCY | Agency routing |
+| blackroad-router-AGENTS | Agent routing |
+| blackroad-router-LEDGER | Ledger events |
+| CACHE | General cache |
+| HEALTH_KV | Health checks |
+| IDENTITIES | Identity store |
+| JOBS | Job queue |
+| RATE_LIMIT / RATE_LIMITS | Rate limiting |
+| SUBSCRIPTIONS_KV | Subscriptions |
+| TELEMETRY_KV | Telemetry |
+| USERS_KV | User data |
+| WORLD_KV | World state |
+
+### D1 Databases (9)
+| Database | Size | Purpose |
+|----------|------|---------|
+| blackroad-continuity | 45KB | Continuity state |
+| lucidia-world | 115KB | Game world |
+| blackroad-saas | 627KB | SaaS platform |
+| apollo-agent-registry | 9.4MB | Agent registry |
+| blackroad_revenue | 344KB | Revenue tracking |
+| blackroad-d1-database | 16KB | General |
+| openapi-template-db | 12KB | OpenAPI templates |
+| blackroad-logs | 352KB | Log storage |
+| blackroad-os-main | 168KB | Main database |
+
+### Workers (10+)
+- api-gateway, auth, router, cece
+- status, identity, cipher, sovereignty, intercept
+- billing, health
+
+---
+
+## Railway Projects (12+)
+| Project | Service | Role |
+|---------|---------|------|
+| blackroad-os-core | Core platform | Main backend |
+| blackroad-os-api | API gateway | REST/GraphQL |
+| blackroad-os-docs | Documentation | Docs site |
+| blackroad-os-prism-console | Console | Admin UI |
+| blackroad-os-web | Web app | Frontend |
+| blackroad-os-operator | Operator | Orchestration |
+| blackroad-login | Auth | Login service |
+| lucidia-platform | Lucidia | Game platform |
+| postgres-db | PostgreSQL 15 | Primary DB |
+
+---
+
+## Databases
+
+### PostgreSQL (Railway)
+- **Host:** trolley.proxy.rlwy.net:47996
+- **Database:** railway
+- **Features:** read_replicas, pgvector
+
+### Redis
+- **Providers:** Upstash, Redis Cloud
+- **Use:** Cache, pub/sub, job queues (BullMQ)
+
+### Pinecone
+- **Type:** Vector DB
+- **Capacity:** 10M+ vectors
+- **Use:** Agent memory, embeddings
+
+### SQLite (Edge)
+- **Turso/D1:** Edge-local databases
+- **Task Queue:** Local SQLite on Pis
+
+---
+
+## AI Services
+
+| Service | Models | Use |
+|---------|--------|-----|
+| **Anthropic** | claude-opus-4-5, claude-sonnet-4-5 | Primary LLM |
+| **OpenAI** | gpt-4-turbo, gpt-4o | Secondary LLM |
+| **HuggingFace** | Custom models | Model hub |
+| **Ollama** | phi-3, llama, mistral | Local inference |
+| **Replicate** | Various | Serverless inference |
+| **Hailo-8** | Edge AI (26 TOPS) | On-device inference |
+
+---
+
+## Payments (Stripe)
+- **Account:** acct_1SUDM8ChUUSEbzyh
+- **Products:**
+  - Basic: $900/mo
+  - Pro: $2,900/mo
+  - Enterprise: $9,900/mo
+- **Features:** Connect, subscriptions, billing, webhooks
+
+---
+
+## Authentication
+| Provider | Use |
+|----------|-----|
+| Clerk | OAuth (consumer apps) |
+| Auth0 | Enterprise SSO |
+| Cloudflare Access | Zero-trust access |
+| Salesforce OAuth | CRM integration |
+
+---
+
+## Observability
+| Service | Use |
+|---------|-----|
+| Datadog | APM, logs, metrics |
+| Sentry | Error tracking |
+| Grafana | Dashboards |
+| PostHog | Product analytics |
+
+---
+
+## Communication
+| Service | Use |
+|---------|-----|
+| Slack | Team (Business+) |
+| Discord | Community |
+| Email | blackroad.systems@gmail.com |
 
 ## SSH Access
 ```bash
