@@ -311,14 +311,92 @@ ssh shellfish  # 174.138.44.45
 
 ## Active Services
 
-### lucidia (192.168.4.38) - ElectroCookie
-- `blackroad-salesforce-agent.service` - Salesforce Daemon (RUNNING)
-- Docker containers (nginx, etc.)
+### lucidia (192.168.4.38) - ElectroCookie - POWERHOUSE
+**Systemd Services:**
+- `blackroad-salesforce-agent.service` - Salesforce Daemon
+- `blackroad-api.service` - Unified API Server
+- `lucidia.service` - Lucidia API (FastAPI/Uvicorn)
+- `cloudflared.service` - Cloudflare Tunnel
+- `influxdb.service` - Time-series DB
+- `java-hello.service` - Java Server
+- `docker.service` - Container runtime
 
-### octavia (192.168.4.74) - Pironman 5-MAX
+**Docker Containers (15+):**
+| Container | Image | Purpose |
+|-----------|-------|---------|
+| road-pdns | powerdns/pdns-auth-48 | DNS Server |
+| road-pdns-admin | powerdns-admin | DNS Admin |
+| road-dns-db | postgres:15-alpine | DNS Database |
+| roadauth | node:18-alpine | Auth Service |
+| roadapi | node:18-alpine | API Service |
+| blackroad-edge-agent | blackroad/edge-agent:v2 | Edge Agent |
+| blackroad.systems | blackroad.systems:latest | Systems Site |
+| blackroadai.com | blackroadai.com:latest | AI Site |
+| blackroad-auth-gateway | auth-gateway:latest | Auth Gateway |
+| blackroad-metaverse | metaverse:latest | Metaverse |
+| blackroad-os | blackroad-os-ultimate:latest | OS Core |
+| blackroad-os-carpool | carpool:latest | Carpool |
+| eps | pi-eps | EPS Service |
+| bitcoind | bitcoin-core:latest | Bitcoin Node |
+| pi-my-agent-1 | pi-my-agent | AI Agent |
+
+**Ports:** 22, 53, 80, 5000, 8889, 9053, 9090, 34001, 50001
+
+---
+
+### alice (192.168.4.49) - Pi 400 - K8S MASTER
+**Systemd Services:**
+- `headscale.service` - VPN Control Server (Tailscale alternative!)
+- `k3s.service` - Lightweight Kubernetes!
+- `nginx.service` - Reverse Proxy
+- `cloudflared.service` - Cloudflare Tunnel
+- `docker.service` - Container runtime
+- `epmd.service` - Erlang Port Mapper
+
+**Docker Containers (7):**
+| Container | Image | Purpose |
+|-----------|-------|---------|
+| blackroad-minio | node:18-alpine | Object Storage |
+| blackroad-localai | node:18-alpine | Local AI |
+| roadlog-monitoring | node:18-alpine | Log Monitoring |
+| blackroad-ai-platform | node:18-alpine | AI Platform |
+| roadbilling | node:18-alpine | Billing |
+| roadauth | node:18-alpine | Auth |
+| roadapi | node:18-alpine | API |
+
+**Ports:** 22, 3000-3003, 8888, 9000, 9002, 9090
+
+---
+
+### octavia (192.168.4.74) - Pironman 5-MAX - OFFLINE
 - Hailo-8 AI Accelerator (26 TOPS) - Verified working
 - Firmware: 4.23.0, Serial: HLLWM2B233704606
-- Ready for AI inference workloads
+- **Status: Currently OFFLINE**
+
+### aria (192.168.4.64) - ElectroCookie - OFFLINE
+- **Status: Currently OFFLINE**
+
+---
+
+### shellfish (174.138.44.45) - DigitalOcean Droplet
+**Systemd Services:**
+- `blackroad-api.service` - Console Backend API
+- `ollama.service` - Local LLM inference
+- `docker.service` - Container runtime
+- `firewalld.service` - Firewall
+- `droplet-agent.service` - DO Agent
+
+---
+
+### cecilia (Mac) - Dev Machine
+**Brew Services:**
+- `ollama` - Local LLM inference (RUNNING)
+- `tailscale` - Mesh VPN (ERROR - needs fix)
+
+**Local Assets:**
+- 4,538 blackroad-* directories/files
+- Docker compose configs for Pi deployments
+- All SSH keys and configs
 
 ## Cost Summary
 | Category | Monthly | Annual |
