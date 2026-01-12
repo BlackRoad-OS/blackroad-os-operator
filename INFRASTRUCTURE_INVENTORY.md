@@ -368,13 +368,49 @@ ssh shellfish  # 174.138.44.45
 
 ---
 
-### octavia (192.168.4.74) - Pironman 5-MAX - OFFLINE
-- Hailo-8 AI Accelerator (26 TOPS) - Verified working
-- Firmware: 4.23.0, Serial: HLLWM2B233704606
-- **Status: Currently OFFLINE**
+### octavia (192.168.4.74) - Pironman 5-MAX - AI + 3D PRINTING
+**Systemd Services:**
+- `hailort.service` - Hailo AI Runtime (26 TOPS!)
+- `pironman5.service` - Pironman case control
+- `octoprint.service` - 3D Printer control!
+- `ollama.service` - Local LLM inference
+- `influxdb.service` - Time-series DB
+- `docker.service` - Container runtime
+- `nfs-blkmap.service` - NFS storage
 
-### aria (192.168.4.64) - ElectroCookie - OFFLINE
-- **Status: Currently OFFLINE**
+**Docker Containers (3):**
+| Container | Status |
+|-----------|--------|
+| blackroad-nats | NATS messaging |
+| blackroad-ollama | LLM inference |
+| blackroad-edge-agent | Edge agent |
+
+**Hailo-8:** Firmware 4.23.0, Serial HLLWM2B233704606
+
+---
+
+### aria (192.168.4.64) - ElectroCookie - AGENT HUB
+**Systemd Services:**
+- `blackroad-agent.service` - Edge Device Runtime
+- `blackroad-agent-cf.service` - Cloudflare Workers Agent
+- `headscale.service` - VPN coordination server
+- `cloudflared.service` - Cloudflare Tunnel
+- `ollama.service` - Local LLM inference
+- `influxdb.service` - Time-series DB
+- `docker.service` - Container runtime
+
+**Docker Containers (9):**
+| Container | Status |
+|-----------|--------|
+| final-blackroad-os-prism-console | Up 22h |
+| final-blackroad-os-infra | Up 22h |
+| final-blackroad-os-demo | Up 22h |
+| final-blackroad-os-core | Up 22h |
+| final-blackroad-os-api | Up 22h |
+| final-blackroad-os-agents-work | Up 22h |
+| final-blackroad-docs | Up 22h |
+| final-blackroad-deployment-docs | Up 22h |
+| final-app-blackroad-io-check | Up 22h |
 
 ---
 
