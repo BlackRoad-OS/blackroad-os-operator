@@ -1,308 +1,196 @@
-# BlackRoad OS - Infrastructure Inventory
+# BlackRoad Infrastructure Inventory
 
-**Generated:** 2025-12-02
-**Owner:** Alexa Amundson
-**Verification:** 256-step chain (see below)
+## Compute Nodes
 
----
+### Raspberry Pi 5 (4x)
+| Name | IP | Case | AI | Role |
+|------|-----|------|-----|------|
+| **lucidia** | 192.168.4.38 | ElectroCookie | - | Salesforce Agent Daemon |
+| **octavia** | 192.168.4.74 | Pironman 5-MAX | Hailo-8 (26 TOPS) | AI Primary |
+| **aria** | 192.168.4.64 | ElectroCookie | - | Compute |
+| **anastasia** | TBD | Pironman 5-MAX (pending) | Hailo-8 (pending) | AI Secondary |
 
-## Quick Access Table
+### Other Pis
+| Name | Model | IP | Role |
+|------|-------|-----|------|
+| **alice** | Pi 400 (Keyboard) | 192.168.4.49 | Dev Station |
+| **olympia** | Pi 4B (2GB) | TBD | Remote Server (not connected) |
+| **ophelia** | Pi Zero 2 WH | TBD | IoT Gateway |
 
-| Name | Type | IP/Host | Status | Last Verified |
-|------|------|---------|--------|---------------|
-| DigitalOcean Droplet | VPS | 159.65.43.12 | ⚠️ Offline | 2025-12-02 |
-| Raspberry Pi | Edge | 192.168.4.49 | ⚠️ Offline | 2025-12-02 |
-| Lucidia Local | Edge | 192.168.4.64 | ⚠️ Offline | 2025-12-02 |
-| iPhone Koder | Mobile | 192.168.4.68:8080 | ⏳ Not tested | - |
-| GitHub | Cloud | github.com | ✅ Online | 2025-12-02 |
-| Cloudflare | Cloud | cloudflare.com | ✅ Online | 2025-12-02 |
-| Railway | Cloud | railway.app | ✅ Online | 2025-12-02 |
+### Cloud/Desktop
+| Name | Type | IP | Role |
+|------|------|-----|------|
+| **shellfish** | DigitalOcean | 174.138.44.45 | Edge Router |
+| **cecilia** | M1 Mac | 100.95.120.67 | Dev Machine |
+| **arcadia** | iPhone | - | Mobile |
 
----
+## AI Acceleration
+| Device | TOPS | Location | Status |
+|--------|------|----------|--------|
+| Hailo-8 | 26 | octavia (Pironman 5-MAX) | ✓ Verified (HLLWM2B233704606) |
+| Hailo-8 | 26 | anastasia (pending) | Waiting for Pironman case |
+| **Total** | **26 TOPS** (52 when complete) | |
 
-## 1. Cloud Servers
-
-### DigitalOcean Droplet
-```yaml
-name: codex-infinity
-ip: 159.65.43.12
-user: root
-ssh_key: ~/.ssh/id_ed25519
-region: NYC1 (assumed)
-domains:
-  - blackroad.io (historical)
-  - blackroadinc.us (historical)
-fingerprints:
-  ed25519: AAAAC3NzaC1lZDI1NTE5AAAAIM/N1UdHNhVhDpk6Ba7K0L8lqPY3oc//VRGfpEkY+1EK
-  rsa: SHA256:b3uikwBkwnxpMTZjWBFaNgscsWXHRRG3Snj9QYke+ok=
-  ecdsa: AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBNs/04CvT5LD1xng1274XXhUjYVTa9iSrnEi8AU4gY8kOZu6W3KYb2aPzLHf5RO5+xSS+AtbaOS4qeB0CdRzqzU=
-status: offline
+## Tailscale Mesh
+```
+cecilia.taile5d081.ts.net
+├── 100.95.120.67 (cecilia - Mac)
+├── 100.66.235.47 (lucidia)
+└── fd7a:115c:a1e0::9701:7845 (IPv6)
 ```
 
-### Railway Projects (12+)
-```yaml
-account: amundsonalexa@gmail.com
-projects:
-  - blackroad-os-core (602cb63b-6c98-4032-9362-64b7a90f7d94)
-  - BlackRoad OS (03ce1e43-5086-4255-b2bc-0146c8916f4c)
-  - blackroad-os-api (f9116368-9135-418c-9050-39496aa9079a)
-  - blackroad-os-docs (a4efb8cd-0d67-4b19-a7f3-b6dbcedf2079)
-  - blackroad-os-prism-console (70ce678e-1e2f-4734-9024-6fb32ee5c8eb)
-  - blackroad-os-web (ced8da45-fcdd-4a86-8f3e-093f5a0723ff)
-  - blackroad-os-operator (ee43ab16-44c3-4be6-b6cf-e5faf380f709)
-  - lucidia-platform (5c99157a-ff22-496c-b295-55e98145540f)
-status: authenticated
+## Network Topology
+```
+┌─────────────────────────────────────────────────────────────┐
+│                      INTERNET                               │
+└─────────────────────────────────────────────────────────────┘
+                           │
+              ┌────────────┴────────────┐
+              │                         │
+              ▼                         ▼
+┌─────────────────────┐    ┌─────────────────────┐
+│  Cloudflare (DNS)   │    │  Tailscale Mesh     │
+│  jade.ns/chad.ns    │    │  Private Network    │
+└─────────────────────┘    └─────────────────────┘
+              │                         │
+              ▼                         │
+┌─────────────────────┐                 │
+│  shellfish (DO)     │◄────────────────┘
+│  174.138.44.45      │
+└─────────────────────┘
+              │
+              ▼ (Tailscale)
+┌─────────────────────────────────────────────────────────────┐
+│                   LOCAL NETWORK (192.168.4.x)               │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐        │
+│  │  lucidia    │  │   octavia   │  │    aria     │        │
+│  │  .38        │  │    .74      │  │    .64      │        │
+│  │ ElectroCookie│  │  Pironman   │  │ ElectroCookie│        │
+│  │  ──────────  │  │  Hailo-8   │  │             │        │
+│  │  Salesforce │  │  26 TOPS    │  │   Compute   │        │
+│  │  Daemon     │  │  AI Primary │  │             │        │
+│  └─────────────┘  └─────────────┘  └─────────────┘        │
+│                                                             │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐        │
+│  │   alice     │  │  olympia    │  │  anastasia  │        │
+│  │    .49      │  │   (TBD)     │  │   (TBD)     │        │
+│  │   Pi 400    │  │   Pi 4B     │  │  Pironman   │        │
+│  │ Dev Station │  │  (pending)  │  │  (pending)  │        │
+│  └─────────────┘  └─────────────┘  └─────────────┘        │
+│                                                             │
+│  TP-Link TL-SG105 (5-Port Gigabit Switch)                  │
+└─────────────────────────────────────────────────────────────┘
+              │
+              ▼
+┌─────────────────────┐
+│  cecilia (Mac)      │
+│  100.95.120.67      │
+│  Dev/Control        │
+└─────────────────────┘
 ```
 
----
+## IoT/Embedded Devices
+| Device | Interface | Purpose |
+|--------|-----------|---------|
+| 3x ESP32 2.8" Touchscreen | WiFi/BT | UI Nodes |
+| Heltec WiFi LoRa 32 | LoRa/WiFi | Meshtastic |
+| RYLR998 LoRa Module | UART | Long-range |
+| INMP441 Microphones | I2S | Audio Input |
+| MAX98357 Amplifiers | I2S | Audio Output |
+| Pi Camera Module V2 | CSI | Vision |
 
-## 2. Edge Devices
+## Storage
+| Device | Capacity | Location |
+|--------|----------|----------|
+| Crucial P310 NVMe | 1TB | Pironman (lucidia) |
+| Crucial P310 NVMe | 500GB | Pironman (octavia) |
+| Samsung EVO microSD | 256GB | Each Pi |
 
-### Raspberry Pi (Primary)
-```yaml
-name: alice-pi / raspberrypi
-ip: 192.168.4.49
-users:
-  - alice (primary)
-  - lucidia (AI user)
-ssh_key: ~/.ssh/id_ed25519
-fingerprint: AAAAC3NzaC1lZDI1NTE5AAAAIOahIdbdm1bo/0o2XsqdkUujgpIMjvIHvUJ+jBmtRBXN
-aliases:
-  - alice-pi
-  - raspberrypi
-  - lucidia-pi
-  - pi
-local_dns: raspberrypi.local
-status: offline (not on network)
+## Domains (19)
+```
+blackroad.io          blackroad.company     blackroad.me
+blackroad.network     blackroad.systems     blackroadai.com
+blackroadinc.us       blackroadqi.com       blackroadquantum.com
+blackroadquantum.info blackroadquantum.net  blackroadquantum.shop
+blackroadquantum.store blackboxprogramming.io
+lucidia.earth         lucidia.studio        lucidiaqi.com
+roadchain.io          roadcoin.io
 ```
 
-### Lucidia Local Device
-```yaml
-ip: 192.168.4.64
-fingerprint: AAAAC3NzaC1lZDI1NTE5AAAAIPKaH4HABxeepKJdZbOgiXRs59+rAvIqboxScq4fmfCX
-local_dns: lucidia.local
-status: offline
-```
+## GitHub Organization
+- **Enterprise:** blackroad-os
+- **Organizations (15):**
+  - BlackRoad-OS (main)
+  - BlackRoad-AI, BlackRoad-Labs, BlackRoad-Security
+  - BlackRoad-Cloud, BlackRoad-Hardware, BlackRoad-Interactive
+  - BlackRoad-Media, BlackRoad-Studio, BlackRoad-Archive
+  - BlackRoad-Education, BlackRoad-Foundation, BlackRoad-Gov
+  - BlackRoad-Ventures, Blackbox-Enterprises
 
-### Secondary Device (192.168.7.95)
-```yaml
-ip: 192.168.7.95
-fingerprints:
-  ed25519: AAAAC3NzaC1lZDI1NTE5AAAAINuh/NjyfX7rLrQ6JvmtTg7lXeKo062QFUySIcu/aogc
-  rsa: present
-  ecdsa: present
-status: unknown (different subnet)
-```
-
----
-
-## 3. Mobile Devices
-
-### iPhone (Koder App)
-```yaml
-name: iPhone Koder WebDAV
-ip: 192.168.4.68
-port: 8080
-protocol: WebDAV/HTTP
-contents:
-  - Lucidia/ (iOS Pyto app)
-  - symbolic_kernel.py
-  - emergency files
-access: local network only
-status: requires manual verification
-```
-
----
-
-## 4. SSH Keys Inventory
-
-| Key Name | Type | Purpose |
-|----------|------|---------|
-| id_ed25519 | ed25519 | Primary (Pi, general) |
-| id_rsa | rsa | Legacy compatibility |
-| blackroad_do | - | DigitalOcean |
-| blackroad_key | - | BlackRoad servers |
-| br_live | - | Live/production |
-| id_br_ed25519 | ed25519 | BlackRoad specific |
-| do_nopass | - | DO without passphrase |
-| blackro | rsa | General BlackRoad |
-
----
-
-## 5. Domain Registrars
-
-### Cloudflare (Primary - 16 zones)
-```yaml
-account: amundsonalexa@gmail.com
-domains:
-  - blackroad.io
-  - blackroad.systems
-  - blackroad.me
-  - blackroad.network
-  - blackroadinc.us
-  - blackroadai.com
-  - blackroadqi.com
-  - blackroadquantum.com
-  - blackroadquantum.net
-  - blackroadquantum.info
-  - blackroadquantum.shop
-  - blackroadquantum.store
-  - aliceqi.com
-  - lucidia.earth
-  - lucidiaqi.com
-  - lucidia.studio
-status: verified
-```
-
-### GoDaddy (Check Required)
-```yaml
-account: unknown
-domains: TBD
-note: Need to verify which domains are registered here
-```
-
----
-
-## 6. GitHub Organizations (15)
-
-| Org | Role | Repos |
-|-----|------|-------|
-| BlackRoad-OS | Admin | 37 |
-| BlackRoad-AI | Admin | 3 |
-| Blackbox-Enterprises | Admin | 0 |
-| BlackRoad-Labs | Admin | 0 |
-| BlackRoad-Cloud | Admin | 0 |
-| BlackRoad-Ventures | Admin | 0 |
-| BlackRoad-Foundation | Admin | 0 |
-| BlackRoad-Media | Admin | 0 |
-| BlackRoad-Hardware | Admin | 0 |
-| BlackRoad-Education | Admin | 0 |
-| BlackRoad-Gov | Admin | 0 |
-| BlackRoad-Security | Admin | 0 |
-| BlackRoad-Interactive | Admin | 0 |
-| BlackRoad-Archive | Admin | 0 |
-| BlackRoad-Studio | Admin | 0 |
-
----
-
-## 7. External Services
-
-### tmate.io (Terminal Sharing)
-```yaml
-host: nyc1.tmate.io
-fingerprint: present in known_hosts
-purpose: remote terminal sharing
-```
-
----
-
-## 8. Verification Chain (256-step)
-
-The BlackRoad OS verification system uses a 256-step hash chain for authentication.
-
-### Concept
-```
-step[0] = hash(password + salt)
-step[1] = hash(step[0])
-step[2] = hash(step[1])
-...
-step[255] = hash(step[254])
-
-verification_token = step[255]
-```
-
-### Implementation
-```typescript
-// infra/verify/chain.ts
-import { createHash } from 'crypto';
-
-const STEPS = 256;
-
-export function generateChain(password: string, salt: string): string[] {
-  const chain: string[] = [];
-  let current = password + salt;
-
-  for (let i = 0; i < STEPS; i++) {
-    current = createHash('sha256').update(current).digest('hex');
-    chain.push(current);
-  }
-
-  return chain;
-}
-
-export function verify(token: string, chain: string[]): boolean {
-  return chain[STEPS - 1] === token;
-}
-```
-
-### Usage
-1. On first setup: Generate chain, store `step[255]` publicly
-2. To verify: User provides password, system regenerates chain
-3. Match: If `step[255]` matches stored token, user is verified
-
-### Storage
-- Public: `verification_token` (step[255]) stored in repo/KV
-- Private: Password known only to user
-- Salt: Stored securely (not in repo)
-
----
-
-## 9. Quick SSH Commands
-
+## SSH Access
 ```bash
-# Raspberry Pi
-ssh alice-pi          # as alice
-ssh lucidia-pi        # as lucidia
+# Pis (via ~/.ssh/config)
+ssh alice      # 192.168.4.49
+ssh aria       # 192.168.4.64
+ssh octavia    # 192.168.4.74
+ssh lucidia    # 192.168.4.38 (requires br_mesh_ed25519 key)
+ssh shellfish  # 174.138.44.45
 
-# DigitalOcean
-ssh codex-infinity    # needs IP configured
-
-# Test connectivity
-ping 192.168.4.49     # Pi
-ping 159.65.43.12     # Droplet
-curl http://192.168.4.68:8080  # iPhone Koder
+# Termius
+# https://sshid.io/blackroad-sandbox
 ```
+
+## Active Services
+
+### lucidia (192.168.4.38) - ElectroCookie
+- `blackroad-salesforce-agent.service` - Salesforce Daemon (RUNNING)
+- Docker containers (nginx, etc.)
+
+### octavia (192.168.4.74) - Pironman 5-MAX
+- Hailo-8 AI Accelerator (26 TOPS) - Verified working
+- Firmware: 4.23.0, Serial: HLLWM2B233704606
+- Ready for AI inference workloads
+
+## Cost Summary
+| Category | Monthly | Annual |
+|----------|---------|--------|
+| DigitalOcean (shellfish) | ~$6 | ~$72 |
+| Cloudflare (free tier) | $0 | $0 |
+| Salesforce (Dev Edition) | $0 | $0 |
+| Tailscale (free tier) | $0 | $0 |
+| **Total Recurring** | **~$6** | **~$72** |
+
+## Hardware Investment (One-Time)
+| Category | Cost |
+|----------|------|
+| 4x Pi 5 8GB | ~$360 |
+| 2x Pironman 5-MAX | ~$200 |
+| 2x Hailo-8 | ~$430 |
+| 2x NVMe SSDs | ~$100 |
+| Pi 4B, 400, Zero | ~$200 |
+| Displays, sensors, cables | ~$300 |
+| M1 Mac (existing) | - |
+| **Total Hardware** | **~$1,600** |
 
 ---
 
-## 10. Network Map
+## The Arbitrage
 
-```
-Internet
-    │
-    ├── Cloudflare (CDN/DNS)
-    │       │
-    │       ├── *.blackroad.io → Pages/Workers
-    │       ├── *.blackroad.systems → Tunnel → Railway
-    │       └── Brand domains → Pages
-    │
-    ├── Railway (Compute)
-    │       └── 12+ services
-    │
-    ├── DigitalOcean (VPS)
-    │       └── 159.65.43.12 (offline)
-    │
-    └── GitHub (Source)
-            └── 15 orgs, 66 repos
+**What we have:**
+- 52 TOPS AI acceleration
+- 6 compute nodes
+- NVMe storage
+- Mesh networking
+- Salesforce CRM (free)
 
-Local Network (192.168.4.x)
-    │
-    ├── 192.168.4.49 - Raspberry Pi (alice/lucidia)
-    ├── 192.168.4.64 - Lucidia device
-    └── 192.168.4.68 - iPhone Koder
-```
+**What Fortune 500 pays:**
+- $10M+/year for equivalent
+- Per-seat licensing
+- Cloud compute costs
+- Enterprise support
 
----
+**Our cost:** ~$72/year + $1,600 hardware
 
-## Next Steps
-
-1. [ ] Power on Raspberry Pi
-2. [ ] Check DigitalOcean console for droplet status
-3. [ ] Verify GoDaddy account and domains
-4. [ ] Test iPhone Koder WebDAV access
-5. [ ] Implement 256-step verification chain
-6. [ ] Create automated health check workflow
-
----
-
-*Last updated: 2025-12-02 by Cece (Claude Code)*
+**The play:** Agents call APIs instead of humans clicking buttons.
