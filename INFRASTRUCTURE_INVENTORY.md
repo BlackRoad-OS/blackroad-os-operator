@@ -344,7 +344,7 @@ ssh shellfish  # 174.138.44.45
 
 ---
 
-### alice (192.168.4.49) - Pi 400 - K8S MASTER
+### alice (192.168.4.49) - Pi 400 KEYBOARD - K8S MASTER
 **Systemd Services:**
 - `headscale.service` - VPN Control Server (Tailscale alternative!)
 - `k3s.service` - Lightweight Kubernetes!
@@ -475,3 +475,88 @@ ssh shellfish  # 174.138.44.45
 **Our cost:** ~$72/year + $1,600 hardware
 
 **The play:** Agents call APIs instead of humans clicking buttons.
+
+---
+
+## Integration Architecture
+
+### The Unified Control Plane
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                    BLACKROAD UNIFIED CONTROL                        │
+├─────────────────────────────────────────────────────────────────────┤
+│                                                                     │
+│   ┌─────────────┐    ┌─────────────┐    ┌─────────────┐           │
+│   │  SALESFORCE │    │ CLOUDFLARE  │    │   GITHUB    │           │
+│   │  CRM + API  │    │ Edge + DNS  │    │  Code + CI  │           │
+│   └──────┬──────┘    └──────┬──────┘    └──────┬──────┘           │
+│          │                  │                  │                   │
+│          └──────────────────┼──────────────────┘                   │
+│                             │                                       │
+│                    ┌────────▼────────┐                             │
+│                    │   OPERATOR      │                             │
+│                    │  (Orchestrator) │                             │
+│                    └────────┬────────┘                             │
+│                             │                                       │
+│   ┌─────────────────────────┼─────────────────────────┐           │
+│   │                         │                         │           │
+│   ▼                         ▼                         ▼           │
+│ ┌─────────┐           ┌─────────┐           ┌─────────┐          │
+│ │ lucidia │           │ octavia │           │  aria   │          │
+│ │ SF Dmn  │           │ Hailo-8 │           │ Agents  │          │
+│ │ Bitcoin │           │ 3D Print│           │ CF Wrkr │          │
+│ └─────────┘           └─────────┘           └─────────┘          │
+│       │                     │                     │               │
+│       └─────────────────────┼─────────────────────┘               │
+│                             │                                      │
+│                    ┌────────▼────────┐                            │
+│                    │     alice       │                            │
+│                    │   K8s + VPN     │                            │
+│                    └─────────────────┘                            │
+│                                                                    │
+│   ┌─────────────┐    ┌─────────────┐    ┌─────────────┐          │
+│   │ HUGGINGFACE │    │   cecilia   │    │   arcadia   │          │
+│   │  AI Models  │    │  Mac + Dev  │    │   iPhone    │          │
+│   └─────────────┘    └─────────────┘    └─────────────┘          │
+│                                                                    │
+└────────────────────────────────────────────────────────────────────┘
+```
+
+### Integration Matrix
+
+| Source | Target | Method | Status |
+|--------|--------|--------|--------|
+| **Salesforce** | lucidia | SFDX OAuth, REST API | ✓ ACTIVE |
+| **Salesforce** | Cloudflare | Webhook → Worker | ○ TODO |
+| **Cloudflare** | All Pis | Tunnels (cloudflared) | ✓ ACTIVE |
+| **GitHub** | Cloudflare | Pages auto-deploy | ✓ ACTIVE |
+| **GitHub** | Railway | CI/CD triggers | ✓ ACTIVE |
+| **GitHub** | Pis | Webhook → deploy | ○ TODO |
+| **HuggingFace** | octavia | Model inference (Hailo) | ○ TODO |
+| **HuggingFace** | ollama | Model sync | ○ TODO |
+| **Mac (cecilia)** | All Pis | SSH + rsync | ✓ ACTIVE |
+| **iPhone (arcadia)** | Cloudflare | PWA dashboards | ○ TODO |
+| **iPhone (arcadia)** | Pis | Termius SSH | ✓ ACTIVE |
+| **Headscale** | All devices | Mesh VPN | ✓ ACTIVE (aria, alice) |
+| **K3s (alice)** | Pis | Container orchestration | ○ TODO |
+| **InfluxDB** | Grafana | Metrics pipeline | ○ TODO |
+
+### Service Ownership Goals
+
+| Platform | Current | Target |
+|----------|---------|--------|
+| **Salesforce** | 1 daemon (lucidia) | Multi-agent CRM automation |
+| **Cloudflare** | 15 Pages, 24 KV, 9 D1 | Full edge compute + storage |
+| **GitHub** | 15 orgs, 50+ repos | Auto-deploy to Pi cluster |
+| **HuggingFace** | Not connected | Model hub → Hailo inference |
+| **Mac (cecilia)** | Dev machine | Command center + orchestrator |
+| **iPhone (arcadia)** | SSH access | PWA dashboard + mobile alerts |
+
+### Next Steps
+
+1. **Salesforce → Cloudflare**: Webhook triggers on SF events → CF Worker → Pi action
+2. **HuggingFace → Hailo**: Download models → Convert to HEF → Deploy to octavia
+3. **GitHub → Pi Cluster**: Push → Webhook → K3s (alice) → Deploy containers
+4. **Mobile Dashboard**: PWA on arcadia for real-time cluster monitoring
+5. **Unified Metrics**: InfluxDB (all Pis) → Grafana dashboard
