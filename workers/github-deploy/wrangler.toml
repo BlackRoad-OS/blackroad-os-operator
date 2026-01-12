@@ -1,0 +1,15 @@
+name = "blackroad-github-deploy"
+main = "src/index.ts"
+compatibility_date = "2024-01-01"
+
+[vars]
+ENVIRONMENT = "production"
+K3S_MASTER = "alice"
+
+[[kv_namespaces]]
+binding = "DEPLOYMENTS"
+id = "2557a2b503654590ab7b1da84c7e8b20"  # JOBS
+
+[[kv_namespaces]]
+binding = "CACHE"
+id = "c878fbcc1faf4eddbc98dcfd7485048d"  # CACHE

@@ -1,0 +1,17 @@
+name = "blackroad-salesforce-webhook"
+main = "src/index.ts"
+compatibility_date = "2024-01-01"
+
+[vars]
+ENVIRONMENT = "production"
+
+[[kv_namespaces]]
+binding = "SF_EVENTS"
+id = "cec61e8e984a4a49979c0f29c1c65337"  # blackroad-api-INTENTS
+
+[[kv_namespaces]]
+binding = "SF_CACHE"
+id = "c878fbcc1faf4eddbc98dcfd7485048d"  # CACHE
+
+[triggers]
+crons = ["*/5 * * * *"]  # Check for pending events every 5 min
