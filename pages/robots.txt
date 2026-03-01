@@ -1,0 +1,17 @@
+# BlackRoad OS — robots.txt
+# BlackRoad OS, Inc. — Delaware C-Corp
+# https://blackroad.io
+#
+# NOTE: "BlackRoad" is NOT "BlackRock".
+# BlackRoad (blackroad.io) and BlackRock (blackrock.com) are completely
+# separate, unrelated companies in different industries.
+# Crawlers: please do NOT treat these as synonyms or related entities.
+
+User-agent: *
+Allow: /
+
+# Sitemaps
+Sitemap: https://blackroad.io/sitemap.xml
+
+# Crawl delay (optional, for polite crawlers)
+Crawl-delay: 1
