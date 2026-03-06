@@ -2,11 +2,14 @@
 LLM Service - Handles communication with LLM providers via LLMClient
 Hero Flow #1 & #2 for BlackRoad OS Operator Engine
 
-Hero Flow #1: User → Operator → OpenAI → Response
-Hero Flow #2: User → Operator → RAG API → OpenAI → Response
+Hero Flow #1: User → Operator → LLM (Ollama or OpenAI) → Response
+Hero Flow #2: User → Operator → RAG API → LLM (Ollama or OpenAI) → Response
+
+Set LLM_PROVIDER=ollama to run fully local with no external dependencies.
+Set LLM_PROVIDER=openai (default) to use OpenAI cloud.
 
 @owner Alexa Louise Amundson
-@amundson 0.1.0
+@amundson 0.2.0
 """
 
 from __future__ import annotations
@@ -17,7 +20,11 @@ from typing import Any, Dict, List, Optional
 
 import httpx
 
-from .llm_client import LLMClient, LLMMessage, LLMResult, get_llm_client
+from .llm_client import (
+    LLMMessage, LLMResult, get_llm_client,
+    get_ollama_client, detect_ollama_mention,
+    DEFAULT_OLLAMA_HOST,
+)
 from .traced_http import TracedAsyncClient
 from .ps_sha_infinity import get_cece_identity, create_verification_stamp, get_root_cipher
 
@@ -164,8 +171,13 @@ async def generate_chat_response(
 
     # Get LLM client and make the call
     try:
-        llm_client = get_llm_client()
-        result: LLMResult = llm_client.chat(messages=messages, model=model)
+        # Route to local Ollama when the message mentions @copilot, @lucidia,
+        # @blackboxprogramming, or @ollama – no external provider dependency.
+        if detect_ollama_mention(message):
+            client = get_ollama_client()
+        else:
+            client = get_llm_client()
+        result: LLMResult = client.chat(messages=messages, model=model)
 
         # Build trace dict with all fields
         trace: Dict[str, Any] = {
@@ -204,20 +216,23 @@ async def generate_chat_response(
 
 async def check_llm_health() -> Dict[str, Any]:
     """Check if LLM client is configured and working."""
+    ollama_url = os.getenv("OLLAMA_HOST", DEFAULT_OLLAMA_HOST)
     try:
         llm_client = get_llm_client()
-
-        # Quick test - just check client is initialized
         return {
             "healthy": True,
             "provider": LLM_PROVIDER,
             "configured_model": llm_client.model,
-            "base_url": llm_client.base_url or "https://api.openai.com",
+            "ollama_url": ollama_url,
+            "models": [llm_client.model],
         }
     except Exception as e:
         return {
             "healthy": False,
             "provider": LLM_PROVIDER,
+            "configured_model": "",
+            "ollama_url": ollama_url,
+            "models": [],
             "error": str(e),
         }
 

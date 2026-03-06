@@ -1,23 +1,47 @@
 """
-LLM Client - OpenAI API wrapper for BlackRoad OS Operator
+LLM Client - Multi-provider LLM wrapper for BlackRoad OS Operator
 
-Provides a clean interface for LLM calls with structured tracing.
-Uses the secrets resolver for API key management.
+Supports Ollama (local, no API key) and OpenAI (cloud).
+Set LLM_PROVIDER=ollama to run fully local with no external dependencies.
 
 @owner Alexa Louise Amundson
-@amundson 0.1.0
+@amundson 0.2.0
 """
 
 from __future__ import annotations
 
 import os
+import re
 import time
-from dataclasses import dataclass, field
-from typing import List, Literal, Optional
+from dataclasses import dataclass
+from typing import List, Literal, Optional, Union
 
 from openai import OpenAI
 
-from .secrets import resolve_secret, get_secret, SecretNotFoundError
+from .secrets import resolve_secret, SecretNotFoundError
+
+# =============================================================================
+# Ollama mention detection
+# =============================================================================
+
+# Messages containing any of these @mentions are routed to Ollama without
+# depending on any external provider (OpenAI, Anthropic, etc.).
+_OLLAMA_MENTION_RE = re.compile(
+    r"@(copilot|lucidia|blackboxprogramming|ollama)\b",
+    re.IGNORECASE,
+)
+
+DEFAULT_OLLAMA_HOST = "http://127.0.0.1:11434"
+DEFAULT_OLLAMA_MODEL = "llama3.2:latest"
+
+
+def detect_ollama_mention(message: str) -> bool:
+    """Return True when the message contains a mention that should go to Ollama.
+
+    Recognised mentions (case-insensitive, trailing punctuation safe):
+        @copilot, @lucidia, @blackboxprogramming, @ollama
+    """
+    return bool(_OLLAMA_MENTION_RE.search(message))
 
 
 @dataclass
@@ -141,12 +165,102 @@ class LLMClient:
 
 
 # Singleton instance
-_llm_client: Optional[LLMClient] = None
+_llm_client: Optional[Union[LLMClient, OllamaClient]] = None
 
 
-def get_llm_client() -> LLMClient:
-    """Get or create the singleton LLM client."""
+def get_llm_client() -> Union[LLMClient, OllamaClient]:
+    """
+    Get or create the singleton LLM client.
+
+    Set LLM_PROVIDER=ollama to use local Ollama (no API key needed).
+    Set LLM_PROVIDER=openai (default) to use OpenAI.
+    """
     global _llm_client
     if _llm_client is None:
-        _llm_client = LLMClient()
+        provider = os.getenv("LLM_PROVIDER", "openai").lower()
+        if provider == "ollama":
+            _llm_client = OllamaClient()
+        else:
+            _llm_client = LLMClient()
     return _llm_client
+
+
+# =============================================================================
+# Ollama client – routes @copilot / @lucidia / @blackboxprogramming / @ollama
+# =============================================================================
+
+class OllamaClient:
+    """Local Ollama LLM client using the OpenAI-compatible /v1 API.
+
+    All requests routed here bypass every external provider. Set OLLAMA_HOST
+    and OLLAMA_MODEL in the environment to customise the target.
+    """
+
+    def __init__(
+        self,
+        base_url: Optional[str] = None,
+        model: Optional[str] = None,
+    ):
+        self.base_url = (base_url or os.getenv("OLLAMA_HOST", DEFAULT_OLLAMA_HOST)).rstrip("/")
+        self.model = model or os.getenv("OLLAMA_MODEL", DEFAULT_OLLAMA_MODEL)
+        # Ollama exposes an OpenAI-compatible API at /v1 – no real key needed.
+        self._client = OpenAI(
+            api_key="ollama",
+            base_url=f"{self.base_url}/v1",
+        )
+
+    def chat(
+        self,
+        messages: List[LLMMessage],
+        model: Optional[str] = None,
+        temperature: float = 0.7,
+        max_tokens: Optional[int] = None,
+    ) -> LLMResult:
+        """Send a chat request to the local Ollama instance."""
+        start_time = time.time()
+
+        openai_messages = [
+            {"role": msg.role, "content": msg.content} for msg in messages
+        ]
+
+        request_kwargs = {
+            "model": model or self.model,
+            "messages": openai_messages,
+            "temperature": temperature,
+        }
+        if max_tokens:
+            request_kwargs["max_tokens"] = max_tokens
+
+        response = self._client.chat.completions.create(**request_kwargs)
+
+        response_time_ms = (time.time() - start_time) * 1000
+
+        usage = response.usage
+        tokens_in = usage.prompt_tokens if usage else None
+        tokens_out = usage.completion_tokens if usage else None
+
+        trace = LLMTrace(
+            llm_provider="ollama",
+            model=response.model,
+            response_time_ms=round(response_time_ms, 2),
+            raw_tokens_in=tokens_in,
+            raw_tokens_out=tokens_out,
+        )
+
+        reply = ""
+        if response.choices and len(response.choices) > 0:
+            reply = response.choices[0].message.content or ""
+
+        return LLMResult(reply=reply.strip(), trace=trace)
+
+
+# Singleton Ollama client
+_ollama_client: Optional[OllamaClient] = None
+
+
+def get_ollama_client() -> OllamaClient:
+    """Get or create the singleton Ollama client."""
+    global _ollama_client
+    if _ollama_client is None:
+        _ollama_client = OllamaClient()
+    return _ollama_client
