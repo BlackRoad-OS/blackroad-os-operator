@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import pytest
 
-from br_operator.llm_client import detect_ollama_mention, OllamaClient, DEFAULT_OLLAMA_URL, DEFAULT_OLLAMA_MODEL
+from br_operator.llm_client import detect_ollama_mention, OllamaClient, DEFAULT_OLLAMA_HOST, DEFAULT_OLLAMA_MODEL
 
 
 # ---------------------------------------------------------------------------
@@ -40,15 +40,15 @@ def test_detect_ollama_mention_negative(message: str) -> None:
 # ---------------------------------------------------------------------------
 
 def test_ollama_client_default_base_url(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.delenv("OLLAMA_URL", raising=False)
+    monkeypatch.delenv("OLLAMA_HOST", raising=False)
     monkeypatch.delenv("OLLAMA_MODEL", raising=False)
     client = OllamaClient()
-    assert client.base_url == DEFAULT_OLLAMA_URL
+    assert client.base_url == DEFAULT_OLLAMA_HOST
     assert client.model == DEFAULT_OLLAMA_MODEL
 
 
 def test_ollama_client_respects_env(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setenv("OLLAMA_URL", "http://mypi.local:11434")
+    monkeypatch.setenv("OLLAMA_HOST", "http://mypi.local:11434")
     monkeypatch.setenv("OLLAMA_MODEL", "mistral:instruct")
     client = OllamaClient()
     assert client.base_url == "http://mypi.local:11434"

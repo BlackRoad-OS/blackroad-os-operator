@@ -23,7 +23,7 @@ import httpx
 from .llm_client import (
     LLMMessage, LLMResult, get_llm_client,
     get_ollama_client, detect_ollama_mention,
-    DEFAULT_OLLAMA_URL,
+    DEFAULT_OLLAMA_HOST,
 )
 from .traced_http import TracedAsyncClient
 from .ps_sha_infinity import get_cece_identity, create_verification_stamp, get_root_cipher
@@ -216,7 +216,7 @@ async def generate_chat_response(
 
 async def check_llm_health() -> Dict[str, Any]:
     """Check if LLM client is configured and working."""
-    ollama_url = os.getenv("OLLAMA_URL", DEFAULT_OLLAMA_URL)
+    ollama_url = os.getenv("OLLAMA_HOST", DEFAULT_OLLAMA_HOST)
     try:
         llm_client = get_llm_client()
         return {

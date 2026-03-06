@@ -31,7 +31,7 @@ _OLLAMA_MENTION_RE = re.compile(
     re.IGNORECASE,
 )
 
-DEFAULT_OLLAMA_URL = "http://127.0.0.1:11434"
+DEFAULT_OLLAMA_HOST = "http://127.0.0.1:11434"
 DEFAULT_OLLAMA_MODEL = "llama3.2:latest"
 
 
@@ -192,7 +192,7 @@ def get_llm_client() -> Union[LLMClient, OllamaClient]:
 class OllamaClient:
     """Local Ollama LLM client using the OpenAI-compatible /v1 API.
 
-    All requests routed here bypass every external provider. Set OLLAMA_URL
+    All requests routed here bypass every external provider. Set OLLAMA_HOST
     and OLLAMA_MODEL in the environment to customise the target.
     """
 
@@ -201,7 +201,7 @@ class OllamaClient:
         base_url: Optional[str] = None,
         model: Optional[str] = None,
     ):
-        self.base_url = (base_url or os.getenv("OLLAMA_URL", DEFAULT_OLLAMA_URL)).rstrip("/")
+        self.base_url = (base_url or os.getenv("OLLAMA_HOST", DEFAULT_OLLAMA_HOST)).rstrip("/")
         self.model = model or os.getenv("OLLAMA_MODEL", DEFAULT_OLLAMA_MODEL)
         # Ollama exposes an OpenAI-compatible API at /v1 – no real key needed.
         self._client = OpenAI(
