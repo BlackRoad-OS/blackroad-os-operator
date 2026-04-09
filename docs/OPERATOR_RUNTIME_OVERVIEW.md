@@ -31,8 +31,15 @@ The Operator is a lightweight job scheduler and orchestrator for BlackRoad OS. I
 ### HTTP Endpoints
 The Fastify app in `src/index.ts` exposes standard service endpoints:
 - `GET /health` - Liveness check
-- `GET /ready` - Readiness check (validates config and queue availability)
+- `GET /ready` - Readiness check (validates config and verifies Redis queue connectivity with PING)
 - `GET /version` - Build and environment metadata
+- `GET /metrics` - Service-level request counters and response status aggregates
+- `GET /diagnostics/startup` - Structured startup diagnostics and configuration posture
+- `GET /events` - Recent domain events buffered by the operator event bus
+- `POST /integrations/e2e` - Unified backend integration checks for Stripe, Git, Slack, Railway, Pi agents, Cloudflare, and Gitea
+- `GET /v1/*` + `POST /v1/*` - Versioned aliases for stable API migration
+
+Protected routes can require `x-api-key` when `ENABLE_API_KEY_AUTH=true`.
 
 ## Adding New Jobs
 1. Create a new file in `src/jobs/` (e.g., `my-job.job.ts`)
